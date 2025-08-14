@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gronestats"
+version = "0.1.0"
+description = "GroneStats: Análisis de datos del fútbol peruano"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Alvaro Cáceres", email = "alvarojohn1290@gmail.com" }
+]
+license = {text = "MIT"}
+
+[tool.setuptools]
+packages = ["gronestats"]
