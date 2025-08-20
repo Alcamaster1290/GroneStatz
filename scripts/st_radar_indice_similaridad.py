@@ -183,7 +183,9 @@ with col1:
 
 with col2:
     st.subheader("Ranking según pesos actuales")
-    display_base = ["player","team","minutesPlayed","dynamic_score"]
+    display_base = ["player", "team", "minutesPlayed", "dynamic_score"]
+
+    # Construcción de tabla visible
     table = df_proc[display_base + [c + "_sim" for c in radar_metrics]].copy()
     for m in radar_metrics:
         table[METRICS_DICT[m]] = (table[m + "_sim"] * 100).round(2)
@@ -197,11 +199,15 @@ with col2:
     export_cols = ["player", "team", "minutesPlayed", "dynamic_score"] + list(FEATURES.keys())
     export_table = df_proc[export_cols].sort_values("dynamic_score", ascending=False).reset_index(drop=True)
 
+    # 🔑 Convertir a CSV en memoria (en bytes)
+    csv = export_table.to_csv(index=False).encode("utf-8-sig")
+
     st.download_button(
-        "Descargar CSV",
-        export_table.to_csv(index=False, encoding="utf-8-sig"),
-        "mis_candidatos_reemplazo_noriega.csv",
-        "text/csv"
+        label="📥 Descargar CSV",
+        data=csv,
+        file_name="mis_candidatos_reemplazo_noriega.csv",
+        mime="text/csv"
     )
+
 
 st.markdown("- Erick Noriega siempre se incluye en el radar. - Selecciona hasta 2 jugadores adicionales.")
