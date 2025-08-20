@@ -1,5 +1,6 @@
 # app.py
 import streamlit as st
+import io
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -199,14 +200,17 @@ with col2:
     export_cols = ["player", "team", "minutesPlayed", "dynamic_score"] + list(FEATURES.keys())
     export_table = df_proc[export_cols].sort_values("dynamic_score", ascending=False).reset_index(drop=True)
 
-    # 🔑 Convertir a CSV en memoria (en bytes)
-    csv = export_table.to_csv(index=False).encode("utf-8-sig")
+    # 🔑 Guardar en memoria como Excel
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        export_table.to_excel(writer, index=False, sheet_name="Ranking")
+    processed_data = output.getvalue()
 
     st.download_button(
-        label="📥 Descargar CSV",
-        data=csv,
-        file_name="mis_candidatos_reemplazo_noriega.csv",
-        mime="text/csv"
+        label="📥 Descargar Excel",
+        data=processed_data,
+        file_name="mis_candidatos_reemplazo_noriega.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
 
