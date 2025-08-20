@@ -100,9 +100,9 @@ def filtrar_rol(df):
     return df[
         (df["aerialDuelsWonPercentage"] >= 50) &
         (df["groundDuelsWonPercentage"] >= 50) &
-        (df["accuratePassesPercentage"] >= 72) &
+        (df["accuratePassesPercentage"] >= 70) &
         ((df["accuratePasses_p90"] >= 25) | (df["accurateFinalThirdPasses_p90"] >= 2)) &
-        (df["clearances_p90"].between(2, 9, inclusive="both"))
+        (df["clearances_p90"].between(2, 11, inclusive="both"))
     ].copy()
 
 def main():
@@ -129,22 +129,22 @@ def main():
         "dribbledPast_p90","cards_p90"
     ]
 
-    top10 = df_scored.sort_values("similarity_score", ascending=False)[cols_out].head(10).copy()
+    top50 = df_scored.sort_values("similarity_score", ascending=False)[cols_out].head(50).copy()
 
     # resumen de Noriega en mismas features
     noriega_cols = ["player","team"] + [c for c in cols_out if c not in ["player","team","similarity_score"]]
     noriega = ref_row(df_scored, NORIEGA_ID)[noriega_cols].to_frame().T
 
     # redondeo y guardado con dos decimales
-    top10_2d = top10.round(2)
+    top50_2d = top50.round(2)
     noriega_2d = noriega.round(2)
-    top10_2d.to_csv("top10_similares_a_noriega.csv", index=False, encoding="utf-8-sig", float_format="%.2f")
+    top50_2d.to_csv("top50_similares_a_noriega.csv", index=False, encoding="utf-8-sig", float_format="%.2f")
     # muestra en consola con dos decimales
     pd.set_option("display.float_format", lambda x: f"{x:.2f}")
-    print("Top-10 similares guardado en top10_similares_a_noriega.csv")
+    print("Top-50 similares guardado en top50_similares_a_noriega.csv")
     print("Resumen de Noriega guardado en noriega_resumen.csv")
-    print("\nTop-10 preview:")
-    print(top10_2d.to_string(index=False))
+    print("\nTop-50 preview:")
+    print(top50_2d.to_string(index=False))
     print("\nNoriega resumen:")
     print(noriega_2d.to_string(index=False))
 
