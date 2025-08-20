@@ -202,7 +202,7 @@ with col2:
 
     # 🔑 Guardar en memoria como Excel
     output = io.BytesIO()
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
         export_table.to_excel(writer, index=False, sheet_name="Ranking")
     processed_data = output.getvalue()
 
