@@ -5,8 +5,8 @@ from tkinter import ttk
 
 # Rutas
 carpeta_matches = "gronestats/data/Liga 1 Peru/2025"
-archivo_maestro = "gronestats/data/master_data/Partidos_Liga1_2025.xlsx"
-archivo_salida = "gronestats/data/Partidos_detalles_faltantes_2025.xlsx"
+archivo_maestro = "gronestats/data/master_data/Partidos_Liga 1 Peru_2025_limpio.xlsx"
+archivo_salida = "gronestats/data/Liga 1 Peru/Partidos_detalles_faltantes_2025.xlsx"
 
 # 1. Archivos en carpeta
 archivos = [f for f in os.listdir(carpeta_matches) if f.startswith("Sofascore_") and f.endswith(".xlsx")]
