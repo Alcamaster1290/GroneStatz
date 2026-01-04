@@ -1,0 +1,2 @@
+[16/306] error 12831480: archivo menor a 15 KB (6.9 KB). Se elimina y se detiene el proceso.
+[35/291] error 12702501: archivo menor a 15 KB (6.9 KB). Se elimina y se detiene el proceso.
