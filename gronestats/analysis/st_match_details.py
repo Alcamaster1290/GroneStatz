@@ -45,7 +45,8 @@ def _coalesce_columns(df: pd.DataFrame, target: str, aliases: list[str]) -> pd.D
     if target not in work.columns:
         work[target] = None
     for c in cols:
-        work[target] = work[target].fillna(work[c])
+        mask = work[target].isna() & work[c].notna()
+        work.loc[mask, target] = work.loc[mask, c]
     drop_cols = [c for c in cols if c != target]
     work = work.drop(columns=drop_cols, errors="ignore")
     return work
