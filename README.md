@@ -19,12 +19,21 @@ Este repositorio contiene:
 
 ## 🔍 Origen de los datos
 
-Utiliza `LanusStats`, un scraper open-source que extrae información de SofaScore, y `ScraperFC`, una librería para extracción de datos de Transfermarkt.
+Utiliza `ScraperFC`, un scraper open-source que extrae información de SofaScore.
 
-### Créditos a:
+### Créditos
 
-- 🧠 `LanusStats`: [https://github.com/federicorabanos/LanusStats](https://github.com/federicorabanos/LanusStats)  
-- ⚙️ `ScraperFC`: [https://github.com/oseymour/ScraperFC](https://github.com/oseymour/ScraperFC)
+Este proyecto se apoya en herramientas y trabajos open-source que han sido fundamentales para el desarrollo del ecosistema GroneStats:
+
+- ⚙️ `ScraperFC` — Librería para extracción de datos futbolísticos (Sofascore, Transfermarkt, etc).  
+  https://github.com/oseymour/ScraperFC
+
+- 🧠 `LanusStats` — Scraper open-source para datos de SofaScore.  
+  https://github.com/federicorabanos/LanusStats
+
+- 📐 `football_analytics` — Trabajo de referencia en fundamentos de análisis futbolístico, desarrollado por Edd Webster.  
+  https://github.com/eddwebster/football_analytics
+
 
 ---
 
@@ -67,23 +76,31 @@ pytest -v tests/
 
 ---
 
-## 🧠 Estructura del proyecto
+## Estructura del proyecto
 
 ```
 GroneStatz/
-│
-├── gronestats/              # Código fuente principal
-│   ├── scraping/            # Funciones de obtención de datos (SofaScore)
-│   ├── utils/               # Utilidades de procesamiento
-│   └── visualizations/      # Próximamente: visualizaciones
-│
-├── scripts/                 # Archivos de entrada manual o testeo
-│   └── obtener_partido.py   # Ejemplo de uso para scrapear un partido
-│
-├── tests/                   # Pruebas automáticas con pytest
-├── README.md                # Este archivo
-├── pyproject.toml           # Configuración del paquete
-└── requirements.txt         # Librerías necesarias
+|-- gronestats/                 # Codigo fuente principal
+|   |-- analysis/               # Analisis y apps (Streamlit)
+|   |-- data/                   # Datos locales (xlsx, parquet, etc)
+|   |-- images/                 # Imagenes y recursos
+|   |-- processing/             # Procesamiento y ETL
+|   |-- results/                # Salidas generadas
+|   |-- stats/                  # Estadisticas y calculos
+|   |-- utils/                  # Utilidades compartidas
+|   |-- visualization/          # Visualizaciones
+|   |-- app_config.py           # Configuracion de la app
+|   |-- requirements.txt        # Dependencias del paquete gronestats
+|   `-- __init__.py
+|-- logs/                       # Logs locales
+|-- notebooks/                  # Notebooks de exploracion
+|-- scripts/                    # Scripts varios
+|-- tests/                      # Pruebas con pytest
+|-- LICENSE
+|-- README.md
+|-- pyproject.toml
+|-- requirements.txt
+`-- setup.py
 ```
 
 ---
