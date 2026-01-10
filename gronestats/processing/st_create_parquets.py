@@ -5,6 +5,7 @@ import streamlit as st
 
 MASTER_FILE = Path("gronestats/data/master_data/Partidos_Liga 1 Peru_2025_limpio.xlsx")
 DETAILS_DIR = Path("gronestats/data/Liga 1 Peru/2025")
+PARQUET_DIR = Path("gronestats/data/Liga 1 Peru/2025/parquets")
 ALKAGRONE_FILE = Path("gronestats/data/master_data/BD Alkagrone 2025.xlsx")
 
 
@@ -73,7 +74,7 @@ def _normalize_player_stats_df(df: pd.DataFrame) -> pd.DataFrame:
         dt.loc[~mask_num] = pd.to_datetime(dob_series[~mask_num], errors="coerce")
         work["dateOfBirth"] = dt.dt.strftime("%d/%m/%Y")
         ref = pd.Timestamp("2026-01-01")
-        work["age_jan_2026"] = ((ref - dt).dt.days / 365.25).round(1)
+        work["age_enero_2026"] = ((ref - dt).dt.days / 365.25).round(1)
     return work
 
 
@@ -112,6 +113,23 @@ def render_schema_section(title: str, source_df: pd.DataFrame, schema_df: pd.Dat
     st.caption("Esquema parquet")
     st.write(f"Filas: {len(schema_df)}")
     st.dataframe(schema_df, use_container_width=True)
+
+
+def export_parquet_tables(tables: dict[str, pd.DataFrame], output_dir: Path) -> tuple[list[Path], list[str]]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    saved: list[Path] = []
+    errors: list[str] = []
+    for name, df in tables.items():
+        if df.empty:
+            continue
+        out_path = output_dir / f"{name}.parquet"
+        try:
+            df.to_parquet(out_path, index=False)
+        except Exception as exc:
+            errors.append(f"{name}: {exc}")
+            continue
+        saved.append(out_path)
+    return saved, errors
 
 
 @st.cache_data
@@ -281,10 +299,78 @@ def build_player_match_schema(df_player_stats: pd.DataFrame) -> pd.DataFrame:
         "YELLOWCARDS",
         "REDCARDS",
         "SAVES",
+        "FOULS",
+        "PENALTYWON",
+        "PENALTYSAVE",
+        "PENALTYCONCEDED",
         "RATING",
     ]
     cols = [c for c in cols if c in df_player_stats.columns]
     return df_player_stats[cols].copy()
+
+
+@st.cache_data
+def build_player_totals_schema(df_player_match: pd.DataFrame) -> pd.DataFrame:
+    if df_player_match.empty:
+        return pd.DataFrame()
+    if "PLAYER_ID" not in df_player_match.columns or "MATCH_ID" not in df_player_match.columns:
+        return pd.DataFrame()
+    work = df_player_match.copy()
+    work["PLAYER_ID"] = _normalize_id_series(work["PLAYER_ID"])
+    work["MATCH_ID"] = _normalize_id_series(work["MATCH_ID"])
+    goals_col = next((c for c in ["GOALS", "GOAL"] if c in work.columns), None)
+    assists_col = next((c for c in ["GOALASSIST", "ASSISTS", "ASSIST"] if c in work.columns), None)
+    saves_col = next((c for c in ["SAVES", "SAVE"] if c in work.columns), None)
+    fouls_col = next((c for c in ["FOULS", "FOUL"] if c in work.columns), None)
+    minutes_col = next((c for c in ["MINUTESPLAYED", "MINUTES_PLAYED", "MINUTES"] if c in work.columns), None)
+    penalty_won_col = next((c for c in ["PENALTYWON", "PENALTY_WON"] if c in work.columns), None)
+    penalty_save_col = next((c for c in ["PENALTYSAVE", "PENALTY_SAVE"] if c in work.columns), None)
+    penalty_conceded_col = next((c for c in ["PENALTYCONCEDED", "PENALTY_CONCEDED"] if c in work.columns), None)
+    if goals_col is None or assists_col is None:
+        return pd.DataFrame()
+    if saves_col is None:
+        work["SAVES"] = 0
+        saves_col = "SAVES"
+    if fouls_col is None:
+        work["FOULS"] = 0
+        fouls_col = "FOULS"
+    if minutes_col is None:
+        work["MINUTESPLAYED"] = 0
+        minutes_col = "MINUTESPLAYED"
+    if penalty_won_col is None:
+        work["PENALTYWON"] = 0
+        penalty_won_col = "PENALTYWON"
+    if penalty_save_col is None:
+        work["PENALTYSAVE"] = 0
+        penalty_save_col = "PENALTYSAVE"
+    if penalty_conceded_col is None:
+        work["PENALTYCONCEDED"] = 0
+        penalty_conceded_col = "PENALTYCONCEDED"
+    work[goals_col] = pd.to_numeric(work[goals_col], errors="coerce").fillna(0)
+    work[assists_col] = pd.to_numeric(work[assists_col], errors="coerce").fillna(0)
+    work[saves_col] = pd.to_numeric(work[saves_col], errors="coerce").fillna(0)
+    work[fouls_col] = pd.to_numeric(work[fouls_col], errors="coerce").fillna(0)
+    work[minutes_col] = pd.to_numeric(work[minutes_col], errors="coerce").fillna(0)
+    work[penalty_won_col] = pd.to_numeric(work[penalty_won_col], errors="coerce").fillna(0)
+    work[penalty_save_col] = pd.to_numeric(work[penalty_save_col], errors="coerce").fillna(0)
+    work[penalty_conceded_col] = pd.to_numeric(work[penalty_conceded_col], errors="coerce").fillna(0)
+    totals = (
+        work.dropna(subset=["PLAYER_ID"])
+        .groupby("PLAYER_ID", as_index=False)
+        .agg(
+            GOALS=(goals_col, "sum"),
+            ASSISTS=(assists_col, "sum"),
+            SAVES=(saves_col, "sum"),
+            FOULS=(fouls_col, "sum"),
+            MINUTESPLAYED=(minutes_col, "sum"),
+            PENALTYWON=(penalty_won_col, "sum"),
+            PENALTYSAVE=(penalty_save_col, "sum"),
+            PENALTYCONCEDED=(penalty_conceded_col, "sum"),
+            MATCHES_PLAYED=("MATCH_ID", "nunique"),
+        )
+        .sort_values("PLAYER_ID")
+    )
+    return totals
 
 
 @st.cache_data
@@ -370,6 +456,7 @@ def main() -> None:
     player_stats_df = load_all_player_stats()
     players_df = load_player_rows()  # Parquet export: players_df
     player_match_df = build_player_match_schema(player_stats_df)  # Parquet export: player_match_df
+    player_totals_df = build_player_totals_schema(player_match_df)  # Parquet export: player_totals_df
     player_team_df = build_player_team_schema(player_stats_df)  # Parquet export: player_team_df
     player_transfer_df = build_player_transfer_schema(  # Parquet export: player_transfer_df
         player_team_df,
@@ -381,10 +468,32 @@ def main() -> None:
     tab_esquemas, tab_cruce, tab_partidos = st.tabs(["Esquemas", "Cruce info", "Detalle partido"])
 
     with tab_esquemas:
+        if st.button("Exportar parquets a data/Liga 1 Peru/2025/parquets"):
+            with st.spinner("Exportando parquets..."):
+                saved, errors = export_parquet_tables(
+                    {
+                        "matches": matches_df,
+                        "teams": teams_df,
+                        "players": players_df,
+                        "player_match": player_match_df,
+                        "player_totals": player_totals_df,
+                        "player_team": player_team_df,
+                        "player_transfer": player_transfer_df,
+                        "team_stats": team_stats_df,
+                    },
+                    PARQUET_DIR,
+                )
+            if saved:
+                st.success(f"Parquets exportados: {len(saved)}")
+                st.write([str(path) for path in saved])
+            if errors:
+                st.error("Errores al exportar algunos parquets:")
+                st.write(errors)
         render_schema_section("Matches", df_master, matches_df)
         render_schema_section("Teams", teams_source_df, teams_df)
         render_schema_section("Players", player_stats_df, players_df)
         render_schema_section("Player Match Stats", player_stats_df, player_match_df)
+        render_schema_section("Player Totals", player_match_df, player_totals_df)
         render_schema_section("Player Team", player_stats_df, player_team_df)
         render_schema_section("Player Transfers", player_team_df, player_transfer_df)
         render_schema_section("Team Match Stats", team_stats_df, team_stats_df)
