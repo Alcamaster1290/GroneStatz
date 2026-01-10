@@ -115,6 +115,29 @@ def render_schema_section(title: str, source_df: pd.DataFrame, schema_df: pd.Dat
     st.dataframe(schema_df, use_container_width=True)
 
 
+def _round_float_columns(df: pd.DataFrame, decimals: int = 2) -> pd.DataFrame:
+    if df.empty:
+        return df
+    float_cols = [c for c in df.columns if pd.api.types.is_float_dtype(df[c])]
+    if not float_cols:
+        return df
+    work = df.copy()
+    work[float_cols] = work[float_cols].round(decimals)
+    return work
+
+
+def _scale_prices_to_budget(
+    prices: pd.Series,
+    target_budget: float = 100.0,
+    squad_size: int = 15,
+) -> pd.Series:
+    mean_price = pd.to_numeric(prices, errors="coerce").mean()
+    if not mean_price or mean_price <= 0:
+        return prices
+    scale = target_budget / (mean_price * squad_size)
+    return prices * scale
+
+
 def export_parquet_tables(tables: dict[str, pd.DataFrame], output_dir: Path) -> tuple[list[Path], list[str]]:
     output_dir.mkdir(parents=True, exist_ok=True)
     saved: list[Path] = []
@@ -124,7 +147,8 @@ def export_parquet_tables(tables: dict[str, pd.DataFrame], output_dir: Path) -> 
             continue
         out_path = output_dir / f"{name}.parquet"
         try:
-            df.to_parquet(out_path, index=False)
+            rounded = _round_float_columns(df, decimals=2)
+            rounded.to_parquet(out_path, index=False)
         except Exception as exc:
             errors.append(f"{name}: {exc}")
             continue
@@ -173,6 +197,131 @@ def load_team_stats() -> pd.DataFrame:
     if not rows:
         return pd.DataFrame()
     return pd.concat(rows, ignore_index=True)
+
+
+@st.cache_data
+def load_parquet_table(name: str) -> pd.DataFrame:
+    path = PARQUET_DIR / f"{name}.parquet"
+    if not path.exists():
+        st.error(f"No existe el parquet: {path}")
+        return pd.DataFrame()
+    try:
+        return pd.read_parquet(path)
+    except Exception as exc:
+        st.error(f"No se pudo leer {path}: {exc}")
+        return pd.DataFrame()
+
+
+def _safe_per_match(series: pd.Series, matches: pd.Series) -> pd.Series:
+    safe_matches = matches.where(matches > 0)
+    return series.div(safe_matches).fillna(0)
+
+
+def calculate_price(row: pd.Series) -> float:
+    position = str(row.get("position", "")).strip().upper()
+    base_map = {"G": 1.5, "D": 2.0, "M": 2.5, "F": 3.0}
+    goals_map = {"F": 0.5, "M": 0.4, "D": 0.3, "G": 0.2}
+    assists_map = {"M": 0.3, "F": 0.25, "D": 0.15}
+    base = base_map.get(position, 0.0)
+    goals = float(row.get("goals_pm", 0) or 0)
+    assists = float(row.get("assists_pm", 0) or 0)
+    saves = float(row.get("saves_pm", 0) or 0)
+    fouls = float(row.get("fouls_pm", 0) or 0)
+    penalty_won = float(row.get("penaltywon_pm", 0) or 0)
+    penalty_save = float(row.get("penaltysave_pm", 0) or 0)
+    penalty_conceded = float(row.get("penaltyconceded_pm", 0) or 0)
+    minutes = float(row.get("minutesplayed", 0) or 0)
+    matches = float(row.get("matches_played", 0) or 0)
+    price = base + goals_map.get(position, 0.0) * goals + assists_map.get(position, 0.0) * assists
+    if position == "G":
+        price += 0.05 * saves
+        price += 0.6 * penalty_save
+    else:
+        price += 0.3 * penalty_save
+    price += 0.2 * penalty_won
+    price -= 0.02 * fouls
+    price -= 0.35 * penalty_conceded
+    price += 0.1 * (minutes / 1000.0)
+    price += 0.03 * matches
+    return round(price, 2)
+
+
+def build_players_fantasy_df(players_df: pd.DataFrame, totals_df: pd.DataFrame) -> pd.DataFrame:
+    if players_df.empty or totals_df.empty:
+        return pd.DataFrame()
+    players = players_df.copy()
+    totals = totals_df.copy()
+    if "player_id" in players.columns:
+        players["player_id"] = _normalize_id_series(players["player_id"])
+    if "PLAYER_ID" in totals.columns:
+        totals["PLAYER_ID"] = _normalize_id_series(totals["PLAYER_ID"])
+    fantasy_df = players.merge(
+        totals,
+        left_on="player_id",
+        right_on="PLAYER_ID",
+        how="left",
+    )
+    if "position" not in fantasy_df.columns and "POSITION" in fantasy_df.columns:
+        fantasy_df["position"] = fantasy_df["POSITION"]
+    for source, target in [
+        ("GOALS", "goals"),
+        ("ASSISTS", "assists"),
+        ("SAVES", "saves"),
+        ("FOULS", "fouls"),
+        ("PENALTYWON", "penaltywon"),
+        ("PENALTYSAVE", "penaltysave"),
+        ("PENALTYCONCEDED", "penaltyconceded"),
+        ("MINUTESPLAYED", "minutesplayed"),
+        ("MATCHES_PLAYED", "matches_played"),
+    ]:
+        if source in fantasy_df.columns:
+            fantasy_df[target] = pd.to_numeric(fantasy_df[source], errors="coerce").fillna(0)
+        else:
+            fantasy_df[target] = 0
+    fantasy_df["goals_pm"] = _safe_per_match(fantasy_df["goals"], fantasy_df["matches_played"])
+    fantasy_df["assists_pm"] = _safe_per_match(fantasy_df["assists"], fantasy_df["matches_played"])
+    fantasy_df["saves_pm"] = _safe_per_match(fantasy_df["saves"], fantasy_df["matches_played"])
+    fantasy_df["fouls_pm"] = _safe_per_match(fantasy_df["fouls"], fantasy_df["matches_played"])
+    fantasy_df["penaltywon_pm"] = _safe_per_match(fantasy_df["penaltywon"], fantasy_df["matches_played"])
+    fantasy_df["penaltysave_pm"] = _safe_per_match(fantasy_df["penaltysave"], fantasy_df["matches_played"])
+    fantasy_df["penaltyconceded_pm"] = _safe_per_match(fantasy_df["penaltyconceded"], fantasy_df["matches_played"])
+    fantasy_df["price"] = fantasy_df.apply(calculate_price, axis=1)
+    fantasy_df["price"] = _scale_prices_to_budget(fantasy_df["price"], target_budget=100.0, squad_size=15)
+    fantasy_df["price"] = fantasy_df["price"].round(1)
+    fantasy_df["player_id"] = _normalize_id_series(fantasy_df["player_id"])
+    if "team_id" in fantasy_df.columns:
+        fantasy_df["team_id"] = _normalize_id_series(fantasy_df["team_id"])
+    fantasy_df = fantasy_df.dropna(subset=["player_id", "position"])
+    fantasy_df = fantasy_df.drop_duplicates(subset=["player_id"])
+    fantasy_df = _round_float_columns(fantasy_df, decimals=2)
+    keep_cols = [
+        c
+        for c in [
+            "player_id",
+            "name",
+            "position",
+            "price",
+            "team_id",
+            "minutesplayed",
+            "matches_played",
+            "goals",
+            "assists",
+            "saves",
+            "fouls",
+            "penaltywon",
+            "penaltysave",
+            "penaltyconceded",
+            "goals_pm",
+            "assists_pm",
+            "saves_pm",
+            "fouls_pm",
+            "penaltywon_pm",
+            "penaltysave_pm",
+            "penaltyconceded_pm",
+        ]
+        if c in fantasy_df.columns
+    ]
+    return fantasy_df[keep_cols].copy()
 
 
 @st.cache_data
@@ -458,6 +607,7 @@ def main() -> None:
     player_match_df = build_player_match_schema(player_stats_df)  # Parquet export: player_match_df
     player_totals_df = build_player_totals_schema(player_match_df)  # Parquet export: player_totals_df
     player_team_df = build_player_team_schema(player_stats_df)  # Parquet export: player_team_df
+    players_fantasy_df = build_players_fantasy_df(players_df, player_totals_df)  # Parquet export: players_fantasy_df
     player_transfer_df = build_player_transfer_schema(  # Parquet export: player_transfer_df
         player_team_df,
         players_df,
@@ -465,7 +615,9 @@ def main() -> None:
     )
     team_stats_df = load_team_stats()  # Parquet export: team_stats_df
 
-    tab_esquemas, tab_cruce, tab_partidos = st.tabs(["Esquemas", "Cruce info", "Detalle partido"])
+    tab_esquemas, tab_parquets, tab_cruce, tab_partidos = st.tabs(
+        ["Esquemas", "Precios fantasy", "Cruce info", "Detalle partido"]
+    )
 
     with tab_esquemas:
         if st.button("Exportar parquets a data/Liga 1 Peru/2025/parquets"):
@@ -477,6 +629,7 @@ def main() -> None:
                         "players": players_df,
                         "player_match": player_match_df,
                         "player_totals": player_totals_df,
+                        "players_fantasy": players_fantasy_df,
                         "player_team": player_team_df,
                         "player_transfer": player_transfer_df,
                         "team_stats": team_stats_df,
@@ -497,6 +650,26 @@ def main() -> None:
         render_schema_section("Player Team", player_stats_df, player_team_df)
         render_schema_section("Player Transfers", player_team_df, player_transfer_df)
         render_schema_section("Team Match Stats", team_stats_df, team_stats_df)
+
+    with tab_parquets:
+        st.subheader("Parquets Liga 1 2025")
+        players_parquet = load_parquet_table("players")
+        totals_parquet = load_parquet_table("player_totals")
+        matches_parquet = load_parquet_table("player_match")
+
+        st.caption("players")
+        st.dataframe(players_parquet, use_container_width=True)
+        st.caption("player_totals")
+        st.dataframe(totals_parquet, use_container_width=True)
+        st.caption("player_match")
+        st.dataframe(matches_parquet, use_container_width=True)
+
+        st.subheader("Precios calculados")
+        prices_df = build_players_fantasy_df(players_parquet, totals_parquet)
+        if prices_df.empty:
+            st.info("No hay datos suficientes para calcular precios.")
+        else:
+            st.dataframe(prices_df, use_container_width=True)
 
     with tab_cruce:
         st.subheader("Resumen por equipo")
