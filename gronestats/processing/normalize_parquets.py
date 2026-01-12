@@ -110,6 +110,39 @@ def normalize_position(s: pd.Series) -> pd.Series:
     return x
 
 
+def normalize_fecha(s: pd.Series) -> pd.Series:
+    if pd.api.types.is_string_dtype(s) or s.dtype == object:
+        sample = s.dropna().astype(str)
+        if not sample.empty and sample.str.match(r"^\d{2}/\d{2}/\d{4} \d{2}:\d{2}$").all():
+            return s.astype("string")
+
+    if pd.api.types.is_datetime64_any_dtype(s):
+        dt = pd.to_datetime(s, errors="coerce")
+        dt = dt - pd.Timedelta(hours=5)
+        return dt.dt.strftime("%d/%m/%Y %H:%M")
+
+    numeric = pd.to_numeric(s, errors="coerce")
+    if numeric.dropna().empty:
+        dt = pd.to_datetime(s, errors="coerce")
+        dt = dt - pd.Timedelta(hours=5)
+        return dt.dt.strftime("%d/%m/%Y %H:%M")
+
+    max_val = numeric.abs().max()
+    if max_val >= 1_000_000_000_000_000:
+        unit = "ns"
+    elif max_val >= 1_000_000_000_000:
+        unit = "ms"
+    else:
+        unit = "s"
+
+    dt_num = pd.to_datetime(numeric, unit=unit, errors="coerce")
+    dt_txt = pd.to_datetime(s, errors="coerce")
+    dt = dt_num.copy()
+    dt.loc[numeric.isna()] = dt_txt[numeric.isna()]
+    dt = dt - pd.Timedelta(hours=5)
+    return dt.dt.strftime("%d/%m/%Y %H:%M")
+
+
 def coalesce_columns(df: pd.DataFrame, target: str, candidates: list[str]) -> pd.DataFrame:
     existing = [c for c in candidates if c in df.columns]
     if not existing:
@@ -133,7 +166,13 @@ def normalize_column_names(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def normalize_df(df: pd.DataFrame, filename: str) -> pd.DataFrame:
+    price_snapshot = None
+    if filename == "players_fantasy.parquet" and "price" in df.columns:
+        price_snapshot = pd.to_numeric(df["price"], errors="coerce")
+
     df = normalize_column_names(df)
+    if filename == "matches.parquet" and "fecha" in df.columns:
+        df["fecha"] = normalize_fecha(df["fecha"])
 
     # columnas a string (seguro)
     for c in df.columns:
@@ -190,6 +229,18 @@ def normalize_df(df: pd.DataFrame, filename: str) -> pd.DataFrame:
         if alt in df.columns:
             df[alt] = to_int64_nullable(df[alt])
 
+    if filename == "players_fantasy.parquet" and price_snapshot is not None:
+        df["price"] = price_snapshot
+
+    return df
+
+
+def postprocess_df(df: pd.DataFrame, filename: str) -> pd.DataFrame:
+    if filename == "players_fantasy.parquet":
+        drop_cols = [c for c in df.columns if c.endswith("_pm")]
+        drop_cols += [c for c in ["price_raw", "is_valid"] if c in df.columns]
+        if drop_cols:
+            df = df.drop(columns=drop_cols)
     return df
 
 
@@ -206,6 +257,7 @@ def main():
         try:
             df = pd.read_parquet(fp)
             df2 = normalize_df(df, fp.name)
+            df2 = postprocess_df(df2, fp.name)
 
             out_fp = OUT_DIR / fp.name
             df2.to_parquet(out_fp, index=False)

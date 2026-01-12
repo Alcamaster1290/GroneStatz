@@ -88,20 +88,30 @@ def _normalize_id_series(series: pd.Series) -> pd.Series:
 
 
 def _normalize_match_datetime(series: pd.Series) -> pd.Series:
+    if pd.api.types.is_datetime64_any_dtype(series):
+        dt = pd.to_datetime(series, errors="coerce")
+        dt = dt - pd.Timedelta(hours=5)
+        return dt.dt.strftime("%d/%m/%Y %H:%M")
+
     numeric = pd.to_numeric(series, errors="coerce")
     if numeric.dropna().empty:
-        dt = pd.to_datetime(series, errors="coerce", utc=True)
+        dt = pd.to_datetime(series, errors="coerce")
+        dt = dt - pd.Timedelta(hours=5)
+        return dt.dt.strftime("%d/%m/%Y %H:%M")
+
+    max_val = numeric.abs().max()
+    if max_val >= 1_000_000_000_000_000:
+        unit = "ns"
+    elif max_val >= 1_000_000_000_000:
+        unit = "ms"
     else:
-        max_val = numeric.abs().max()
-        unit = "ms" if max_val >= 1_000_000_000_000 else "s"
-        dt_num = pd.to_datetime(numeric, unit=unit, errors="coerce", utc=True)
-        dt_txt = pd.to_datetime(series, errors="coerce", utc=True)
-        dt = dt_num.copy()
-        dt.loc[numeric.isna()] = dt_txt[numeric.isna()]
-    try:
-        dt = dt.dt.tz_convert("America/Lima")
-    except Exception:
-        dt = dt.dt.tz_convert("Etc/GMT+5")
+        unit = "s"
+
+    dt_num = pd.to_datetime(numeric, unit=unit, errors="coerce")
+    dt_txt = pd.to_datetime(series, errors="coerce")
+    dt = dt_num.copy()
+    dt.loc[numeric.isna()] = dt_txt[numeric.isna()]
+    dt = dt - pd.Timedelta(hours=5)
     return dt.dt.strftime("%d/%m/%Y %H:%M")
 
 
@@ -128,14 +138,52 @@ def _round_float_columns(df: pd.DataFrame, decimals: int = 2) -> pd.DataFrame:
 
 def _scale_prices_to_budget(
     prices: pd.Series,
-    target_budget: float = 100.0,
-    squad_size: int = 15,
+    target_budget: float = 85.0,
+    squad_size: int = 14,
+    min_price: float = 3.0,
+    max_price: float = 9.5,
+    stretch: float = 1.25,
 ) -> pd.Series:
-    mean_price = pd.to_numeric(prices, errors="coerce").mean()
-    if not mean_price or mean_price <= 0:
+    prices_num = pd.to_numeric(prices, errors="coerce")
+    mean_price = prices_num.mean()
+    if pd.isna(mean_price) or mean_price <= 0:
         return prices
-    scale = target_budget / (mean_price * squad_size)
-    return prices * scale
+    target_mean = target_budget / squad_size
+    scale = target_mean / mean_price
+    scaled_prices = prices_num * scale
+    if stretch and stretch != 1.0:
+        center = scaled_prices.mean()
+        scaled_prices = center + (scaled_prices - center) * stretch
+    scaled_prices = scaled_prices.clip(min_price, max_price)
+    current_mean = scaled_prices.mean()
+    if current_mean and current_mean > 0:
+        adjustment = target_mean / current_mean
+        scaled_prices = (scaled_prices * adjustment).clip(min_price, max_price)
+    return scaled_prices.round(1)
+
+
+def _stretch_goalkeeper_prices(
+    prices: pd.Series,
+    positions: pd.Series,
+    target_max: float = 5.5,
+    min_price: float = 4.5,
+) -> pd.Series:
+    if prices.empty or positions is None:
+        return prices
+    pos = positions.astype(str).str.strip().str.upper()
+    mask = pos == "G"
+    if not mask.any():
+        return prices
+    gk_prices = pd.to_numeric(prices[mask], errors="coerce")
+    min_gk = gk_prices.min()
+    max_gk = gk_prices.max()
+    if pd.isna(min_gk) or pd.isna(max_gk) or max_gk <= min_gk:
+        return prices
+    scale = (target_max - min_price) / (max_gk - min_gk)
+    adjusted = prices.copy()
+    adjusted.loc[mask] = (gk_prices - min_gk) * scale + min_price
+    adjusted.loc[mask] = adjusted.loc[mask].clip(min_price, target_max)
+    return adjusted
 
 
 def export_parquet_tables(tables: dict[str, pd.DataFrame], output_dir: Path) -> tuple[list[Path], list[str]]:
@@ -219,10 +267,10 @@ def _safe_per_match(series: pd.Series, matches: pd.Series) -> pd.Series:
 
 def calculate_price(row: pd.Series) -> float:
     position = str(row.get("position", "")).strip().upper()
-    base_map = {"G": 1.5, "D": 2.0, "M": 2.5, "F": 3.0}
-    goals_map = {"F": 0.5, "M": 0.4, "D": 0.3, "G": 0.2}
-    assists_map = {"M": 0.3, "F": 0.25, "D": 0.15}
-    base = base_map.get(position, 0.0)
+    base_map = {"G": 4.0, "D": 4.5, "M": 5.5, "F": 7.0}
+    goals_map = {"F": 0.8, "M": 0.6, "D": 0.5, "G": 0.3}
+    assists_map = {"M": 0.5, "F": 0.4, "D": 0.3, "G": 0.1}
+    base = base_map.get(position, 5.0)
     goals = float(row.get("goals_pm", 0) or 0)
     assists = float(row.get("assists_pm", 0) or 0)
     saves = float(row.get("saves_pm", 0) or 0)
@@ -232,23 +280,36 @@ def calculate_price(row: pd.Series) -> float:
     penalty_conceded = float(row.get("penaltyconceded_pm", 0) or 0)
     minutes = float(row.get("minutesplayed", 0) or 0)
     matches = float(row.get("matches_played", 0) or 0)
-    price = base + goals_map.get(position, 0.0) * goals + assists_map.get(position, 0.0) * assists
+    attack = goals_map.get(position, 0.0) * goals * 1.5 + assists_map.get(position, 0.0) * assists * 1.3
+    other = 0.0
     if position == "G":
-        price += 0.05 * saves
-        price += 0.6 * penalty_save
+        other += 0.08 * saves * 1.2
+        other += 0.8 * penalty_save
     else:
-        price += 0.3 * penalty_save
-    price += 0.2 * penalty_won
-    price -= 0.02 * fouls
-    price -= 0.35 * penalty_conceded
-    price += 0.1 * (minutes / 1000.0)
-    price += 0.03 * matches
-    return round(price, 2)
+        other += 0.4 * penalty_save
+    other += 0.3 * penalty_won
+    other -= 0.08 * fouls
+    other -= 0.4 * penalty_conceded
+    other += 0.05 * (minutes / 1000.0)
+    other += 0.03 * matches
+    age = None
+    if "age_enero_2026" in row and pd.notna(row["age_enero_2026"]):
+        age = float(row["age_enero_2026"])
+    elif "age_jan_2026" in row and pd.notna(row["age_jan_2026"]):
+        age = float(row["age_jan_2026"])
+    if age is not None:
+        if age < 23:
+            other += 0.3
+        elif age > 32:
+            other -= 0.5
+    price = base + 0.8 * attack + 0.2 * other
+    return max(3.5, round(price, 2))
 
 
 def build_players_fantasy_df(players_df: pd.DataFrame, totals_df: pd.DataFrame) -> pd.DataFrame:
     if players_df.empty or totals_df.empty:
         return pd.DataFrame()
+    favorite_team_ids = {2302, 2305, 2311,63760,2308}
     players = players_df.copy()
     totals = totals_df.copy()
     if "player_id" in players.columns:
@@ -278,6 +339,7 @@ def build_players_fantasy_df(players_df: pd.DataFrame, totals_df: pd.DataFrame) 
             fantasy_df[target] = pd.to_numeric(fantasy_df[source], errors="coerce").fillna(0)
         else:
             fantasy_df[target] = 0
+    fantasy_df = fantasy_df[fantasy_df["minutesplayed"] > 10].copy()
     fantasy_df["goals_pm"] = _safe_per_match(fantasy_df["goals"], fantasy_df["matches_played"])
     fantasy_df["assists_pm"] = _safe_per_match(fantasy_df["assists"], fantasy_df["matches_played"])
     fantasy_df["saves_pm"] = _safe_per_match(fantasy_df["saves"], fantasy_df["matches_played"])
@@ -286,7 +348,40 @@ def build_players_fantasy_df(players_df: pd.DataFrame, totals_df: pd.DataFrame) 
     fantasy_df["penaltysave_pm"] = _safe_per_match(fantasy_df["penaltysave"], fantasy_df["matches_played"])
     fantasy_df["penaltyconceded_pm"] = _safe_per_match(fantasy_df["penaltyconceded"], fantasy_df["matches_played"])
     fantasy_df["price"] = fantasy_df.apply(calculate_price, axis=1)
-    fantasy_df["price"] = _scale_prices_to_budget(fantasy_df["price"], target_budget=100.0, squad_size=15)
+    fantasy_df["is_valid"] = fantasy_df["minutesplayed"] >= 90
+    valid_players = fantasy_df[fantasy_df["is_valid"]].copy()
+    invalid_players = fantasy_df[~fantasy_df["is_valid"]].copy()
+    if not valid_players.empty:
+        if (
+            "team_id" in valid_players.columns
+            and "matches_played" in valid_players.columns
+            and "minutesplayed" in valid_players.columns
+        ):
+            team_id_num = pd.to_numeric(valid_players["team_id"], errors="coerce")
+            matches_num = pd.to_numeric(valid_players["matches_played"], errors="coerce").fillna(0)
+            minutes_num = pd.to_numeric(valid_players["minutesplayed"], errors="coerce").fillna(0)
+            bonus_mask = (
+                team_id_num.isin(favorite_team_ids)
+                & (matches_num > 30)
+                & (minutes_num > 1600)
+            )
+            valid_players.loc[bonus_mask, "price"] = valid_players.loc[bonus_mask, "price"] + 1.0
+        valid_players["price"] = _scale_prices_to_budget(
+            valid_players["price"],
+            target_budget=85.0,
+            squad_size=14,
+            min_price=3.5,
+            max_price=9.5,
+        )
+        valid_players["price"] = valid_players["price"].clip(4.5, 10.0)
+        valid_players["price"] = _stretch_goalkeeper_prices(
+            valid_players["price"],
+            valid_players["position"],
+            target_max=5.5,
+            min_price=4.5,
+        )
+    invalid_players["price"] = 4.0
+    fantasy_df = pd.concat([valid_players, invalid_players], ignore_index=True)
     fantasy_df["price"] = fantasy_df["price"].round(1)
     fantasy_df["player_id"] = _normalize_id_series(fantasy_df["player_id"])
     if "team_id" in fantasy_df.columns:
@@ -294,6 +389,7 @@ def build_players_fantasy_df(players_df: pd.DataFrame, totals_df: pd.DataFrame) 
     fantasy_df = fantasy_df.dropna(subset=["player_id", "position"])
     fantasy_df = fantasy_df.drop_duplicates(subset=["player_id"])
     fantasy_df = _round_float_columns(fantasy_df, decimals=2)
+    fantasy_df["price"] = fantasy_df["price"].round(1)
     keep_cols = [
         c
         for c in [
@@ -366,7 +462,7 @@ def build_matches_schema(df_master: pd.DataFrame, normalize_date: bool = True) -
     cols = [c for c in cols if c in df_master.columns]
     result = df_master[cols].copy()
     if normalize_date and "fecha" in result.columns:
-        result["fecha"] = _normalize_match_datetime(result["fecha"])
+        result["fecha"] = _normalize_match_datetime(result["fecha"]).astype("string")
     return result
 
 
