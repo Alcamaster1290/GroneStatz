@@ -16,9 +16,10 @@ import streamlit as st
 try:
     from gronestats.processing.st_create_parquets import (
         calculate_price,
+        apply_price_outlier_corrections,
         _round_float_columns,
-        _scale_prices_to_budget,
         _stretch_goalkeeper_prices,
+        _remap_prices_by_position_quantiles,
     )
 except ModuleNotFoundError:
     BASE_DIR = Path(__file__).resolve().parents[2]
@@ -27,9 +28,10 @@ except ModuleNotFoundError:
     try:
         from gronestats.processing.st_create_parquets import (
             calculate_price,
+            apply_price_outlier_corrections,
             _round_float_columns,
-            _scale_prices_to_budget,
             _stretch_goalkeeper_prices,
+            _remap_prices_by_position_quantiles,
         )
     except ModuleNotFoundError:
         module_path = Path(__file__).resolve().parent / "st_create_parquets.py"
@@ -40,9 +42,10 @@ except ModuleNotFoundError:
         sys.modules["st_create_parquets"] = module
         spec.loader.exec_module(module)
         calculate_price = module.calculate_price
+        apply_price_outlier_corrections = module.apply_price_outlier_corrections
         _round_float_columns = module._round_float_columns
-        _scale_prices_to_budget = module._scale_prices_to_budget
         _stretch_goalkeeper_prices = module._stretch_goalkeeper_prices
+        _remap_prices_by_position_quantiles = module._remap_prices_by_position_quantiles
 
 # -------------------------
 # Config
@@ -223,12 +226,42 @@ def recalc_players_fantasy(players_fantasy: pd.DataFrame, players: pd.DataFrame)
         ("penaltyconceded", "penaltyconceded_pm"),
     ]:
         fantasy[target] = _safe_per_match(fantasy[src], fantasy["matches_played"])
+    favorite_team_ids = {2302, 2305, 2311, 63760, 2308}
     fantasy["price_raw"] = fantasy.apply(calculate_price, axis=1)
-    scaled_prices = _scale_prices_to_budget(fantasy["price_raw"])
-    scaled_prices = _stretch_goalkeeper_prices(scaled_prices, fantasy.get("position"))
-    fantasy["price"] = scaled_prices.round(1)
+    team_id_num = pd.to_numeric(fantasy.get("team_id"), errors="coerce")
+    matches_num = pd.to_numeric(fantasy["matches_played"], errors="coerce").fillna(0)
+    minutes_num = pd.to_numeric(fantasy["minutesplayed"], errors="coerce").fillna(0)
+    bonus_mask = (
+        team_id_num.isin(favorite_team_ids)
+        & (matches_num > 30)
+        & (minutes_num > 1600)
+        & (minutes_num >= 90)
+    )
+    fantasy.loc[bonus_mask, "price_raw"] = fantasy.loc[bonus_mask, "price_raw"] + 1.0
+    min_price_all = 5.0
+    max_price_all = 9.8
+    fantasy["price"] = _remap_prices_by_position_quantiles(
+        fantasy["price_raw"],
+        fantasy.get("position"),
+        fantasy["minutesplayed"],
+        min_price_all=min_price_all,
+        max_price_all=max_price_all,
+    )
+    fantasy["price"] = fantasy["price"].clip(min_price_all, max_price_all)
+    fantasy.loc[bonus_mask, "price"] = fantasy.loc[bonus_mask, "price"] + 1.0
+    fantasy["price"] = fantasy["price"].clip(min_price_all, max_price_all)
+    if "position" in fantasy.columns:
+        pos_upper = fantasy["position"].astype(str).str.strip().str.upper()
+        m_mask = pos_upper == "M"
+        d_mask = pos_upper == "D"
+        fantasy.loc[m_mask, "price"] = fantasy.loc[m_mask, "price"].clip(upper=8.9)
+        fantasy.loc[d_mask, "price"] = fantasy.loc[d_mask, "price"].clip(upper=7.9)
+    fantasy["price"] = _stretch_goalkeeper_prices(fantasy["price"], fantasy.get("position"))
+    fantasy["price"] = fantasy["price"].round(1)
     fantasy = fantasy.drop(columns=["price_raw"], errors="ignore")
     fantasy = _round_float_columns(fantasy, decimals=2)
+    fantasy["price"] = fantasy["price"].round(1)
+    fantasy = apply_price_outlier_corrections(fantasy)
     fantasy["price"] = fantasy["price"].round(1)
     return fantasy
 
@@ -271,6 +304,29 @@ def update_players_row(
 def save_parquet(df: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(path, index=False)
+
+
+def sync_players_price(players_df: pd.DataFrame, fantasy_df: pd.DataFrame) -> pd.DataFrame:
+    if players_df.empty or fantasy_df.empty:
+        return players_df
+    players = normalize_player_columns(players_df)
+    fantasy = normalize_player_columns(fantasy_df)
+    if "player_id" not in players.columns or "player_id" not in fantasy.columns:
+        return players_df
+    if "price" not in fantasy.columns:
+        return players_df
+    price_map = fantasy[["player_id", "price"]].dropna(subset=["player_id"]).drop_duplicates(subset=["player_id"])
+    merged = players.merge(price_map, on="player_id", how="left", suffixes=("", "_fantasy"))
+    if "price_fantasy" in merged.columns:
+        if "price" in players.columns:
+            merged["price"] = merged["price_fantasy"].combine_first(merged["price"])
+        else:
+            merged["price"] = merged["price_fantasy"]
+        merged = merged.drop(columns=["price_fantasy"])
+    original_cols = list(players.columns)
+    if "price" not in original_cols:
+        original_cols.append("price")
+    return merged[original_cols].copy()
 
 
 def remove_player_rows(
@@ -395,8 +451,11 @@ if delete_from_fantasy:
             players_fantasy,
             sel,
         )
+        updated_fantasy = recalc_players_fantasy(updated_fantasy, players)
+        updated_players = sync_players_price(players, updated_fantasy)
+        save_parquet(updated_players, FILES["players"])
         save_parquet(updated_fantasy, FILES["players_fantasy"])
-        st.success("Jugador eliminado del fantasy.")
+        st.success("Jugador eliminado y precios recalculados.")
         st.cache_data.clear()
         st.rerun()
 
@@ -441,8 +500,9 @@ if st.button("Aplicar transferencia de equipo", type="primary"):
             new_team_id,
             name_value if name_value else None,
         )
-        save_parquet(updated_players, FILES["players"])
         updated_fantasy = recalc_players_fantasy(players_fantasy, updated_players)
+        updated_players = sync_players_price(updated_players, updated_fantasy)
+        save_parquet(updated_players, FILES["players"])
         save_parquet(updated_fantasy, FILES["players_fantasy"])
         st.success("Equipo actualizado y precios recalculados.")
         st.cache_data.clear()
@@ -510,8 +570,9 @@ with tab2:
                     new_team,
                     name_value if name_value else None,
                 )
-                save_parquet(updated_players, FILES["players"])
                 updated_fantasy = recalc_players_fantasy(players_fantasy, updated_players)
+                updated_players = sync_players_price(updated_players, updated_fantasy)
+                save_parquet(updated_players, FILES["players"])
                 save_parquet(updated_fantasy, FILES["players_fantasy"])
                 st.success("Parquets actualizados.")
                 st.cache_data.clear()

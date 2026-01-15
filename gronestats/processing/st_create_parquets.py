@@ -140,7 +140,7 @@ def _scale_prices_to_budget(
     prices: pd.Series,
     target_budget: float = 85.0,
     squad_size: int = 14,
-    min_price: float = 3.0,
+    min_price: float = 5.0,
     max_price: float = 9.5,
     stretch: float = 1.25,
 ) -> pd.Series:
@@ -165,8 +165,8 @@ def _scale_prices_to_budget(
 def _stretch_goalkeeper_prices(
     prices: pd.Series,
     positions: pd.Series,
-    target_max: float = 5.5,
-    min_price: float = 4.5,
+    target_max: float = 6.6,
+    min_price: float = 5.5,
 ) -> pd.Series:
     if prices.empty or positions is None:
         return prices
@@ -184,6 +184,196 @@ def _stretch_goalkeeper_prices(
     adjusted.loc[mask] = (gk_prices - min_gk) * scale + min_price
     adjusted.loc[mask] = adjusted.loc[mask].clip(min_price, target_max)
     return adjusted
+
+
+def _remap_prices_by_position_quantiles(
+    prices: pd.Series,
+    positions: pd.Series,
+    minutes: pd.Series,
+    min_price_all: float = 5.0,
+    max_price_all: float = 9.8,
+) -> pd.Series:
+    prices_num = pd.to_numeric(prices, errors="coerce")
+    pos = positions.astype(str).str.strip().str.upper()
+    minutes_num = pd.to_numeric(minutes, errors="coerce").fillna(0)
+    result = prices_num.copy()
+
+    invalid_mask = minutes_num < 90
+    result.loc[invalid_mask] = min_price_all
+
+    ranges = {
+        "D": [(0.0, 0.20, 5.0, 5.0), (0.20, 0.70, 5.0, 5.9), (0.70, 0.92, 6.4, 7.0), (0.92, 1.0, 7.0, 7.9)],
+        "M": [(0.0, 0.20, 5.8, 6.4), (0.20, 0.60, 6.4, 7.2), (0.60, 0.85, 7.2, 8.2), (0.85, 1.0, 8.2, 8.9)],
+        "F": [(0.0, 0.25, 6.0, 6.9), (0.25, 0.65, 6.9, 7.9), (0.65, 0.90, 7.9, 8.8), (0.90, 1.0, 8.8, 9.8)],
+    }
+
+    for position, segments in ranges.items():
+        pos_mask = (pos == position) & ~invalid_mask
+        if not pos_mask.any():
+            continue
+        q = prices_num[pos_mask].rank(pct=True, method="average")
+        mapped = pd.Series(index=q.index, dtype="float64")
+        for q0, q1, a, b in segments:
+            if q1 <= q0:
+                continue
+            seg_mask = (q > q0) & (q <= q1) if q0 > 0 else (q <= q1)
+            if not seg_mask.any():
+                continue
+            denom = q1 - q0
+            mapped.loc[seg_mask] = a + (q[seg_mask] - q0) / denom * (b - a)
+        mapped = mapped.fillna(min_price_all)
+        result.loc[mapped.index] = mapped
+
+    return result.clip(min_price_all, max_price_all)
+
+
+def apply_price_outlier_corrections(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return df
+    required_cols = {
+        "price",
+        "position",
+        "minutesplayed",
+        "goals_pm",
+        "assists_pm",
+        "penaltywon_pm",
+        "penaltyconceded_pm",
+        "fouls_pm",
+        "saves_pm",
+        "penaltysave_pm",
+    }
+    missing = required_cols.difference(df.columns)
+    if missing:
+        return df
+
+    work = df.copy()
+    pos = work["position"].astype(str).str.strip().str.upper()
+    minutes = pd.to_numeric(work["minutesplayed"], errors="coerce").fillna(0)
+    avail = (minutes / 2500.0).pow(0.5).clip(0.25, 1.15)
+
+    goals = pd.to_numeric(work["goals_pm"], errors="coerce").fillna(0)
+    assists = pd.to_numeric(work["assists_pm"], errors="coerce").fillna(0)
+    penalty_won = pd.to_numeric(work["penaltywon_pm"], errors="coerce").fillna(0)
+    penalty_conceded = pd.to_numeric(work["penaltyconceded_pm"], errors="coerce").fillna(0)
+    fouls = pd.to_numeric(work["fouls_pm"], errors="coerce").fillna(0)
+    saves = pd.to_numeric(work["saves_pm"], errors="coerce").fillna(0)
+    penalty_save = pd.to_numeric(work["penaltysave_pm"], errors="coerce").fillna(0)
+    price = pd.to_numeric(work["price"], errors="coerce")
+
+    performance_score = pd.Series(0.0, index=work.index, dtype="float64")
+    mask_f = pos == "F"
+    mask_m = pos == "M"
+    mask_d = pos == "D"
+    mask_g = pos == "G"
+    performance_score.loc[mask_f] = (
+        4.0 * goals
+        + 3.0 * assists
+        + 1.0 * penalty_won
+        - 1.2 * penalty_conceded
+        - 0.3 * fouls
+    ).loc[mask_f] * avail.loc[mask_f]
+    performance_score.loc[mask_m] = (
+        3.2 * goals
+        + 3.2 * assists
+        + 0.8 * penalty_won
+        - 1.2 * penalty_conceded
+        - 0.25 * fouls
+    ).loc[mask_m] * avail.loc[mask_m]
+    performance_score.loc[mask_d] = (
+        4.0 * goals
+        + 2.5 * assists
+        + 0.6 * penalty_won
+        - 1.2 * penalty_conceded
+        - 0.25 * fouls
+    ).loc[mask_d] * avail.loc[mask_d]
+    performance_score.loc[mask_g] = (
+        0.35 * saves
+        + 1.5 * penalty_save
+        - 1.0 * penalty_conceded
+        - 0.1 * fouls
+    ).loc[mask_g] * avail.loc[mask_g]
+
+    score_rank = performance_score.groupby(pos).rank(pct=True, method="average")
+    price_rank = price.groupby(pos).rank(pct=True, method="average")
+    rank_gap = price_rank - score_rank
+
+    outlier = rank_gap.abs() >= 0.25
+    m_overpriced = (pos == "M") & (rank_gap >= 0.15)
+    adjust_mask = outlier | m_overpriced
+
+    suggested_price = pd.Series(index=work.index, dtype="float64")
+    for position in pos.dropna().unique():
+        group_mask = pos == position
+        if not group_mask.any():
+            continue
+        group_prices = price[group_mask].dropna()
+        if group_prices.empty:
+            continue
+        group_ranks = score_rank[group_mask].clip(0, 1).fillna(0)
+        suggested_price.loc[group_mask] = group_ranks.apply(
+            lambda q: group_prices.quantile(q, interpolation="linear")
+        )
+
+    new_price = price.copy()
+    blended = (0.7 * suggested_price + 0.3 * price).round(1)
+    adjustable_mask = adjust_mask & suggested_price.notna() & price.notna()
+    new_price.loc[adjustable_mask & mask_g] = blended.loc[adjustable_mask & mask_g].clip(5.5, 6.6)
+    new_price.loc[adjustable_mask & mask_m] = blended.loc[adjustable_mask & mask_m].clip(5.0, 8.9)
+    new_price.loc[adjustable_mask & mask_d] = blended.loc[adjustable_mask & mask_d].clip(5.0, 7.9)
+    new_price.loc[adjustable_mask & ~mask_g & ~mask_m & ~mask_d] = blended.loc[
+        adjustable_mask & ~mask_g & ~mask_m & ~mask_d
+    ].clip(5.0, 9.8)
+    new_price = new_price.round(1)
+
+    adjusted_mask = (new_price != price) & adjustable_mask
+    work["price"] = new_price
+    work.attrs["price_corrections"] = {
+        "total": int(adjusted_mask.sum()),
+        "by_position": adjusted_mask.groupby(pos).sum().to_dict(),
+    }
+    return work
+
+
+def _apply_price_corrections_to_players(
+    players_df: pd.DataFrame,
+    fantasy_df: pd.DataFrame,
+) -> pd.DataFrame:
+    if players_df.empty or fantasy_df.empty or "player_id" not in players_df.columns:
+        return players_df
+    players_work = players_df.copy()
+    fantasy_work = fantasy_df.copy()
+    if "player_id" in players_work.columns:
+        players_work["_player_id_key"] = _normalize_id_series(players_work["player_id"])
+    if "player_id" in fantasy_work.columns:
+        fantasy_work["_player_id_key"] = _normalize_id_series(fantasy_work["player_id"])
+    if "_player_id_key" not in players_work.columns or "_player_id_key" not in fantasy_work.columns:
+        return players_df
+    merge_cols = [
+        "player_id",
+        "price",
+        "minutesplayed",
+        "goals_pm",
+        "assists_pm",
+        "penaltywon_pm",
+        "penaltyconceded_pm",
+        "fouls_pm",
+        "saves_pm",
+        "penaltysave_pm",
+    ]
+    available_cols = [c for c in merge_cols if c in fantasy_work.columns]
+    if "price" not in available_cols:
+        return players_df
+    enriched = players_work.merge(
+        fantasy_work[available_cols + ["_player_id_key"]],
+        on="_player_id_key",
+        how="left",
+        suffixes=("", "_fantasy"),
+        sort=False,
+    )
+    enriched = apply_price_outlier_corrections(enriched)
+    updated = players_df.copy()
+    updated["price"] = enriched["price"]
+    return updated
 
 
 def export_parquet_tables(tables: dict[str, pd.DataFrame], output_dir: Path) -> tuple[list[Path], list[str]]:
@@ -268,8 +458,8 @@ def _safe_per_match(series: pd.Series, matches: pd.Series) -> pd.Series:
 def calculate_price(row: pd.Series) -> float:
     position = str(row.get("position", "")).strip().upper()
     base_map = {"G": 4.0, "D": 4.5, "M": 5.5, "F": 7.0}
-    goals_map = {"F": 0.8, "M": 0.6, "D": 0.5, "G": 0.3}
-    assists_map = {"M": 0.5, "F": 0.4, "D": 0.3, "G": 0.1}
+    goals_map = {"F": 0.8, "M": 0.5, "D": 0.7, "G": 0.1}
+    assists_map = {"M": 0.8, "F": 0.4, "D": 0.2, "G": 0.05}
     base = base_map.get(position, 5.0)
     goals = float(row.get("goals_pm", 0) or 0)
     assists = float(row.get("assists_pm", 0) or 0)
@@ -281,14 +471,21 @@ def calculate_price(row: pd.Series) -> float:
     minutes = float(row.get("minutesplayed", 0) or 0)
     matches = float(row.get("matches_played", 0) or 0)
     attack = goals_map.get(position, 0.0) * goals * 1.5 + assists_map.get(position, 0.0) * assists * 1.3
-    other = 0.0
     if position == "G":
-        other += 0.08 * saves * 1.2
-        other += 0.8 * penalty_save
-    else:
-        other += 0.4 * penalty_save
+        keeper = 0.55 * saves
+        keeper += 0.35 * (minutes / 1000.0)
+        keeper += 0.08 * matches
+        keeper += 0.5 * penalty_save
+        keeper -= 0.04 * fouls
+        keeper -= 0.2 * penalty_conceded
+        price = base + keeper
+        return max(3.5, round(price, 2))
+
+    foul_penalty = 0.12 if position == "D" else 0.08
+    other = 0.0
+    other += 0.4 * penalty_save
     other += 0.3 * penalty_won
-    other -= 0.08 * fouls
+    other -= foul_penalty * fouls
     other -= 0.4 * penalty_conceded
     other += 0.05 * (minutes / 1000.0)
     other += 0.03 * matches
@@ -302,7 +499,7 @@ def calculate_price(row: pd.Series) -> float:
             other += 0.3
         elif age > 32:
             other -= 0.5
-    price = base + 0.8 * attack + 0.2 * other
+    price = base + 0.7 * attack + 0.3 * other
     return max(3.5, round(price, 2))
 
 
@@ -351,7 +548,10 @@ def build_players_fantasy_df(players_df: pd.DataFrame, totals_df: pd.DataFrame) 
     fantasy_df["is_valid"] = fantasy_df["minutesplayed"] >= 90
     valid_players = fantasy_df[fantasy_df["is_valid"]].copy()
     invalid_players = fantasy_df[~fantasy_df["is_valid"]].copy()
+    min_price_all = 5.0
+    max_price_all = 9.8
     if not valid_players.empty:
+        bonus_mask = pd.Series(False, index=valid_players.index)
         if (
             "team_id" in valid_players.columns
             and "matches_played" in valid_players.columns
@@ -366,22 +566,30 @@ def build_players_fantasy_df(players_df: pd.DataFrame, totals_df: pd.DataFrame) 
                 & (minutes_num > 1600)
             )
             valid_players.loc[bonus_mask, "price"] = valid_players.loc[bonus_mask, "price"] + 1.0
-        valid_players["price"] = _scale_prices_to_budget(
+        valid_players["price"] = _remap_prices_by_position_quantiles(
             valid_players["price"],
-            target_budget=85.0,
-            squad_size=14,
-            min_price=3.5,
-            max_price=9.5,
+            valid_players["position"],
+            valid_players["minutesplayed"],
+            min_price_all=min_price_all,
+            max_price_all=max_price_all,
         )
-        valid_players["price"] = valid_players["price"].clip(4.5, 10.0)
+        valid_players["price"] = valid_players["price"].clip(min_price_all, max_price_all)
+        valid_players.loc[bonus_mask, "price"] = valid_players.loc[bonus_mask, "price"] + 1.0
+        valid_players["price"] = valid_players["price"].clip(min_price_all, max_price_all)
+        pos_upper = valid_players["position"].astype(str).str.strip().str.upper()
+        m_mask = pos_upper == "M"
+        d_mask = pos_upper == "D"
+        valid_players.loc[m_mask, "price"] = valid_players.loc[m_mask, "price"].clip(upper=8.9)
+        valid_players.loc[d_mask, "price"] = valid_players.loc[d_mask, "price"].clip(upper=7.9)
         valid_players["price"] = _stretch_goalkeeper_prices(
             valid_players["price"],
             valid_players["position"],
-            target_max=5.5,
-            min_price=4.5,
+            target_max=6.6,
+            min_price=5.5,
         )
-    invalid_players["price"] = 4.0
+    invalid_players["price"] = min_price_all
     fantasy_df = pd.concat([valid_players, invalid_players], ignore_index=True)
+    fantasy_df["price"] = fantasy_df["price"].clip(min_price_all, max_price_all)
     fantasy_df["price"] = fantasy_df["price"].round(1)
     fantasy_df["player_id"] = _normalize_id_series(fantasy_df["player_id"])
     if "team_id" in fantasy_df.columns:
@@ -389,6 +597,9 @@ def build_players_fantasy_df(players_df: pd.DataFrame, totals_df: pd.DataFrame) 
     fantasy_df = fantasy_df.dropna(subset=["player_id", "position"])
     fantasy_df = fantasy_df.drop_duplicates(subset=["player_id"])
     fantasy_df = _round_float_columns(fantasy_df, decimals=2)
+    fantasy_df["price"] = fantasy_df["price"].round(1)
+    fantasy_df = apply_price_outlier_corrections(fantasy_df)
+    correction_stats = fantasy_df.attrs.get("price_corrections", {})
     fantasy_df["price"] = fantasy_df["price"].round(1)
     keep_cols = [
         c
@@ -417,7 +628,10 @@ def build_players_fantasy_df(players_df: pd.DataFrame, totals_df: pd.DataFrame) 
         ]
         if c in fantasy_df.columns
     ]
-    return fantasy_df[keep_cols].copy()
+    result = fantasy_df[keep_cols].copy()
+    if correction_stats:
+        result.attrs["price_corrections"] = correction_stats
+    return result
 
 
 @st.cache_data
@@ -709,6 +923,7 @@ def main() -> None:
         players_df,
         teams_df,
     )
+    players_df = _apply_price_corrections_to_players(players_df, players_fantasy_df)
     team_stats_df = load_team_stats()  # Parquet export: team_stats_df
 
     tab_esquemas, tab_parquets, tab_cruce, tab_partidos = st.tabs(
@@ -766,6 +981,54 @@ def main() -> None:
             st.info("No hay datos suficientes para calcular precios.")
         else:
             st.dataframe(prices_df, use_container_width=True)
+            price_bins = [-float("inf"), 5.0, 6.0, 7.0, 8.0, 9.0, float("inf")]
+            price_labels = ["<5", "5-5.9", "6-6.9", "7-7.9", "8-8.9", "9+"]
+            price_range = pd.cut(prices_df["price"], bins=price_bins, labels=price_labels, right=False)
+
+            st.caption("Conteo por rango de precio")
+            range_counts = (
+                price_range.value_counts()
+                .reindex(price_labels, fill_value=0)
+                .rename_axis("rango")
+                .reset_index(name="count")
+            )
+            st.dataframe(range_counts, use_container_width=True, hide_index=True)
+
+            if "position" in prices_df.columns:
+                st.caption("Conteo por posicion y rango")
+                pos_range = (
+                    prices_df.assign(rango=price_range)
+                    .groupby(["position", "rango"], dropna=False)
+                    .size()
+                    .reset_index(name="count")
+                )
+                pos_range_pivot = pos_range.pivot(index="position", columns="rango", values="count").fillna(0).astype(int)
+                pos_range_pivot = pos_range_pivot.reindex(columns=price_labels, fill_value=0)
+                st.dataframe(pos_range_pivot, use_container_width=True)
+
+                st.caption("Promedio y mediana por posicion")
+                pos_stats = (
+                    prices_df.groupby("position")["price"]
+                    .agg(mean="mean", median="median", count="count")
+                    .reset_index()
+                )
+                st.dataframe(pos_stats, use_container_width=True, hide_index=True)
+
+            correction_stats = prices_df.attrs.get("price_corrections", {})
+            if correction_stats:
+                st.write(f"Ajustes aplicados: {correction_stats.get('total', 0)}")
+                by_position = correction_stats.get("by_position", {})
+                if by_position:
+                    by_pos_df = (
+                        pd.Series(by_position)
+                        .rename_axis("position")
+                        .reset_index(name="count")
+                    )
+                    st.dataframe(by_pos_df, use_container_width=True, hide_index=True)
+
+            if "price" in prices_df.columns:
+                below_min = int((prices_df["price"] < 5.0).sum())
+                st.write(f"Precios < 5.0: {below_min}")
 
     with tab_cruce:
         st.subheader("Resumen por equipo")
