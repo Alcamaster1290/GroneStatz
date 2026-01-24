@@ -1,6 +1,8 @@
 # Fantasy Liga 1 2026 v1.0 (Localhost)
 
-Fantasy Liga 1 2026 100% localhost. Flujo: Parquets -> DuckDB local -> Postgres local -> API FastAPI -> Next.js PWA.
+Fantasy Liga 1 2026. 
+
+Flujo: Parquets -> DuckDB local -> Postgres local -> API FastAPI -> Next.js PWA.
 
 ## Requisitos
 - Docker Desktop
