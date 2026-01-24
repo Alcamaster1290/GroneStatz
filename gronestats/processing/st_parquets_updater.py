@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import importlib.util
+import re
 import sys
 import pandas as pd
 import streamlit as st
@@ -115,6 +116,11 @@ def normalize_player_columns(df: pd.DataFrame) -> pd.DataFrame:
     work = coalesce_columns(work, "match_id", ["match_id", "MATCH_ID", "matchId", "matchid"])
     work = coalesce_columns(work, "team_id", ["team_id", "TEAM_ID", "teamId", "teamid"])
     work = coalesce_columns(work, "name", ["name", "NAME"])
+    work = coalesce_columns(
+        work,
+        "short_name",
+        ["short_name", "shortName", "shortname", "SHORT_NAME", "SHORTNAME", "short name"],
+    )
     work = coalesce_columns(work, "position", ["position", "POSITION", "pos"])
     work = coalesce_columns(work, "goals", ["goals", "GOALS", "goal"])
     work = coalesce_columns(work, "assists", ["assists", "ASSISTS", "assist", "GOALASSIST", "goalassist", "goal_assist"])
@@ -151,17 +157,36 @@ def normalize_teams(df: pd.DataFrame) -> pd.DataFrame:
     return work
 
 
+def parse_player_ids(raw_text: str) -> list[int]:
+    if not raw_text:
+        return []
+    tokens = re.split(r"[,\s;]+", raw_text.strip())
+    ids: list[int] = []
+    seen = set()
+    for token in tokens:
+        if not token:
+            continue
+        try:
+            val = int(float(token))
+        except ValueError:
+            continue
+        if val not in seen:
+            seen.add(val)
+            ids.append(val)
+    return ids
+
+
 def build_view(players_fantasy: pd.DataFrame, players: pd.DataFrame, teams: pd.DataFrame) -> pd.DataFrame:
     view = normalize_player_columns(players_fantasy)
     players = normalize_player_columns(players)
     teams = normalize_teams(teams)
-    for col in ["name", "position", "team_id"]:
+    for col in ["name", "short_name", "position", "team_id"]:
         if col not in view.columns:
             view[col] = pd.NA
     if not players.empty and "player_id" in players.columns:
-        cols = [c for c in ["player_id", "name", "position", "team_id"] if c in players.columns]
+        cols = [c for c in ["player_id", "name", "short_name", "position", "team_id"] if c in players.columns]
         view = view.merge(players[cols], on="player_id", how="left", suffixes=("", "_players"))
-        for col in ["name", "position", "team_id"]:
+        for col in ["name", "short_name", "position", "team_id"]:
             alt = f"{col}_players"
             if alt in view.columns:
                 view[col] = view[alt].combine_first(view[col])
@@ -191,13 +216,13 @@ def _safe_per_match(series: pd.Series, matches: pd.Series) -> pd.Series:
 def recalc_players_fantasy(players_fantasy: pd.DataFrame, players: pd.DataFrame) -> pd.DataFrame:
     fantasy = normalize_player_columns(players_fantasy)
     players = normalize_player_columns(players)
-    for col in ["name", "position", "team_id"]:
+    for col in ["name", "short_name", "position", "team_id"]:
         if col not in fantasy.columns:
             fantasy[col] = pd.NA
     if not players.empty and "player_id" in players.columns:
-        cols = [c for c in ["player_id", "name", "position", "team_id"] if c in players.columns]
+        cols = [c for c in ["player_id", "name", "short_name", "position", "team_id"] if c in players.columns]
         fantasy = fantasy.merge(players[cols], on="player_id", how="left", suffixes=("", "_players"))
-        for col in ["name", "position", "team_id"]:
+        for col in ["name", "short_name", "position", "team_id"]:
             alt = f"{col}_players"
             if alt in fantasy.columns:
                 fantasy[col] = fantasy[alt].combine_first(fantasy[col])
@@ -337,6 +362,56 @@ def remove_player_rows(
     return fantasy[fantasy["player_id"] != player_id].copy()
 
 
+def add_short_name_to_fantasy(
+    players_fantasy_df: pd.DataFrame,
+    players_df: pd.DataFrame,
+) -> pd.DataFrame:
+    if players_fantasy_df.empty or players_df.empty:
+        return players_fantasy_df
+    if "player_id" not in players_fantasy_df.columns:
+        return players_fantasy_df
+    players = normalize_player_columns(players_df)
+    if "player_id" not in players.columns or "short_name" not in players.columns:
+        return players_fantasy_df
+    ids = pd.to_numeric(players["player_id"], errors="coerce").astype("Int64")
+    short = players["short_name"].astype("string")
+    short_map = {
+        int(pid): str(short_name)
+        for pid, short_name in zip(ids, short)
+        if pd.notna(pid) and pd.notna(short_name) and str(short_name).strip() != ""
+    }
+    if not short_map:
+        return players_fantasy_df
+    work = players_fantasy_df.copy()
+    fantasy_ids = pd.to_numeric(work["player_id"], errors="coerce").astype("Int64")
+    mapped = fantasy_ids.map(short_map)
+    if "short_name" in work.columns:
+        work["short_name"] = work["short_name"].combine_first(mapped)
+    else:
+        work["short_name"] = mapped
+    return work
+
+
+def append_missing_players_from_players(
+    players_fantasy_df: pd.DataFrame,
+    players_df: pd.DataFrame,
+) -> pd.DataFrame:
+    fantasy = normalize_player_columns(players_fantasy_df)
+    players = normalize_player_columns(players_df)
+    if players.empty or "player_id" not in players.columns:
+        return fantasy
+    if "player_id" not in fantasy.columns:
+        fantasy["player_id"] = pd.NA
+    players_ids = set(players["player_id"].dropna().astype(int).tolist())
+    fantasy_ids = set(fantasy["player_id"].dropna().astype(int).tolist())
+    missing_ids = sorted(players_ids - fantasy_ids)
+    if not missing_ids:
+        return fantasy
+    cols = [c for c in ["player_id", "name", "short_name", "position", "team_id"] if c in players.columns]
+    missing_rows = players[players["player_id"].isin(missing_ids)][cols].drop_duplicates(subset=["player_id"])
+    return pd.concat([fantasy, missing_rows], ignore_index=True)
+
+
 # -------------------------
 # Load
 # -------------------------
@@ -418,6 +493,111 @@ if "price" in players_table.columns:
 st.dataframe(players_table, use_container_width=True)
 
 # -------------------------
+# Acciones por lista de IDs
+# -------------------------
+st.divider()
+st.subheader("Acciones por lista de IDs")
+st.caption("Pega IDs separados por coma, espacio o salto de linea.")
+ids_text = st.text_area("Lista de player_id", height=120)
+batch_ids = parse_player_ids(ids_text)
+if ids_text and not batch_ids:
+    st.warning("No se detectaron IDs validos.")
+if batch_ids:
+    st.write(f"IDs detectados: {len(batch_ids)}")
+    preview_cols = safe_cols(
+        view,
+        [
+            "player_id",
+            "name",
+            "short_name",
+            "position_effective",
+            "team_name_effective",
+            "team_id_effective",
+            "price",
+        ],
+    )
+    st.dataframe(view[view["player_id"].isin(batch_ids)][preview_cols], use_container_width=True)
+
+    st.subheader("Asignar equipo a lista")
+    team_options = []
+    team_label_by_id: dict[int, str] = {}
+    if not teams.empty and "team_id" in teams.columns:
+        team_lookup = teams[["team_id", "team_name"]].dropna(subset=["team_id"]).drop_duplicates()
+        for _, row_team in team_lookup.iterrows():
+            team_id_val = row_team.get("team_id")
+            if pd.isna(team_id_val):
+                continue
+            team_id_int = int(team_id_val)
+            team_name = str(row_team.get("team_name", "")).strip() or "Equipo"
+            team_options.append(team_id_int)
+            team_label_by_id[team_id_int] = f"{team_name} ({team_id_int})"
+    team_options = sorted(set(team_options))
+
+    if team_options:
+        selected_team_id = st.selectbox(
+            "Nuevo equipo (lista)",
+            options=team_options,
+            format_func=lambda tid: team_label_by_id.get(tid, str(tid)),
+            key="batch_team_select",
+        )
+        manual_team_id = st.number_input(
+            "O ingresar team_id manual",
+            min_value=0,
+            step=1,
+            value=0,
+            key="batch_team_manual",
+        )
+        use_manual_team = st.checkbox("Usar team_id manual", value=False, key="batch_team_manual_check")
+        proposed_team_id = manual_team_id if use_manual_team else selected_team_id
+    else:
+        proposed_team_id = st.number_input(
+            "Nuevo team_id",
+            min_value=0,
+            step=1,
+            value=0,
+            key="batch_team_manual_only",
+        )
+
+    if st.button("Aplicar equipo a IDs", type="primary"):
+        new_team_id = normalize_team_id(proposed_team_id)
+        if pd.isna(new_team_id) or int(new_team_id) <= 0:
+            st.warning("team_id invalido.")
+        else:
+            updated_players = players.copy()
+            if "player_id" not in updated_players.columns:
+                st.warning("players.parquet no tiene player_id.")
+            else:
+                updated_players.loc[
+                    updated_players["player_id"].isin(batch_ids), "team_id"
+                ] = new_team_id
+                updated_fantasy = recalc_players_fantasy(players_fantasy, updated_players)
+                updated_players = sync_players_price(updated_players, updated_fantasy)
+                save_parquet(updated_players, FILES["players"])
+                save_parquet(updated_fantasy, FILES["players_fantasy"])
+                st.success("Equipo actualizado para la lista.")
+                st.cache_data.clear()
+                st.rerun()
+
+    st.subheader("Eliminar jugadores del fantasy (lista)")
+    delete_batch = st.checkbox("Eliminar jugadores del fantasy con estos IDs")
+    if st.button("Eliminar jugadores (lista)", type="primary"):
+        if not delete_batch:
+            st.warning("Confirma el checkbox para eliminar.")
+        else:
+            updated_fantasy = players_fantasy.copy()
+            if "player_id" not in updated_fantasy.columns:
+                st.warning("players_fantasy.parquet no tiene player_id.")
+            else:
+                updated_fantasy = updated_fantasy[~updated_fantasy["player_id"].isin(batch_ids)]
+                updated_fantasy = recalc_players_fantasy(updated_fantasy, players)
+                updated_players = sync_players_price(players, updated_fantasy)
+                save_parquet(updated_players, FILES["players"])
+                save_parquet(updated_fantasy, FILES["players_fantasy"])
+                st.success("Jugadores eliminados del fantasy.")
+                st.cache_data.clear()
+                st.rerun()
+
+# -------------------------
 # Detalle por jugador
 # -------------------------
 st.divider()
@@ -436,7 +616,7 @@ if row.empty:
     st.stop()
 
 r = row.iloc[0]
-d1, d2, d3, d4 = st.columns(4)
+d1, d2, d3, d4 = st.columns([3,1,2,1])
 d1.metric("Jugador", str(r.get("name", "")))
 d2.metric("Posicion", str(r.get("position_effective", "")))
 d3.metric("Equipo (id)", str(r.get("team_id_effective", "")))
@@ -508,7 +688,74 @@ if st.button("Aplicar transferencia de equipo", type="primary"):
         st.cache_data.clear()
         st.rerun()
 
-tab1, tab2, tab3 = st.tabs(["player_totals", "player_match", "player_transfer"])
+tab_reload, tab1, tab2, tab3 = st.tabs(
+    ["recargar players_fantasy", "player_totals", "player_match", "player_transfer"]
+)
+
+with tab_reload:
+    st.subheader("Recargar players_fantasy desde players.parquet")
+    st.caption("Actualiza name/position/team_id y recalcula precios.")
+
+    players_count = int(players["player_id"].dropna().nunique()) if "player_id" in players.columns else 0
+    fantasy_count = (
+        int(players_fantasy["player_id"].dropna().nunique())
+        if "player_id" in players_fantasy.columns
+        else 0
+    )
+    st.write(f"players.parquet: {players_count} jugadores")
+    st.write(f"players_fantasy.parquet: {fantasy_count} jugadores")
+
+    missing_ids = []
+    if "player_id" in players.columns:
+        players_ids = set(players["player_id"].dropna().astype(int).tolist())
+        fantasy_ids = (
+            set(players_fantasy["player_id"].dropna().astype(int).tolist())
+            if "player_id" in players_fantasy.columns
+            else set()
+        )
+        missing_ids = sorted(players_ids - fantasy_ids)
+
+    add_missing = st.checkbox("Agregar jugadores nuevos desde players.parquet", value=True)
+    if missing_ids:
+        st.caption(f"Nuevos jugadores detectados: {len(missing_ids)}")
+        preview_cols = safe_cols(players, ["player_id", "name", "short_name", "position", "team_id"])
+        st.dataframe(
+            players[players["player_id"].isin(missing_ids)][preview_cols],
+            use_container_width=True,
+        )
+    else:
+        st.caption("No hay jugadores nuevos en players.parquet.")
+
+    st.divider()
+    st.subheader("Agregar short_name sin recalcular")
+    raw_fantasy = read_parquet(FILES["players_fantasy"])
+    if "short_name" in raw_fantasy.columns:
+        missing_short = raw_fantasy["short_name"].isna().sum()
+    else:
+        missing_short = len(raw_fantasy)
+    if "short_name" not in players.columns:
+        st.info("players.parquet no tiene short_name.")
+    else:
+        st.caption(f"short_name faltante en players_fantasy: {missing_short}")
+        if st.button("Agregar short_name a players_fantasy", type="primary"):
+            updated_fantasy = add_short_name_to_fantasy(raw_fantasy, players)
+            save_parquet(updated_fantasy, FILES["players_fantasy"])
+            st.success("short_name agregado en players_fantasy.")
+            st.cache_data.clear()
+            st.rerun()
+
+    st.divider()
+    if st.button("Recargar players_fantasy", type="primary"):
+        updated_fantasy = players_fantasy
+        if add_missing:
+            updated_fantasy = append_missing_players_from_players(updated_fantasy, players)
+        updated_fantasy = recalc_players_fantasy(updated_fantasy, players)
+        updated_players = sync_players_price(players, updated_fantasy)
+        save_parquet(updated_players, FILES["players"])
+        save_parquet(updated_fantasy, FILES["players_fantasy"])
+        st.success("players_fantasy actualizado desde players.parquet.")
+        st.cache_data.clear()
+        st.rerun()
 
 with tab1:
     if totals.empty:

@@ -1,0 +1,61 @@
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/700.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0b0b0f;
+  --surface: #12141b;
+  --surface-2: #1a1e2a;
+  --ink: #f7f3ed;
+  --muted: #9aa3b2;
+  --accent: #f2c94c;
+  --accent-2: #5de0a5;
+  --warning: #ff6b6b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  background: radial-gradient(1200px 600px at 20% 20%, rgba(242, 201, 76, 0.12), transparent 60%),
+    radial-gradient(900px 500px at 80% 10%, rgba(93, 224, 165, 0.1), transparent 55%),
+    linear-gradient(160deg, #0b0b0f 0%, #0f131b 40%, #111827 100%);
+  color: var(--ink);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.glass {
+  background: rgba(18, 20, 27, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-float-in {
+  animation: floatIn 400ms ease-out;
+}

@@ -62,6 +62,11 @@ def _normalize_player_stats_df(df: pd.DataFrame) -> pd.DataFrame:
     work = df.copy()
     work = _coalesce_columns(work, "player_id", ["playerId", "id", "player id", "player_id", "__pid"])
     work = _coalesce_columns(work, "name", ["name", "player", "player_name", "__name"])
+    work = _coalesce_columns(
+        work,
+        "short_name",
+        ["shortName", "short_name", "short name", "shortname", "SHORTNAME", "SHORT_NAME"],
+    )
     work = _coalesce_columns(work, "team_id", ["teamId", "team id", "team_id"])
     work = _coalesce_columns(work, "position", ["position", "pos"])
     work = _coalesce_columns(work, "dateOfBirth", ["dateOfBirthTimestamp", "dateOfBirth", "dob", "birthTimestamp"])
@@ -606,6 +611,7 @@ def build_players_fantasy_df(players_df: pd.DataFrame, totals_df: pd.DataFrame) 
         for c in [
             "player_id",
             "name",
+            "short_name",
             "position",
             "price",
             "team_id",
@@ -642,7 +648,9 @@ def load_player_rows() -> pd.DataFrame:
     cols_required = [c for c in ["NAME", "PLAYER_ID", "POSITION", "TEAM_ID", "DATEOFBIRTH"] if c in all_stats.columns]
     if not cols_required:
         return pd.DataFrame()
-    cols_keep = cols_required + [c for c in ["AGE_JAN_2026"] if c in all_stats.columns]
+    cols_keep = cols_required + [
+        c for c in ["SHORT_NAME", "SHORTNAME", "AGE_JAN_2026"] if c in all_stats.columns
+    ]
     df = all_stats[cols_keep].copy()
     df = df.dropna(subset=cols_required)
     if "PLAYER_ID" in df.columns:

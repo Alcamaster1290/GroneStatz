@@ -42,6 +42,7 @@ CANONICAL_COLS = {
     "match_id": ["match_id", "matchid", "matchId", "MATCH_ID"],
     "team_id": ["team_id", "teamid", "teamId", "TEAM_ID"],
     "name": ["name", "NAME", "player_name", "player"],
+    "short_name": ["short_name", "shortName", "shortname", "SHORT_NAME", "SHORTNAME", "short name"],
     "position": ["position", "POSITION", "pos"],
     "dateofbirth": ["dateofbirth", "date_of_birth", "dateOfBirth", "DATEOFBIRTH"],
     "age_jan_2026": ["age_jan_2026", "AGE_JAN_2026", "age_enero_2026"],
