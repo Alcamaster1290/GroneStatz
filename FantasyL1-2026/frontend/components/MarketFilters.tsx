@@ -1,4 +1,4 @@
-import { MarketFiltersState, Position } from "@/lib/types";
+import { MarketFiltersState, Position } from "../lib/types";
 
 const POSITIONS: { value: Position; label: string }[] = [
   { value: "G", label: "Arquero" },

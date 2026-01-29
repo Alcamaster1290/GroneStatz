@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import AuthPanel from "@/components/AuthPanel";
 import TeamNameGate from "@/components/TeamNameGate";
 import WelcomeSlideshow from "@/components/WelcomeSlideshow";
-import { createTeam, getTeam } from "@/lib/api";
-import { useFantasyStore } from "@/lib/store";
+import { createTeam, getTeam } from "../../lib/api";
+import { useFantasyStore } from "../../lib/store";
 
 export default function SettingsPage() {
   const token = useFantasyStore((state) => state.token);

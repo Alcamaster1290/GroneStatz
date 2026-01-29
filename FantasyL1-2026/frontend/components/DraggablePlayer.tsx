@@ -5,7 +5,7 @@ import { useDraggable } from "@dnd-kit/core";
 
 import PlayerAvatarSquare from "@/components/PlayerAvatarSquare";
 import PlayerCard from "@/components/PlayerCard";
-import { Player } from "@/lib/types";
+import { Player } from "../lib/types";
 
 export default function DraggablePlayer({
   player,

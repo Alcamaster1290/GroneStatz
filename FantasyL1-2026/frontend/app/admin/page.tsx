@@ -20,7 +20,7 @@ import {
   updateAdminFixture,
   upsertAdminPlayerStats,
   updateAdminPlayerInjury
-} from "@/lib/api";
+} from "../../lib/api";
 import {
   AdminActionLog,
   AdminLeague,
@@ -29,8 +29,8 @@ import {
   AdminPriceMovement,
   AdminTeam,
   FixtureStatus
-} from "@/lib/types";
-import type { AdminPlayerListItem } from "@/lib/api";
+} from "../../lib/types";
+import type { AdminPlayerListItem } from "../../lib/api";
 
 const ADMIN_TOKEN_KEY = "fantasy_admin_token";
 

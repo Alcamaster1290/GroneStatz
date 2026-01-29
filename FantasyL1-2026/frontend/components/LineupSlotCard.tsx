@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 
 import PlayerAvatarSquare from "@/components/PlayerAvatarSquare";
-import { LineupSlot, Player } from "@/lib/types";
+import { LineupSlot, Player } from "../lib/types";
 
 export default function LineupSlotCard({
   slot,

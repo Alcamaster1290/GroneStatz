@@ -5,9 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import AuthPanel from "@/components/AuthPanel";
 import TeamNameGate from "@/components/TeamNameGate";
 import WelcomeSlideshow from "@/components/WelcomeSlideshow";
-import { createTeam, getFixtures, getTeam, getTeams } from "@/lib/api";
-import { useFantasyStore } from "@/lib/store";
-import { Fixture } from "@/lib/types";
+import { createTeam, getFixtures, getTeam, getTeams } from "../../lib/api";
+import { useFantasyStore } from "../../lib/store";
+import { Fixture } from "../../lib/types";
 
 function TeamLogo({ teamId }: { teamId: number | null | undefined }) {
   const [hidden, setHidden] = useState(false);

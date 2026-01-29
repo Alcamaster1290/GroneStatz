@@ -9,10 +9,10 @@ import MarketFilters from "@/components/MarketFilters";
 import PlayerCard from "@/components/PlayerCard";
 import TeamNameGate from "@/components/TeamNameGate";
 import WelcomeSlideshow from "@/components/WelcomeSlideshow";
-import { createTeam, getCatalogPlayers, getFixtures, getTeam, getTransferCount, updateSquad } from "@/lib/api";
-import { useFantasyStore } from "@/lib/store";
-import { Fixture, Player, TransferCount } from "@/lib/types";
-import { validateSquad } from "@/lib/validation";
+import { createTeam, getCatalogPlayers, getFixtures, getTeam, getTransferCount, updateSquad } from "../../lib/api";
+import { useFantasyStore } from "../../lib/store";
+import { Fixture, Player, TransferCount } from "../../lib/types";
+import { validateSquad } from "../../lib/validation";
 
 function PlayerFace({ playerId }: { playerId: number }) {
   const sources = [

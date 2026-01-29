@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { useDroppable } from "@dnd-kit/core";
 
-import { LineupSlot, Player } from "@/lib/types";
+import { LineupSlot, Player } from "../lib/types";
 
 export default function FieldSlot({
   slot,
