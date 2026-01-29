@@ -486,6 +486,19 @@ export async function updateAdminPlayerInjury(
   );
 }
 
+export async function rebuildAdminCatalog(
+  adminToken: string
+): Promise<{ ok: boolean }> {
+  return apiFetch(
+    "/admin/rebuild_catalog",
+    {
+      method: "POST",
+      headers: { "X-Admin-Token": adminToken }
+    },
+    undefined
+  );
+}
+
 export type AdminPlayerListItem = {
   player_id: number;
   name: string;

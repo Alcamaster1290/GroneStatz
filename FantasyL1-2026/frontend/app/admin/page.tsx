@@ -13,6 +13,7 @@ import {
   getAdminRounds,
   getAdminFixtures,
   getAdminTeams,
+  rebuildAdminCatalog,
   getCatalogPlayers,
   getTeams,
   getAdminPlayers,
@@ -98,6 +99,8 @@ export default function AdminTeamsPage() {
     injured: 0,
     unselected: 0
   });
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogMessage, setCatalogMessage] = useState<string | null>(null);
   const [playerSearch, setPlayerSearch] = useState("");
   const [playerResults, setPlayerResults] = useState<
     { player_id: number; name: string; short_name?: string | null; is_injured?: boolean }[]
@@ -141,7 +144,7 @@ export default function AdminTeamsPage() {
           unselected: data.unselected || 0
         });
       })
-      .catch(() => setAdminPlayersError("players_load_failed"))
+      .catch((err) => setAdminPlayersError(String(err)))
       .finally(() => setAdminPlayersLoading(false));
   }, [adminToken]);
 
@@ -502,6 +505,30 @@ export default function AdminTeamsPage() {
       setPriceError(String(err));
     } finally {
       setPriceLoading(false);
+    }
+  };
+
+  const handleRebuildCatalog = async () => {
+    if (!adminToken) {
+      setCatalogMessage("admin_token_required");
+      return;
+    }
+    setCatalogLoading(true);
+    setCatalogMessage(null);
+    try {
+      await rebuildAdminCatalog(adminToken);
+      const refreshed = await getAdminPlayers(adminToken);
+      setAdminPlayers(refreshed.items || []);
+      setAdminPlayersSummary({
+        total: refreshed.total || 0,
+        injured: refreshed.injured || 0,
+        unselected: refreshed.unselected || 0
+      });
+      setCatalogMessage("catalog_ok");
+    } catch (err) {
+      setCatalogMessage(String(err));
+    } finally {
+      setCatalogLoading(false);
     }
   };
 
@@ -1259,8 +1286,19 @@ export default function AdminTeamsPage() {
             <span>Sin elegir: <span className="font-semibold text-ink">{adminPlayersSummary.unselected}</span></span>
           </div>
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+          <span className="text-xs text-muted">Catalogo de jugadores</span>
+          <button
+            onClick={handleRebuildCatalog}
+            disabled={catalogLoading}
+            className="rounded-xl border border-white/10 px-3 py-1 text-xs text-ink"
+          >
+            {catalogLoading ? "Actualizando..." : "Actualizar catalogo"}
+          </button>
+        </div>
+        {catalogMessage ? <p className="text-xs text-muted">{catalogMessage}</p> : null}
         {adminPlayersError ? (
-          <p className="text-xs text-warning">No se pudo cargar la lista de jugadores.</p>
+          <p className="text-xs text-warning">No se pudo cargar la lista de jugadores: {adminPlayersError}</p>
         ) : null}
         <div className="space-y-1">
           <label className="text-xs text-muted">Listado de jugadores</label>
