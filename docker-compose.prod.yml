@@ -68,6 +68,8 @@ services:
   web:
     build:
       context: ./FantasyL1-2026/frontend
+      args:
+        NEXT_PUBLIC_API_URL: https://api.fantasyliga1peru.com
     container_name: fantasy_l1_web
     environment:
       NEXT_PUBLIC_API_URL: https://api.fantasyliga1peru.com
