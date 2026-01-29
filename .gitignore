@@ -211,6 +211,8 @@ __marimo__/
 **/.next/
 **/.turbo/
 **/out/
+!FantasyL1-2026/frontend/lib/
+!FantasyL1-2026/frontend/lib/**
 
 # Local environment files
 **/.env.local
