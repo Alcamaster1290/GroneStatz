@@ -6,20 +6,21 @@ import { useEffect, useState } from "react";
 export default function PlayerAvatarSquare({
   playerId,
   teamId,
+  isCaptain = false,
+  isViceCaptain = false,
   className,
   rounded = true
 }: {
   playerId?: number | null;
   teamId?: number | null;
+  isCaptain?: boolean;
+  isViceCaptain?: boolean;
   className?: string;
   rounded?: boolean;
 }) {
   const sources = playerId
     ? [
-        `/images/players/${playerId}.png`,
-        `/images/players/${playerId}.jpg`,
-        `/images/players/${playerId}.jpeg`,
-        `/images/players/${playerId}.webp`
+        `/images/players/${playerId}.png`
       ]
     : [];
   const [srcIndex, setSrcIndex] = useState(0);
@@ -56,19 +57,21 @@ export default function PlayerAvatarSquare({
   return (
     <div
       className={clsx(
-        "relative overflow-hidden",
+        "relative",
         rounded ? "rounded-xl" : "",
         className
       )}
     >
-      <img
-        src={sources[srcIndex]}
-        alt=""
-        className="h-full w-full object-cover"
-        onError={handleError}
-      />
+      <div className={clsx("h-full w-full overflow-hidden", rounded ? "rounded-xl" : "")}>
+        <img
+          src={sources[srcIndex]}
+          alt=""
+          className="h-full w-full object-cover"
+          onError={handleError}
+        />
+      </div>
       {teamId ? (
-        <span className="absolute -bottom-1 -right-1 flex h-[25%] w-[25%] -translate-x-[10%] -translate-y-[10%] items-center justify-center">
+        <span className="absolute bottom-1 right-1 z-20 flex h-[25%] w-[25%] items-center justify-center">
           <img
             src={`/images/teams/${teamId}.png`}
             alt=""
@@ -77,6 +80,16 @@ export default function PlayerAvatarSquare({
               (event.currentTarget as HTMLImageElement).style.display = "none";
             }}
           />
+        </span>
+      ) : null}
+      {isCaptain ? (
+        <span className="absolute bottom-1 left-1 z-30 flex h-[25%] w-[25%] items-center justify-center rounded-full bg-yellow-300 text-[10px] font-bold text-black">
+          C
+        </span>
+      ) : null}
+      {isViceCaptain ? (
+        <span className="absolute bottom-[calc(25%+6px)] left-1 z-30 flex h-[25%] w-[25%] items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-black">
+          V
         </span>
       ) : null}
     </div>

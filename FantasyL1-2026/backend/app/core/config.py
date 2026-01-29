@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     SEASON_NAME: str = "2026 Apertura"
     CORS_ORIGINS: str = "http://localhost:3000"
     CORS_ORIGIN_REGEX: str = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
+    SCHEDULER_ENABLED: bool = True
+    SCHEDULER_INTERVAL_SECONDS: int = 300
 
     model_config = SettingsConfigDict(
         env_file=str(env_path),

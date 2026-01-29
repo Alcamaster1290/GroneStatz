@@ -9,10 +9,17 @@ from typing import Dict, Tuple
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 BACKEND_DIR = BASE_DIR / "backend"
+SCRIPTS_DIR = BASE_DIR / "scripts"
 sys.path.append(str(BACKEND_DIR))
+sys.path.append(str(SCRIPTS_DIR))
 
 from app.core.config import get_settings
 from app.services.data_pipeline import ingest_parquets_to_duckdb, sync_duckdb_to_postgres
+
+try:
+    from create_empty_matches_2026 import main as ensure_empty_matches_2026
+except Exception:  # pragma: no cover - fallback if script missing
+    ensure_empty_matches_2026 = None
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
@@ -29,6 +36,8 @@ def snapshot_parquets(path: Path) -> Dict[str, Tuple[int, int]]:
 
 
 def run_pipeline(settings) -> None:
+    if ensure_empty_matches_2026:
+        ensure_empty_matches_2026()
     ingest_parquets_to_duckdb(settings)
     sync_duckdb_to_postgres(settings)
 

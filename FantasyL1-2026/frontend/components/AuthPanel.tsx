@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { login, register } from "@/lib/api";
+import { confirmPasswordReset, login, register, requestPasswordReset } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
 
 export default function AuthPanel() {
@@ -11,6 +11,10 @@ export default function AuthPanel() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetCode, setResetCode] = useState("");
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [resetStep, setResetStep] = useState<"request" | "confirm">("request");
 
   const mapAuthErrors = (raw: string): string[] => {
     const cleaned = raw.replace(/^Error:\s*/i, "");
@@ -18,14 +22,23 @@ export default function AuthPanel() {
     const codes = parts.length ? parts : [cleaned];
 
     const dictionary: Record<string, string> = {
-      email_invalid: "El correo no es válido.",
-      password_min_length: "La contraseña debe tener al menos 6 caracteres.",
-      password_invalid: "La contraseña no es válida.",
-      validation_error: "Completa email y contraseña correctamente.",
+      email_invalid: "El correo no es valido.",
+      password_min_length: "La contrasena debe tener al menos 6 caracteres.",
+      password_invalid: "La contrasena no es valida.",
+      validation_error: "Completa email y contrasena correctamente.",
       invalid_credentials: "Credenciales incorrectas.",
-      email_already_registered: "Este correo ya está registrado.",
+      email_already_registered: "Este correo ya esta registrado.",
       db_unavailable: "No se puede conectar a la base de datos (Postgres).",
-      network_error: "No se puede conectar con el backend. Verifica que esté activo.",
+      network_error: "No se puede conectar con el backend. Verifica que este activo.",
+      endpoint_not_found: "No se encontro el endpoint de autenticacion. Revisa la API.",
+      service_unavailable: "Backend no disponible o servicio caido.",
+      server_error: "Error interno del servidor.",
+      rate_limited: "Demasiados intentos. Espera un momento.",
+      reset_code_invalid: "El codigo no es valido.",
+      reset_code_expired: "El codigo expiro.",
+      reset_code_used: "El codigo ya fue usado.",
+      unauthorized: "No autorizado.",
+      forbidden: "Acceso denegado.",
       api_error: "Error del servidor."
     };
 
@@ -36,7 +49,7 @@ export default function AuthPanel() {
     try {
       setErrors([]);
       if (!email.trim() || !password.trim()) {
-        setErrors(["Completa email y contraseña."]);
+        setErrors(["Completa email y contrasena."]);
         return;
       }
       const result =
@@ -44,6 +57,44 @@ export default function AuthPanel() {
       setToken(result.access_token);
       setUserEmail(email);
       localStorage.setItem("fantasy_token", result.access_token);
+    } catch (err) {
+      setErrors(mapAuthErrors(String(err)));
+    }
+  };
+
+  const handleRequestReset = async () => {
+    setErrors([]);
+    setResetMessage(null);
+    if (!email.trim()) {
+      setErrors(["Ingresa tu correo."]);
+      return;
+    }
+    try {
+      const result = await requestPasswordReset(email.trim());
+      if (result.reset_code) {
+        setResetMessage(`Codigo: ${result.reset_code}`);
+      } else {
+        setResetMessage("Codigo enviado. Revisa tu correo.");
+      }
+      setResetStep("confirm");
+    } catch (err) {
+      setErrors(mapAuthErrors(String(err)));
+    }
+  };
+
+  const handleConfirmReset = async () => {
+    setErrors([]);
+    setResetMessage(null);
+    if (!email.trim() || !resetCode.trim() || !password.trim()) {
+      setErrors(["Completa email, codigo y nueva contrasena."]);
+      return;
+    }
+    try {
+      await confirmPasswordReset(email.trim(), resetCode.trim(), password.trim());
+      setResetMessage("Contrasena actualizada. Ya puedes iniciar sesion.");
+      setResetMode(false);
+      setResetStep("request");
+      setResetCode("");
     } catch (err) {
       setErrors(mapAuthErrors(String(err)));
     }
@@ -59,13 +110,23 @@ export default function AuthPanel() {
         placeholder="email"
         className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-sm"
       />
-      <input
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        placeholder="password"
-        className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-sm"
-      />
+      {!resetMode || resetStep === "confirm" ? (
+        <input
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder={resetMode ? "nueva contraseña" : "password"}
+          className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-sm"
+        />
+      ) : null}
+      {resetMode && resetStep === "confirm" ? (
+        <input
+          value={resetCode}
+          onChange={(event) => setResetCode(event.target.value)}
+          placeholder="codigo"
+          className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-sm"
+        />
+      ) : null}
       {errors.length > 0 ? (
         <div className="space-y-1 text-xs text-warning">
           {errors.map((message) => (
@@ -73,20 +134,59 @@ export default function AuthPanel() {
           ))}
         </div>
       ) : null}
+      {resetMessage ? <p className="text-xs text-muted">{resetMessage}</p> : null}
       <div className="flex gap-2">
-        <button
-          onClick={() => handleAuth("login")}
-          className="flex-1 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
-        >
-          Login
-        </button>
-        <button
-          onClick={() => handleAuth("register")}
-          className="flex-1 rounded-xl border border-white/20 px-4 py-2 text-sm text-ink"
-        >
-          Registro
-        </button>
+        {resetMode ? (
+          <>
+            <button
+              onClick={resetStep === "request" ? handleRequestReset : handleConfirmReset}
+              className="flex-1 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+            >
+              {resetStep === "request" ? "Enviar codigo" : "Cambiar clave"}
+            </button>
+            <button
+              onClick={() => {
+                setResetMode(false);
+                setResetStep("request");
+                setResetCode("");
+                setResetMessage(null);
+                setErrors([]);
+              }}
+              className="flex-1 rounded-xl border border-white/20 px-4 py-2 text-sm text-ink"
+            >
+              Volver
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => handleAuth("login")}
+              className="flex-1 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+            >
+              Login
+            </button>
+            <button
+              onClick={() => handleAuth("register")}
+              className="flex-1 rounded-xl border border-white/20 px-4 py-2 text-sm text-ink"
+            >
+              Registro
+            </button>
+          </>
+        )}
       </div>
+      {!resetMode ? (
+        <button
+          onClick={() => {
+            setResetMode(true);
+            setResetStep("request");
+            setResetMessage(null);
+            setErrors([]);
+          }}
+          className="w-full text-xs text-muted underline"
+        >
+          Olvidaste tu contraseña?
+        </button>
+      ) : null}
     </div>
   );
 }

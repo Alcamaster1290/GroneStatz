@@ -17,8 +17,11 @@ import DraggablePlayer from "@/components/DraggablePlayer";
 import FabMenu from "@/components/FabMenu";
 import LineupSlotCard from "@/components/LineupSlotCard";
 import PlayerCard from "@/components/PlayerCard";
+import PlayerAvatarSquare from "@/components/PlayerAvatarSquare";
 import StickyTopBar from "@/components/StickyTopBar";
-import { getFixtures, getHealth, getLineup, getTeam, getTeams, saveLineup } from "@/lib/api";
+import TeamNameGate from "@/components/TeamNameGate";
+import WelcomeSlideshow from "@/components/WelcomeSlideshow";
+import { createTeam, getFixtures, getHealth, getLineup, getTeam, getTeams, saveLineup } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
 import { Fixture, LineupSlot, Player } from "@/lib/types";
 import { validateLineup, validateSquad } from "@/lib/validation";
@@ -45,10 +48,7 @@ const buildDefaultSlots = () => DEFAULT_SLOTS.map((slot) => ({ ...slot }));
 
 function PlayerFace({ playerId, sizeClass }: { playerId: number; sizeClass: string }) {
   const sources = [
-    `/images/players/${playerId}.png`,
-    `/images/players/${playerId}.jpg`,
-    `/images/players/${playerId}.jpeg`,
-    `/images/players/${playerId}.webp`
+    `/images/players/${playerId}.png`
   ];
   const [srcIndex, setSrcIndex] = useState(0);
   const [hidden, setHidden] = useState(false);
@@ -106,13 +106,161 @@ function TeamBadge({ teamId, sizeClass }: { teamId: number; sizeClass: string })
   );
 }
 
+const positionLabels: Record<string, string> = {
+  G: "Arquero",
+  D: "Defensa",
+  M: "Mediocampo",
+  F: "Delantero"
+};
+
+function PlayerFantasyDetails({
+  player,
+  roundNumber,
+  teamName,
+  fixtures
+}: {
+  player: Player;
+  roundNumber: number | null;
+  teamName?: string;
+  fixtures: Fixture[];
+}) {
+  const displayName = player.short_name || player.shortName || player.name;
+  const isKeeper = player.position === "G";
+  const points =
+    typeof player.points_round === "number" ? player.points_round.toFixed(1) : "--";
+  const primaryStatLabel = isKeeper ? "Atajadas" : "Goles";
+  const primaryStatValue = isKeeper ? player.saves ?? 0 : player.goals ?? 0;
+  const secondaryStatLabel = isKeeper ? "Goles recibidos" : "Asistencias";
+  const secondaryStatValue = isKeeper
+    ? player.goals_conceded ?? 0
+    : player.assists ?? 0;
+  const formatKickoff = (kickoff: string | null) => {
+    if (!kickoff) return "Por confirmar";
+    const normalized = kickoff.replace("T", " ").trim();
+    const [datePart, timePart] = normalized.split(" ");
+    const [year, month, day] = datePart.split("-");
+    const shortYear = year ? year.slice(2) : "";
+    const time = timePart ? timePart.slice(0, 5) : "";
+    return `${day}/${month}/${shortYear}${time ? `, ${time}` : ""}`;
+  };
+  const teamFixtures = fixtures
+    .filter(
+      (fixture) =>
+        fixture.home_team_id === player.team_id || fixture.away_team_id === player.team_id
+    )
+    .sort((a, b) => {
+      const aKey = a.kickoff_at ? a.kickoff_at : "9999-99-99";
+      const bKey = b.kickoff_at ? b.kickoff_at : "9999-99-99";
+      return aKey.localeCompare(bKey);
+    })
+    .slice(0, 3);
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <PlayerFace playerId={player.player_id} sizeClass="h-12 w-12" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface2/60">
+          <img
+            src={`/images/teams/${player.team_id}.png`}
+            alt=""
+            className="h-full w-full object-contain"
+            onError={(event) => {
+              (event.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-ink">{displayName}</p>
+          <p className="text-xs text-muted">
+            {player.price_current.toFixed(1)} - {positionLabels[player.position] || player.position}
+          </p>
+          <p className="text-[11px] text-muted">{teamName || ""}</p>
+        </div>
+      </div>
+      {player.is_injured ? (
+        <div className="flex items-center gap-2 rounded-xl bg-red-500/80 px-3 py-2 text-xs font-semibold text-black">
+          <span>⚠</span>
+          <span>Lesionado</span>
+        </div>
+      ) : null}
+      <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/20 p-3 text-xs">
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase text-muted">
+            Puntaje ronda {roundNumber ?? "-"}
+          </p>
+          <p className="text-sm font-semibold text-ink">
+            {roundNumber ? `${points}` : "--"}
+          </p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase text-muted">{primaryStatLabel}</p>
+          <p className="text-sm font-semibold text-ink">{primaryStatValue}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase text-muted">{secondaryStatLabel}</p>
+          <p className="text-sm font-semibold text-ink">{secondaryStatValue}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase text-muted">Precio</p>
+          <p className="text-sm font-semibold text-accent">{player.price_current.toFixed(1)}</p>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-ink">Partidos</p>
+        {teamFixtures.length ? (
+          <div className="space-y-2">
+            {teamFixtures.map((fixture) => {
+              const homeId = fixture.home_team_id;
+              const awayId = fixture.away_team_id;
+              return (
+                <div
+                  key={fixture.id}
+                  className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-black/40">
+                      {homeId ? (
+                        <img
+                          src={`/images/teams/${homeId}.png`}
+                          alt=""
+                          className="h-full w-full object-contain"
+                        />
+                      ) : null}
+                    </span>
+                    <span className="text-muted">-</span>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-black/40">
+                      {awayId ? (
+                        <img
+                          src={`/images/teams/${awayId}.png`}
+                          alt=""
+                          className="h-full w-full object-contain"
+                        />
+                      ) : null}
+                    </span>
+                  </div>
+                  <div className="text-right text-[10px] text-muted">
+                    <p>{formatKickoff(fixture.kickoff_at)}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-xs text-muted">Sin partidos programados.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function PitchSlot({
   slot,
   player,
   opponent,
   onClick,
   sizeClass,
-  badgeClass
+  badgeClass,
+  isCaptain,
+  isViceCaptain
 }: {
   slot: LineupSlot;
   player?: Player;
@@ -120,6 +268,8 @@ function PitchSlot({
   onClick?: () => void;
   sizeClass: string;
   badgeClass: string;
+  isCaptain: boolean;
+  isViceCaptain: boolean;
 }) {
   const { setNodeRef: setDropRef, isOver } = useDroppable({
     id: `slot-${slot.slot_index}`,
@@ -148,20 +298,35 @@ function PitchSlot({
         {...attributes}
         className={
           "flex flex-col items-center gap-1 rounded-2xl px-2 py-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent " +
-          (isOver ? "ring-2 ring-accent " : "") +
-          (isDragging ? "opacity-60" : "")
+          "cursor-grab active:cursor-grabbing " +
+          (isOver ? "ring-2 ring-accent scale-[1.03] " : "") +
+          (isDragging ? "opacity-0" : "")
         }
       >
-        <div className="relative">
-          {player ? (
-            <>
-              <PlayerFace playerId={player.player_id} sizeClass={sizeClass} />
-              <TeamBadge teamId={player.team_id} sizeClass={badgeClass} />
-            </>
-          ) : (
-            <div
-              className={`flex ${sizeClass} items-center justify-center rounded-full bg-surface2/30`}
-            />
+          <div className="relative">
+            {player ? (
+              <>
+                <PlayerFace playerId={player.player_id} sizeClass={sizeClass} />
+                <TeamBadge teamId={player.team_id} sizeClass={badgeClass} />
+                {isCaptain ? (
+                  <span
+                    className={`absolute -bottom-1 -left-1 z-30 flex ${badgeClass} -translate-x-[10%] -translate-y-[10%] items-center justify-center rounded-full bg-yellow-300 text-[10px] font-bold text-black`}
+                  >
+                    C
+                  </span>
+                ) : null}
+                {isViceCaptain ? (
+                  <span
+                    className={`absolute -bottom-6 -left-1 z-30 flex ${badgeClass} -translate-x-[10%] -translate-y-[10%] items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-black`}
+                  >
+                    V
+                  </span>
+                ) : null}
+              </>
+            ) : (
+              <div
+                className={`flex ${sizeClass} items-center justify-center rounded-full bg-surface2/30`}
+              />
           )}
         </div>
         <span className="max-w-[96px] truncate text-[10px] text-ink">{displayName}</span>
@@ -192,7 +357,9 @@ function PitchRow({
   opponentByTeamId,
   onSelect,
   sizeClass,
-  badgeClass
+  badgeClass,
+  captainId,
+  viceCaptainId
 }: {
   label: string;
   slots: LineupSlot[];
@@ -201,28 +368,32 @@ function PitchRow({
   onSelect: (slot: LineupSlot) => void;
   sizeClass: string;
   badgeClass: string;
+  captainId: number | null;
+  viceCaptainId: number | null;
 }) {
   return (
     <div className="flex flex-col gap-1">
       <p className="text-[10px] uppercase tracking-[0.2em] text-muted">{label}</p>
       <div className="flex flex-wrap items-center justify-center gap-2">
         {slots.map((slot) => {
-          const player = slot.player_id ? squadMap.get(slot.player_id) : undefined;
-          const opponent = player ? opponentByTeamId.get(player.team_id) : undefined;
-          return (
-            <PitchSlot
-              key={slot.slot_index}
-              slot={slot}
-              player={player}
-              opponent={opponent}
-              onClick={() => onSelect(slot)}
-              sizeClass={sizeClass}
-              badgeClass={badgeClass}
-            />
-          );
-        })}
+            const player = slot.player_id ? squadMap.get(slot.player_id) : undefined;
+            const opponent = player ? opponentByTeamId.get(player.team_id) : undefined;
+            return (
+              <PitchSlot
+                key={slot.slot_index}
+                slot={slot}
+                player={player}
+                opponent={opponent}
+                onClick={() => onSelect(slot)}
+                sizeClass={sizeClass}
+                badgeClass={badgeClass}
+                isCaptain={Boolean(player && captainId === player.player_id)}
+                isViceCaptain={Boolean(player && viceCaptainId === player.player_id)}
+              />
+            );
+          })}
+        </div>
       </div>
-    </div>
   );
 }
 
@@ -239,10 +410,14 @@ export default function TeamPage() {
   const setCurrentRound = useFantasyStore((state) => state.setCurrentRound);
   const captainId = useFantasyStore((state) => state.captainId);
   const setCaptainId = useFantasyStore((state) => state.setCaptainId);
+  const viceCaptainId = useFantasyStore((state) => state.viceCaptainId);
+  const setViceCaptainId = useFantasyStore((state) => state.setViceCaptainId);
+  const userEmail = useFantasyStore((state) => state.userEmail);
 
   const [loading, setLoading] = useState(false);
   const [activePlayerId, setActivePlayerId] = useState<number | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [starterPickerOpen, setStarterPickerOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<LineupSlot | null>(null);
   const [saveErrors, setSaveErrors] = useState<string[] | null>(null);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
@@ -250,11 +425,177 @@ export default function TeamPage() {
     []
   );
   const [appEnv, setAppEnv] = useState<string>("local");
+  const [roundMissing, setRoundMissing] = useState(false);
+  const [teamName, setTeamName] = useState("");
+  const [teamLoaded, setTeamLoaded] = useState(false);
+  const [nameGateOpen, setNameGateOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeSeen, setWelcomeSeen] = useState(false);
+  const [teamNameError, setTeamNameError] = useState<string | null>(null);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  const formatError = (code: string) => {
+    const positionCounts = squad.reduce(
+      (acc, player) => {
+        acc[player.position] = (acc[player.position] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+    const messages: Record<
+      string,
+      { title: string; detail?: string; tone?: "warning" | "danger" }
+    > = {
+      lineup_must_have_15_slots: {
+        title: "Faltan slots",
+        detail: "Debe existir un total de 15 slots (11 titulares y 4 suplentes).",
+        tone: "warning"
+      },
+      lineup_slot_index_duplicate: {
+        title: "Slots duplicados",
+        detail: "Se detectaron slots repetidos en el XI.",
+        tone: "danger"
+      },
+      lineup_requires_11_starters_and_4_bench: {
+        title: "XI incompleto",
+        detail: "Asegura 11 titulares y 4 suplentes.",
+        tone: "warning"
+      },
+      lineup_has_empty_slots: {
+        title: "Slots vacios",
+        detail: "Completa todos los espacios antes de guardar.",
+        tone: "warning"
+      },
+      lineup_has_duplicate_players: {
+        title: "Jugadores repetidos",
+        detail: "Un jugador esta asignado mas de una vez.",
+        tone: "danger"
+      },
+      lineup_players_not_in_squad: {
+        title: "Jugadores fuera del plantel",
+        detail: "Hay jugadores que no pertenecen a tu equipo guardado.",
+        tone: "danger"
+      },
+      lineup_starters_need_goalkeeper: {
+        title: "Arquero faltante",
+        detail: "El XI necesita 1 arquero titular.",
+        tone: "warning"
+      },
+      lineup_starters_max_1_goalkeeper: {
+        title: "Demasiados arqueros",
+        detail: "Solo puedes tener 1 arquero en titulares.",
+        tone: "warning"
+      },
+      lineup_starters_need_defender: {
+        title: "Defensas insuficientes",
+        detail: "Debe haber al menos 1 defensor en titulares.",
+        tone: "warning"
+      },
+      lineup_starters_need_midfielder: {
+        title: "Mediocampistas insuficientes",
+        detail: "Debe haber al menos 1 mediocampista en titulares.",
+        tone: "warning"
+      },
+      lineup_starters_need_forward: {
+        title: "Delanteros insuficientes",
+        detail: "Debe haber al menos 1 delantero en titulares.",
+        tone: "warning"
+      },
+      lineup_starters_max_4_forwards: {
+        title: "Demasiados delanteros",
+        detail: "Maximo 4 delanteros en titulares.",
+        tone: "warning"
+      },
+      captain_not_in_lineup: {
+        title: "Capitan invalido",
+        detail: "El capitan debe estar en el XI.",
+        tone: "warning"
+      },
+      vice_captain_not_in_lineup: {
+        title: "Vice invalido",
+        detail: "El vicecapitan debe estar en el XI.",
+        tone: "warning"
+      },
+      captain_and_vice_same_player: {
+        title: "Capitan duplicado",
+        detail: "Capitan y vicecapitan no pueden ser el mismo jugador.",
+        tone: "warning"
+      },
+      squad_must_have_15_players: {
+        title: "Plantel incompleto",
+        detail: `Tienes ${squad.length}/15 jugadores.`,
+        tone: "warning"
+      },
+      squad_must_have_2_goalkeepers: {
+        title: "Arqueros incompletos",
+        detail: `Necesitas 2 arqueros. Tienes ${positionCounts.G || 0}.`,
+        tone: "warning"
+      },
+      squad_defenders_out_of_range: {
+        title: "Defensas fuera de rango",
+        detail: `Debes tener entre 3 y 6 defensas. Tienes ${positionCounts.D || 0}.`,
+        tone: "warning"
+      },
+      squad_midfielders_out_of_range: {
+        title: "Mediocampistas fuera de rango",
+        detail: `Debes tener entre 3 y 6 mediocampistas. Tienes ${positionCounts.M || 0}.`,
+        tone: "warning"
+      },
+      squad_forwards_out_of_range: {
+        title: "Delanteros fuera de rango",
+        detail: `Debes tener entre 1 y 3 delanteros. Tienes ${positionCounts.F || 0}.`,
+        tone: "warning"
+      },
+      max_3_players_per_team: {
+        title: "Maximo 3 por club",
+        detail: "Hay un club con mas de 3 jugadores.",
+        tone: "danger"
+      },
+      budget_exceeded: {
+        title: "Presupuesto excedido",
+        detail: "Tu plantel supera los 100 M.",
+        tone: "danger"
+      },
+      rounds_not_configured: {
+        title: "Rondas no configuradas",
+        detail: "Carga rondas desde Admin antes de guardar el XI.",
+        tone: "warning"
+      },
+      round_not_found: {
+        title: "Ronda no encontrada",
+        detail: "La ronda solicitada no existe.",
+        tone: "warning"
+      }
+    };
+
+    return (
+      messages[code] || {
+        title: "Error",
+        detail: code,
+        tone: "danger"
+      }
+    );
+  };
 
   const squadMap = useMemo(
     () => new Map(squad.map((player) => [player.player_id, player])),
     [squad]
   );
+
+  const draftKey = useMemo(() => {
+    const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
+    const round = currentRound ?? "none";
+    return `fantasy_lineup_draft_${safeEmail}_${round}`;
+  }, [userEmail, currentRound]);
+
+  useEffect(() => {
+    if (captainId && !squadMap.get(captainId)) {
+      setCaptainId(null);
+    }
+    if (viceCaptainId && !squadMap.get(viceCaptainId)) {
+      setViceCaptainId(null);
+    }
+  }, [captainId, viceCaptainId, squadMap, setCaptainId, setViceCaptainId]);
   const assignedIds = useMemo(() => {
     const ids = new Set<number>();
     lineupSlots.forEach((slot) => {
@@ -303,6 +644,32 @@ export default function TeamPage() {
     return map;
   }, [fixtures, teamNameById]);
 
+  const roundDateRange = useMemo(() => {
+    if (!fixtures.length) return null;
+    const parsed = fixtures
+      .map((fixture) => {
+        const raw = fixture.kickoff_at ? String(fixture.kickoff_at).trim() : "";
+        if (!raw) return null;
+        const datePart = raw.split("T")[0].split(" ")[0];
+        const [year, month, day] = datePart.split("-").map((part) => Number(part));
+        if (!year || !month || !day) return null;
+        return { year, month, day, key: `${year}-${month}-${day}` };
+      })
+      .filter((value): value is { year: number; month: number; day: number; key: string } => value !== null);
+    if (!parsed.length) return null;
+    parsed.sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      if (a.month !== b.month) return a.month - b.month;
+      return a.day - b.day;
+    });
+    const first = parsed[0];
+    const last = parsed[parsed.length - 1];
+    return {
+      min: `${first.day}/${first.month}`,
+      max: `${last.day}/${last.month}`
+    };
+  }, [fixtures]);
+
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
     if (!token && stored) {
@@ -318,30 +685,87 @@ export default function TeamPage() {
       try {
         const team = await getTeam(token);
         setSquad(team.squad || []);
+        setTeamName(team.name || "");
+        setTeamLoaded(true);
 
-        const lineup = await getLineup(token);
-        setCurrentRound(lineup.round_number);
-        const squadById = new Map((team.squad || []).map((player) => [player.player_id, player]));
-        const normalizedSlots = (lineup.slots || []).map((slot) => {
-          if (slot.player_id) {
-            const player = squadById.get(slot.player_id);
-            if (player) {
-              return { ...slot, role: player.position };
+        try {
+          const lineup = await getLineup(token);
+          setCurrentRound(lineup.round_number);
+          const lineupCaptainId = lineup.captain_player_id ?? null;
+          const lineupViceCaptainId = lineup.vice_captain_player_id ?? null;
+          const squadById = new Map(
+            (team.squad || []).map((player) => [player.player_id, player])
+          );
+          const normalizedSlots = (lineup.slots || []).map((slot) => {
+            if (slot.player_id) {
+              const player = squadById.get(slot.player_id);
+              if (player) {
+                return { ...slot, role: player.position };
+              }
             }
+            return slot;
+          });
+            const draftKeyForRound = `fantasy_lineup_draft_${(userEmail || "anon").trim() || "anon"}_${lineup.round_number}`;
+            const storedDraft = localStorage.getItem(draftKeyForRound);
+            if (storedDraft) {
+              try {
+                const parsed = JSON.parse(storedDraft) as {
+                  roundNumber?: number;
+                  slots?: LineupSlot[];
+                  captainId?: number | null;
+                  viceCaptainId?: number | null;
+                };
+                if (parsed?.roundNumber === lineup.round_number && Array.isArray(parsed.slots)) {
+                  setLineupSlots(parsed.slots);
+                  if (parsed.captainId) {
+                    setCaptainId(parsed.captainId);
+                  } else {
+                    setCaptainId(lineupCaptainId);
+                  }
+                  if (parsed.viceCaptainId) {
+                    setViceCaptainId(parsed.viceCaptainId);
+                  } else {
+                    setViceCaptainId(lineupViceCaptainId);
+                  }
+                } else {
+                  setLineupSlots(normalizedSlots);
+                  setCaptainId(lineupCaptainId);
+                  setViceCaptainId(lineupViceCaptainId);
+                }
+              } catch {
+                setLineupSlots(normalizedSlots);
+                setCaptainId(lineupCaptainId);
+                setViceCaptainId(lineupViceCaptainId);
+              }
+            } else {
+              setLineupSlots(normalizedSlots);
+              setCaptainId(lineupCaptainId);
+              setViceCaptainId(lineupViceCaptainId);
+            }
+          setRoundMissing(false);
+          getFixtures(lineup.round_number)
+            .then(setFixtures)
+            .catch(() => setFixtures([]));
+        } catch (err) {
+          const message = String(err);
+          if (message.includes("round_not_found")) {
+            setRoundMissing(true);
+            setCurrentRound(null);
+            setLineupSlots(buildDefaultSlots());
+            setFixtures([]);
+          } else {
+            throw err;
           }
-          return slot;
-        });
-        setLineupSlots(normalizedSlots);
-        getFixtures(lineup.round_number)
-          .then(setFixtures)
-          .catch(() => setFixtures([]));
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    load().catch(() => undefined);
-  }, [token, setSquad, setLineupSlots, setCurrentRound]);
+    load().catch(() => {
+      setTeamLoaded(true);
+    });
+    }, [token, userEmail, setSquad, setLineupSlots, setCurrentRound, setCaptainId]);
 
   useEffect(() => {
     getTeams().then(setTeams).catch(() => undefined);
@@ -354,12 +778,50 @@ export default function TeamPage() {
   }, []);
 
   useEffect(() => {
+    if (teamLoaded && !teamName.trim()) {
+      setNameGateOpen(!welcomeOpen);
+    } else {
+      setNameGateOpen(false);
+    }
+  }, [teamLoaded, teamName, welcomeOpen]);
+
+  const welcomeKey = useMemo(() => {
+    const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
+    return `fantasy_welcome_seen_${safeEmail}`;
+  }, [userEmail]);
+
+  useEffect(() => {
+    if (!token) return;
+    const stored = localStorage.getItem(welcomeKey);
+    setWelcomeSeen(stored === "1");
+  }, [token, welcomeKey]);
+
+  useEffect(() => {
+    if (teamLoaded && !teamName.trim() && !welcomeSeen) {
+      setWelcomeOpen(true);
+    } else {
+      setWelcomeOpen(false);
+    }
+  }, [teamLoaded, teamName, welcomeSeen]);
+
+  useEffect(() => {
+    if (!token || roundMissing || !currentRound) return;
+    const payload = {
+      roundNumber: currentRound,
+      slots: lineupSlots,
+      captainId,
+      viceCaptainId
+    };
+    localStorage.setItem(draftKey, JSON.stringify(payload));
+  }, [token, roundMissing, currentRound, lineupSlots, captainId, viceCaptainId, draftKey]);
+
+  useEffect(() => {
     if (!loading && squad.length > 0 && lineupSlots.length === 0) {
       setLineupSlots(buildDefaultSlots());
     }
   }, [loading, squad.length, lineupSlots.length, setLineupSlots]);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   const handleDragStart = (event: any) => {
     const playerId = event.active.data.current?.playerId as number | undefined;
@@ -430,7 +892,19 @@ export default function TeamPage() {
 
   const handleSlotClick = (slot: LineupSlot) => {
     setSelectedSlot(slot);
-    setSheetOpen(true);
+    if (slot.is_starter) {
+      setStarterPickerOpen(true);
+      setSheetOpen(false);
+    } else {
+      setSheetOpen(true);
+      setStarterPickerOpen(false);
+    }
+  };
+
+  const closeSelection = () => {
+    setSelectedSlot(null);
+    setSheetOpen(false);
+    setStarterPickerOpen(false);
   };
 
   const handleRemovePlayer = () => {
@@ -440,13 +914,41 @@ export default function TeamPage() {
         slot.slot_index === selectedSlot.slot_index ? { ...slot, player_id: null } : slot
       )
     );
-    setSheetOpen(false);
+    setSelectedSlot({ ...selectedSlot, player_id: null });
+    if (sheetOpen) {
+      setSheetOpen(false);
+    }
+    if (starterPickerOpen) {
+      setStarterPickerOpen(false);
+    }
   };
 
   const handleCaptain = () => {
     if (!selectedSlot?.player_id) return;
     setCaptainId(selectedSlot.player_id);
-    setSheetOpen(false);
+    if (viceCaptainId === selectedSlot.player_id) {
+      setViceCaptainId(null);
+    }
+    if (sheetOpen) {
+      setSheetOpen(false);
+    }
+    if (starterPickerOpen) {
+      setStarterPickerOpen(false);
+    }
+  };
+
+  const handleViceCaptain = () => {
+    if (!selectedSlot?.player_id) return;
+    setViceCaptainId(selectedSlot.player_id);
+    if (captainId === selectedSlot.player_id) {
+      setCaptainId(null);
+    }
+    if (sheetOpen) {
+      setSheetOpen(false);
+    }
+    if (starterPickerOpen) {
+      setStarterPickerOpen(false);
+    }
   };
 
   const handleAssignPlayer = (playerId: number, sourceSlotIndex?: number) => {
@@ -468,12 +970,24 @@ export default function TeamPage() {
         return slot;
       });
     });
-    setSheetOpen(false);
+    setSelectedSlot((prev) => (prev ? applyPlayerToSlot(prev, playerId) : prev));
+    if (sheetOpen) {
+      setSheetOpen(false);
+    }
+    if (starterPickerOpen) {
+      setStarterPickerOpen(false);
+    }
   };
 
   const handleSave = async () => {
+    if (nameGateOpen) return;
+    if (roundMissing) {
+      setSaveErrors(["rounds_not_configured"]);
+      return;
+    }
     if (!token) return;
     setSaveErrors(null);
+    setSaveMessage(null);
     const localErrors = [
       ...new Set([...validateSquad(squad), ...validateLineup(lineupSlots, squad)])
     ];
@@ -482,7 +996,14 @@ export default function TeamPage() {
       return;
     }
     try {
-      await saveLineup(token, lineupSlots, currentRound || undefined);
+      await saveLineup(
+        token,
+        lineupSlots,
+        currentRound || undefined,
+        captainId,
+        viceCaptainId
+      );
+      setSaveMessage("XI guardado correctamente");
     } catch (err) {
       setSaveErrors([String(err)]);
     }
@@ -532,56 +1053,72 @@ export default function TeamPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold">Equipo</h1>
-          <p className="text-xs text-muted">Ronda {currentRound ?? "-"}</p>
+          <h1 className="text-xl font-semibold">Fantasy Liga 1 2026</h1>
+          <p className="text-xs text-muted">
+            Ronda actual : {currentRound ?? "-"}
+            {roundDateRange ? ` (Del ${roundDateRange.min} al ${roundDateRange.max})` : ""}
+          </p>
         </div>
       </div>
+      {roundMissing ? (
+        <div className="glass rounded-2xl border border-white/10 p-4 text-sm text-muted">
+          No hay rondas configuradas. Carga rondas y partidos desde Admin para habilitar el XI.
+        </div>
+      ) : null}
       <StickyTopBar budgetUsed={budgetUsed} budgetLeft={budgetLeft} />
 
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Titulares</h2>
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-emerald-900/40 via-emerald-950/40 to-black/30 p-4">
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-emerald-700/55 via-emerald-900/45 to-black/35 p-4">
             <div className="pointer-events-none absolute inset-4 rounded-2xl border border-white/10" />
             <div className="pointer-events-none absolute left-4 right-4 top-1/2 h-px bg-white/10" />
             <div className="pointer-events-none absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
             <div className="relative z-10 flex min-h-[520px] flex-col justify-between gap-6 py-3">
-              <PitchRow
-                label="Ataque"
-                slots={startersByRole.F}
-                squadMap={squadMap}
-                opponentByTeamId={opponentByTeamId}
-                onSelect={handleSlotClick}
-                sizeClass={sizeClass}
-                badgeClass={badgeClass}
-              />
-              <PitchRow
-                label="Medio"
-                slots={startersByRole.M}
-                squadMap={squadMap}
-                opponentByTeamId={opponentByTeamId}
-                onSelect={handleSlotClick}
-                sizeClass={sizeClass}
-                badgeClass={badgeClass}
-              />
-              <PitchRow
-                label="Defensa"
-                slots={startersByRole.D}
-                squadMap={squadMap}
-                opponentByTeamId={opponentByTeamId}
-                onSelect={handleSlotClick}
-                sizeClass={sizeClass}
-                badgeClass={badgeClass}
-              />
-              <PitchRow
-                label="Arquero"
-                slots={startersByRole.G}
-                squadMap={squadMap}
-                opponentByTeamId={opponentByTeamId}
-                onSelect={handleSlotClick}
-                sizeClass={sizeClass}
-                badgeClass={badgeClass}
-              />
+            <PitchRow
+              label="Ataque"
+              slots={startersByRole.F}
+              squadMap={squadMap}
+              opponentByTeamId={opponentByTeamId}
+              onSelect={handleSlotClick}
+              sizeClass={sizeClass}
+              badgeClass={badgeClass}
+              captainId={captainId}
+              viceCaptainId={viceCaptainId}
+            />
+            <PitchRow
+              label="Medio"
+              slots={startersByRole.M}
+              squadMap={squadMap}
+              opponentByTeamId={opponentByTeamId}
+              onSelect={handleSlotClick}
+              sizeClass={sizeClass}
+              badgeClass={badgeClass}
+              captainId={captainId}
+              viceCaptainId={viceCaptainId}
+            />
+            <PitchRow
+              label="Defensa"
+              slots={startersByRole.D}
+              squadMap={squadMap}
+              opponentByTeamId={opponentByTeamId}
+              onSelect={handleSlotClick}
+              sizeClass={sizeClass}
+              badgeClass={badgeClass}
+              captainId={captainId}
+              viceCaptainId={viceCaptainId}
+            />
+            <PitchRow
+              label="Arquero"
+              slots={startersByRole.G}
+              squadMap={squadMap}
+              opponentByTeamId={opponentByTeamId}
+              onSelect={handleSlotClick}
+              sizeClass={sizeClass}
+              badgeClass={badgeClass}
+              captainId={captainId}
+              viceCaptainId={viceCaptainId}
+            />
             </div>
           </div>
         </section>
@@ -594,6 +1131,8 @@ export default function TeamPage() {
                 key={slot.slot_index}
                 slot={slot}
                 player={slot.player_id ? squadMap.get(slot.player_id) : undefined}
+                isCaptain={Boolean(slot.player_id && captainId === slot.player_id)}
+                isViceCaptain={Boolean(slot.player_id && viceCaptainId === slot.player_id)}
                 opponent={
                   slot.player_id && squadMap.get(slot.player_id)
                     ? opponentByTeamId.get(
@@ -632,7 +1171,18 @@ export default function TeamPage() {
           )}
         </section>
 
-        <DragOverlay>{activePlayer ? <PlayerCard player={activePlayer} /> : null}</DragOverlay>
+        <DragOverlay>
+          {activePlayer ? (
+            <div className="rounded-2xl bg-black/40 p-2 shadow-xl">
+              <PlayerAvatarSquare
+                playerId={activePlayer.player_id}
+                teamId={activePlayer.team_id}
+                className={isTestEnv ? "h-14 w-14" : "h-20 w-20"}
+                rounded
+              />
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
 
       <div className="glass rounded-2xl p-4">
@@ -640,9 +1190,74 @@ export default function TeamPage() {
         <p className="text-sm text-ink">
           {captainId && squadMap.get(captainId) ? squadMap.get(captainId)?.name : "No asignado"}
         </p>
+        <p className="mt-2 text-xs text-muted">Vicecapitan</p>
+        <p className="text-sm text-ink">
+          {viceCaptainId && squadMap.get(viceCaptainId)
+            ? squadMap.get(viceCaptainId)?.name
+            : "No asignado"}
+        </p>
       </div>
 
       <FabMenu onSave={handleSave} />
+
+      {saveMessage ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
+          <div className="glass w-full max-w-sm rounded-2xl border border-white/10 p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-ink">Listo</p>
+              <button
+                onClick={() => setSaveMessage(null)}
+                className="text-xs text-muted"
+                aria-label="Cerrar"
+              >
+                X
+              </button>
+            </div>
+            <div className="mt-3 rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+              {saveMessage}
+            </div>
+            <button
+              onClick={() => setSaveMessage(null)}
+              className="mt-4 w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <WelcomeSlideshow
+        open={welcomeOpen}
+        onComplete={() => {
+          localStorage.setItem(welcomeKey, "1");
+          setWelcomeSeen(true);
+          setWelcomeOpen(false);
+          setNameGateOpen(true);
+        }}
+      />
+
+      <TeamNameGate
+        open={nameGateOpen}
+        teamName={teamName}
+        onTeamNameChange={setTeamName}
+        error={teamNameError}
+        onSave={async () => {
+          if (!token) return;
+          const trimmedName = teamName.trim();
+          if (!trimmedName) {
+            setTeamNameError("Nombre requerido.");
+            return;
+          }
+          setTeamNameError(null);
+          try {
+            await createTeam(token, trimmedName);
+            setTeamName(trimmedName);
+            setNameGateOpen(false);
+          } catch {
+            setTeamNameError("No se pudo guardar el nombre.");
+          }
+        }}
+      />
 
       {saveErrors ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
@@ -657,10 +1272,23 @@ export default function TeamPage() {
                 X
               </button>
             </div>
-            <div className="mt-3 space-y-2 text-xs text-warning">
-              {saveErrors.map((error) => (
-                <p key={error}>{error}</p>
-              ))}
+            <div className="mt-3 space-y-2 text-xs">
+              {saveErrors.map((error) => {
+                const info = formatError(error);
+                const toneClass =
+                  info.tone === "danger"
+                    ? "border-red-400/40 bg-red-500/10 text-red-200"
+                    : "border-amber-400/40 bg-amber-500/10 text-amber-200";
+                return (
+                  <div
+                    key={error}
+                    className={`rounded-xl border px-3 py-2 ${toneClass}`}
+                  >
+                    <p className="font-semibold">{info.title}</p>
+                    {info.detail ? <p className="text-[11px] opacity-90">{info.detail}</p> : null}
+                  </div>
+                );
+              })}
             </div>
             <button
               onClick={() => setSaveErrors(null)}
@@ -668,6 +1296,128 @@ export default function TeamPage() {
             >
               Entendido
             </button>
+          </div>
+        </div>
+      ) : null}
+
+      {starterPickerOpen && selectedSlot && selectedSlot.is_starter ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4">
+          <div className="glass w-full max-w-md rounded-2xl border border-white/10 p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-ink">Seleccion de titular</p>
+              <button onClick={closeSelection} className="text-xs text-muted" aria-label="Cerrar">
+                X
+              </button>
+            </div>
+            <div className="mt-3 max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+              {selectedPlayer ? (
+                <div className="space-y-2">
+                  <PlayerCard player={selectedPlayer} compact />
+                  <PlayerFantasyDetails
+                    player={selectedPlayer}
+                    roundNumber={currentRound}
+                    teamName={teamNameById.get(selectedPlayer.team_id)}
+                    fixtures={fixtures}
+                  />
+                </div>
+              ) : (
+                <p className="text-xs text-muted">Slot vacio.</p>
+              )}
+
+              {selectedSlot.player_id ? (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <p className="text-[10px] uppercase text-muted">Reemplazar con banca</p>
+                    {benchCandidates.length ? (
+                      benchCandidates.map(({ slot, player }) => (
+                        <button
+                          key={slot.slot_index}
+                          onClick={() => handleAssignPlayer(player.player_id, slot.slot_index)}
+                          className="w-full text-left"
+                        >
+                          <PlayerCard player={player} compact />
+                        </button>
+                      ))
+                    ) : (
+                      <p className="text-xs text-muted">Sin jugadores en banca.</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] uppercase text-muted">Reemplazar con plantel</p>
+                    {availablePlayersSorted.length ? (
+                      availablePlayersSorted.map((player) => (
+                        <button
+                          key={player.player_id}
+                          onClick={() => handleAssignPlayer(player.player_id)}
+                          className="w-full text-left"
+                        >
+                          <PlayerCard player={player} compact />
+                        </button>
+                      ))
+                    ) : (
+                      <p className="text-xs text-muted">Sin jugadores disponibles.</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <p className="text-[10px] uppercase text-muted">Agregar jugador disponible</p>
+                    {availablePlayersSorted.length ? (
+                      availablePlayersSorted.map((player) => (
+                        <button
+                          key={player.player_id}
+                          onClick={() => handleAssignPlayer(player.player_id)}
+                          className="w-full text-left"
+                        >
+                          <PlayerCard player={player} compact />
+                        </button>
+                      ))
+                    ) : (
+                      <p className="text-xs text-muted">Sin jugadores disponibles.</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[10px] uppercase text-muted">Agregar desde banca</p>
+                    {benchCandidates.length ? (
+                      benchCandidates.map(({ slot, player }) => (
+                        <button
+                          key={slot.slot_index}
+                          onClick={() => handleAssignPlayer(player.player_id, slot.slot_index)}
+                          className="w-full text-left"
+                        >
+                          <PlayerCard player={player} compact />
+                        </button>
+                      ))
+                    ) : (
+                      <p className="text-xs text-muted">Sin jugadores en banca.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            {selectedSlot.player_id ? (
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={handleRemovePlayer}
+                  className="flex-1 rounded-xl border border-white/20 px-4 py-2 text-xs text-ink"
+                >
+                  Quitar
+                </button>
+                <button
+                  onClick={handleCaptain}
+                  className="flex-1 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-black"
+                >
+                  Fijar Capitan
+                </button>
+                <button
+                  onClick={handleViceCaptain}
+                  className="flex-1 rounded-xl border border-white/20 px-4 py-2 text-xs text-ink"
+                >
+                  Fijar Vice
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -682,6 +1432,12 @@ export default function TeamPage() {
             {selectedPlayer ? (
               <div className="space-y-2">
                 <PlayerCard player={selectedPlayer} />
+                <PlayerFantasyDetails
+                  player={selectedPlayer}
+                  roundNumber={currentRound}
+                  teamName={teamNameById.get(selectedPlayer.team_id)}
+                  fixtures={fixtures}
+                />
                 {selectedSlot.is_starter && selectedOpponent ? (
                   <div className="flex items-center gap-2 text-xs text-muted">
                     <span>Rival:</span>
@@ -805,6 +1561,12 @@ export default function TeamPage() {
                   className="flex-1 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
                 >
                   Fijar Capitan
+                </button>
+                <button
+                  onClick={handleViceCaptain}
+                  className="flex-1 rounded-xl border border-white/20 px-4 py-2 text-sm text-ink"
+                >
+                  Fijar Vice
                 </button>
               </div>
             ) : null}

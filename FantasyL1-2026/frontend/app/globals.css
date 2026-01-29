@@ -7,9 +7,9 @@
 @tailwind utilities;
 
 :root {
-  --bg: #0b0b0f;
-  --surface: #12141b;
-  --surface-2: #1a1e2a;
+  --bg: #120708;
+  --surface: #181017;
+  --surface-2: #22121b;
   --ink: #f7f3ed;
   --muted: #9aa3b2;
   --accent: #f2c94c;
@@ -23,15 +23,15 @@
 
 body {
   min-height: 100vh;
-  background: radial-gradient(1200px 600px at 20% 20%, rgba(242, 201, 76, 0.12), transparent 60%),
-    radial-gradient(900px 500px at 80% 10%, rgba(93, 224, 165, 0.1), transparent 55%),
-    linear-gradient(160deg, #0b0b0f 0%, #0f131b 40%, #111827 100%);
+  background: radial-gradient(1200px 600px at 20% 20%, rgba(229, 28, 28, 0.16), transparent 60%),
+    radial-gradient(900px 500px at 80% 10%, rgba(242, 201, 76, 0.1), transparent 55%),
+    linear-gradient(160deg, #120708 0%, #1a0b12 45%, #220f1a 100%);
   color: var(--ink);
   font-family: "Space Grotesk", sans-serif;
 }
 
 .glass {
-  background: rgba(18, 20, 27, 0.7);
+  background: rgba(24, 16, 23, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
 }

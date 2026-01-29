@@ -65,10 +65,7 @@ def get_current_round(db: Session, season_id: int) -> Optional[Round]:
         .scalars()
         .first()
     )
-    if round_obj:
-        return round_obj
-    # If no rounds exist yet, create round 1 to avoid 404 on lineup
-    return ensure_round(db, season_id, 1)
+    return round_obj
 
 
 def ensure_round(db: Session, season_id: int, round_number: int) -> Round:

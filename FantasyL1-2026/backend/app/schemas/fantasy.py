@@ -16,6 +16,13 @@ class FantasyTeamPlayerOut(BaseModel):
     team_id: int
     price_current: float
     bought_price: float
+    is_injured: bool
+    goals: int = 0
+    assists: int = 0
+    saves: int = 0
+    points_round: Optional[float] = None
+    clean_sheets: Optional[int] = None
+    goals_conceded: Optional[int] = None
 
 
 class FantasyTeamOut(BaseModel):
@@ -42,11 +49,15 @@ class LineupSlotIn(BaseModel):
 class LineupOut(BaseModel):
     lineup_id: int
     round_number: int
+    captain_player_id: Optional[int] = None
+    vice_captain_player_id: Optional[int] = None
     slots: List[LineupSlotIn]
 
 
 class LineupUpdateIn(BaseModel):
     slots: List[LineupSlotIn]
+    captain_player_id: Optional[int] = None
+    vice_captain_player_id: Optional[int] = None
 
 
 class TransferIn(BaseModel):
@@ -63,6 +74,12 @@ class TransferOut(BaseModel):
     out_price: float
     in_price: float
     created_at: datetime
+
+
+class TransferCountOut(BaseModel):
+    round_number: int
+    transfers_used: int
+    next_fee: float
 
 
 class ValidationResult(BaseModel):

@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import Counter
 from typing import Iterable, List
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import FantasyTeamPlayer, FantasyTransfer, PlayerCatalog
@@ -147,15 +147,18 @@ def validate_transfer(
 ) -> List[str]:
     errors: List[str] = []
 
-    existing_transfer = db.execute(
-        select(FantasyTransfer).where(
-            FantasyTransfer.fantasy_team_id == fantasy_team_id,
-            FantasyTransfer.round_id == round_id,
-        )
-    ).scalar_one_or_none()
-    if existing_transfer:
-        errors.append("transfer_already_used_this_round")
-        return errors
+    existing_count = (
+        db.execute(
+            select(func.count())
+            .select_from(FantasyTransfer)
+            .where(
+                FantasyTransfer.fantasy_team_id == fantasy_team_id,
+                FantasyTransfer.round_id == round_id,
+            )
+        ).scalar()
+        or 0
+    )
+    total_fee = max(0, existing_count) * 0.5
 
     squad_ids = (
         db.execute(
@@ -176,6 +179,7 @@ def validate_transfer(
         return errors
 
     new_ids = [pid for pid in squad_ids if pid != out_player_id] + [in_player_id]
-    errors.extend(validate_squad(db, new_ids, budget_cap=budget_cap))
+    effective_cap = float(budget_cap) - float(total_fee)
+    errors.extend(validate_squad(db, new_ids, budget_cap=effective_cap))
 
     return errors

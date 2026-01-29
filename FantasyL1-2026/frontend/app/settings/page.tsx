@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 
 import AuthPanel from "@/components/AuthPanel";
+import TeamNameGate from "@/components/TeamNameGate";
+import WelcomeSlideshow from "@/components/WelcomeSlideshow";
 import { createTeam, getTeam } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
 
@@ -16,6 +18,11 @@ export default function SettingsPage() {
   const setMarketDraftLoaded = useFantasyStore((state) => state.setMarketDraftLoaded);
   const [teamName, setTeamName] = useState("");
   const [status, setStatus] = useState<string | null>(null);
+  const [teamLoaded, setTeamLoaded] = useState(false);
+  const [nameGateOpen, setNameGateOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeSeen, setWelcomeSeen] = useState(false);
+  const [teamNameError, setTeamNameError] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
@@ -27,9 +34,36 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!token) return;
     getTeam(token)
-      .then((team) => setTeamName(team.name || ""))
-      .catch(() => undefined);
+      .then((team) => {
+        setTeamName(team.name || "");
+        setTeamLoaded(true);
+      })
+      .catch(() => setTeamLoaded(true));
   }, [token]);
+
+  useEffect(() => {
+    if (teamLoaded && !teamName.trim()) {
+      setNameGateOpen(!welcomeOpen);
+    } else {
+      setNameGateOpen(false);
+    }
+  }, [teamLoaded, teamName, welcomeOpen]);
+
+  const welcomeKey = `fantasy_welcome_seen_${userEmail && userEmail.trim() ? userEmail.trim() : "anon"}`;
+
+  useEffect(() => {
+    if (!token) return;
+    const stored = localStorage.getItem(welcomeKey);
+    setWelcomeSeen(stored === "1");
+  }, [token, welcomeKey]);
+
+  useEffect(() => {
+    if (teamLoaded && !teamName.trim() && !welcomeSeen) {
+      setWelcomeOpen(true);
+    } else {
+      setWelcomeOpen(false);
+    }
+  }, [teamLoaded, teamName, welcomeSeen]);
 
   const handleSave = async () => {
     if (!token) return;
@@ -88,6 +122,39 @@ export default function SettingsPage() {
       >
         Logout
       </button>
+
+      <WelcomeSlideshow
+        open={welcomeOpen}
+        onComplete={() => {
+          localStorage.setItem(welcomeKey, "1");
+          setWelcomeSeen(true);
+          setWelcomeOpen(false);
+          setNameGateOpen(true);
+        }}
+      />
+
+      <TeamNameGate
+        open={nameGateOpen}
+        teamName={teamName}
+        onTeamNameChange={setTeamName}
+        error={teamNameError}
+        onSave={async () => {
+          if (!token) return;
+          const trimmedName = teamName.trim();
+          if (!trimmedName) {
+            setTeamNameError("Nombre requerido.");
+            return;
+          }
+          setTeamNameError(null);
+          try {
+            await createTeam(token, trimmedName);
+            setTeamName(trimmedName);
+            setNameGateOpen(false);
+          } catch {
+            setTeamNameError("No se pudo guardar el nombre.");
+          }
+        }}
+      />
     </div>
   );
 }

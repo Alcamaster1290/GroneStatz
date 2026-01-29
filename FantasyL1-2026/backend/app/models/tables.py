@@ -67,6 +67,7 @@ class PlayerCatalog(Base):
     assists = Column(Integer, nullable=False, server_default="0")
     saves = Column(Integer, nullable=False, server_default="0")
     fouls = Column(Integer, nullable=False, server_default="0")
+    is_injured = Column(Boolean, nullable=False, server_default="false")
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
@@ -82,6 +83,9 @@ class Fixture(Base):
     kickoff_at = Column(DateTime(timezone=True), nullable=True)
     stadium = Column(String(120), nullable=True)
     city = Column(String(120), nullable=True)
+    status = Column(String(20), nullable=False, server_default="Programado")
+    home_score = Column(Integer, nullable=True)
+    away_score = Column(Integer, nullable=True)
 
 
 class FantasyTeam(Base):
@@ -112,6 +116,8 @@ class FantasyLineup(Base):
     fantasy_team_id = Column(Integer, ForeignKey("fantasy_teams.id"), nullable=False)
     round_id = Column(Integer, ForeignKey("rounds.id"), nullable=False)
     formation_code = Column(Text, nullable=False, server_default="DEFAULT")
+    captain_player_id = Column(Integer, ForeignKey("players_catalog.player_id"), nullable=True)
+    vice_captain_player_id = Column(Integer, ForeignKey("players_catalog.player_id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     __table_args__ = (UniqueConstraint("fantasy_team_id", "round_id"),)
@@ -139,8 +145,6 @@ class FantasyTransfer(Base):
     in_price = Column(Numeric(4, 1), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    __table_args__ = (UniqueConstraint("fantasy_team_id", "round_id"),)
-
 
 class PriceHistory(Base):
     __tablename__ = "price_history"
@@ -151,6 +155,38 @@ class PriceHistory(Base):
     price = Column(Numeric(4, 1), nullable=False)
 
 
+class PriceMovement(Base):
+    __tablename__ = "price_movements"
+
+    season_id = Column(Integer, ForeignKey("seasons.id"), primary_key=True)
+    round_id = Column(Integer, ForeignKey("rounds.id"), primary_key=True)
+    player_id = Column(Integer, ForeignKey("players_catalog.player_id"), primary_key=True)
+    points = Column(Numeric(6, 2), nullable=False)
+    delta = Column(Numeric(4, 1), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class League(Base):
+    __tablename__ = "leagues"
+
+    id = Column(Integer, primary_key=True)
+    code = Column(String(10), nullable=False, unique=True, index=True)
+    name = Column(String(80), nullable=False)
+    owner_fantasy_team_id = Column(Integer, ForeignKey("fantasy_teams.id"), nullable=False)
+    is_public = Column(Boolean, nullable=False, server_default="false")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class LeagueMember(Base):
+    __tablename__ = "league_members"
+
+    league_id = Column(Integer, ForeignKey("leagues.id"), primary_key=True)
+    fantasy_team_id = Column(Integer, ForeignKey("fantasy_teams.id"), primary_key=True)
+    joined_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (UniqueConstraint("fantasy_team_id"),)
+
+
 class PointsRound(Base):
     __tablename__ = "points_round"
 
@@ -158,3 +194,66 @@ class PointsRound(Base):
     round_id = Column(Integer, ForeignKey("rounds.id"), primary_key=True)
     player_id = Column(Integer, ForeignKey("players_catalog.player_id"), primary_key=True)
     points = Column(Numeric(6, 2), nullable=False, server_default="0")
+
+
+class PlayerRoundStat(Base):
+    __tablename__ = "player_round_stats"
+
+    season_id = Column(Integer, ForeignKey("seasons.id"), primary_key=True)
+    round_id = Column(Integer, ForeignKey("rounds.id"), primary_key=True)
+    player_id = Column(Integer, ForeignKey("players_catalog.player_id"), primary_key=True)
+    minutesplayed = Column(Integer, nullable=False, server_default="0")
+    goals = Column(Integer, nullable=False, server_default="0")
+    assists = Column(Integer, nullable=False, server_default="0")
+    saves = Column(Integer, nullable=False, server_default="0")
+    fouls = Column(Integer, nullable=False, server_default="0")
+    yellow_cards = Column(Integer, nullable=False, server_default="0")
+    red_cards = Column(Integer, nullable=False, server_default="0")
+    clean_sheets = Column(Integer, nullable=False, server_default="0")
+    goals_conceded = Column(Integer, nullable=False, server_default="0")
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class PlayerMatchStat(Base):
+    __tablename__ = "player_match_stats"
+
+    season_id = Column(Integer, ForeignKey("seasons.id"), primary_key=True)
+    round_id = Column(Integer, ForeignKey("rounds.id"), primary_key=True)
+    match_id = Column(Integer, primary_key=True)
+    player_id = Column(Integer, ForeignKey("players_catalog.player_id"), primary_key=True)
+    minutesplayed = Column(Integer, nullable=False, server_default="0")
+    goals = Column(Integer, nullable=False, server_default="0")
+    assists = Column(Integer, nullable=False, server_default="0")
+    saves = Column(Integer, nullable=False, server_default="0")
+    fouls = Column(Integer, nullable=False, server_default="0")
+    yellow_cards = Column(Integer, nullable=False, server_default="0")
+    red_cards = Column(Integer, nullable=False, server_default="0")
+    clean_sheet = Column(Integer, nullable=True)
+    goals_conceded = Column(Integer, nullable=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class ActionLog(Base):
+    __tablename__ = "action_logs"
+
+    id = Column(Integer, primary_key=True)
+    category = Column(String(30), nullable=False)
+    action = Column(String(50), nullable=False)
+    actor_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    league_id = Column(Integer, ForeignKey("leagues.id"), nullable=True)
+    fantasy_team_id = Column(Integer, ForeignKey("fantasy_teams.id"), nullable=True)
+    target_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    target_fantasy_team_id = Column(Integer, ForeignKey("fantasy_teams.id"), nullable=True)
+    details = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    token_hash = Column(String(128), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    used_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

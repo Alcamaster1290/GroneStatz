@@ -17,13 +17,36 @@ class PlayerCatalogOut(BaseModel):
     position: str
     team_id: int
     price_current: float
+    is_injured: bool
     minutesplayed: int
     matches_played: int
     goals: int
     assists: int
     saves: int
     fouls: int
+    points_round: Optional[float] = None
+    clean_sheets: Optional[int] = None
+    goals_conceded: Optional[int] = None
     updated_at: datetime
+
+
+class PlayerStatsOut(BaseModel):
+    player_id: int
+    name: str
+    short_name: Optional[str] = None
+    position: str
+    team_id: int
+    price_current: float
+    is_injured: bool
+    selected_count: int
+    selected_percent: float
+    goals: int
+    assists: int
+    minutesplayed: int
+    saves: int
+    fouls: int
+    yellow_cards: int
+    red_cards: int
 
 
 class FixtureOut(BaseModel):
@@ -35,3 +58,6 @@ class FixtureOut(BaseModel):
     kickoff_at: Optional[datetime] = None
     stadium: Optional[str] = None
     city: Optional[str] = None
+    status: str
+    home_score: Optional[int] = None
+    away_score: Optional[int] = None

@@ -17,3 +17,18 @@ class UserOut(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirm(BaseModel):
+    email: EmailStr
+    code: str
+    new_password: str = Field(min_length=6)
+
+
+class PasswordResetOut(BaseModel):
+    ok: bool
+    reset_code: str | None = None

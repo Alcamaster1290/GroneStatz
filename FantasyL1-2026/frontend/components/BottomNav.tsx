@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, Home, Settings, ShoppingBag } from "lucide-react";
+import { BarChart3, Calendar, Home, Settings, ShoppingBag, Trophy } from "lucide-react";
 
 const items = [
   { href: "/team", label: "Equipo", icon: Home },
   { href: "/market", label: "Mercado", icon: ShoppingBag },
   { href: "/fixtures", label: "Rondas", icon: Calendar },
+  { href: "/ranking", label: "Ranking", icon: Trophy },
+  { href: "/stats", label: "Estadisticas", icon: BarChart3 },
   { href: "/settings", label: "Ajustes", icon: Settings }
 ];
 

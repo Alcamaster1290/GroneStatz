@@ -5,6 +5,7 @@ from sqlalchemy.exc import OperationalError
 
 from app.api.router import router
 from app.core.config import get_settings
+from app.services.scheduler import start_scheduler
 
 settings = get_settings()
 origin_regex = settings.CORS_ORIGIN_REGEX.strip() if settings.CORS_ORIGIN_REGEX else None
@@ -23,6 +24,18 @@ app.add_middleware(
 )
 
 app.include_router(router)
+
+
+@app.on_event("startup")
+async def _startup_scheduler() -> None:
+    app.state.scheduler_task = start_scheduler()
+
+
+@app.on_event("shutdown")
+async def _shutdown_scheduler() -> None:
+    task = getattr(app.state, "scheduler_task", None)
+    if task:
+        task.cancel()
 
 
 @app.exception_handler(OperationalError)

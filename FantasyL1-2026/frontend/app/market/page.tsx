@@ -7,17 +7,16 @@ import AuthPanel from "@/components/AuthPanel";
 import BottomSheet from "@/components/BottomSheet";
 import MarketFilters from "@/components/MarketFilters";
 import PlayerCard from "@/components/PlayerCard";
-import { createTeam, getCatalogPlayers, getHealth, getTeam, getTeams, updateSquad } from "@/lib/api";
+import TeamNameGate from "@/components/TeamNameGate";
+import WelcomeSlideshow from "@/components/WelcomeSlideshow";
+import { createTeam, getCatalogPlayers, getFixtures, getTeam, getTransferCount, updateSquad } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
-import { Player } from "@/lib/types";
+import { Fixture, Player, TransferCount } from "@/lib/types";
 import { validateSquad } from "@/lib/validation";
 
 function PlayerFace({ playerId }: { playerId: number }) {
   const sources = [
-    `/images/players/${playerId}.png`,
-    `/images/players/${playerId}.jpg`,
-    `/images/players/${playerId}.jpeg`,
-    `/images/players/${playerId}.webp`
+    `/images/players/${playerId}.png`
   ];
   const [srcIndex, setSrcIndex] = useState(0);
   const [hidden, setHidden] = useState(false);
@@ -123,6 +122,139 @@ function PitchPlayer({
   );
 }
 
+const positionLabels: Record<string, string> = {
+  G: "Arquero",
+  D: "Defensa",
+  M: "Mediocampo",
+  F: "Delantero"
+};
+
+function MarketPlayerDetails({ player, fixtures }: { player: Player; fixtures: Fixture[] }) {
+  const displayName = player.short_name || player.shortName || player.name;
+  const isKeeper = player.position === "G";
+  const points =
+    typeof player.points_round === "number" ? player.points_round.toFixed(1) : "--";
+  const primaryStatLabel = isKeeper ? "Atajadas" : "Goles";
+  const primaryStatValue = isKeeper ? player.saves ?? 0 : player.goals ?? 0;
+  const secondaryStatLabel = isKeeper ? "Goles recibidos" : "Asistencias";
+  const secondaryStatValue = isKeeper
+    ? player.goals_conceded ?? 0
+    : player.assists ?? 0;
+
+  const formatKickoff = (kickoff: string | null) => {
+    if (!kickoff) return "Por confirmar";
+    const normalized = kickoff.replace("T", " ").trim();
+    const [datePart, timePart] = normalized.split(" ");
+    const [year, month, day] = datePart.split("-");
+    const shortYear = year ? year.slice(2) : "";
+    const time = timePart ? timePart.slice(0, 5) : "";
+    return `${day}/${month}/${shortYear}${time ? `, ${time}` : ""}`;
+  };
+
+  const teamFixtures = fixtures
+    .filter(
+      (fixture) =>
+        fixture.home_team_id === player.team_id || fixture.away_team_id === player.team_id
+    )
+    .sort((a, b) => {
+      const aKey = a.kickoff_at ? a.kickoff_at : "9999-99-99";
+      const bKey = b.kickoff_at ? b.kickoff_at : "9999-99-99";
+      return aKey.localeCompare(bKey);
+    })
+    .slice(0, 3);
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <PlayerFace playerId={player.player_id} />
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface2/60">
+          <img
+            src={`/images/teams/${player.team_id}.png`}
+            alt=""
+            className="h-full w-full object-contain"
+            onError={(event) => {
+              (event.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-ink">{displayName}</p>
+          <p className="text-xs text-muted">
+            {player.price_current.toFixed(1)} - {positionLabels[player.position] || player.position}
+          </p>
+        </div>
+      </div>
+      {player.is_injured ? (
+        <div className="flex items-center gap-2 rounded-xl bg-red-500/80 px-3 py-2 text-xs font-semibold text-black">
+          <span>!</span>
+          <span>Lesionado</span>
+        </div>
+      ) : null}
+      <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/20 p-3 text-xs">
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase text-muted">Puntaje ronda</p>
+          <p className="text-sm font-semibold text-ink">{points}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase text-muted">{primaryStatLabel}</p>
+          <p className="text-sm font-semibold text-ink">{primaryStatValue}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase text-muted">{secondaryStatLabel}</p>
+          <p className="text-sm font-semibold text-ink">{secondaryStatValue}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase text-muted">Precio</p>
+          <p className="text-sm font-semibold text-accent">{player.price_current.toFixed(1)}</p>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-ink">Partidos</p>
+        {teamFixtures.length ? (
+          <div className="space-y-2">
+            {teamFixtures.map((fixture) => {
+              const homeId = fixture.home_team_id;
+              const awayId = fixture.away_team_id;
+              return (
+                <div
+                  key={fixture.id}
+                  className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-black/40">
+                      {homeId ? (
+                        <img
+                          src={`/images/teams/${homeId}.png`}
+                          alt=""
+                          className="h-full w-full object-contain"
+                        />
+                      ) : null}
+                    </span>
+                    <span className="text-muted">-</span>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-black/40">
+                      {awayId ? (
+                        <img
+                          src={`/images/teams/${awayId}.png`}
+                          alt=""
+                          className="h-full w-full object-contain"
+                        />
+                      ) : null}
+                    </span>
+                  </div>
+                  <div className="text-right text-[10px] text-muted">
+                    <p>{formatKickoff(fixture.kickoff_at)}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-xs text-muted">Sin partidos programados.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function PitchRow({
   label,
   players,
@@ -161,6 +293,7 @@ function PitchRow({
 export default function MarketPage() {
   const token = useFantasyStore((state) => state.token);
   const setToken = useFantasyStore((state) => state.setToken);
+  const userEmail = useFantasyStore((state) => state.userEmail);
   const squad = useFantasyStore((state) => state.squad);
   const setSquad = useFantasyStore((state) => state.setSquad);
   const draftSquadState = useFantasyStore((state) => state.marketDraftSquad);
@@ -170,8 +303,8 @@ export default function MarketPage() {
   const setDraftLoaded = useFantasyStore((state) => state.setMarketDraftLoaded);
   const draftSquad = Array.isArray(draftSquadState) ? draftSquadState : [];
 
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [teams, setTeams] = useState<{ id: number; name_short?: string; name_full?: string }[]>([]);
+  const [playersBase, setPlayersBase] = useState<Player[]>([]);
+  const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const filters = useFantasyStore((state) => state.marketFilters);
   const setFilters = useFantasyStore((state) => state.setMarketFilters);
   const [outPlayerId, setOutPlayerId] = useState<number | null>(null);
@@ -183,12 +316,24 @@ export default function MarketPage() {
   const [errorPopup, setErrorPopup] = useState<string[] | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [randomLoading, setRandomLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [teamName, setTeamName] = useState("");
   const [teamNameError, setTeamNameError] = useState<string | null>(null);
-  const [appEnv, setAppEnv] = useState<string>("local");
   const [teamLoaded, setTeamLoaded] = useState(false);
   const [nameGateOpen, setNameGateOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeSeen, setWelcomeSeen] = useState(false);
+  const [transferInfo, setTransferInfo] = useState<TransferCount | null>(null);
+  const [playersAll, setPlayersAll] = useState<Player[] | null>(null);
+  const lastPositionsKey = useRef<string>("");
+
+  const parseMaybeNumber = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
 
   const parentRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -203,6 +348,12 @@ export default function MarketPage() {
       setDraftSquad([]);
     }
   }, [draftSquadState, setDraftSquad]);
+
+  useEffect(() => {
+    if (!Array.isArray(filters.positions)) {
+      setFilters({ ...filters, positions: [] });
+    }
+  }, [filters, setFilters]);
 
   useEffect(() => {
     if (!token) return;
@@ -220,27 +371,65 @@ export default function MarketPage() {
       }
       setTeamLoaded(true);
     };
-    load().catch(() => undefined);
+    load().catch(() => {
+      setTeamLoaded(true);
+    });
   }, [token, setSquad, setDraftSquad, draftSquad.length, draftLoaded, setDraftLoaded]);
 
   useEffect(() => {
-    getHealth()
-      .then((data) => setAppEnv(data.env || "local"))
-      .catch(() => setAppEnv("local"));
+    getFixtures()
+      .then(setFixtures)
+      .catch(() => setFixtures([]));
   }, []);
 
   useEffect(() => {
-    const requiresTeamName = ["test", "prod"].includes(appEnv);
-    if (requiresTeamName && teamLoaded && !teamName.trim()) {
-      setNameGateOpen(true);
+    if (teamLoaded && !teamName.trim()) {
+      setNameGateOpen(!welcomeOpen);
     } else {
       setNameGateOpen(false);
     }
-  }, [appEnv, teamLoaded, teamName]);
+  }, [teamLoaded, teamName, welcomeOpen]);
+
+  const welcomeKey = useMemo(() => {
+    const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
+    return `fantasy_welcome_seen_${safeEmail}`;
+  }, [userEmail]);
 
   useEffect(() => {
-    getTeams().then(setTeams).catch(() => undefined);
-  }, []);
+    if (!token) return;
+    const stored = localStorage.getItem(welcomeKey);
+    setWelcomeSeen(stored === "1");
+  }, [token, welcomeKey]);
+
+  useEffect(() => {
+    if (teamLoaded && !teamName.trim() && !welcomeSeen) {
+      setWelcomeOpen(true);
+    } else {
+      setWelcomeOpen(false);
+    }
+  }, [teamLoaded, teamName, welcomeSeen]);
+
+  useEffect(() => {
+    if (!token) return;
+    if (!sheetOpen) return;
+    getTransferCount(token)
+      .then(setTransferInfo)
+      .catch(() => setTransferInfo(null));
+  }, [token, sheetOpen]);
+
+  const positionsKey = useMemo(
+    () => (Array.isArray(filters.positions) ? filters.positions.join("|") : ""),
+    [filters.positions]
+  );
+
+  useEffect(() => {
+    if (lastPositionsKey.current !== positionsKey) {
+      lastPositionsKey.current = positionsKey;
+      if (filters.minPrice !== "" || filters.maxPrice !== "") {
+        setFilters({ ...filters, minPrice: "", maxPrice: "" });
+      }
+    }
+  }, [positionsKey, filters, setFilters]);
 
   useEffect(() => {
     const fetchPlayers = async () => {
@@ -249,39 +438,85 @@ export default function MarketPage() {
       const limit = 200;
       const maxPages = 10;
       const all: Player[] = [];
+      const positions =
+        Array.isArray(filters.positions) && filters.positions.length > 0 ? filters.positions : [""];
 
-      for (let page = 0; page < maxPages; page += 1) {
-        const result = await getCatalogPlayers({
-          position: filters.position || undefined,
-          team_id: filters.teamId ? Number(filters.teamId) : undefined,
-          min_price: filters.minPrice ? Number(filters.minPrice) : undefined,
-          max_price: filters.maxPrice ? Number(filters.maxPrice) : undefined,
-          q: filters.query || undefined,
-          limit,
-          offset: page * limit
-        });
-        all.push(...result);
-        if (result.length < limit) break;
+      for (const position of positions) {
+        for (let page = 0; page < maxPages; page += 1) {
+          const result = await getCatalogPlayers({
+            position: position || undefined,
+            q: filters.query || undefined,
+            limit,
+            offset: page * limit
+          });
+          all.push(...result);
+          if (result.length < limit) break;
+        }
       }
 
-      const sorted = [...all].sort((a, b) => b.price_current - a.price_current);
-      setPlayers(sorted);
+      const unique = new Map<number, Player>();
+      all.forEach((player) => {
+        unique.set(player.player_id, player);
+      });
+      const sorted = Array.from(unique.values()).sort((a, b) => b.price_current - a.price_current);
+      setPlayersBase(sorted);
       setLoadingPlayers(false);
     };
 
     const timeout = setTimeout(() => {
       fetchPlayers().catch((err) => {
-        setPlayers([]);
+        setPlayersBase([]);
         setFetchError(String(err));
         setLoadingPlayers(false);
       });
     }, 250);
 
     return () => clearTimeout(timeout);
-  }, [filters]);
+  }, [filters.query, positionsKey]);
+
+  const priceBounds = useMemo(() => {
+    if (playersBase.length === 0) return { min: 0, max: 0 };
+    let min = Number.POSITIVE_INFINITY;
+    let max = 0;
+    for (const player of playersBase) {
+      if (player.price_current < min) min = player.price_current;
+      if (player.price_current > max) max = player.price_current;
+    }
+    return { min, max };
+  }, [playersBase]);
+
+  useEffect(() => {
+    if (playersBase.length === 0) {
+      if (filters.minPrice || filters.maxPrice) {
+        setFilters({ ...filters, minPrice: "", maxPrice: "" });
+      }
+      return;
+    }
+    const minBound = priceBounds.min;
+    const maxBound = priceBounds.max;
+    const minNum = parseMaybeNumber(filters.minPrice);
+    const maxNum = parseMaybeNumber(filters.maxPrice);
+    let nextMin = minNum !== null ? Math.min(Math.max(minNum, minBound), maxBound) : minBound;
+    let nextMax = maxNum !== null ? Math.min(Math.max(maxNum, minBound), maxBound) : maxBound;
+    if (nextMax < nextMin) nextMax = nextMin;
+    const nextMinStr = nextMin.toFixed(1);
+    const nextMaxStr = nextMax.toFixed(1);
+    if (nextMinStr !== filters.minPrice || nextMaxStr !== filters.maxPrice) {
+      setFilters({ ...filters, minPrice: nextMinStr, maxPrice: nextMaxStr });
+    }
+  }, [playersBase.length, priceBounds.min, priceBounds.max, filters.minPrice, filters.maxPrice, filters, setFilters]);
+
+  const filteredPlayers = useMemo(() => {
+    if (playersBase.length === 0) return [];
+    const minNum = parseMaybeNumber(filters.minPrice);
+    const maxNum = parseMaybeNumber(filters.maxPrice);
+    const min = minNum !== null ? minNum : priceBounds.min;
+    const max = maxNum !== null ? maxNum : priceBounds.max;
+    return playersBase.filter((player) => player.price_current >= min && player.price_current <= max);
+  }, [playersBase, filters.minPrice, filters.maxPrice, priceBounds.min, priceBounds.max]);
 
   const rowVirtualizer = useVirtualizer({
-    count: players.length,
+    count: filteredPlayers.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 72,
     overscan: 6
@@ -293,8 +528,8 @@ export default function MarketPage() {
   );
 
   const inPlayer = useMemo(
-    () => players.find((player) => player.player_id === inPlayerId),
-    [players, inPlayerId]
+    () => playersBase.find((player) => player.player_id === inPlayerId),
+    [playersBase, inPlayerId]
   );
 
   const playersByPosition = useMemo(() => {
@@ -306,16 +541,109 @@ export default function MarketPage() {
     };
   }, [draftSquad]);
 
+  const clubCounts = useMemo(() => {
+    const counts: Record<number, number> = {};
+    draftSquad.forEach((player) => {
+      counts[player.team_id] = (counts[player.team_id] || 0) + 1;
+    });
+    return counts;
+  }, [draftSquad]);
+
+  const maxClubCount = useMemo(() => {
+    const values = Object.values(clubCounts);
+    return values.length > 0 ? Math.max(...values) : 0;
+  }, [clubCounts]);
+
+  const clubRuleOk = maxClubCount <= 3;
+
   const draftBudget = useMemo(
     () => draftSquad.reduce((sum, player) => sum + player.price_current, 0),
     [draftSquad]
   );
   const budgetLeft = 100 - draftBudget;
 
+  const formatError = (code: string) => {
+    const positionCounts = {
+      G: playersByPosition.G.length,
+      D: playersByPosition.D.length,
+      M: playersByPosition.M.length,
+      F: playersByPosition.F.length
+    };
+    const budgetOver = draftBudget > 100 ? (draftBudget - 100).toFixed(1) : "0.0";
+    const messages: Record<
+      string,
+      { title: string; detail?: string; tone?: "warning" | "danger" }
+    > = {
+      squad_must_have_15_players: {
+        title: "Te faltan jugadores",
+        detail: `Tienes ${draftSquad.length}/15`,
+        tone: "warning"
+      },
+      squad_has_duplicate_players: {
+        title: "Jugadores repetidos",
+        detail: "Un jugador aparece mas de una vez.",
+        tone: "danger"
+      },
+      squad_must_have_2_goalkeepers: {
+        title: "Arqueros incompletos",
+        detail: `Necesitas 2 arqueros. Tienes ${positionCounts.G}.`,
+        tone: "warning"
+      },
+      squad_defenders_out_of_range: {
+        title: "Defensas fuera de rango",
+        detail: `Debes tener entre 3 y 6 defensas. Tienes ${positionCounts.D}.`,
+        tone: "warning"
+      },
+      squad_midfielders_out_of_range: {
+        title: "Mediocampistas fuera de rango",
+        detail: `Debes tener entre 3 y 6 mediocampistas. Tienes ${positionCounts.M}.`,
+        tone: "warning"
+      },
+      squad_forwards_out_of_range: {
+        title: "Delanteros fuera de rango",
+        detail: `Debes tener entre 1 y 3 delanteros. Tienes ${positionCounts.F}.`,
+        tone: "warning"
+      },
+      max_3_players_per_team: {
+        title: "Maximo 3 por club",
+        detail: "Hay un club con mas de 3 jugadores.",
+        tone: "danger"
+      },
+      budget_exceeded: {
+        title: "Presupuesto excedido",
+        detail: `Excediste el presupuesto por ${budgetOver} M.`,
+        tone: "danger"
+      },
+      equipo_lleno: {
+        title: "Plantel completo",
+        detail: "Ya tienes 15 jugadores.",
+        tone: "warning"
+      },
+      no_players_available: {
+        title: "Sin jugadores disponibles",
+        detail: "No hay jugadores para generar el equipo.",
+        tone: "warning"
+      },
+      no_valid_random_squad: {
+        title: "No se pudo generar equipo",
+        detail: "Intenta de nuevo o ajusta el catalogo.",
+        tone: "warning"
+      }
+    };
+
+    return (
+      messages[code] || {
+        title: "Error",
+        detail: code,
+        tone: "danger"
+      }
+    );
+  };
+
   const handleConfirmPlayer = () => {
     if (nameGateOpen) return;
     if (!inPlayerId) return;
-    const incoming = players.find((player) => player.player_id === inPlayerId);
+    const incoming = playersBase.find((player) => player.player_id === inPlayerId);
     if (!incoming) return;
 
     setActionError(null);
@@ -342,46 +670,184 @@ export default function MarketPage() {
     setOutPlayerId(null);
   };
 
-  const handleGenerateRandomTeam = () => {
+  const handleGenerateRandomTeam = async () => {
     if (nameGateOpen) return;
     setSaveMessage(null);
     setErrorPopup(null);
 
-    if (players.length === 0) {
-      setErrorPopup([fetchError || "no_players_available"]);
-      return;
-    }
-
-    const pickRandom = (items: Player[], count: number) => {
-      if (items.length < count) return null;
-      const shuffled = [...items];
-      for (let i = shuffled.length - 1; i > 0; i -= 1) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    setRandomLoading(true);
+    try {
+      let allPlayers = playersAll;
+      if (!allPlayers || allPlayers.length === 0) {
+        const limit = 200;
+        const maxPages = 10;
+        const all: Player[] = [];
+        for (let page = 0; page < maxPages; page += 1) {
+          const result = await getCatalogPlayers({
+            limit,
+            offset: page * limit
+          });
+          all.push(...result);
+          if (result.length < limit) break;
+        }
+        const unique = new Map<number, Player>();
+        all.forEach((player) => {
+          unique.set(player.player_id, player);
+        });
+        allPlayers = Array.from(unique.values()).sort((a, b) => b.price_current - a.price_current);
+        setPlayersAll(allPlayers);
       }
-      return shuffled.slice(0, count);
+
+      if (!allPlayers || allPlayers.length === 0) {
+        setErrorPopup([fetchError || "no_players_available"]);
+        return;
+      }
+
+      const pool = {
+        G: allPlayers.filter((player) => player.position === "G"),
+        D: allPlayers.filter((player) => player.position === "D"),
+        M: allPlayers.filter((player) => player.position === "M"),
+        F: allPlayers.filter((player) => player.position === "F")
+      };
+
+      const missing: string[] = [];
+      if (pool.G.length < 2) missing.push("not_enough_goalkeepers");
+      if (pool.D.length < 3) missing.push("not_enough_defenders");
+      if (pool.M.length < 3) missing.push("not_enough_midfielders");
+      if (pool.F.length < 1) missing.push("not_enough_forwards");
+      if (missing.length > 0) {
+        setErrorPopup(missing);
+        return;
+      }
+
+      const combos: { D: number; M: number; F: number }[] = [];
+      for (let D = 3; D <= 6; D += 1) {
+        for (let M = 3; M <= 6; M += 1) {
+          for (let F = 1; F <= 3; F += 1) {
+            if (D + M + F === 13) {
+              combos.push({ D, M, F });
+            }
+          }
+        }
+      }
+
+    const shuffled = <T,>(items: T[]) => {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
     };
 
-    const gk = pickRandom(players.filter((player) => player.position === "G"), 2);
-    const defenders = pickRandom(players.filter((player) => player.position === "D"), 5);
-    const mids = pickRandom(players.filter((player) => player.position === "M"), 5);
-    const forwards = pickRandom(players.filter((player) => player.position === "F"), 3);
+    const pickWithTeamLimit = (
+      items: Player[],
+      count: number,
+      teamCounts: Record<number, number>
+    ) => {
+      const selection: Player[] = [];
+      for (const player of shuffled(items)) {
+        const current = teamCounts[player.team_id] || 0;
+        if (current >= 3) continue;
+        selection.push(player);
+        teamCounts[player.team_id] = current + 1;
+        if (selection.length === count) break;
+      }
+      return selection.length === count ? selection : null;
+    };
 
-    const missing: string[] = [];
-    if (!gk) missing.push("not_enough_goalkeepers");
-    if (!defenders) missing.push("not_enough_defenders");
-    if (!mids) missing.push("not_enough_midfielders");
-    if (!forwards) missing.push("not_enough_forwards");
+    const buildCheapestFallback = () => {
+      const teamCounts: Record<number, number> = {};
+      const pickCheapest = (items: Player[], count: number) => {
+        const sorted = [...items].sort((a, b) => a.price_current - b.price_current);
+        const selected: Player[] = [];
+        for (const player of sorted) {
+          const current = teamCounts[player.team_id] || 0;
+          if (current >= 3) continue;
+          selected.push(player);
+          teamCounts[player.team_id] = current + 1;
+          if (selected.length === count) break;
+        }
+        return selected.length === count ? selected : null;
+      };
 
-    if (missing.length > 0) {
-      setErrorPopup(missing);
-      return;
+      const baseG = pickCheapest(pool.G, 2);
+      const baseD = pickCheapest(pool.D, 3);
+      const baseM = pickCheapest(pool.M, 3);
+      const baseF = pickCheapest(pool.F, 1);
+      if (!baseG || !baseD || !baseM || !baseF) return null;
+
+      let squad = [...baseG, ...baseD, ...baseM, ...baseF];
+      const counts = {
+        D: baseD.length,
+        M: baseM.length,
+        F: baseF.length
+      };
+
+      const remainingSlots = 15 - squad.length;
+      const fillers = [...pool.D, ...pool.M, ...pool.F].sort(
+        (a, b) => a.price_current - b.price_current
+      );
+      for (const player of fillers) {
+        if (squad.find((p) => p.player_id === player.player_id)) continue;
+        const current = teamCounts[player.team_id] || 0;
+        if (current >= 3) continue;
+        if (player.position === "D" && counts.D >= 6) continue;
+        if (player.position === "M" && counts.M >= 6) continue;
+        if (player.position === "F" && counts.F >= 3) continue;
+        squad.push(player);
+        teamCounts[player.team_id] = current + 1;
+        if (player.position === "D") counts.D += 1;
+        if (player.position === "M") counts.M += 1;
+        if (player.position === "F") counts.F += 1;
+        if (squad.length >= 15) break;
+      }
+
+      if (squad.length !== 15) return null;
+      const errors = validateSquad(squad);
+      return errors.length === 0 ? squad : null;
+    };
+
+      let squad: Player[] | null = null;
+      const maxAttempts = 600;
+
+      for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+        const combo = combos[Math.floor(Math.random() * combos.length)];
+        if (!combo) break;
+
+        const teamCounts: Record<number, number> = {};
+        const gk = pickWithTeamLimit(pool.G, 2, teamCounts);
+        const defenders = gk ? pickWithTeamLimit(pool.D, combo.D, teamCounts) : null;
+        const mids = defenders ? pickWithTeamLimit(pool.M, combo.M, teamCounts) : null;
+        const forwards = mids ? pickWithTeamLimit(pool.F, combo.F, teamCounts) : null;
+
+        if (!gk || !defenders || !mids || !forwards) continue;
+        const candidate = [...gk, ...defenders, ...mids, ...forwards];
+        const errors = validateSquad(candidate);
+        if (errors.length === 0) {
+          squad = candidate;
+          break;
+        }
+      }
+
+      if (!squad) {
+        squad = buildCheapestFallback();
+      }
+
+      if (!squad) {
+        setErrorPopup(["no_valid_random_squad"]);
+        return;
+      }
+
+      setDraftSquad(squad);
+      setOutPlayerId(null);
+      setInPlayerId(null);
+      setSheetOpen(false);
+    } catch (err) {
+      setErrorPopup([String(err)]);
+    } finally {
+      setRandomLoading(false);
     }
-
-    setDraftSquad([...(gk || []), ...(defenders || []), ...(mids || []), ...(forwards || [])]);
-    setOutPlayerId(null);
-    setInPlayerId(null);
-    setSheetOpen(false);
   };
 
   const handleRemoveFromDraft = (playerId: number) => {
@@ -461,14 +927,24 @@ export default function MarketPage() {
         <p className="text-sm text-muted">
           Elige 15 jugadores de la Liga 1 con un presupuesto de 100 M.
         </p>
+        <p className="mt-1 text-xs text-muted">
+          1 transferencia gratis por ronda; las adicionales cuestan 0.5.
+        </p>
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
-          <span className="rounded-full border border-white/10 px-3 py-1 text-muted">
+          <span
+            className={
+              "rounded-full border px-3 py-1 " +
+              (clubRuleOk
+                ? "border-emerald-400/40 text-emerald-200"
+                : "border-red-400/40 text-red-200")
+            }
+          >
             Max 3 jugadores del mismo club
           </span>
         </div>
       </div>
 
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-emerald-900/40 via-emerald-950/40 to-black/30 p-4">
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-emerald-700/55 via-emerald-900/45 to-black/35 p-4">
           <div className="pointer-events-none absolute inset-4 rounded-2xl border border-white/10" />
           <div className="pointer-events-none absolute left-4 right-4 top-1/2 h-px bg-white/10" />
           <div className="pointer-events-none absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
@@ -531,9 +1007,10 @@ export default function MarketPage() {
           {saveMessage ? <p className="mt-2 text-xs text-accent2">{saveMessage}</p> : null}
           <button
             onClick={handleGenerateRandomTeam}
+            disabled={randomLoading}
             className="mt-3 w-full rounded-xl border border-white/10 px-4 py-2 text-sm font-semibold text-ink"
           >
-            Generar equipo aleatorio
+            {randomLoading ? "Generando..." : "Generar equipo aleatorio"}
           </button>
           <button
             onClick={handleSaveTeam}
@@ -555,21 +1032,21 @@ export default function MarketPage() {
           </button>
         </div>
 
-        <MarketFilters teams={teams} value={filters} onChange={setFilters} />
+        <MarketFilters value={filters} onChange={setFilters} priceBounds={priceBounds} />
         {fetchError ? (
           <p className="text-xs text-warning">Error cargando jugadores: {fetchError}</p>
         ) : null}
         {!fetchError && loadingPlayers ? (
           <p className="text-xs text-muted">Cargando jugadores...</p>
         ) : null}
-        {!fetchError && !loadingPlayers && players.length === 0 ? (
+        {!fetchError && !loadingPlayers && filteredPlayers.length === 0 ? (
           <p className="text-xs text-muted">Sin resultados con los filtros actuales.</p>
         ) : null}
 
         <div ref={parentRef} className="scrollbar-hide h-[50vh] overflow-auto">
           <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: "relative" }}>
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const player = players[virtualRow.index];
+              const player = filteredPlayers[virtualRow.index];
               if (!player) return null;
               return (
                 <div
@@ -602,7 +1079,10 @@ export default function MarketPage() {
           <div>
             <p className="text-xs uppercase text-muted">Sale</p>
             {outPlayer ? (
-              <PlayerCard player={outPlayer} compact />
+              <div className="space-y-2">
+                <PlayerCard player={outPlayer} compact />
+                <MarketPlayerDetails player={outPlayer} fixtures={fixtures} />
+              </div>
             ) : (
               <p className="text-xs text-muted">Sin reemplazo</p>
             )}
@@ -610,12 +1090,33 @@ export default function MarketPage() {
           <div>
             <p className="text-xs uppercase text-muted">Entra</p>
             {inPlayer ? (
-              <PlayerCard player={inPlayer} compact />
+              <div className="space-y-2">
+                <PlayerCard player={inPlayer} compact />
+                <MarketPlayerDetails player={inPlayer} fixtures={fixtures} />
+              </div>
             ) : (
               <p className="text-xs text-muted">Selecciona en mercado</p>
             )}
           </div>
-          {actionError ? <p className="text-xs text-warning">{actionError}</p> : null}
+          {transferInfo ? (
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-3 text-xs text-muted">
+              <p>
+                Transferencias usadas en la ronda:{" "}
+                <span className="font-semibold text-ink">{transferInfo.transfers_used}</span>
+              </p>
+              <p>
+                Costo por esta transferencia:{" "}
+                <span className="font-semibold text-ink">
+                  {transferInfo.next_fee.toFixed(1)}
+                </span>
+              </p>
+            </div>
+          ) : null}
+          {actionError ? (
+            <div className="rounded-xl border border-red-400/40 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+              {formatError(actionError).title}
+            </div>
+          ) : null}
           <button
             onClick={handleConfirmPlayer}
             disabled={!inPlayerId}
@@ -642,10 +1143,23 @@ export default function MarketPage() {
                 X
               </button>
             </div>
-            <div className="mt-3 space-y-2 text-xs text-warning">
-              {errorPopup.map((error) => (
-                <p key={error}>{error}</p>
-              ))}
+            <div className="mt-3 space-y-2 text-xs">
+              {errorPopup.map((error) => {
+                const info = formatError(error);
+                const toneClass =
+                  info.tone === "danger"
+                    ? "border-red-400/40 bg-red-500/10 text-red-200"
+                    : "border-amber-400/40 bg-amber-500/10 text-amber-200";
+                return (
+                  <div
+                    key={error}
+                    className={`rounded-xl border px-3 py-2 ${toneClass}`}
+                  >
+                    <p className="font-semibold">{info.title}</p>
+                    {info.detail ? <p className="text-[11px] opacity-90">{info.detail}</p> : null}
+                  </div>
+                );
+              })}
             </div>
             <button
               onClick={() => setErrorPopup(null)}
@@ -706,51 +1220,38 @@ export default function MarketPage() {
         </div>
       ) : null}
 
-      {nameGateOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
-          <div className="glass w-full max-w-sm space-y-4 rounded-2xl border border-white/10 p-5">
-            <div>
-              <p className="text-sm font-semibold text-ink">Nombre del equipo</p>
-              <p className="mt-1 text-xs text-muted">
-                En produccion necesitas nombrar tu equipo antes de usar el mercado.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs text-muted">Nombre oficial</label>
-              <input
-                value={teamName}
-                onChange={(event) => setTeamName(event.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
-                placeholder="Ej: Los Grones"
-              />
-              {teamNameError ? (
-                <p className="text-xs text-warning">{teamNameError}</p>
-              ) : null}
-            </div>
-            <button
-              onClick={async () => {
-                if (!token) return;
-                const trimmedName = teamName.trim();
-                if (!trimmedName) {
-                  setTeamNameError("Nombre requerido.");
-                  return;
-                }
-                setTeamNameError(null);
-                try {
-                  await createTeam(token, trimmedName);
-                  setTeamName(trimmedName);
-                  setNameGateOpen(false);
-                } catch {
-                  setTeamNameError("No se pudo guardar el nombre.");
-                }
-              }}
-              className="w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
-            >
-              Guardar nombre
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <WelcomeSlideshow
+        open={welcomeOpen}
+        onComplete={() => {
+          localStorage.setItem(welcomeKey, "1");
+          setWelcomeSeen(true);
+          setWelcomeOpen(false);
+          setNameGateOpen(true);
+        }}
+      />
+
+      <TeamNameGate
+        open={nameGateOpen}
+        teamName={teamName}
+        onTeamNameChange={setTeamName}
+        error={teamNameError}
+        onSave={async () => {
+          if (!token) return;
+          const trimmedName = teamName.trim();
+          if (!trimmedName) {
+            setTeamNameError("Nombre requerido.");
+            return;
+          }
+          setTeamNameError(null);
+          try {
+            await createTeam(token, trimmedName);
+            setTeamName(trimmedName);
+            setNameGateOpen(false);
+          } catch {
+            setTeamNameError("No se pudo guardar el nombre.");
+          }
+        }}
+      />
     </div>
   );
 }

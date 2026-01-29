@@ -65,7 +65,18 @@ FILES = {
     "player_transfer": PARQUETS_DIR / "player_transfer.parquet",
 }
 
-POS_ORDER = ["G", "D", "M", "F"]
+POS_CANON = ["G", "D", "M", "F"]
+POS_UI = ["GK", "D", "M", "F"]
+POS_CANON_MAP = {
+    "GK": "G",
+    "G": "G",
+    "ARQUERO": "G",
+    "ARQ": "G",
+    "GOALKEEPER": "G",
+    "D": "D",
+    "M": "M",
+    "F": "F",
+}
 
 
 # -------------------------
@@ -89,7 +100,16 @@ def normalize_pos(x):
     if pd.isna(x) or x == "":
         return pd.NA
     x = str(x).strip().upper()
-    return x if x in POS_ORDER else pd.NA
+    return POS_CANON_MAP.get(x, pd.NA)
+
+
+def display_pos(x):
+    if pd.isna(x) or x == "":
+        return pd.NA
+    x = str(x).strip().upper()
+    if x == "G":
+        return "GK"
+    return x
 
 def safe_cols(df: pd.DataFrame, wanted: list[str]) -> list[str]:
     return [c for c in wanted if c in df.columns]
@@ -136,7 +156,14 @@ def normalize_player_columns(df: pd.DataFrame) -> pd.DataFrame:
         if col in work.columns:
             work[col] = pd.to_numeric(work[col], errors="coerce").astype("Int64")
     if "position" in work.columns:
-        work["position"] = work["position"].astype(str).str.strip().str.upper().replace({"NAN": pd.NA})
+        work["position"] = (
+            work["position"]
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            .replace({"NAN": pd.NA})
+            .apply(normalize_pos)
+        )
     return work
 
 
@@ -191,7 +218,14 @@ def build_view(players_fantasy: pd.DataFrame, players: pd.DataFrame, teams: pd.D
             if alt in view.columns:
                 view[col] = view[alt].combine_first(view[col])
         view = view.drop(columns=[c for c in view.columns if c.endswith("_players")], errors="ignore")
-    view["position_effective"] = view.get("position", pd.NA).astype(str).str.upper().replace({"NAN": pd.NA})
+    view["position_effective"] = (
+        view.get("position", pd.NA)
+        .astype(str)
+        .str.upper()
+        .replace({"NAN": pd.NA})
+        .apply(normalize_pos)
+    )
+    view["position_display"] = view["position_effective"].apply(display_pos)
     view["team_id_effective"] = pd.to_numeric(view.get("team_id"), errors="coerce").astype("Int64")
     if not teams.empty and "team_id" in teams.columns:
         team_lookup = teams[["team_id", "team_name"]].dropna(subset=["team_id"]).drop_duplicates()
@@ -322,7 +356,14 @@ def update_players_row(
     if "team_id" in work.columns:
         work["team_id"] = pd.to_numeric(work["team_id"], errors="coerce").astype("Int64")
     if "position" in work.columns:
-        work["position"] = work["position"].astype(str).str.strip().str.upper().replace({"NAN": pd.NA})
+        work["position"] = (
+            work["position"]
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            .replace({"NAN": pd.NA})
+            .apply(normalize_pos)
+        )
     return work
 
 
@@ -442,7 +483,7 @@ c0, c1, c2 = st.columns([2, 2, 2])
 with c0:
     q = st.text_input("Buscar jugador", placeholder="Nombre...")
 with c1:
-    pos_filter = st.multiselect("Posicion", POS_ORDER, default=POS_ORDER)
+    pos_filter = st.multiselect("Posicion", POS_UI, default=POS_UI)
 with c2:
     team_names = sorted(view["team_name_effective"].dropna().unique().tolist()) if "team_name_effective" in view.columns else []
     team_filter = st.multiselect("Equipo", team_names, default=team_names)
@@ -451,7 +492,8 @@ filtered = view.copy()
 if q:
     filtered = filtered[filtered["name"].astype(str).str.contains(q, case=False, na=False)]
 if "position_effective" in filtered.columns:
-    filtered = filtered[filtered["position_effective"].isin(pos_filter)]
+    pos_filter_canon = [normalize_pos(p) for p in pos_filter]
+    filtered = filtered[filtered["position_effective"].isin(pos_filter_canon)]
 if "team_name_effective" in filtered.columns and team_filter:
     filtered = filtered[filtered["team_name_effective"].isin(team_filter)]
 
@@ -460,12 +502,13 @@ if "position_effective" in filtered.columns:
     dist = (
         filtered["position_effective"]
         .value_counts(dropna=False)
-        .reindex(POS_ORDER)
+        .reindex(POS_CANON)
         .fillna(0)
         .astype(int)
         .rename_axis("position")
         .reset_index(name="count")
     )
+    dist["position"] = dist["position"].apply(display_pos)
     st.dataframe(dist, use_container_width=True, hide_index=True)
 
 st.subheader("Vista de jugadores")
@@ -475,7 +518,7 @@ cols_show = safe_cols(
     [
         "player_id",
         "name",
-        "position_effective",
+        "position_display",
         "team_name_effective",
         "team_id_effective",
         "price",
@@ -510,7 +553,7 @@ if batch_ids:
             "player_id",
             "name",
             "short_name",
-            "position_effective",
+            "position_display",
             "team_name_effective",
             "team_id_effective",
             "price",
@@ -578,6 +621,32 @@ if batch_ids:
                 st.cache_data.clear()
                 st.rerun()
 
+    st.subheader("Asignar posicion a lista")
+    batch_pos = st.selectbox(
+        "Nueva posicion (lista)",
+        options=POS_UI,
+        key="batch_position_select",
+    )
+    if st.button("Aplicar posicion a IDs", type="primary"):
+        new_pos = normalize_pos(batch_pos)
+        if pd.isna(new_pos):
+            st.warning("Posicion invalida.")
+        else:
+            updated_players = players.copy()
+            if "player_id" not in updated_players.columns:
+                st.warning("players.parquet no tiene player_id.")
+            else:
+                updated_players.loc[
+                    updated_players["player_id"].isin(batch_ids), "position"
+                ] = new_pos
+                updated_fantasy = recalc_players_fantasy(players_fantasy, updated_players)
+                updated_players = sync_players_price(updated_players, updated_fantasy)
+                save_parquet(updated_players, FILES["players"])
+                save_parquet(updated_fantasy, FILES["players_fantasy"])
+                st.success("Posicion actualizada para la lista.")
+                st.cache_data.clear()
+                st.rerun()
+
     st.subheader("Eliminar jugadores del fantasy (lista)")
     delete_batch = st.checkbox("Eliminar jugadores del fantasy con estos IDs")
     if st.button("Eliminar jugadores (lista)", type="primary"):
@@ -618,9 +687,38 @@ if row.empty:
 r = row.iloc[0]
 d1, d2, d3, d4 = st.columns([3,1,2,1])
 d1.metric("Jugador", str(r.get("name", "")))
-d2.metric("Posicion", str(r.get("position_effective", "")))
+d2.metric("Posicion", str(r.get("position_display", "")))
 d3.metric("Equipo (id)", str(r.get("team_id_effective", "")))
 d4.metric("Precio", str(r.get("price", "")))
+
+st.subheader("Modificar posicion")
+current_pos_display = str(r.get("position_display", "")).strip() or "GK"
+if current_pos_display not in POS_UI:
+    current_pos_display = "GK"
+new_pos_display = st.selectbox(
+    "Nueva posicion",
+    options=POS_UI,
+    index=POS_UI.index(current_pos_display),
+    key="position_modifier",
+)
+if st.button("Aplicar posicion", type="primary"):
+    new_pos = normalize_pos(new_pos_display)
+    name_value = str(r.get("name", "")).strip()
+    current_team_id = normalize_team_id(r.get("team_id_effective"))
+    updated_players = update_players_row(
+        players,
+        sel,
+        new_pos,
+        current_team_id,
+        name_value if name_value else None,
+    )
+    updated_fantasy = recalc_players_fantasy(players_fantasy, updated_players)
+    updated_players = sync_players_price(updated_players, updated_fantasy)
+    save_parquet(updated_players, FILES["players"])
+    save_parquet(updated_fantasy, FILES["players_fantasy"])
+    st.success("Posicion actualizada.")
+    st.cache_data.clear()
+    st.rerun()
 
 st.subheader("Eliminar jugador del fantasy")
 delete_from_fantasy = st.checkbox("Eliminar este jugador de players_fantasy.parquet")

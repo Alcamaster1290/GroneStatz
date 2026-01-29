@@ -1,13 +1,44 @@
 import clsx from "clsx";
+import { useEffect, useState } from "react";
 
 import { Player } from "@/lib/types";
 
 const positionLabels: Record<string, string> = {
-  G: "GK",
-  D: "D",
-  M: "M",
-  F: "F"
+  G: "Arquero",
+  D: "Defensa",
+  M: "Mediocampo",
+  F: "Delantero"
 };
+
+function PlayerFace({ playerId, sizeClass }: { playerId: number; sizeClass: string }) {
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    setHidden(false);
+  }, [playerId]);
+
+  if (hidden) {
+    return (
+      <div
+        className={clsx(
+          "flex items-center justify-center rounded-full bg-surface2/60 ring-1 ring-white/10",
+          sizeClass
+        )}
+      />
+    );
+  }
+
+  return (
+    <div className={clsx("overflow-hidden rounded-full ring-1 ring-white/10", sizeClass)}>
+      <img
+        src={`/images/players/${playerId}.png`}
+        alt=""
+        className="h-full w-full object-cover"
+        onError={() => setHidden(true)}
+      />
+    </div>
+  );
+}
 
 export default function PlayerCard({
   player,
@@ -18,6 +49,14 @@ export default function PlayerCard({
   onClick?: () => void;
   compact?: boolean;
 }) {
+  const avatarSize = compact ? "h-9 w-9" : "h-11 w-11";
+  const teamSize = compact ? "h-7 w-7" : "h-8 w-8";
+  const goals = player.goals ?? 0;
+  const assists = player.assists ?? 0;
+  const saves = player.saves ?? 0;
+  const isGoalkeeper = player.position === "G";
+  const isInjured = Boolean(player.is_injured);
+
   return (
     <div
       onClick={onClick}
@@ -28,22 +67,36 @@ export default function PlayerCard({
       )}
     >
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface2 text-sm font-semibold">
-          {positionLabels[player.position]}
+        <PlayerFace playerId={player.player_id} sizeClass={avatarSize} />
+        <div className={clsx("flex items-center justify-center rounded-full bg-surface2", teamSize)}>
+          <img
+            src={`/images/teams/${player.team_id}.png`}
+            alt=""
+            className="h-full w-full object-contain"
+            onError={(event) => {
+              (event.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
         </div>
         <div>
           <p className="text-sm font-semibold text-ink">{player.name}</p>
-          <div className="flex items-center gap-2 text-xs text-muted">
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-surface2">
-              <img
-                src={`/images/teams/${player.team_id}.png`}
-                alt=""
-                className="h-full w-full object-contain"
-                onError={(event) => {
-                  (event.currentTarget as HTMLImageElement).style.display = "none";
-                }}
-              />
-            </div>
+          <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
+            <span className="rounded-full border border-white/10 px-2 py-0.5">
+              {positionLabels[player.position]}
+            </span>
+            {isInjured ? (
+              <span className="rounded-full border border-red-400/40 bg-red-500/10 px-2 py-0.5 text-[10px] text-red-200">
+                Lesionado
+              </span>
+            ) : null}
+            {isGoalkeeper ? (
+              <span>Atajadas {saves}</span>
+            ) : (
+              <>
+                <span>Goles {goals}</span>
+                <span>Asist {assists}</span>
+              </>
+            )}
           </div>
         </div>
       </div>

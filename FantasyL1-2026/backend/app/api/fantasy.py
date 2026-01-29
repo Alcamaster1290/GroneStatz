@@ -3,12 +3,21 @@ from __future__ import annotations
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import delete, select
+from decimal import Decimal, ROUND_HALF_UP
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
-from app.models import FantasyLineupSlot, FantasyTeam, FantasyTeamPlayer, FantasyTransfer, PlayerCatalog
+from app.models import (
+    FantasyLineupSlot,
+    FantasyTeam,
+    FantasyTeamPlayer,
+    FantasyTransfer,
+    PlayerCatalog,
+    PlayerRoundStat,
+    PointsRound,
+)
 from app.schemas.fantasy import (
     FantasyTeamCreate,
     FantasyTeamOut,
@@ -18,6 +27,7 @@ from app.schemas.fantasy import (
     SquadUpdateIn,
     TransferIn,
     TransferOut,
+    TransferCountOut,
     ValidationResult,
 )
 from app.services.fantasy import (
@@ -35,7 +45,9 @@ from app.services.validation import validate_lineup, validate_squad, validate_tr
 router = APIRouter(prefix="/fantasy", tags=["fantasy"])
 
 
-def _build_team_response(db: Session, fantasy_team_id: int) -> FantasyTeamOut:
+def _build_team_response(
+    db: Session, fantasy_team_id: int, round_number: Optional[int] = None
+) -> FantasyTeamOut:
     team = db.execute(select(FantasyTeam).where(FantasyTeam.id == fantasy_team_id)).scalar_one()
 
     rows = (
@@ -46,18 +58,65 @@ def _build_team_response(db: Session, fantasy_team_id: int) -> FantasyTeamOut:
         )
         .all()
     )
-    squad = [
-        FantasyTeamPlayerOut(
-            player_id=player.player_id,
-            name=player.name,
-            short_name=player.short_name,
-            position=player.position,
-            team_id=player.team_id,
-            price_current=float(player.price_current),
-            bought_price=float(team_player.bought_price),
+    points_map = {}
+    round_stats_map = {}
+    if rows:
+        player_ids = [player.player_id for player, _ in rows]
+        round_obj = (
+            get_round_by_number(db, team.season_id, round_number)
+            if round_number
+            else get_current_round(db, team.season_id)
         )
-        for player, team_player in rows
-    ]
+        if round_obj:
+            points_rows = db.execute(
+                select(PointsRound.player_id, PointsRound.points).where(
+                    PointsRound.season_id == team.season_id,
+                    PointsRound.round_id == round_obj.id,
+                    PointsRound.player_id.in_(player_ids),
+                )
+            ).all()
+            points_map = {player_id: float(points) for player_id, points in points_rows}
+
+            stats_rows = db.execute(
+                select(
+                    PlayerRoundStat.player_id,
+                    PlayerRoundStat.clean_sheets,
+                    PlayerRoundStat.goals_conceded,
+                ).where(
+                    PlayerRoundStat.season_id == team.season_id,
+                    PlayerRoundStat.round_id == round_obj.id,
+                    PlayerRoundStat.player_id.in_(player_ids),
+                )
+            ).all()
+            round_stats_map = {
+                player_id: {
+                    "clean_sheets": int(clean_sheets or 0),
+                    "goals_conceded": int(goals_conceded or 0),
+                }
+                for player_id, clean_sheets, goals_conceded in stats_rows
+            }
+
+    squad = []
+    for player, team_player in rows:
+        stats = round_stats_map.get(player.player_id)
+        squad.append(
+            FantasyTeamPlayerOut(
+                player_id=player.player_id,
+                name=player.name,
+                short_name=player.short_name,
+                position=player.position,
+                team_id=player.team_id,
+                price_current=float(player.price_current),
+                bought_price=float(team_player.bought_price),
+                is_injured=bool(player.is_injured),
+                goals=int(player.goals or 0),
+                assists=int(player.assists or 0),
+                saves=int(player.saves or 0),
+                points_round=points_map.get(player.player_id),
+                clean_sheets=stats["clean_sheets"] if stats else (0 if round_stats_map else None),
+                goals_conceded=stats["goals_conceded"] if stats else (0 if round_stats_map else None),
+            )
+        )
 
     budget_used = sum(float(team_player.bought_price) for _, team_player in rows)
     budget_left = float(team.budget_cap) - budget_used
@@ -86,10 +145,14 @@ def create_team(
 
 
 @router.get("/team", response_model=FantasyTeamOut)
-def get_team(db: Session = Depends(get_db), user=Depends(get_current_user)) -> FantasyTeamOut:
+def get_team(
+    round_number: Optional[int] = Query(default=None),
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+) -> FantasyTeamOut:
     season = get_or_create_season(db)
     team = get_or_create_fantasy_team(db, user.id, season.id)
-    return _build_team_response(db, team.id)
+    return _build_team_response(db, team.id, round_number=round_number)
 
 
 @router.put("/team/squad", response_model=ValidationResult)
@@ -134,6 +197,8 @@ def get_lineup(
     return LineupOut(
         lineup_id=lineup.id,
         round_number=round_obj.round_number,
+        captain_player_id=lineup.captain_player_id,
+        vice_captain_player_id=lineup.vice_captain_player_id,
         slots=[
             {
                 "slot_index": slot.slot_index,
@@ -161,10 +226,25 @@ def update_lineup(
 
     lineup = ensure_lineup(db, team.id, round_obj.id)
     errors = validate_lineup(db, team.id, payload.slots)
+    if not errors:
+        player_ids = {slot.player_id for slot in payload.slots if slot.player_id is not None}
+        if payload.captain_player_id and payload.captain_player_id not in player_ids:
+            errors.append("captain_not_in_lineup")
+        if payload.vice_captain_player_id and payload.vice_captain_player_id not in player_ids:
+            errors.append("vice_captain_not_in_lineup")
+        if (
+            payload.captain_player_id
+            and payload.vice_captain_player_id
+            and payload.captain_player_id == payload.vice_captain_player_id
+        ):
+            errors.append("captain_and_vice_same_player")
     if errors:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors)
 
     upsert_lineup_slots(db, lineup.id, payload.slots)
+    lineup.captain_player_id = payload.captain_player_id
+    lineup.vice_captain_player_id = payload.vice_captain_player_id
+    db.commit()
     return ValidationResult(ok=True, errors=[])
 
 
@@ -191,6 +271,19 @@ def transfer_player(
     )
     if errors:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors)
+
+    existing_count = (
+        db.execute(
+            select(func.count())
+            .select_from(FantasyTransfer)
+            .where(
+                FantasyTransfer.fantasy_team_id == team.id,
+                FantasyTransfer.round_id == round_obj.id,
+            )
+        ).scalar()
+        or 0
+    )
+    transfer_fee = 0.0 if existing_count == 0 else 0.5
 
     out_player = db.get(PlayerCatalog, payload.out_player_id)
     in_player = db.get(PlayerCatalog, payload.in_player_id)
@@ -221,6 +314,9 @@ def transfer_player(
         in_price=float(in_player.price_current),
     )
     db.add(transfer)
+    if transfer_fee > 0:
+        new_cap = Decimal(str(team.budget_cap)) - Decimal(str(transfer_fee))
+        team.budget_cap = new_cap.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
     db.commit()
     db.refresh(transfer)
 
@@ -233,4 +329,39 @@ def transfer_player(
         out_price=float(transfer.out_price),
         in_price=float(transfer.in_price),
         created_at=transfer.created_at,
+    )
+
+
+@router.get("/transfers/count", response_model=TransferCountOut)
+def get_transfer_count(
+    round_number: Optional[int] = Query(default=None),
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+) -> TransferCountOut:
+    season = get_or_create_season(db)
+    team = get_or_create_fantasy_team(db, user.id, season.id)
+    round_obj = (
+        get_round_by_number(db, season.id, round_number)
+        if round_number
+        else get_current_round(db, season.id)
+    )
+    if not round_obj:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+
+    transfers_used = (
+        db.execute(
+            select(func.count())
+            .select_from(FantasyTransfer)
+            .where(
+                FantasyTransfer.fantasy_team_id == team.id,
+                FantasyTransfer.round_id == round_obj.id,
+            )
+        ).scalar()
+        or 0
+    )
+    next_fee = 0.0 if transfers_used == 0 else 0.5
+    return TransferCountOut(
+        round_number=round_obj.round_number,
+        transfers_used=int(transfers_used),
+        next_fee=float(next_fee),
     )

@@ -11,13 +11,17 @@ export default function LineupSlotCard({
   player,
   opponent,
   onClick,
-  compact = false
+  compact = false,
+  isCaptain = false,
+  isViceCaptain = false
 }: {
   slot: LineupSlot;
   player?: Player;
   opponent?: { teamId: number; name?: string };
   onClick?: () => void;
   compact?: boolean;
+  isCaptain?: boolean;
+  isViceCaptain?: boolean;
 }) {
   const { setNodeRef: setDropRef, isOver } = useDroppable({
     id: `slot-${slot.slot_index}`,
@@ -64,6 +68,8 @@ export default function LineupSlotCard({
           <PlayerAvatarSquare
             playerId={player?.player_id}
             teamId={player?.team_id}
+            isCaptain={isCaptain}
+            isViceCaptain={isViceCaptain}
             className="aspect-square w-full ring-1 ring-white/10"
           />
         ) : (

@@ -1,17 +1,16 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from pathlib import Path
 from typing import Iterable, List, Optional
 
 import duckdb
-from sqlalchemy import text
+from sqlalchemy import bindparam, text
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
 from app.db.session import SessionLocal
-from app.services.fantasy import ensure_round, get_or_create_season
+from app.services.fantasy import get_or_create_season
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +49,13 @@ def ingest_parquets_to_duckdb(settings: Settings) -> None:
     duckdb_path = Path(settings.DUCKDB_PATH)
     duckdb_path.parent.mkdir(parents=True, exist_ok=True)
 
-    con = duckdb.connect(str(duckdb_path))
+    try:
+        con = duckdb.connect(str(duckdb_path))
+    except UnicodeDecodeError:
+        if duckdb_path.exists():
+            logger.warning("duckdb_unicode_error_recreate %s", duckdb_path)
+            duckdb_path.unlink(missing_ok=True)
+        con = duckdb.connect(str(duckdb_path))
 
     for parquet_name, table_name in EXPECTED_PARQUETS.items():
         parquet_path = parquet_dir / parquet_name
@@ -123,6 +128,53 @@ def _upsert_players(db: Session, rows: List[dict]) -> None:
         rows,
     )
 
+def _prune_missing_players(db: Session, player_ids: List[int]) -> None:
+    if not player_ids:
+        logger.warning("players_fantasy_empty_skip_prune")
+        return
+    ids_param = bindparam("ids", expanding=True)
+    params = {"ids": player_ids}
+
+    # Remove references first to avoid FK violations.
+    db.execute(
+        text("DELETE FROM fantasy_team_players WHERE player_id NOT IN :ids").bindparams(ids_param),
+        params,
+    )
+    db.execute(
+        text("DELETE FROM fantasy_transfers WHERE out_player_id NOT IN :ids OR in_player_id NOT IN :ids").bindparams(
+            ids_param
+        ),
+        params,
+    )
+    db.execute(
+        text("DELETE FROM price_history WHERE player_id NOT IN :ids").bindparams(ids_param),
+        params,
+    )
+    db.execute(
+        text("DELETE FROM price_movements WHERE player_id NOT IN :ids").bindparams(ids_param),
+        params,
+    )
+    db.execute(
+        text("DELETE FROM points_round WHERE player_id NOT IN :ids").bindparams(ids_param),
+        params,
+    )
+    db.execute(
+        text("DELETE FROM player_round_stats WHERE player_id NOT IN :ids").bindparams(ids_param),
+        params,
+    )
+    db.execute(
+        text("DELETE FROM player_match_stats WHERE player_id NOT IN :ids").bindparams(ids_param),
+        params,
+    )
+    db.execute(
+        text("UPDATE fantasy_lineup_slots SET player_id = NULL WHERE player_id NOT IN :ids").bindparams(ids_param),
+        params,
+    )
+    db.execute(
+        text("DELETE FROM players_catalog WHERE player_id NOT IN :ids").bindparams(ids_param),
+        params,
+    )
+
 
 def _upsert_fixtures(db: Session, rows: List[dict]) -> None:
     if not rows:
@@ -131,10 +183,10 @@ def _upsert_fixtures(db: Session, rows: List[dict]) -> None:
         text(
             """
             INSERT INTO fixtures (
-                season_id, round_id, match_id, home_team_id, away_team_id, kickoff_at, stadium, city
+                season_id, round_id, match_id, home_team_id, away_team_id, kickoff_at, stadium, city, status
             )
             VALUES (
-                :season_id, :round_id, :match_id, :home_team_id, :away_team_id, :kickoff_at, :stadium, :city
+                :season_id, :round_id, :match_id, :home_team_id, :away_team_id, :kickoff_at, :stadium, :city, :status
             )
             ON CONFLICT (match_id) DO UPDATE
             SET season_id = EXCLUDED.season_id,
@@ -227,57 +279,9 @@ def sync_duckdb_to_postgres(settings: Settings | None = None) -> None:
             for row in player_rows
         ]
         _upsert_players(db, players_payload)
+        _prune_missing_players(db, [row[0] for row in player_rows])
 
-        # Fixtures
-        match_cols = _get_columns(con, "matches")
-        match_id_col = _pick_column(match_cols, ["match_id", "id"])
-        round_col = _pick_column(match_cols, ["round_number", "round", "round_no"])
-        if not match_id_col or not round_col:
-            raise ValueError("matches_missing_match_id_or_round")
-
-        home_col = _pick_column(match_cols, ["home_team_id", "home_id", "home_team"])
-        away_col = _pick_column(match_cols, ["away_team_id", "away_id", "away_team"])
-        kickoff_col = _pick_column(match_cols, ["kickoff_at", "kickoff", "datetime", "date", "match_date"])
-        stadium_col = _pick_column(match_cols, ["stadium", "venue"])
-        city_col = _pick_column(match_cols, ["city"])
-
-        kickoff_expr = kickoff_col or "NULL"
-        stadium_expr = stadium_col or "NULL"
-        city_expr = city_col or "NULL"
-        home_expr = home_col or "NULL"
-        away_expr = away_col or "NULL"
-
-        match_rows = con.execute(
-            f"SELECT {match_id_col} as match_id, {round_col} as round_number, {home_expr} as home_team_id, {away_expr} as away_team_id, {kickoff_expr} as kickoff_at, {stadium_expr} as stadium, {city_expr} as city FROM matches"
-        ).fetchall()
-
-        rounds_map = {}
-        fixtures_payload = []
-        for row in match_rows:
-            round_number = int(row[1])
-            if round_number not in rounds_map:
-                round_obj = ensure_round(db, season.id, round_number)
-                rounds_map[round_number] = round_obj.id
-            kickoff = row[4]
-            if kickoff is not None and not isinstance(kickoff, datetime):
-                try:
-                    kickoff = datetime.fromisoformat(str(kickoff))
-                except ValueError:
-                    kickoff = None
-            fixtures_payload.append(
-                {
-                    "season_id": season.id,
-                    "round_id": rounds_map[round_number],
-                    "match_id": row[0],
-                    "home_team_id": row[2],
-                    "away_team_id": row[3],
-                    "kickoff_at": kickoff,
-                    "stadium": row[5],
-                    "city": row[6],
-                }
-            )
-
-        _upsert_fixtures(db, fixtures_payload)
+        # Fixtures are not synced from parquet. They are managed via admin.
         db.commit()
     finally:
         db.close()
