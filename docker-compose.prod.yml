@@ -70,9 +70,11 @@ services:
       context: ./FantasyL1-2026/frontend
       args:
         NEXT_PUBLIC_API_URL: https://api.fantasyliga1peru.com
+        NEXT_PUBLIC_ENABLE_PASSWORD_RESET: "false"
     container_name: fantasy_l1_web
     environment:
       NEXT_PUBLIC_API_URL: https://api.fantasyliga1peru.com
+      NEXT_PUBLIC_ENABLE_PASSWORD_RESET: "false"
       NODE_ENV: production
     depends_on:
       - api
