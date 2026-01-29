@@ -15,6 +15,7 @@ export default function AuthPanel() {
   const [resetCode, setResetCode] = useState("");
   const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [resetStep, setResetStep] = useState<"request" | "confirm">("request");
+  const allowPasswordReset = process.env.NODE_ENV !== "production";
 
   const mapAuthErrors = (raw: string): string[] => {
     const cleaned = raw.replace(/^Error:\s*/i, "");
@@ -175,7 +176,7 @@ export default function AuthPanel() {
           </>
         )}
       </div>
-      {!resetMode ? (
+      {!resetMode && allowPasswordReset ? (
         <button
           onClick={() => {
             setResetMode(true);
@@ -185,9 +186,10 @@ export default function AuthPanel() {
           }}
           className="w-full text-xs text-muted underline"
         >
-          Olvidaste tu contraseña?
+          Recuperar contrasena
         </button>
       ) : null}
     </div>
   );
 }
+

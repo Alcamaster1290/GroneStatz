@@ -7,7 +7,11 @@ import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 export const metadata: Metadata = {
   title: "Fantasy Liga 1 2026",
   description: "Fantasy Liga 1 2026 v1.0",
-  manifest: "/manifest.json"
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/apple-touch-icon.png"
+  }
 };
 
 export const viewport = {
