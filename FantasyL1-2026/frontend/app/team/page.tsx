@@ -178,7 +178,7 @@ function PlayerFantasyDetails({
       </div>
       {player.is_injured ? (
         <div className="flex items-center gap-2 rounded-xl bg-red-500/80 px-3 py-2 text-xs font-semibold text-black">
-          <span>⚠</span>
+          <span>!</span>
           <span>Lesionado</span>
         </div>
       ) : null}
@@ -317,7 +317,7 @@ function PitchSlot({
                 ) : null}
                 {isViceCaptain ? (
                   <span
-                    className={`absolute -bottom-6 -left-1 z-30 flex ${badgeClass} -translate-x-[10%] -translate-y-[10%] items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-black`}
+                    className={`absolute -bottom-1 -left-1 z-30 flex ${badgeClass} -translate-x-[10%] -translate-y-[10%] items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-black`}
                   >
                     V
                   </span>
@@ -400,6 +400,7 @@ function PitchRow({
 export default function TeamPage() {
   const token = useFantasyStore((state) => state.token);
   const setToken = useFantasyStore((state) => state.setToken);
+  const setUserEmail = useFantasyStore((state) => state.setUserEmail);
   const squad = useFantasyStore((state) => state.squad);
   const setSquad = useFantasyStore((state) => state.setSquad);
   const lineupSlots = useFantasyStore((state) => state.lineupSlots);
@@ -424,9 +425,11 @@ export default function TeamPage() {
   const [teams, setTeams] = useState<{ id: number; name_short?: string; name_full?: string }[]>(
     []
   );
+  const [roundStatus, setRoundStatus] = useState<string | null>(null);
   const [appEnv, setAppEnv] = useState<string>("local");
   const [roundMissing, setRoundMissing] = useState(false);
   const [teamName, setTeamName] = useState("");
+  const [needsTeamName, setNeedsTeamName] = useState(false);
   const [teamLoaded, setTeamLoaded] = useState(false);
   const [nameGateOpen, setNameGateOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
@@ -511,14 +514,34 @@ export default function TeamPage() {
         detail: "El capitan debe estar en el XI.",
         tone: "warning"
       },
+      captain_not_in_starting_xi: {
+        title: "Capitan en banca",
+        detail: "El capitan debe ser titular.",
+        tone: "warning"
+      },
       vice_captain_not_in_lineup: {
         title: "Vice invalido",
         detail: "El vicecapitan debe estar en el XI.",
         tone: "warning"
       },
+      vice_captain_not_in_starting_xi: {
+        title: "Vice en banca",
+        detail: "El vicecapitan debe ser titular.",
+        tone: "warning"
+      },
       captain_and_vice_same_player: {
         title: "Capitan duplicado",
         detail: "Capitan y vicecapitan no pueden ser el mismo jugador.",
+        tone: "warning"
+      },
+      round_closed: {
+        title: "Ronda cerrada",
+        detail: "La ronda esta cerrada. No puedes guardar cambios.",
+        tone: "danger"
+      },
+      rounds_not_configured: {
+        title: "Sin rondas activas",
+        detail: "Carga rondas desde Admin para habilitar el XI.",
         tone: "warning"
       },
       squad_must_have_15_players: {
@@ -555,11 +578,6 @@ export default function TeamPage() {
         title: "Presupuesto excedido",
         detail: "Tu plantel supera los 100 M.",
         tone: "danger"
-      },
-      rounds_not_configured: {
-        title: "Rondas no configuradas",
-        detail: "Carga rondas desde Admin antes de guardar el XI.",
-        tone: "warning"
       },
       round_not_found: {
         title: "Ronda no encontrada",
@@ -670,12 +688,17 @@ export default function TeamPage() {
     };
   }, [fixtures]);
 
+
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
+    const storedEmail = localStorage.getItem("fantasy_email");
     if (!token && stored) {
       setToken(stored);
     }
-  }, [token, setToken]);
+    if (!userEmail && storedEmail) {
+      setUserEmail(storedEmail);
+    }
+  }, [token, setToken, userEmail, setUserEmail]);
 
   useEffect(() => {
     if (!token) return;
@@ -685,7 +708,9 @@ export default function TeamPage() {
       try {
         const team = await getTeam(token);
         setSquad(team.squad || []);
-        setTeamName(team.name || "");
+        const savedName = team.name || "";
+        setTeamName(savedName);
+        setNeedsTeamName(!savedName.trim());
         setTeamLoaded(true);
 
         try {
@@ -743,16 +768,42 @@ export default function TeamPage() {
               setViceCaptainId(lineupViceCaptainId);
             }
           setRoundMissing(false);
-          getFixtures(lineup.round_number)
-            .then(setFixtures)
+          setRoundStatus("Pendiente");
+          getFixtures()
+            .then((allFixtures) => {
+              const roundFixtures = allFixtures.filter(
+                (fixture) => fixture.round_number === lineup.round_number
+              );
+              setFixtures(roundFixtures);
+            })
             .catch(() => setFixtures([]));
         } catch (err) {
           const message = String(err);
           if (message.includes("round_not_found")) {
-            setRoundMissing(true);
-            setCurrentRound(null);
+            const allFixtures = await getFixtures().catch(() => []);
+            if (allFixtures.length) {
+              const roundNumbers = Array.from(
+                new Set(allFixtures.map((fixture) => fixture.round_number))
+              ).sort((a, b) => a - b);
+              const nextRound = roundNumbers[0] ?? null;
+              if (nextRound) {
+                setCurrentRound(nextRound);
+                setFixtures(allFixtures.filter((fixture) => fixture.round_number === nextRound));
+                setRoundMissing(false);
+                setRoundStatus("Cerrada");
+              } else {
+                setRoundMissing(true);
+                setCurrentRound(null);
+                setFixtures([]);
+                setRoundStatus(null);
+              }
+            } else {
+              setRoundMissing(true);
+              setCurrentRound(null);
+              setFixtures([]);
+              setRoundStatus(null);
+            }
             setLineupSlots(buildDefaultSlots());
-            setFixtures([]);
           } else {
             throw err;
           }
@@ -765,7 +816,7 @@ export default function TeamPage() {
     load().catch(() => {
       setTeamLoaded(true);
     });
-    }, [token, userEmail, setSquad, setLineupSlots, setCurrentRound, setCaptainId]);
+    }, [token, userEmail, setSquad, setLineupSlots, setCurrentRound, setCaptainId, setViceCaptainId]);
 
   useEffect(() => {
     getTeams().then(setTeams).catch(() => undefined);
@@ -778,12 +829,12 @@ export default function TeamPage() {
   }, []);
 
   useEffect(() => {
-    if (teamLoaded && !teamName.trim()) {
+    if (teamLoaded && needsTeamName) {
       setNameGateOpen(!welcomeOpen);
     } else {
       setNameGateOpen(false);
     }
-  }, [teamLoaded, teamName, welcomeOpen]);
+  }, [teamLoaded, needsTeamName, welcomeOpen]);
 
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
@@ -797,12 +848,12 @@ export default function TeamPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (teamLoaded && !teamName.trim() && !welcomeSeen) {
+    if (teamLoaded && needsTeamName && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
     }
-  }, [teamLoaded, teamName, welcomeSeen]);
+  }, [teamLoaded, needsTeamName, welcomeSeen]);
 
   useEffect(() => {
     if (!token || roundMissing || !currentRound) return;
@@ -925,6 +976,10 @@ export default function TeamPage() {
 
   const handleCaptain = () => {
     if (!selectedSlot?.player_id) return;
+    if (!selectedSlot.is_starter) {
+      setSaveErrors(["captain_not_in_starting_xi"]);
+      return;
+    }
     setCaptainId(selectedSlot.player_id);
     if (viceCaptainId === selectedSlot.player_id) {
       setViceCaptainId(null);
@@ -939,6 +994,10 @@ export default function TeamPage() {
 
   const handleViceCaptain = () => {
     if (!selectedSlot?.player_id) return;
+    if (!selectedSlot.is_starter) {
+      setSaveErrors(["vice_captain_not_in_starting_xi"]);
+      return;
+    }
     setViceCaptainId(selectedSlot.player_id);
     if (captainId === selectedSlot.player_id) {
       setCaptainId(null);
@@ -1057,6 +1116,7 @@ export default function TeamPage() {
           <p className="text-xs text-muted">
             Ronda actual : {currentRound ?? "-"}
             {roundDateRange ? ` (Del ${roundDateRange.min} al ${roundDateRange.max})` : ""}
+            {roundStatus ? ` - ${roundStatus}` : ""}
           </p>
         </div>
       </div>
@@ -1252,6 +1312,7 @@ export default function TeamPage() {
           try {
             await createTeam(token, trimmedName);
             setTeamName(trimmedName);
+            setNeedsTeamName(false);
             setNameGateOpen(false);
           } catch {
             setTeamNameError("No se pudo guardar el nombre.");

@@ -17,6 +17,7 @@ from app.models import (
     PlayerCatalog,
     PlayerRoundStat,
     PointsRound,
+    Round,
 )
 from app.schemas.fantasy import (
     FantasyTeamCreate,
@@ -185,6 +186,8 @@ def get_lineup(
     round_obj = get_round_by_number(db, season.id, round_number) if round_number else get_current_round(db, season.id)
     if not round_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+    if round_obj.is_closed:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="round_closed")
 
     lineup = ensure_lineup(db, team.id, round_obj.id)
     slots = (
@@ -223,15 +226,26 @@ def update_lineup(
     round_obj = get_round_by_number(db, season.id, round_number) if round_number else get_current_round(db, season.id)
     if not round_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+    if round_obj.is_closed:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="round_closed")
 
     lineup = ensure_lineup(db, team.id, round_obj.id)
     errors = validate_lineup(db, team.id, payload.slots)
     if not errors:
         player_ids = {slot.player_id for slot in payload.slots if slot.player_id is not None}
+        starter_ids = {
+            slot.player_id
+            for slot in payload.slots
+            if slot.player_id is not None and slot.is_starter
+        }
         if payload.captain_player_id and payload.captain_player_id not in player_ids:
             errors.append("captain_not_in_lineup")
+        if payload.captain_player_id and payload.captain_player_id not in starter_ids:
+            errors.append("captain_not_in_starting_xi")
         if payload.vice_captain_player_id and payload.vice_captain_player_id not in player_ids:
             errors.append("vice_captain_not_in_lineup")
+        if payload.vice_captain_player_id and payload.vice_captain_player_id not in starter_ids:
+            errors.append("vice_captain_not_in_starting_xi")
         if (
             payload.captain_player_id
             and payload.vice_captain_player_id

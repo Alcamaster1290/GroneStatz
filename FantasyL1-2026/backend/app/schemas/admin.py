@@ -167,3 +167,19 @@ class AdminPlayerInjuryIn(BaseModel):
 class AdminPlayerInjuryOut(BaseModel):
     player_id: int
     is_injured: bool
+
+
+class AdminPlayerListItem(BaseModel):
+    player_id: int
+    name: str
+    short_name: Optional[str] = None
+    position: str
+    team_id: Optional[int] = None
+    is_injured: bool
+
+
+class AdminPlayerListOut(BaseModel):
+    total: int
+    injured: int
+    unselected: int
+    items: List[AdminPlayerListItem]

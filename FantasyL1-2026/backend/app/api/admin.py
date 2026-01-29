@@ -34,6 +34,8 @@ from app.schemas.admin import (
     AdminLeagueOut,
     AdminLeagueMemberOut,
     AdminActionLogOut,
+    AdminPlayerListItem,
+    AdminPlayerListOut,
     AdminRoundOut,
     AdminPlayerRoundStatsIn,
     AdminPlayerStatOut,
@@ -221,6 +223,61 @@ def seed_season_rounds(
         ensure_round(db, season.id, round_number)
 
     return {"ok": True, "rounds": rounds}
+
+
+@router.get("/players", response_model=AdminPlayerListOut)
+def list_players(db: Session = Depends(get_db)) -> AdminPlayerListOut:
+    season = get_or_create_season(db)
+    selected_subq = (
+        select(FantasyTeamPlayer.player_id)
+        .join(FantasyTeam, FantasyTeam.id == FantasyTeamPlayer.fantasy_team_id)
+        .where(FantasyTeam.season_id == season.id, FantasyTeamPlayer.is_active.is_(True))
+        .distinct()
+        .subquery()
+    )
+
+    total = db.execute(select(func.count()).select_from(PlayerCatalog)).scalar() or 0
+    injured = (
+        db.execute(select(func.count()).select_from(PlayerCatalog).where(PlayerCatalog.is_injured.is_(True)))
+        .scalar()
+        or 0
+    )
+    unselected = (
+        db.execute(
+            select(func.count())
+            .select_from(PlayerCatalog)
+            .where(PlayerCatalog.player_id.not_in(select(selected_subq.c.player_id)))
+        ).scalar()
+        or 0
+    )
+
+    rows = (
+        db.execute(
+            select(
+                PlayerCatalog.player_id,
+                PlayerCatalog.name,
+                PlayerCatalog.short_name,
+                PlayerCatalog.position,
+                PlayerCatalog.team_id,
+                PlayerCatalog.is_injured,
+            ).order_by(PlayerCatalog.name)
+        )
+        .all()
+    )
+
+    items = [
+        AdminPlayerListItem(
+            player_id=row.player_id,
+            name=row.name,
+            short_name=row.short_name,
+            position=row.position,
+            team_id=row.team_id,
+            is_injured=bool(row.is_injured),
+        )
+        for row in rows
+    ]
+
+    return AdminPlayerListOut(total=int(total), injured=int(injured), unselected=int(unselected), items=items)
 
 
 @router.get("/teams", response_model=List[AdminTeamOut])
@@ -647,6 +704,28 @@ def close_round(
         db,
         category="round",
         action="close",
+        details={"round_number": round_number},
+    )
+    return {"ok": True, "round_number": round_number}
+
+
+@router.post("/rounds/open")
+def open_round(
+    round_number: int = Query(..., ge=1),
+    db: Session = Depends(get_db),
+) -> dict:
+    season = get_or_create_season(db)
+    round_obj = get_round_by_number(db, season.id, round_number)
+    if not round_obj:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+    round_obj.is_closed = False
+    if round_obj.starts_at is None:
+        round_obj.starts_at = func.now()
+    db.commit()
+    log_action(
+        db,
+        category="round",
+        action="open",
         details={"round_number": round_number},
     )
     return {"ok": True, "round_number": round_number}

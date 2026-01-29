@@ -88,7 +88,7 @@ export default function PlayerAvatarSquare({
         </span>
       ) : null}
       {isViceCaptain ? (
-        <span className="absolute bottom-[calc(25%+6px)] left-1 z-30 flex h-[25%] w-[25%] items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-black">
+        <span className="absolute bottom-1 left-1 z-30 flex h-[25%] w-[25%] items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-black">
           V
         </span>
       ) : null}

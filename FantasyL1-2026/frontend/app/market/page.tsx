@@ -293,6 +293,7 @@ function PitchRow({
 export default function MarketPage() {
   const token = useFantasyStore((state) => state.token);
   const setToken = useFantasyStore((state) => state.setToken);
+  const setUserEmail = useFantasyStore((state) => state.setUserEmail);
   const userEmail = useFantasyStore((state) => state.userEmail);
   const squad = useFantasyStore((state) => state.squad);
   const setSquad = useFantasyStore((state) => state.setSquad);
@@ -320,6 +321,7 @@ export default function MarketPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [teamName, setTeamName] = useState("");
   const [teamNameError, setTeamNameError] = useState<string | null>(null);
+  const [needsTeamName, setNeedsTeamName] = useState(false);
   const [teamLoaded, setTeamLoaded] = useState(false);
   const [nameGateOpen, setNameGateOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
@@ -338,10 +340,14 @@ export default function MarketPage() {
   const parentRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
+    const storedEmail = localStorage.getItem("fantasy_email");
     if (!token && stored) {
       setToken(stored);
     }
-  }, [token, setToken]);
+    if (!userEmail && storedEmail) {
+      setUserEmail(storedEmail);
+    }
+  }, [token, setToken, userEmail, setUserEmail]);
 
   useEffect(() => {
     if (!Array.isArray(draftSquadState)) {
@@ -369,9 +375,11 @@ export default function MarketPage() {
       if (team.name) {
         setTeamName(team.name);
       }
+      setNeedsTeamName(!team.name?.trim());
       setTeamLoaded(true);
     };
     load().catch(() => {
+      setNeedsTeamName(true);
       setTeamLoaded(true);
     });
   }, [token, setSquad, setDraftSquad, draftSquad.length, draftLoaded, setDraftLoaded]);
@@ -383,12 +391,12 @@ export default function MarketPage() {
   }, []);
 
   useEffect(() => {
-    if (teamLoaded && !teamName.trim()) {
+    if (teamLoaded && needsTeamName) {
       setNameGateOpen(!welcomeOpen);
     } else {
       setNameGateOpen(false);
     }
-  }, [teamLoaded, teamName, welcomeOpen]);
+  }, [teamLoaded, needsTeamName, welcomeOpen]);
 
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
@@ -402,12 +410,12 @@ export default function MarketPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (teamLoaded && !teamName.trim() && !welcomeSeen) {
+    if (teamLoaded && needsTeamName && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
     }
-  }, [teamLoaded, teamName, welcomeSeen]);
+  }, [teamLoaded, needsTeamName, welcomeSeen]);
 
   useEffect(() => {
     if (!token) return;
@@ -627,6 +635,16 @@ export default function MarketPage() {
       no_valid_random_squad: {
         title: "No se pudo generar equipo",
         detail: "Intenta de nuevo o ajusta el catalogo.",
+        tone: "warning"
+      },
+      round_closed: {
+        title: "Ronda cerrada",
+        detail: "La ronda esta cerrada. No puedes guardar cambios.",
+        tone: "danger"
+      },
+      rounds_not_configured: {
+        title: "Sin rondas activas",
+        detail: "Carga rondas desde Admin para habilitar Mercado.",
         tone: "warning"
       }
     };
@@ -898,6 +916,7 @@ export default function MarketPage() {
     }
     try {
       await createTeam(token, trimmedName);
+      setNeedsTeamName(false);
       await updateSquad(
         token,
         draftSquad.map((player) => player.player_id)
@@ -905,6 +924,7 @@ export default function MarketPage() {
       const team = await getTeam(token);
       setSquad(team.squad || []);
       setDraftSquad(team.squad || []);
+      setTeamName(team.name || trimmedName);
       setSaveMessage("Equipo guardado");
     } catch (err) {
       const message = String(err);
@@ -1075,7 +1095,7 @@ export default function MarketPage() {
         </div>
 
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Confirmar jugador">
-        <div className="space-y-4">
+        <div className="max-h-[70vh] space-y-4 overflow-auto pr-1">
           <div>
             <p className="text-xs uppercase text-muted">Sale</p>
             {outPlayer ? (
@@ -1185,7 +1205,7 @@ export default function MarketPage() {
               </button>
             </div>
             <p className="text-xs text-muted">
-              ¿Estás seguro que quieres guardar este equipo?
+              Estas seguro que quieres guardar este equipo?
             </p>
             <div className="space-y-2">
               <label className="text-xs text-muted">Nombre oficial del equipo</label>
@@ -1246,6 +1266,7 @@ export default function MarketPage() {
           try {
             await createTeam(token, trimmedName);
             setTeamName(trimmedName);
+            setNeedsTeamName(false);
             setNameGateOpen(false);
           } catch {
             setTeamNameError("No se pudo guardar el nombre.");

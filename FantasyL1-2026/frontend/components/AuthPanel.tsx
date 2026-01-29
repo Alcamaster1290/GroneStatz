@@ -57,6 +57,7 @@ export default function AuthPanel() {
       setToken(result.access_token);
       setUserEmail(email);
       localStorage.setItem("fantasy_token", result.access_token);
+      localStorage.setItem("fantasy_email", email);
     } catch (err) {
       setErrors(mapAuthErrors(String(err)));
     }

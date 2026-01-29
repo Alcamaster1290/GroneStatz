@@ -511,7 +511,7 @@ def calculate_price(row: pd.Series) -> float:
 def build_players_fantasy_df(players_df: pd.DataFrame, totals_df: pd.DataFrame) -> pd.DataFrame:
     if players_df.empty or totals_df.empty:
         return pd.DataFrame()
-    favorite_team_ids = {2302, 2305, 2311,63760,2308}
+    favorite_team_ids = {2302, 2305, 2311}
     players = players_df.copy()
     totals = totals_df.copy()
     if "player_id" in players.columns:
@@ -570,6 +570,21 @@ def build_players_fantasy_df(players_df: pd.DataFrame, totals_df: pd.DataFrame) 
                 & (matches_num > 30)
                 & (minutes_num > 1600)
             )
+            if bonus_mask.any() and "position" in valid_players.columns:
+                pos_upper = valid_players["position"].astype(str).str.strip().str.upper()
+                top_bonus = pd.Series(False, index=valid_players.index)
+                for pos in ["G", "D", "M", "F"]:
+                    pos_mask = bonus_mask & (pos_upper == pos)
+                    if not pos_mask.any():
+                        continue
+                    top_idx = (
+                        valid_players.loc[pos_mask, "price"]
+                        .sort_values(ascending=False)
+                        .head(2)
+                        .index
+                    )
+                    top_bonus.loc[top_idx] = True
+                bonus_mask = top_bonus
             valid_players.loc[bonus_mask, "price"] = valid_players.loc[bonus_mask, "price"] + 1.0
         valid_players["price"] = _remap_prices_by_position_quantiles(
             valid_players["price"],

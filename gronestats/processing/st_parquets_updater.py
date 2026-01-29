@@ -203,6 +203,53 @@ def parse_player_ids(raw_text: str) -> list[int]:
     return ids
 
 
+def parse_player_rows(raw_text: str) -> list[dict]:
+    rows = []
+    if not raw_text:
+        return rows
+    lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
+    for line in lines:
+        parts = [p.strip() for p in re.split(r"[,\t;]+", line)]
+        if len(parts) < 2:
+            continue
+        try:
+            player_id = int(float(parts[0]))
+        except ValueError:
+            continue
+        name = parts[1].strip()
+        if not name:
+            continue
+        short_name = parts[2].strip() if len(parts) > 2 and parts[2] else None
+        pos_raw = parts[3].strip() if len(parts) > 3 and parts[3] else ""
+        position = normalize_pos(pos_raw)
+        team_id = normalize_team_id(parts[4]) if len(parts) > 4 and parts[4] else pd.NA
+
+        def _num(idx: int) -> float:
+            if len(parts) <= idx or parts[idx] == "":
+                return 0.0
+            try:
+                return float(parts[idx])
+            except ValueError:
+                return 0.0
+
+        rows.append(
+            {
+                "player_id": player_id,
+                "name": name,
+                "short_name": short_name,
+                "position": position,
+                "team_id": int(team_id) if pd.notna(team_id) else None,
+                "minutesplayed": _num(5),
+                "matches_played": _num(6),
+                "goals": _num(7),
+                "assists": _num(8),
+                "saves": _num(9),
+                "fouls": _num(10),
+            }
+        )
+    return rows
+
+
 def build_view(players_fantasy: pd.DataFrame, players: pd.DataFrame, teams: pd.DataFrame) -> pd.DataFrame:
     view = normalize_player_columns(players_fantasy)
     players = normalize_player_columns(players)
@@ -250,6 +297,9 @@ def _safe_per_match(series: pd.Series, matches: pd.Series) -> pd.Series:
 def recalc_players_fantasy(players_fantasy: pd.DataFrame, players: pd.DataFrame) -> pd.DataFrame:
     fantasy = normalize_player_columns(players_fantasy)
     players = normalize_player_columns(players)
+    original_ids = set()
+    if "player_id" in fantasy.columns:
+        original_ids = set(fantasy["player_id"].dropna().astype(int).tolist())
     for col in ["name", "short_name", "position", "team_id"]:
         if col not in fantasy.columns:
             fantasy[col] = pd.NA
@@ -261,6 +311,8 @@ def recalc_players_fantasy(players_fantasy: pd.DataFrame, players: pd.DataFrame)
             if alt in fantasy.columns:
                 fantasy[col] = fantasy[alt].combine_first(fantasy[col])
         fantasy = fantasy.drop(columns=[c for c in fantasy.columns if c.endswith("_players")], errors="ignore")
+    if original_ids and "player_id" in fantasy.columns:
+        fantasy = fantasy[fantasy["player_id"].dropna().astype(int).isin(original_ids)].copy()
     for col in [
         "minutesplayed",
         "matches_played",
@@ -285,7 +337,7 @@ def recalc_players_fantasy(players_fantasy: pd.DataFrame, players: pd.DataFrame)
         ("penaltyconceded", "penaltyconceded_pm"),
     ]:
         fantasy[target] = _safe_per_match(fantasy[src], fantasy["matches_played"])
-    favorite_team_ids = {2302, 2305, 2311, 63760, 2308}
+    favorite_team_ids = {2302, 2305, 2311}
     fantasy["price_raw"] = fantasy.apply(calculate_price, axis=1)
     team_id_num = pd.to_numeric(fantasy.get("team_id"), errors="coerce")
     matches_num = pd.to_numeric(fantasy["matches_played"], errors="coerce").fillna(0)
@@ -296,13 +348,34 @@ def recalc_players_fantasy(players_fantasy: pd.DataFrame, players: pd.DataFrame)
         & (minutes_num > 1600)
         & (minutes_num >= 90)
     )
-    fantasy.loc[bonus_mask, "price_raw"] = fantasy.loc[bonus_mask, "price_raw"] + 1.0
+    if bonus_mask.any() and "position" in fantasy.columns:
+        pos_upper = fantasy["position"].astype(str).str.strip().str.upper()
+        top_bonus = pd.Series(False, index=fantasy.index)
+        for pos in ["G", "D", "M", "F"]:
+            pos_mask = bonus_mask & (pos_upper == pos)
+            if not pos_mask.any():
+                continue
+            top_idx = (
+                fantasy.loc[pos_mask, "price_raw"]
+                .sort_values(ascending=False)
+                .head(2)
+                .index
+            )
+            top_bonus.loc[top_idx] = True
+        bonus_mask = top_bonus
+    fantasy.loc[bonus_mask, "price_raw"] = fantasy.loc[bonus_mask, "price_raw"] + 0.5
     min_price_all = 5.0
     max_price_all = 9.8
+    minutes_for_price = pd.to_numeric(fantasy["minutesplayed"], errors="coerce")
+    avg_minutes = minutes_for_price[minutes_for_price > 0].mean()
+    if pd.isna(avg_minutes):
+        avg_minutes = 90
+    minutes_for_price = minutes_for_price.fillna(avg_minutes)
+    minutes_for_price = minutes_for_price.mask(minutes_for_price <= 0, avg_minutes)
     fantasy["price"] = _remap_prices_by_position_quantiles(
         fantasy["price_raw"],
         fantasy.get("position"),
-        fantasy["minutesplayed"],
+        minutes_for_price,
         min_price_all=min_price_all,
         max_price_all=max_price_all,
     )
@@ -431,6 +504,68 @@ def add_short_name_to_fantasy(
     else:
         work["short_name"] = mapped
     return work
+
+
+def _append_row(df: pd.DataFrame, row: dict) -> pd.DataFrame:
+    if df.empty:
+        return pd.DataFrame([row])
+    work = df.copy()
+    for key in row.keys():
+        if key not in work.columns:
+            work[key] = pd.NA
+    return pd.concat([work, pd.DataFrame([row])], ignore_index=True)
+
+
+def add_new_player_to_fantasy(
+    players_df: pd.DataFrame,
+    players_fantasy_df: pd.DataFrame,
+    player_id: int,
+    name: str,
+    short_name: str | None,
+    position: str | None,
+    team_id: int | None,
+    minutesplayed: float,
+    matches_played: float,
+    goals: float,
+    assists: float,
+    saves: float,
+    fouls: float,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    players = normalize_player_columns(players_df)
+    fantasy = normalize_player_columns(players_fantasy_df)
+    if "player_id" not in fantasy.columns:
+        fantasy["player_id"] = pd.NA
+    existing_fantasy = set(fantasy["player_id"].dropna().astype(int).tolist())
+    existing_players = set()
+    if "player_id" in players.columns:
+        existing_players = set(players["player_id"].dropna().astype(int).tolist())
+    if player_id in existing_fantasy or player_id in existing_players:
+        return players_df, players_fantasy_df
+
+    players = update_players_row(players, player_id, position, team_id, name)
+    if short_name:
+        if "short_name" not in players.columns:
+            players["short_name"] = pd.NA
+        players.loc[players["player_id"] == player_id, "short_name"] = short_name
+
+    new_row = {
+        "player_id": player_id,
+        "name": name,
+        "short_name": short_name if short_name else pd.NA,
+        "position": position,
+        "team_id": team_id,
+        "minutesplayed": minutesplayed,
+        "matches_played": matches_played,
+        "goals": goals,
+        "assists": assists,
+        "saves": saves,
+        "fouls": fouls,
+        "penaltywon": 0,
+        "penaltysave": 0,
+        "penaltyconceded": 0,
+    }
+    fantasy = _append_row(fantasy, new_row)
+    return players, fantasy
 
 
 def append_missing_players_from_players(
@@ -813,7 +948,7 @@ with tab_reload:
         )
         missing_ids = sorted(players_ids - fantasy_ids)
 
-    add_missing = st.checkbox("Agregar jugadores nuevos desde players.parquet", value=True)
+    add_missing = st.checkbox("Agregar jugadores nuevos desde players.parquet", value=False)
     if missing_ids:
         st.caption(f"Nuevos jugadores detectados: {len(missing_ids)}")
         preview_cols = safe_cols(players, ["player_id", "name", "short_name", "position", "team_id"])
@@ -839,6 +974,137 @@ with tab_reload:
             updated_fantasy = add_short_name_to_fantasy(raw_fantasy, players)
             save_parquet(updated_fantasy, FILES["players_fantasy"])
             st.success("short_name agregado en players_fantasy.")
+            st.cache_data.clear()
+            st.rerun()
+
+    st.divider()
+    st.subheader("Agregar nuevo jugador al fantasy")
+    st.caption("Crea un jugador en players.parquet y lo agrega a players_fantasy.parquet.")
+    c_add1, c_add2, c_add3 = st.columns(3)
+    with c_add1:
+        new_player_id = st.number_input("player_id", min_value=0, step=1, value=0)
+        new_player_name = st.text_input("Nombre completo")
+        new_player_short = st.text_input("Short name (opcional)")
+    with c_add2:
+        new_player_pos_display = st.selectbox("Posicion", POS_UI, key="new_player_pos")
+        new_player_team_id = st.number_input("team_id", min_value=0, step=1, value=0)
+    with c_add3:
+        new_minutes = st.number_input("Minutos (opcional)", min_value=0.0, step=1.0, value=0.0)
+        new_matches = st.number_input("Partidos (opcional)", min_value=0.0, step=1.0, value=0.0)
+        new_goals = st.number_input("Goles (opcional)", min_value=0.0, step=1.0, value=0.0)
+        new_assists = st.number_input("Asistencias (opcional)", min_value=0.0, step=1.0, value=0.0)
+        new_saves = st.number_input("Atajadas (opcional)", min_value=0.0, step=1.0, value=0.0)
+        new_fouls = st.number_input("Faltas (opcional)", min_value=0.0, step=1.0, value=0.0)
+
+    if st.button("Agregar jugador al fantasy", type="primary"):
+        if new_player_id <= 0:
+            st.warning("player_id invalido.")
+        elif not new_player_name.strip():
+            st.warning("Nombre requerido.")
+        else:
+            existing_players = set(
+                players["player_id"].dropna().astype(int).tolist()
+            ) if "player_id" in players.columns else set()
+            existing_fantasy = set(
+                players_fantasy["player_id"].dropna().astype(int).tolist()
+            ) if "player_id" in players_fantasy.columns else set()
+            if int(new_player_id) in existing_players or int(new_player_id) in existing_fantasy:
+                st.warning("player_id ya existe en players o players_fantasy.")
+                st.stop()
+            new_pos = normalize_pos(new_player_pos_display)
+            new_team = normalize_team_id(new_player_team_id)
+            updated_players, updated_fantasy = add_new_player_to_fantasy(
+                players,
+                players_fantasy,
+                int(new_player_id),
+                new_player_name.strip(),
+                new_player_short.strip() if new_player_short.strip() else None,
+                new_pos,
+                int(new_team) if pd.notna(new_team) else None,
+                float(new_minutes),
+                float(new_matches),
+                float(new_goals),
+                float(new_assists),
+                float(new_saves),
+                float(new_fouls),
+            )
+            if updated_fantasy is players_fantasy:
+                st.warning("Jugador ya existe en players_fantasy.")
+            else:
+                updated_fantasy = recalc_players_fantasy(updated_fantasy, updated_players)
+                updated_players = sync_players_price(updated_players, updated_fantasy)
+                save_parquet(updated_players, FILES["players"])
+                save_parquet(updated_fantasy, FILES["players_fantasy"])
+                st.success("Jugador agregado y precios recalculados.")
+                st.cache_data.clear()
+                st.rerun()
+
+    st.divider()
+    st.subheader("Carga masiva de nuevos jugadores")
+    st.caption(
+        "Formato por linea: player_id, nombre, short_name, posicion, team_id, minutos, partidos, goles, asistencias, saves, fouls"
+    )
+    st.info(
+        "Columnas requeridas: player_id, nombre. "
+        "Opcionales: short_name, posicion(GK/D/M/F), team_id, minutos, partidos, goles, asistencias, saves, fouls."
+    )
+    bulk_text = st.text_area("Jugadores (bulk)", height=140)
+    bulk_rows = parse_player_rows(bulk_text)
+    if bulk_text and not bulk_rows:
+        st.warning("No se detectaron filas validas.")
+    if bulk_rows:
+        bulk_ids = [row["player_id"] for row in bulk_rows]
+        dup_ids = sorted({pid for pid in bulk_ids if bulk_ids.count(pid) > 1})
+        if dup_ids:
+            st.warning(f"IDs repetidos en el bulk: {', '.join(map(str, dup_ids))}")
+        st.write(f"Filas validas: {len(bulk_rows)}")
+        preview_df = pd.DataFrame(bulk_rows)[
+            ["player_id", "name", "short_name", "position", "team_id"]
+        ]
+        st.dataframe(preview_df, use_container_width=True)
+
+    if st.button("Agregar jugadores (bulk)", type="primary"):
+        if not bulk_rows:
+            st.warning("No hay filas validas.")
+        else:
+            updated_players = players.copy()
+            updated_fantasy = players_fantasy.copy()
+            existing_players = set(
+                updated_players["player_id"].dropna().astype(int).tolist()
+            ) if "player_id" in updated_players.columns else set()
+            existing_fantasy = set(
+                updated_fantasy["player_id"].dropna().astype(int).tolist()
+            ) if "player_id" in updated_fantasy.columns else set()
+            added = 0
+            for row in bulk_rows:
+                pid = row["player_id"]
+                if pid in existing_players or pid in existing_fantasy:
+                    continue
+                updated_players, updated_fantasy = add_new_player_to_fantasy(
+                    updated_players,
+                    updated_fantasy,
+                    pid,
+                    row["name"],
+                    row.get("short_name"),
+                    row.get("position"),
+                    row.get("team_id"),
+                    row.get("minutesplayed", 0.0),
+                    row.get("matches_played", 0.0),
+                    row.get("goals", 0.0),
+                    row.get("assists", 0.0),
+                    row.get("saves", 0.0),
+                    row.get("fouls", 0.0),
+                )
+                existing_players.add(pid)
+                existing_fantasy.add(pid)
+                added += 1
+            if added == 0:
+                st.info("No se agregaron jugadores nuevos. Recalculando precios.")
+            updated_fantasy = recalc_players_fantasy(updated_fantasy, updated_players)
+            updated_players = sync_players_price(updated_players, updated_fantasy)
+            save_parquet(updated_players, FILES["players"])
+            save_parquet(updated_fantasy, FILES["players_fantasy"])
+            st.success(f"Jugadores agregados: {added}.")
             st.cache_data.clear()
             st.rerun()
 

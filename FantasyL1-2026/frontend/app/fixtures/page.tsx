@@ -75,11 +75,13 @@ function formatDateLabel(dateKey: string): string {
 export default function FixturesPage() {
   const token = useFantasyStore((state) => state.token);
   const setToken = useFantasyStore((state) => state.setToken);
+  const setUserEmail = useFantasyStore((state) => state.setUserEmail);
   const userEmail = useFantasyStore((state) => state.userEmail);
 
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [teams, setTeams] = useState<{ id: number; name_short?: string; name_full?: string }[]>([]);
   const [teamName, setTeamName] = useState("");
+  const [needsTeamName, setNeedsTeamName] = useState(false);
   const [teamLoaded, setTeamLoaded] = useState(false);
   const [nameGateOpen, setNameGateOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
@@ -88,28 +90,36 @@ export default function FixturesPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
+    const storedEmail = localStorage.getItem("fantasy_email");
     if (!token && stored) {
       setToken(stored);
     }
-  }, [token, setToken]);
+    if (!userEmail && storedEmail) {
+      setUserEmail(storedEmail);
+    }
+  }, [token, setToken, userEmail, setUserEmail]);
 
   useEffect(() => {
     if (!token) return;
     getTeam(token)
       .then((team) => {
         setTeamName(team.name || "");
+        setNeedsTeamName(!team.name?.trim());
         setTeamLoaded(true);
       })
-      .catch(() => setTeamLoaded(true));
+      .catch(() => {
+        setNeedsTeamName(true);
+        setTeamLoaded(true);
+      });
   }, [token]);
 
   useEffect(() => {
-    if (teamLoaded && !teamName.trim()) {
+    if (teamLoaded && needsTeamName) {
       setNameGateOpen(!welcomeOpen);
     } else {
       setNameGateOpen(false);
     }
-  }, [teamLoaded, teamName, welcomeOpen]);
+  }, [teamLoaded, needsTeamName, welcomeOpen]);
 
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
@@ -123,12 +133,12 @@ export default function FixturesPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (teamLoaded && !teamName.trim() && !welcomeSeen) {
+    if (teamLoaded && needsTeamName && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
     }
-  }, [teamLoaded, teamName, welcomeSeen]);
+  }, [teamLoaded, needsTeamName, welcomeSeen]);
 
   useEffect(() => {
     getFixtures().then(setFixtures).catch(() => undefined);
@@ -238,6 +248,7 @@ export default function FixturesPage() {
           try {
             await createTeam(token, trimmedName);
             setTeamName(trimmedName);
+            setNeedsTeamName(false);
             setNameGateOpen(false);
           } catch {
             setTeamNameError("No se pudo guardar el nombre.");

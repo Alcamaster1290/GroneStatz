@@ -7,9 +7,9 @@ import { BarChart3, Calendar, Home, Settings, ShoppingBag, Trophy } from "lucide
 const items = [
   { href: "/team", label: "Equipo", icon: Home },
   { href: "/market", label: "Mercado", icon: ShoppingBag },
-  { href: "/fixtures", label: "Rondas", icon: Calendar },
-  { href: "/ranking", label: "Ranking", icon: Trophy },
   { href: "/stats", label: "Estadisticas", icon: BarChart3 },
+  { href: "/ranking", label: "Ranking", icon: Trophy },
+  { href: "/fixtures", label: "Rondas", icon: Calendar },
   { href: "/settings", label: "Ajustes", icon: Settings }
 ];
 

@@ -17,6 +17,7 @@ export default function SettingsPage() {
   const setMarketDraftBackup = useFantasyStore((state) => state.setMarketDraftBackup);
   const setMarketDraftLoaded = useFantasyStore((state) => state.setMarketDraftLoaded);
   const [teamName, setTeamName] = useState("");
+  const [needsTeamName, setNeedsTeamName] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [teamLoaded, setTeamLoaded] = useState(false);
   const [nameGateOpen, setNameGateOpen] = useState(false);
@@ -26,28 +27,36 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
+    const storedEmail = localStorage.getItem("fantasy_email");
     if (!token && stored) {
       setToken(stored);
     }
-  }, [token, setToken]);
+    if (!userEmail && storedEmail) {
+      setUserEmail(storedEmail);
+    }
+  }, [token, setToken, userEmail, setUserEmail]);
 
   useEffect(() => {
     if (!token) return;
     getTeam(token)
       .then((team) => {
         setTeamName(team.name || "");
+        setNeedsTeamName(!team.name?.trim());
         setTeamLoaded(true);
       })
-      .catch(() => setTeamLoaded(true));
+      .catch(() => {
+        setNeedsTeamName(true);
+        setTeamLoaded(true);
+      });
   }, [token]);
 
   useEffect(() => {
-    if (teamLoaded && !teamName.trim()) {
+    if (teamLoaded && needsTeamName) {
       setNameGateOpen(!welcomeOpen);
     } else {
       setNameGateOpen(false);
     }
-  }, [teamLoaded, teamName, welcomeOpen]);
+  }, [teamLoaded, needsTeamName, welcomeOpen]);
 
   const welcomeKey = `fantasy_welcome_seen_${userEmail && userEmail.trim() ? userEmail.trim() : "anon"}`;
 
@@ -58,12 +67,12 @@ export default function SettingsPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (teamLoaded && !teamName.trim() && !welcomeSeen) {
+    if (teamLoaded && needsTeamName && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
     }
-  }, [teamLoaded, teamName, welcomeSeen]);
+  }, [teamLoaded, needsTeamName, welcomeSeen]);
 
   const handleSave = async () => {
     if (!token) return;
@@ -78,6 +87,7 @@ export default function SettingsPage() {
 
   const handleLogout = () => {
     localStorage.removeItem("fantasy_token");
+    localStorage.removeItem("fantasy_email");
     setToken(null);
     setUserEmail(null);
     setMarketDraftSquad([]);
@@ -149,6 +159,7 @@ export default function SettingsPage() {
           try {
             await createTeam(token, trimmedName);
             setTeamName(trimmedName);
+            setNeedsTeamName(false);
             setNameGateOpen(false);
           } catch {
             setTeamNameError("No se pudo guardar el nombre.");

@@ -19,9 +19,11 @@ const positionLabels: Record<string, string> = {
 export default function StatsPage() {
   const token = useFantasyStore((state) => state.token);
   const setToken = useFantasyStore((state) => state.setToken);
+  const setUserEmail = useFantasyStore((state) => state.setUserEmail);
   const userEmail = useFantasyStore((state) => state.userEmail);
 
   const [teamName, setTeamName] = useState("");
+  const [needsTeamName, setNeedsTeamName] = useState(false);
   const [teamLoaded, setTeamLoaded] = useState(false);
   const [nameGateOpen, setNameGateOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
@@ -29,6 +31,7 @@ export default function StatsPage() {
   const [teamNameError, setTeamNameError] = useState<string | null>(null);
 
   const [players, setPlayers] = useState<PlayerStatsEntry[]>([]);
+  const [activeTeamIds, setActiveTeamIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [teams, setTeams] = useState<{ id: number; name_short?: string; name_full?: string }[]>([]);
@@ -40,32 +43,45 @@ export default function StatsPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
+    const storedEmail = localStorage.getItem("fantasy_email");
     if (!token && stored) {
       setToken(stored);
     }
-  }, [token, setToken]);
+    if (!userEmail && storedEmail) {
+      setUserEmail(storedEmail);
+    }
+  }, [token, setToken, userEmail, setUserEmail]);
 
   useEffect(() => {
     if (!token) return;
     getTeam(token)
       .then((team) => {
         setTeamName(team.name || "");
+        setNeedsTeamName(!team.name?.trim());
         setTeamLoaded(true);
       })
-      .catch(() => setTeamLoaded(true));
+      .catch(() => {
+        setNeedsTeamName(true);
+        setTeamLoaded(true);
+      });
   }, [token]);
 
   useEffect(() => {
     getTeams().then(setTeams).catch(() => undefined);
   }, []);
 
+  const activeTeams = useMemo(() => {
+    if (activeTeamIds.size === 0) return teams;
+    return teams.filter((team) => activeTeamIds.has(team.id));
+  }, [teams, activeTeamIds]);
+
   useEffect(() => {
-    if (teamLoaded && !teamName.trim()) {
+    if (teamLoaded && needsTeamName) {
       setNameGateOpen(!welcomeOpen);
     } else {
       setNameGateOpen(false);
     }
-  }, [teamLoaded, teamName, welcomeOpen]);
+  }, [teamLoaded, needsTeamName, welcomeOpen]);
 
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
@@ -79,26 +95,50 @@ export default function StatsPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (teamLoaded && !teamName.trim() && !welcomeSeen) {
+    if (teamLoaded && needsTeamName && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
     }
-  }, [teamLoaded, teamName, welcomeSeen]);
+  }, [teamLoaded, needsTeamName, welcomeSeen]);
+
+  const fetchAllStats = async (params: {
+    q?: string;
+    position?: Position;
+    team_id?: number;
+    max_price?: number;
+  }) => {
+    const limit = 200;
+    const maxPages = 30;
+    const all: PlayerStatsEntry[] = [];
+    for (let page = 0; page < maxPages; page += 1) {
+      const batch = await getPlayerStats({
+        ...params,
+        limit,
+        offset: page * limit
+      });
+      all.push(...batch);
+      if (batch.length < limit) break;
+    }
+    return all;
+  };
 
   const handleLoad = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getPlayerStats({
+      const data = await fetchAllStats({
         q: query.trim() || undefined,
         position: position || undefined,
         team_id: teamId ? Number(teamId) : undefined,
-        max_price: maxPrice ? Number(maxPrice) : undefined,
-        limit: 200,
-        offset: 0
+        max_price: maxPrice ? Number(maxPrice) : undefined
       });
-      setPlayers(data);
+      const sorted = [...data].sort((a, b) => {
+        const diff = (b.selected_percent || 0) - (a.selected_percent || 0);
+        if (diff !== 0) return diff;
+        return (b.price_current || 0) - (a.price_current || 0);
+      });
+      setPlayers(sorted);
     } catch (err) {
       setError(String(err));
     } finally {
@@ -108,6 +148,14 @@ export default function StatsPage() {
 
   useEffect(() => {
     handleLoad().catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    fetchAllStats({})
+      .then((data) => {
+        setActiveTeamIds(new Set(data.map((player) => player.team_id)));
+      })
+      .catch(() => undefined);
   }, []);
 
   if (!token) {
@@ -154,7 +202,7 @@ export default function StatsPage() {
               className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
             >
               <option value="">Todos</option>
-              {teams.map((team) => (
+              {activeTeams.map((team) => (
                 <option key={team.id} value={team.id}>
                   {team.name_short || team.name_full || `Equipo ${team.id}`}
                 </option>
@@ -240,8 +288,14 @@ export default function StatsPage() {
                         </>
                       )}
                       <span>F {player.fouls}</span>
-                      <span>Am {player.yellow_cards}</span>
-                      <span>Ro {player.red_cards}</span>
+                      <span className="inline-flex items-center gap-1">
+                        <span className="inline-block h-[12px] w-[8px] rounded-sm bg-yellow-400" />
+                        {player.yellow_cards}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <span className="inline-block h-[12px] w-[8px] rounded-sm bg-red-500" />
+                        {player.red_cards}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -291,6 +345,7 @@ export default function StatsPage() {
           try {
             await createTeam(token, trimmedName);
             setTeamName(trimmedName);
+            setNeedsTeamName(false);
             setNameGateOpen(false);
           } catch {
             setTeamNameError("No se pudo guardar el nombre.");

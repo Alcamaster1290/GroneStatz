@@ -15,6 +15,8 @@ import {
   getAdminTeams,
   getCatalogPlayers,
   getTeams,
+  getAdminPlayers,
+  openAdminRound,
   updateAdminFixture,
   upsertAdminPlayerStats,
   updateAdminPlayerInjury
@@ -28,6 +30,7 @@ import {
   AdminTeam,
   FixtureStatus
 } from "@/lib/types";
+import type { AdminPlayerListItem } from "@/lib/api";
 
 const ADMIN_TOKEN_KEY = "fantasy_admin_token";
 
@@ -43,7 +46,7 @@ export default function AdminTeamsPage() {
   const [fixtureLoading, setFixtureLoading] = useState(false);
   const [fixtureError, setFixtureError] = useState<string | null>(null);
   const [teamsCatalog, setTeamsCatalog] = useState<
-    { id: number; name_short?: string; name_full?: string }[]
+    { id: number; name_short?: string | null; name_full?: string | null }[]
   >([]);
 
   const [newFixture, setNewFixture] = useState({
@@ -87,6 +90,14 @@ export default function AdminTeamsPage() {
   const [injuryStatus, setInjuryStatus] = useState(false);
   const [injuryLoading, setInjuryLoading] = useState(false);
   const [injuryMessage, setInjuryMessage] = useState<string | null>(null);
+  const [adminPlayers, setAdminPlayers] = useState<AdminPlayerListItem[]>([]);
+  const [adminPlayersLoading, setAdminPlayersLoading] = useState(false);
+  const [adminPlayersError, setAdminPlayersError] = useState<string | null>(null);
+  const [adminPlayersSummary, setAdminPlayersSummary] = useState({
+    total: 0,
+    injured: 0,
+    unselected: 0
+  });
   const [playerSearch, setPlayerSearch] = useState("");
   const [playerResults, setPlayerResults] = useState<
     { player_id: number; name: string; short_name?: string | null; is_injured?: boolean }[]
@@ -100,6 +111,7 @@ export default function AdminTeamsPage() {
   const [roundsLoading, setRoundsLoading] = useState(false);
   const [roundsError, setRoundsError] = useState<string | null>(null);
   const [closeRoundNumber, setCloseRoundNumber] = useState("");
+  const [openRoundNumber, setOpenRoundNumber] = useState("");
   const [roundActionMessage, setRoundActionMessage] = useState<string | null>(null);
   const [leagues, setLeagues] = useState<AdminLeague[]>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
@@ -115,6 +127,23 @@ export default function AdminTeamsPage() {
       setAdminToken(storedAdmin);
     }
   }, []);
+
+  useEffect(() => {
+    if (!adminToken) return;
+    setAdminPlayersLoading(true);
+    setAdminPlayersError(null);
+    getAdminPlayers(adminToken)
+      .then((data) => {
+        setAdminPlayers(data.items || []);
+        setAdminPlayersSummary({
+          total: data.total || 0,
+          injured: data.injured || 0,
+          unselected: data.unselected || 0
+        });
+      })
+      .catch(() => setAdminPlayersError("players_load_failed"))
+      .finally(() => setAdminPlayersLoading(false));
+  }, [adminToken]);
 
   useEffect(() => {
     getTeams().then(setTeamsCatalog).catch(() => undefined);
@@ -417,6 +446,13 @@ export default function AdminTeamsPage() {
     setInjuryLoading(true);
     try {
       await updateAdminPlayerInjury(adminToken, playerId, injuryStatus);
+      const refreshed = await getAdminPlayers(adminToken);
+      setAdminPlayers(refreshed.items || []);
+      setAdminPlayersSummary({
+        total: refreshed.total || 0,
+        injured: refreshed.injured || 0,
+        unselected: refreshed.unselected || 0
+      });
       setInjuryMessage(injuryStatus ? "lesionado_ok" : "recuperado_ok");
     } catch (err) {
       setInjuryMessage(String(err));
@@ -528,6 +564,30 @@ export default function AdminTeamsPage() {
     }
   };
 
+  const handleOpenRound = async () => {
+    if (!adminToken) {
+      setRoundActionMessage("admin_token_required");
+      return;
+    }
+    if (!openRoundNumber.trim()) {
+      setRoundActionMessage("round_required");
+      return;
+    }
+    const roundNumber = Number(openRoundNumber);
+    if (!Number.isFinite(roundNumber) || roundNumber < 1) {
+      setRoundActionMessage("round_invalid");
+      return;
+    }
+    setRoundActionMessage(null);
+    try {
+      await openAdminRound(adminToken, roundNumber);
+      await handleLoadRounds();
+      setRoundActionMessage("round_opened");
+    } catch (err) {
+      setRoundActionMessage(String(err));
+    }
+  };
+
   const handleLoadLeagues = async () => {
     if (!adminToken) {
       setLeaguesError("admin_token_required");
@@ -603,27 +663,44 @@ export default function AdminTeamsPage() {
       </div>
 
       <div className="glass space-y-3 rounded-2xl p-4">
-        <div className="flex flex-wrap gap-2">
-          <input
-            type="number"
-            value={closeRoundNumber}
-            onChange={(event) => setCloseRoundNumber(event.target.value)}
-            placeholder="Ronda"
-            className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
-          />
-          <button
-            onClick={handleCloseRound}
-            className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
-          >
-            Cerrar ronda
-          </button>
-          <button
-            onClick={handleLoadRounds}
-            className="rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
-          >
-            Ver rondas
-          </button>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex flex-wrap gap-2">
+            <input
+              type="number"
+              value={openRoundNumber}
+              onChange={(event) => setOpenRoundNumber(event.target.value)}
+              placeholder="Ronda a abrir"
+              className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+            />
+            <button
+              onClick={handleOpenRound}
+              className="rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+            >
+              Activar ronda
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <input
+              type="number"
+              value={closeRoundNumber}
+              onChange={(event) => setCloseRoundNumber(event.target.value)}
+              placeholder="Ronda a cerrar"
+              className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+            />
+            <button
+              onClick={handleCloseRound}
+              className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+            >
+              Cerrar ronda
+            </button>
+          </div>
         </div>
+        <button
+          onClick={handleLoadRounds}
+          className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+        >
+          Ver rondas
+        </button>
         {roundActionMessage ? <p className="text-xs text-muted">{roundActionMessage}</p> : null}
         {roundsError ? <p className="text-xs text-warning">{roundsError}</p> : null}
         {roundsLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
@@ -964,7 +1041,7 @@ export default function AdminTeamsPage() {
             className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
           />
           <button
-            onClick={handleLoadFixtures}
+            onClick={() => handleLoadFixtures()}
             className="rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
           >
             Cargar partidos
@@ -1175,6 +1252,43 @@ export default function AdminTeamsPage() {
       </div>
 
       <div className="glass space-y-3 rounded-2xl p-4">
+        <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
+          <div className="flex flex-wrap items-center gap-2">
+            <span>Total: <span className="font-semibold text-ink">{adminPlayersSummary.total}</span></span>
+            <span>Lesionados: <span className="font-semibold text-ink">{adminPlayersSummary.injured}</span></span>
+            <span>Sin elegir: <span className="font-semibold text-ink">{adminPlayersSummary.unselected}</span></span>
+          </div>
+        </div>
+        {adminPlayersError ? (
+          <p className="text-xs text-warning">No se pudo cargar la lista de jugadores.</p>
+        ) : null}
+        <div className="space-y-1">
+          <label className="text-xs text-muted">Listado de jugadores</label>
+          <select
+            value={injuryPlayerId}
+            onChange={(event) => {
+              const nextId = event.target.value;
+              setInjuryPlayerId(nextId);
+              const selected = adminPlayers.find(
+                (player) => String(player.player_id) === nextId
+              );
+              if (selected) {
+                setInjuryStatus(Boolean(selected.is_injured));
+              }
+            }}
+            className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+          >
+            <option value="">Selecciona un jugador</option>
+            {adminPlayers.map((player) => (
+              <option key={player.player_id} value={String(player.player_id)}>
+                {player.short_name || player.name} (#{player.player_id})
+              </option>
+            ))}
+          </select>
+          {adminPlayersLoading ? (
+            <p className="text-[11px] text-muted">Cargando jugadores...</p>
+          ) : null}
+        </div>
         <div className="space-y-1">
           <label className="text-xs text-muted">Buscar jugador</label>
           <div className="flex gap-2">
