@@ -1,3 +1,4 @@
+const path = require("path");
 /** @type {import('next').NextConfig} */
 const apiBase = process.env.NEXT_PUBLIC_API_URL || "/api";
 const proxyTarget =
@@ -7,6 +8,10 @@ const proxyTarget =
 
 const nextConfig = {
   reactStrictMode: true,
+  webpack(config) {
+    config.resolve.alias["@"] = path.resolve(__dirname);
+    return config;
+  },
   async rewrites() {
     return [
       {
