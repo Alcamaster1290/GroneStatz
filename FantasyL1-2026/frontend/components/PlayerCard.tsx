@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 
-import { Player } from "../lib/types";
+import { Player } from "@/lib/types";
 
 const positionLabels: Record<string, string> = {
   G: "Arquero",

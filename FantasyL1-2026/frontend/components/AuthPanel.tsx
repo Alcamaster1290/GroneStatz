@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-import { confirmPasswordReset, login, register, requestPasswordReset } from "../lib/api";
-import { useFantasyStore } from "../lib/store";
+import { confirmPasswordReset, login, register, requestPasswordReset } from "@/lib/api";
+import { useFantasyStore } from "@/lib/store";
 
 export default function AuthPanel() {
   const setToken = useFantasyStore((state) => state.setToken);

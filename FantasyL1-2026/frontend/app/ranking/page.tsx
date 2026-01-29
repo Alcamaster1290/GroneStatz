@@ -15,9 +15,9 @@ import {
   joinLeague,
   leaveLeague,
   removeLeagueMember
-} from "../../lib/api";
-import { useFantasyStore } from "../../lib/store";
-import { League, RankingResponse } from "../../lib/types";
+} from "@/lib/api";
+import { useFantasyStore } from "@/lib/store";
+import { League, RankingResponse } from "@/lib/types";
 
 function RankingTable({
   title,

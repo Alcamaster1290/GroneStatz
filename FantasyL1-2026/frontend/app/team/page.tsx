@@ -21,10 +21,10 @@ import PlayerAvatarSquare from "@/components/PlayerAvatarSquare";
 import StickyTopBar from "@/components/StickyTopBar";
 import TeamNameGate from "@/components/TeamNameGate";
 import WelcomeSlideshow from "@/components/WelcomeSlideshow";
-import { createTeam, getFixtures, getHealth, getLineup, getTeam, getTeams, saveLineup } from "../../lib/api";
-import { useFantasyStore } from "../../lib/store";
-import { Fixture, LineupSlot, Player } from "../../lib/types";
-import { validateLineup, validateSquad } from "../../lib/validation";
+import { createTeam, getFixtures, getHealth, getLineup, getTeam, getTeams, saveLineup } from "@/lib/api";
+import { useFantasyStore } from "@/lib/store";
+import { Fixture, LineupSlot, Player } from "@/lib/types";
+import { validateLineup, validateSquad } from "@/lib/validation";
 
 const DEFAULT_SLOTS: LineupSlot[] = [
   { slot_index: 0, is_starter: true, role: "G", player_id: null },
