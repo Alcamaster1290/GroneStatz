@@ -15,7 +15,7 @@ export default function AuthPanel() {
   const [resetCode, setResetCode] = useState("");
   const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [resetStep, setResetStep] = useState<"request" | "confirm">("request");
-  const allowPasswordReset = process.env.NODE_ENV !== "production";
+  const allowPasswordReset = process.env.NEXT_PUBLIC_ENABLE_PASSWORD_RESET === "true";
 
   const mapAuthErrors = (raw: string): string[] => {
     const cleaned = raw.replace(/^Error:\s*/i, "");
@@ -104,8 +104,17 @@ export default function AuthPanel() {
 
   return (
     <div className="glass mx-auto mt-16 max-w-md space-y-4 rounded-3xl p-6">
-      <h1 className="text-2xl font-semibold">Fantasy Liga 1</h1>
-      <p className="text-sm text-muted">Ingresa con un email.</p>
+      <div className="flex items-center gap-3">
+        <img
+          src="/favicon.png"
+          alt="Fantasy Liga 1"
+          className="h-10 w-10 rounded-full border border-white/10 bg-black/30 p-1"
+        />
+        <div>
+          <h1 className="text-2xl font-semibold">Fantasy Liga 1</h1>
+          <p className="text-sm text-muted">Ingresa con un email.</p>
+        </div>
+      </div>
       <input
         value={email}
         onChange={(event) => setEmail(event.target.value)}
@@ -117,7 +126,7 @@ export default function AuthPanel() {
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder={resetMode ? "nueva contraseña" : "password"}
+          placeholder={resetMode ? "nueva contrasena" : "password"}
           className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-sm"
         />
       ) : null}

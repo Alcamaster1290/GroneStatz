@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 import BottomNav from "@/components/BottomNav";
+import AppHeader from "@/components/AppHeader";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 export const metadata: Metadata = {
@@ -32,6 +33,7 @@ export default function RootLayout({
             <div className="absolute top-40 right-10 h-64 w-64 rounded-full bg-accent2 opacity-20 blur-3xl" />
           </div>
           <main className="relative mx-auto w-full max-w-md px-4 pb-16 pt-6">
+            <AppHeader />
             {children}
           </main>
         </div>
