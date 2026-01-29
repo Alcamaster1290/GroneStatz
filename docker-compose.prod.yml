@@ -47,6 +47,8 @@ services:
       APP_ENV: prod
       CORS_ORIGINS: https://fantasyliga1peru.com,https://www.fantasyliga1peru.com
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fantasy}:${POSTGRES_PASSWORD:-fantasy}@postgres:5432/${POSTGRES_DB:-fantasy}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
     depends_on:
       postgres:
         condition: service_healthy
