@@ -68,8 +68,11 @@ services:
       context: ./FantasyL1-2026/frontend
     container_name: fantasy_l1_web
     environment:
-      NEXT_PUBLIC_API_URL: https://api.fantasyliga1peru.com
-      NODE_ENV: production
+      APP_ENV: prod
+      CORS_ORIGINS: https://fantasyliga1peru.com,https://www.fantasyliga1peru.com
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fantasy}:${POSTGRES_PASSWORD:-fantasy}@postgres:5432/${POSTGRES_DB:-fantasy}
+      JWT_SECRET: ${JInfernapeSecretoporsilashuevas}
+      ADMIN_TOKEN: ${adminalkagrone20260404}
     depends_on:
       - api
     labels:
