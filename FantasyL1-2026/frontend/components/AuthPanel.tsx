@@ -104,7 +104,7 @@ export default function AuthPanel() {
   return (
     <div className="glass mx-auto mt-16 max-w-md space-y-4 rounded-3xl p-6">
       <h1 className="text-2xl font-semibold">Fantasy Liga 1</h1>
-      <p className="text-sm text-muted">Ingresa con tu correo local.</p>
+      <p className="text-sm text-muted">Ingresa con un email.</p>
       <input
         value={email}
         onChange={(event) => setEmail(event.target.value)}
