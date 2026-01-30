@@ -13,6 +13,7 @@ import {
   League,
   Player,
   PlayerStatsEntry,
+  PublicLineup,
   RankingResponse,
   TransferCount
 } from "./types";
@@ -586,4 +587,11 @@ export async function getRankingGeneral(token: string): Promise<RankingResponse>
 
 export async function getRankingLeague(token: string): Promise<RankingResponse> {
   return apiFetch("/ranking/league", {}, token);
+}
+
+export async function getRankingLineup(
+  token: string,
+  fantasyTeamId: number
+): Promise<PublicLineup> {
+  return apiFetch(`/ranking/team/${fantasyTeamId}/lineup`, {}, token);
 }

@@ -11,20 +11,30 @@ import {
   getMyLeague,
   getRankingGeneral,
   getRankingLeague,
+  getRankingLineup,
   getTeam,
   joinLeague,
   leaveLeague,
   removeLeagueMember
 } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
-import { League, RankingResponse } from "@/lib/types";
+import { League, PublicLineup, PublicLineupSlot, RankingResponse } from "@/lib/types";
+
+const positionLabels: Record<string, string> = {
+  G: "Arquero",
+  D: "Defensa",
+  M: "Mediocampo",
+  F: "Delantero"
+};
 
 function RankingTable({
   title,
-  data
+  data,
+  onSelectTeam
 }: {
   title: string;
   data: RankingResponse | null;
+  onSelectTeam?: (fantasyTeamId: number, teamName: string) => void;
 }) {
   if (!data || data.entries.length === 0) {
     return (
@@ -61,7 +71,13 @@ function RankingTable({
                     </span>
                   </span>
                 ) : null}
-                <span className="font-semibold text-ink">{entry.team_name}</span>
+                <button
+                  type="button"
+                  onClick={() => onSelectTeam?.(entry.fantasy_team_id, entry.team_name)}
+                  className="text-left font-semibold text-ink transition hover:text-accent"
+                >
+                  {entry.team_name}
+                </button>
               </div>
               <span className="text-sm font-semibold text-accent">
                 {entry.total_points.toFixed(1)}
@@ -115,6 +131,12 @@ export default function RankingPage() {
 
   const [createName, setCreateName] = useState("");
   const [joinCode, setJoinCode] = useState("");
+
+  const [lineupOpen, setLineupOpen] = useState(false);
+  const [lineupLoading, setLineupLoading] = useState(false);
+  const [lineupError, setLineupError] = useState<string | null>(null);
+  const [lineupData, setLineupData] = useState<PublicLineup | null>(null);
+  const [lineupTeamName, setLineupTeamName] = useState("");
 
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
@@ -283,12 +305,101 @@ export default function RankingPage() {
     }
   };
 
+  const handleViewLineup = async (fantasyTeamId: number, teamName: string) => {
+    if (!token) return;
+    setLineupTeamName(teamName);
+    setLineupOpen(true);
+    setLineupLoading(true);
+    setLineupError(null);
+    setLineupData(null);
+    try {
+      const data = await getRankingLineup(token, fantasyTeamId);
+      setLineupData(data);
+      setLineupTeamName(data.team_name || teamName);
+    } catch (err) {
+      setLineupError(String(err));
+    } finally {
+      setLineupLoading(false);
+    }
+  };
+
   const leagueSubtitle = useMemo(() => {
     if (league) return `Codigo: ${league.code}`;
     return "Crea o unete con un codigo.";
   }, [league]);
 
   const isAdmin = league?.is_admin ?? false;
+
+  const starters = useMemo(() => {
+    return lineupData?.slots.filter((slot) => slot.is_starter) ?? [];
+  }, [lineupData]);
+
+  const bench = useMemo(() => {
+    return lineupData?.slots.filter((slot) => !slot.is_starter) ?? [];
+  }, [lineupData]);
+
+  const renderSlot = (slot: PublicLineupSlot) => {
+    const player = slot.player ?? null;
+    const isCaptain = player && lineupData?.captain_player_id === player.player_id;
+    const isVice =
+      player && lineupData?.vice_captain_player_id === player.player_id;
+    const positionLabel = player
+      ? positionLabels[player.position] || player.position
+      : positionLabels[slot.role] || slot.role;
+
+    return (
+      <div
+        key={`${slot.slot_index}-${slot.player_id ?? "empty"}`}
+        className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs"
+      >
+        <div className="flex items-center gap-2">
+          <div className="relative h-9 w-9 overflow-hidden rounded-full bg-surface2/60 ring-1 ring-white/10">
+            {player ? (
+              <img
+                src={`/images/players/${player.player_id}.png`}
+                alt=""
+                className="h-full w-full object-cover"
+                onError={(event) => {
+                  (event.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center text-[10px] text-muted">
+                -
+              </span>
+            )}
+            {player ? (
+              <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black/70">
+                <img
+                  src={`/images/teams/${player.team_id}.png`}
+                  alt=""
+                  className="h-full w-full object-contain"
+                />
+              </span>
+            ) : null}
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-ink">
+              {player ? player.short_name || player.name : "Sin jugador"}
+            </p>
+            <p className="text-[10px] text-muted">{positionLabel}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          {isCaptain ? (
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-yellow-300 text-[10px] font-bold text-black">
+              C
+            </span>
+          ) : null}
+          {isVice ? (
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-300 text-[10px] font-bold text-black">
+              V
+            </span>
+          ) : null}
+        </div>
+      </div>
+    );
+  };
 
   if (!token) return <AuthPanel />;
 
@@ -312,7 +423,11 @@ export default function RankingPage() {
 
         {league ? (
           <div className="space-y-3">
-            <RankingTable title={`Tabla ${league.name}`} data={leagueRanking} />
+            <RankingTable
+              title={`Tabla ${league.name}`}
+              data={leagueRanking}
+              onSelectTeam={handleViewLineup}
+            />
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted">
                 <span>Miembros</span>
@@ -333,7 +448,15 @@ export default function RankingPage() {
                     className="flex items-center justify-between rounded-xl border border-white/10 px-3 py-2 text-xs"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-ink">{entry.team_name}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleViewLineup(entry.fantasy_team_id, entry.team_name)
+                        }
+                        className="font-semibold text-ink transition hover:text-accent"
+                      >
+                        {entry.team_name}
+                      </button>
                       {isOwner ? (
                         <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] text-accent">
                           Admin
@@ -393,7 +516,64 @@ export default function RankingPage() {
         <div className="glass rounded-2xl p-3 text-xs text-warning">{rankingError}</div>
       ) : null}
 
-      <RankingTable title="Ranking general" data={generalRanking} />
+      <RankingTable
+        title="Ranking general"
+        data={generalRanking}
+        onSelectTeam={handleViewLineup}
+      />
+
+      {lineupOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6">
+          <div className="glass max-h-[85vh] w-full max-w-xl space-y-4 overflow-y-auto rounded-2xl p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-ink">
+                  {lineupData?.team_name || lineupTeamName || "Equipo"}
+                </h3>
+                <p className="text-xs text-muted">
+                  {lineupData?.round_number
+                    ? `Ronda ${lineupData.round_number}`
+                    : "Sin ronda registrada"}
+                </p>
+              </div>
+              <button
+                onClick={() => setLineupOpen(false)}
+                className="rounded-full border border-white/10 px-3 py-1 text-xs text-ink"
+              >
+                Cerrar
+              </button>
+            </div>
+
+            {lineupLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
+            {lineupError ? (
+              <p className="text-xs text-warning">
+                {lineupError === "lineup_not_found"
+                  ? "Este equipo aun no guardo su XI."
+                  : lineupError}
+              </p>
+            ) : null}
+
+            {!lineupLoading && lineupData ? (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-muted">
+                    <span>Titulares</span>
+                    <span>{starters.length}/11</span>
+                  </div>
+                  <div className="space-y-2">{starters.map(renderSlot)}</div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-muted">
+                    <span>Suplentes</span>
+                    <span>{bench.length}/4</span>
+                  </div>
+                  <div className="space-y-2">{bench.map(renderSlot)}</div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <WelcomeSlideshow
         open={welcomeOpen}

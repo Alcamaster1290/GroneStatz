@@ -210,6 +210,32 @@ export type RankingResponse = {
   entries: RankingEntry[];
 };
 
+export type PublicLineupPlayer = {
+  player_id: number;
+  name: string;
+  short_name?: string | null;
+  position: Position;
+  team_id: number;
+  is_injured: boolean;
+};
+
+export type PublicLineupSlot = {
+  slot_index: number;
+  is_starter: boolean;
+  role: Position;
+  player_id?: number | null;
+  player?: PublicLineupPlayer | null;
+};
+
+export type PublicLineup = {
+  fantasy_team_id: number;
+  team_name: string;
+  round_number: number;
+  captain_player_id?: number | null;
+  vice_captain_player_id?: number | null;
+  slots: PublicLineupSlot[];
+};
+
 export type TransferCount = {
   round_number: number;
   transfers_used: number;

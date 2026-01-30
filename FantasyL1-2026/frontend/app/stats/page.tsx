@@ -306,6 +306,9 @@ export default function StatsPage() {
                   <p className="text-xs font-semibold text-indigo-300">
                     {percent.toFixed(1)}%
                   </p>
+                  <p className="text-[10px] text-muted">
+                    Equipos {player.selected_count}
+                  </p>
                   <div className="h-1 w-16 rounded-full bg-white/10">
                     <div
                       className="h-full rounded-full bg-yellow-400"
