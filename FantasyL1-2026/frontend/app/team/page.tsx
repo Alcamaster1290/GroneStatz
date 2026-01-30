@@ -1105,7 +1105,7 @@ export default function TeamPage() {
     : undefined;
 
   const isTestEnv = appEnv === "test";
-  const sizeClass = isTestEnv ? "h-12 w-12" : "h-20 w-20";
+  const sizeClass = isTestEnv ? "h-10 w-10" : "h-16 w-16";
   const badgeClass = "h-[25%] w-[25%]";
 
   return (
@@ -1237,7 +1237,7 @@ export default function TeamPage() {
               <PlayerAvatarSquare
                 playerId={activePlayer.player_id}
                 teamId={activePlayer.team_id}
-                className={isTestEnv ? "h-14 w-14" : "h-16 w-16"}
+                className={isTestEnv ? "h-12 w-12" : "h-14 w-14"}
                 rounded
               />
             </div>
