@@ -10,6 +10,7 @@ import {
   useSensors
 } from "@dnd-kit/core";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import AuthPanel from "@/components/AuthPanel";
 import BottomSheet from "@/components/BottomSheet";
@@ -434,8 +435,10 @@ export default function TeamPage() {
   const [nameGateOpen, setNameGateOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [welcomeSeen, setWelcomeSeen] = useState(false);
+  const [postWelcomeRedirect, setPostWelcomeRedirect] = useState(false);
   const [teamNameError, setTeamNameError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const router = useRouter();
 
   const formatError = (code: string) => {
     const positionCounts = squad.reduce(
@@ -1299,6 +1302,7 @@ export default function TeamPage() {
           localStorage.setItem(welcomeKey, "1");
           setWelcomeSeen(true);
           setWelcomeOpen(false);
+          setPostWelcomeRedirect(true);
           setNameGateOpen(true);
         }}
       />
@@ -1321,6 +1325,10 @@ export default function TeamPage() {
             setTeamName(trimmedName);
             setNeedsTeamName(false);
             setNameGateOpen(false);
+            if (postWelcomeRedirect) {
+              setPostWelcomeRedirect(false);
+              router.push("/market");
+            }
           } catch {
             setTeamNameError("No se pudo guardar el nombre.");
           }
