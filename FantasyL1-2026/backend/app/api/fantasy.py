@@ -37,6 +37,7 @@ from app.services.fantasy import (
     get_current_round,
     get_or_create_fantasy_team,
     get_or_create_season,
+    get_next_open_round,
     get_round_by_number,
     replace_squad,
     upsert_lineup_slots,
@@ -226,8 +227,15 @@ def update_lineup(
     round_obj = get_round_by_number(db, season.id, round_number) if round_number else get_current_round(db, season.id)
     if not round_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+    notice_message = None
     if round_obj.is_closed:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="round_closed")
+        next_round = get_next_open_round(db, season.id, round_obj.round_number)
+        if not next_round:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="round_closed")
+        round_obj = next_round
+        notice_message = (
+            f"Ronda cerrada. Tu XI se guardó para la ronda {round_obj.round_number}."
+        )
 
     lineup = ensure_lineup(db, team.id, round_obj.id)
     errors = validate_lineup(db, team.id, payload.slots)
@@ -259,7 +267,7 @@ def update_lineup(
     lineup.captain_player_id = payload.captain_player_id
     lineup.vice_captain_player_id = payload.vice_captain_player_id
     db.commit()
-    return ValidationResult(ok=True, errors=[])
+    return ValidationResult(ok=True, errors=[], message=notice_message)
 
 
 @router.post("/transfer", response_model=TransferOut)

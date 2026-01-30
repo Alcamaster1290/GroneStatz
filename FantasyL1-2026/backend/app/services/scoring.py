@@ -244,6 +244,8 @@ def recalc_round_points(
             player = player_map.get(player_id)
             if not player:
                 continue
+            if getattr(player, "is_injured", False):
+                continue
             delta = _price_delta(points)
             current_price = float(player.price_current)
             new_price = _round_price(_clamp_price(current_price + delta))

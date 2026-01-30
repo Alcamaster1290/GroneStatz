@@ -85,3 +85,4 @@ class TransferCountOut(BaseModel):
 class ValidationResult(BaseModel):
     ok: bool
     errors: List[str]
+    message: Optional[str] = None

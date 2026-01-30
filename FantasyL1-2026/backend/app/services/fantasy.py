@@ -68,6 +68,25 @@ def get_current_round(db: Session, season_id: int) -> Optional[Round]:
     return round_obj
 
 
+def get_next_open_round(
+    db: Session, season_id: int, after_round_number: int
+) -> Optional[Round]:
+    return (
+        db.execute(
+            select(Round)
+            .where(
+                Round.season_id == season_id,
+                Round.is_closed.is_(False),
+                Round.round_number > after_round_number,
+            )
+            .order_by(Round.round_number)
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+
+
 def ensure_round(db: Session, season_id: int, round_number: int) -> Round:
     round_obj = get_round_by_number(db, season_id, round_number)
     if round_obj:

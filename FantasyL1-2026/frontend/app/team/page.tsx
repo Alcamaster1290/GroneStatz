@@ -1055,14 +1055,18 @@ export default function TeamPage() {
       return;
     }
     try {
-      await saveLineup(
+      const result = await saveLineup(
         token,
         lineupSlots,
         currentRound || undefined,
         captainId,
         viceCaptainId
       );
-      setSaveMessage("XI guardado correctamente");
+      if (result?.message) {
+        setSaveMessage(result.message);
+      } else {
+        setSaveMessage("XI guardado correctamente");
+      }
     } catch (err) {
       setSaveErrors([String(err)]);
     }
