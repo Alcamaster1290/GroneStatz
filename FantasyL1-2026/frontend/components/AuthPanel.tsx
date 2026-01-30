@@ -53,6 +53,10 @@ export default function AuthPanel() {
         setErrors(["Completa email y contrasena."]);
         return;
       }
+      if (password.trim().length < 6) {
+        setErrors(["La contrasena debe tener al menos 6 caracteres."]);
+        return;
+      }
       const result =
         mode === "login" ? await login(email, password) : await register(email, password);
       setToken(result.access_token);
@@ -89,6 +93,10 @@ export default function AuthPanel() {
     setResetMessage(null);
     if (!email.trim() || !resetCode.trim() || !password.trim()) {
       setErrors(["Completa email, codigo y nueva contrasena."]);
+      return;
+    }
+    if (password.trim().length < 6) {
+      setErrors(["La contrasena debe tener al menos 6 caracteres."]);
       return;
     }
     try {

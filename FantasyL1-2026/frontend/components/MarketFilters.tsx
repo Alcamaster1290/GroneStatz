@@ -18,11 +18,13 @@ const parseMaybeNumber = (value: string) => {
 export default function MarketFilters({
   value,
   onChange,
-  priceBounds
+  priceBounds,
+  teams
 }: {
   value: MarketFiltersState;
   onChange: (next: MarketFiltersState) => void;
   priceBounds?: { min: number; max: number };
+  teams?: { id: number; name_short?: string; name_full?: string }[];
 }) {
   const minBound = Number.isFinite(priceBounds?.min) ? priceBounds!.min : 0;
   const maxBound = Number.isFinite(priceBounds?.max) ? priceBounds!.max : 100;
@@ -89,6 +91,21 @@ export default function MarketFilters({
         placeholder="Busqueda por nombre"
         className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-ink"
       />
+      <div className="space-y-2">
+        <p className="text-xs text-muted">Equipo</p>
+        <select
+          value={value.teamId}
+          onChange={(event) => onChange({ ...value, teamId: event.target.value })}
+          className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-ink"
+        >
+          <option value="">Todos</option>
+          {(teams || []).map((team) => (
+            <option key={team.id} value={String(team.id)}>
+              {team.name_short || team.name_full || `Equipo ${team.id}`}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="space-y-2">
         <p className="text-xs text-muted">Posicion</p>
         <div className="flex flex-wrap gap-2">

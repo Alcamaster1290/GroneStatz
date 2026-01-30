@@ -9,7 +9,15 @@ import MarketFilters from "@/components/MarketFilters";
 import PlayerCard from "@/components/PlayerCard";
 import TeamNameGate from "@/components/TeamNameGate";
 import WelcomeSlideshow from "@/components/WelcomeSlideshow";
-import { createTeam, getCatalogPlayers, getFixtures, getTeam, getTransferCount, updateSquad } from "@/lib/api";
+import {
+  createTeam,
+  getCatalogPlayers,
+  getFixtures,
+  getTeam,
+  getTeams,
+  getTransferCount,
+  updateSquad
+} from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
 import { Fixture, Player, TransferCount } from "@/lib/types";
 import { validateSquad } from "@/lib/validation";
@@ -306,6 +314,7 @@ export default function MarketPage() {
 
   const [playersBase, setPlayersBase] = useState<Player[]>([]);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
+  const [teams, setTeams] = useState<{ id: number; name_short?: string; name_full?: string }[]>([]);
   const filters = useFantasyStore((state) => state.marketFilters);
   const setFilters = useFantasyStore((state) => state.setMarketFilters);
   const [outPlayerId, setOutPlayerId] = useState<number | null>(null);
@@ -329,6 +338,7 @@ export default function MarketPage() {
   const [transferInfo, setTransferInfo] = useState<TransferCount | null>(null);
   const [playersAll, setPlayersAll] = useState<Player[] | null>(null);
   const lastPositionsKey = useRef<string>("");
+  const lastTeamKey = useRef<string>("");
 
   const parseMaybeNumber = (value: string) => {
     const trimmed = value.trim();
@@ -362,6 +372,12 @@ export default function MarketPage() {
   }, [filters, setFilters]);
 
   useEffect(() => {
+    if (typeof filters.teamId !== "string") {
+      setFilters({ ...filters, teamId: "" });
+    }
+  }, [filters, setFilters]);
+
+  useEffect(() => {
     if (!token) return;
     const load = async () => {
       const team = await getTeam(token);
@@ -388,6 +404,12 @@ export default function MarketPage() {
     getFixtures()
       .then(setFixtures)
       .catch(() => setFixtures([]));
+  }, []);
+
+  useEffect(() => {
+    getTeams()
+      .then(setTeams)
+      .catch(() => setTeams([]));
   }, []);
 
   useEffect(() => {
@@ -429,6 +451,7 @@ export default function MarketPage() {
     () => (Array.isArray(filters.positions) ? filters.positions.join("|") : ""),
     [filters.positions]
   );
+  const teamKey = useMemo(() => filters.teamId || "", [filters.teamId]);
 
   useEffect(() => {
     if (lastPositionsKey.current !== positionsKey) {
@@ -438,6 +461,49 @@ export default function MarketPage() {
       }
     }
   }, [positionsKey, filters, setFilters]);
+
+  useEffect(() => {
+    if (lastTeamKey.current !== teamKey) {
+      lastTeamKey.current = teamKey;
+      if (filters.minPrice !== "" || filters.maxPrice !== "") {
+        setFilters({ ...filters, minPrice: "", maxPrice: "" });
+      }
+    }
+  }, [teamKey, filters, setFilters]);
+
+  useEffect(() => {
+    if (playersAll && playersAll.length > 0) return;
+    let cancelled = false;
+    const loadAll = async () => {
+      const limit = 200;
+      const maxPages = 10;
+      const all: Player[] = [];
+      for (let page = 0; page < maxPages; page += 1) {
+        const result = await getCatalogPlayers({
+          limit,
+          offset: page * limit
+        });
+        all.push(...result);
+        if (result.length < limit) break;
+      }
+      const unique = new Map<number, Player>();
+      all.forEach((player) => {
+        unique.set(player.player_id, player);
+      });
+      const sorted = Array.from(unique.values()).sort((a, b) => b.price_current - a.price_current);
+      if (!cancelled) {
+        setPlayersAll(sorted);
+      }
+    };
+
+    loadAll().catch(() => {
+      if (!cancelled) setPlayersAll([]);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [playersAll]);
 
   useEffect(() => {
     const fetchPlayers = async () => {
@@ -454,6 +520,7 @@ export default function MarketPage() {
           const result = await getCatalogPlayers({
             position: position || undefined,
             q: filters.query || undefined,
+            team_id: filters.teamId ? Number(filters.teamId) : undefined,
             limit,
             offset: page * limit
           });
@@ -480,7 +547,7 @@ export default function MarketPage() {
     }, 250);
 
     return () => clearTimeout(timeout);
-  }, [filters.query, positionsKey]);
+  }, [filters.query, positionsKey, teamKey]);
 
   const priceBounds = useMemo(() => {
     if (playersBase.length === 0) return { min: 0, max: 0 };
@@ -522,6 +589,15 @@ export default function MarketPage() {
     const max = maxNum !== null ? maxNum : priceBounds.max;
     return playersBase.filter((player) => player.price_current >= min && player.price_current <= max);
   }, [playersBase, filters.minPrice, filters.maxPrice, priceBounds.min, priceBounds.max]);
+
+  const activeTeams = useMemo(() => {
+    const source = playersAll && playersAll.length > 0 ? playersAll : playersBase;
+    const counts = new Map<number, number>();
+    source.forEach((player) => {
+      counts.set(player.team_id, (counts.get(player.team_id) || 0) + 1);
+    });
+    return teams.filter((team) => (counts.get(team.id) || 0) > 1);
+  }, [teams, playersAll, playersBase]);
 
   const rowVirtualizer = useVirtualizer({
     count: filteredPlayers.length,
@@ -1052,7 +1128,12 @@ export default function MarketPage() {
           </button>
         </div>
 
-        <MarketFilters value={filters} onChange={setFilters} priceBounds={priceBounds} />
+        <MarketFilters
+          value={filters}
+          onChange={setFilters}
+          priceBounds={priceBounds}
+          teams={activeTeams}
+        />
         {fetchError ? (
           <p className="text-xs text-warning">Error cargando jugadores: {fetchError}</p>
         ) : null}

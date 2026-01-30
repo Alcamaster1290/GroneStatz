@@ -1105,7 +1105,7 @@ export default function TeamPage() {
     : undefined;
 
   const isTestEnv = appEnv === "test";
-  const sizeClass = isTestEnv ? "h-12 w-12" : "h-24 w-24";
+  const sizeClass = isTestEnv ? "h-12 w-12" : "h-20 w-20";
   const badgeClass = "h-[25%] w-[25%]";
 
   return (
@@ -1237,7 +1237,7 @@ export default function TeamPage() {
               <PlayerAvatarSquare
                 playerId={activePlayer.player_id}
                 teamId={activePlayer.team_id}
-                className={isTestEnv ? "h-14 w-14" : "h-20 w-20"}
+                className={isTestEnv ? "h-14 w-14" : "h-16 w-16"}
                 rounded
               />
             </div>
@@ -1255,6 +1255,9 @@ export default function TeamPage() {
           {viceCaptainId && squadMap.get(viceCaptainId)
             ? squadMap.get(viceCaptainId)?.name
             : "No asignado"}
+        </p>
+        <p className="mt-3 text-[11px] text-muted">
+          El capitan triplica su puntaje; si no juega, el vicecapitan recibe el bonus.
         </p>
       </div>
 

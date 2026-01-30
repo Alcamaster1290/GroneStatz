@@ -52,7 +52,8 @@ export const useFantasyStore = create<StoreState>((set) => ({
     positions: [],
     minPrice: "",
     maxPrice: "",
-    query: ""
+    query: "",
+    teamId: ""
   },
   marketDraftSquad: [],
   marketDraftBackup: [],

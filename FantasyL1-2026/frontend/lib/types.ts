@@ -26,6 +26,7 @@ export type MarketFiltersState = {
   minPrice: string;
   maxPrice: string;
   query: string;
+  teamId: string;
 };
 
 export type LineupSlot = {
