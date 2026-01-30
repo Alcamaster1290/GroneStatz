@@ -423,6 +423,7 @@ export default function TeamPage() {
   const [selectedSlot, setSelectedSlot] = useState<LineupSlot | null>(null);
   const [saveErrors, setSaveErrors] = useState<string[] | null>(null);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
+  const [allFixtures, setAllFixtures] = useState<Fixture[]>([]);
   const [teams, setTeams] = useState<{ id: number; name_short?: string; name_full?: string }[]>(
     []
   );
@@ -691,6 +692,36 @@ export default function TeamPage() {
     };
   }, [fixtures]);
 
+  const availableRounds = useMemo(() => {
+    const rounds = Array.from(new Set(allFixtures.map((fixture) => fixture.round_number)))
+      .filter((round) => Number.isFinite(round))
+      .sort((a, b) => a - b);
+    if (!rounds.length && currentRound) return [currentRound];
+    return rounds;
+  }, [allFixtures, currentRound]);
+
+  const roundIndex = useMemo(() => {
+    if (!currentRound) return -1;
+    return availableRounds.indexOf(currentRound);
+  }, [availableRounds, currentRound]);
+
+  const teamRoundPoints = useMemo(() => {
+    if (!currentRound) return null;
+    const pointsById = new Map(
+      squad.map((player) => [player.player_id, typeof player.points_round === "number" ? player.points_round : 0])
+    );
+    let total = 0;
+    lineupSlots.forEach((slot) => {
+      if (slot.is_starter && slot.player_id) {
+        total += pointsById.get(slot.player_id) ?? 0;
+      }
+    });
+    if (captainId) {
+      total += 2 * (pointsById.get(captainId) ?? 0);
+    }
+    return Math.round(total * 10) / 10;
+  }, [captainId, currentRound, lineupSlots, squad]);
+
 
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
@@ -774,6 +805,7 @@ export default function TeamPage() {
           setRoundStatus("Pendiente");
           getFixtures()
             .then((allFixtures) => {
+              setAllFixtures(allFixtures);
               const roundFixtures = allFixtures.filter(
                 (fixture) => fixture.round_number === lineup.round_number
               );
@@ -784,6 +816,7 @@ export default function TeamPage() {
           const message = String(err);
           if (message.includes("round_not_found")) {
             const allFixtures = await getFixtures().catch(() => []);
+            setAllFixtures(allFixtures);
             if (allFixtures.length) {
               const roundNumbers = Array.from(
                 new Set(allFixtures.map((fixture) => fixture.round_number))
@@ -1075,6 +1108,44 @@ export default function TeamPage() {
     }
   };
 
+  const handleRoundSelect = async (roundNumber: number) => {
+    if (!token || roundNumber === currentRound) return;
+    setLoading(true);
+    setSaveErrors(null);
+    try {
+      const [team, lineup] = await Promise.all([
+        getTeam(token, roundNumber),
+        getLineup(token, roundNumber)
+      ]);
+      setSquad(team.squad || []);
+      setCurrentRound(roundNumber);
+      const lineupCaptainId = lineup.captain_player_id ?? null;
+      const lineupViceCaptainId = lineup.vice_captain_player_id ?? null;
+      const squadById = new Map(
+        (team.squad || []).map((player) => [player.player_id, player])
+      );
+      const normalizedSlots = (lineup.slots || []).map((slot) => {
+        if (slot.player_id) {
+          const player = squadById.get(slot.player_id);
+          if (player) {
+            return { ...slot, role: player.position };
+          }
+        }
+        return slot;
+      });
+      setLineupSlots(normalizedSlots);
+      setCaptainId(lineupCaptainId);
+      setViceCaptainId(lineupViceCaptainId);
+      setRoundMissing(false);
+      setRoundStatus("Pendiente");
+      setFixtures(allFixtures.filter((fixture) => fixture.round_number === roundNumber));
+    } catch (err) {
+      setSaveErrors([String(err)]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!token) {
     return <AuthPanel />;
   }
@@ -1114,6 +1185,8 @@ export default function TeamPage() {
   const isTestEnv = appEnv === "test";
   const sizeClass = isTestEnv ? "h-10 w-10" : "h-16 w-16";
   const badgeClass = "h-[25%] w-[25%]";
+  const canPrevRound = roundIndex > 0;
+  const canNextRound = roundIndex >= 0 && roundIndex < availableRounds.length - 1;
 
   return (
     <div className="space-y-6">
@@ -1125,6 +1198,41 @@ export default function TeamPage() {
             {roundDateRange ? ` (Del ${roundDateRange.min} al ${roundDateRange.max})` : ""}
             {roundStatus ? ` - ${roundStatus}` : ""}
           </p>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs">
+          <button
+            type="button"
+            onClick={() => {
+              if (canPrevRound && roundIndex > 0) {
+                handleRoundSelect(availableRounds[roundIndex - 1]);
+              }
+            }}
+            disabled={!canPrevRound}
+            className="rounded-lg border border-white/10 px-2 py-1 text-ink disabled:opacity-40"
+          >
+            ‹
+          </button>
+          <span className="text-muted">Ronda {currentRound ?? "-"}</span>
+          <button
+            type="button"
+            onClick={() => {
+              if (canNextRound && roundIndex >= 0) {
+                handleRoundSelect(availableRounds[roundIndex + 1]);
+              }
+            }}
+            disabled={!canNextRound}
+            className="rounded-lg border border-white/10 px-2 py-1 text-ink disabled:opacity-40"
+          >
+            ›
+          </button>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
+          Puntos equipo:{" "}
+          <span className="font-semibold text-ink">
+            {teamRoundPoints === null ? "--" : teamRoundPoints.toFixed(1)}
+          </span>
         </div>
       </div>
       {roundMissing ? (

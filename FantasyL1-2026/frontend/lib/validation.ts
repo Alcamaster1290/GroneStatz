@@ -34,7 +34,7 @@ export function validateSquad(players: Player[]): string[] {
     (sum, p) => sum + (p.bought_price ?? p.price_current),
     0
   );
-  if (budgetUsed > 100) errors.push("budget_exceeded");
+  if (budgetUsed - 100 > 1e-6) errors.push("budget_exceeded");
 
   return errors;
 }

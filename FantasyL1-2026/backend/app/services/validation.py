@@ -60,7 +60,7 @@ def validate_squad(db: Session, player_ids: Iterable[int], budget_cap: float = 1
         errors.append("max_3_players_per_team")
 
     total_price = sum(float(p.price_current) for p in players)
-    if total_price > budget_cap:
+    if total_price - float(budget_cap) > 1e-6:
         errors.append("budget_exceeded")
 
     return errors

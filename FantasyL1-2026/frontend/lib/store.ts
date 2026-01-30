@@ -33,7 +33,8 @@ type StoreState = {
 
 const computeBudget = (squad: Player[]) => {
   const budgetUsed = squad.reduce((sum, player) => sum + (player.bought_price ?? player.price_current), 0);
-  const budgetLeft = 100 - budgetUsed;
+  const rawLeft = 100 - budgetUsed;
+  const budgetLeft = Math.abs(rawLeft) < 1e-6 ? 0 : rawLeft;
   return { budgetUsed, budgetLeft };
 };
 

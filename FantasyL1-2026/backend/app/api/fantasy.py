@@ -187,8 +187,6 @@ def get_lineup(
     round_obj = get_round_by_number(db, season.id, round_number) if round_number else get_current_round(db, season.id)
     if not round_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
-    if round_obj.is_closed:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="round_closed")
 
     lineup = ensure_lineup(db, team.id, round_obj.id)
     slots = (
