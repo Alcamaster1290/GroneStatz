@@ -539,7 +539,8 @@ def add_new_player_to_fantasy(
     existing_players = set()
     if "player_id" in players.columns:
         existing_players = set(players["player_id"].dropna().astype(int).tolist())
-    if player_id in existing_fantasy or player_id in existing_players:
+    # Solo evitar duplicados dentro del fantasy.
+    if player_id in existing_fantasy:
         return players_df, players_fantasy_df
 
     players = update_players_row(players, player_id, position, team_id, name)
@@ -618,19 +619,36 @@ c0, c1, c2 = st.columns([2, 2, 2])
 with c0:
     q = st.text_input("Buscar jugador", placeholder="Nombre...")
 with c1:
-    pos_filter = st.multiselect("Posicion", POS_UI, default=POS_UI)
+    pos_options = POS_UI.copy()
+    if "position_effective" in view.columns:
+        missing_pos = view["position_effective"].isna().any()
+        if missing_pos:
+            pos_options = POS_UI + ["Sin posicion"]
+    pos_filter = st.multiselect("Posicion", pos_options, default=pos_options)
 with c2:
     team_names = sorted(view["team_name_effective"].dropna().unique().tolist()) if "team_name_effective" in view.columns else []
-    team_filter = st.multiselect("Equipo", team_names, default=team_names)
+    team_options = team_names.copy()
+    if "team_name_effective" in view.columns:
+        if view["team_name_effective"].isna().any():
+            team_options = team_names + ["Sin equipo"]
+    team_filter = st.multiselect("Equipo", team_options, default=team_options)
 
 filtered = view.copy()
 if q:
     filtered = filtered[filtered["name"].astype(str).str.contains(q, case=False, na=False)]
-if "position_effective" in filtered.columns:
-    pos_filter_canon = [normalize_pos(p) for p in pos_filter]
-    filtered = filtered[filtered["position_effective"].isin(pos_filter_canon)]
+if "position_effective" in filtered.columns and pos_filter:
+    if len(pos_filter) != len(pos_options):
+        pos_filter_canon = [normalize_pos(p) for p in pos_filter if p != "Sin posicion"]
+        mask = filtered["position_effective"].isin(pos_filter_canon)
+        if "Sin posicion" in pos_filter:
+            mask = mask | filtered["position_effective"].isna()
+        filtered = filtered[mask]
 if "team_name_effective" in filtered.columns and team_filter:
-    filtered = filtered[filtered["team_name_effective"].isin(team_filter)]
+    if len(team_filter) != len(team_options):
+        mask = filtered["team_name_effective"].isin(team_filter)
+        if "Sin equipo" in team_filter:
+            mask = mask | filtered["team_name_effective"].isna()
+        filtered = filtered[mask]
 
 st.subheader("Distribucion por posicion")
 if "position_effective" in filtered.columns:
@@ -1076,9 +1094,11 @@ with tab_reload:
                 updated_fantasy["player_id"].dropna().astype(int).tolist()
             ) if "player_id" in updated_fantasy.columns else set()
             added = 0
+            skipped_existing = []
             for row in bulk_rows:
                 pid = row["player_id"]
-                if pid in existing_players or pid in existing_fantasy:
+                if pid in existing_fantasy:
+                    skipped_existing.append(pid)
                     continue
                 updated_players, updated_fantasy = add_new_player_to_fantasy(
                     updated_players,
@@ -1105,6 +1125,10 @@ with tab_reload:
             save_parquet(updated_players, FILES["players"])
             save_parquet(updated_fantasy, FILES["players_fantasy"])
             st.success(f"Jugadores agregados: {added}.")
+            if skipped_existing:
+                st.info(
+                    f"IDs ya existentes en players_fantasy (omitidos): {', '.join(map(str, skipped_existing))}"
+                )
             st.cache_data.clear()
             st.rerun()
 
