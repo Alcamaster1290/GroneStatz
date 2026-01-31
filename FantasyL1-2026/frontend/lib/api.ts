@@ -108,6 +108,14 @@ async function apiFetch<T>(
     if (res.status === 422 && Array.isArray(detail.detail)) {
       throw new Error(formatValidationErrors(detail.detail).join("|"));
     }
+    if (Array.isArray(detail.detail) && detail.detail.length) {
+      const parts = detail.detail
+        .map((item: unknown) => (typeof item === "string" ? item : ""))
+        .filter(Boolean);
+      if (parts.length) {
+        throw new Error(parts.join("|"));
+      }
+    }
     if (typeof detail.detail === "string" && detail.detail.trim() !== "") {
       throw new Error(detail.detail);
     }
