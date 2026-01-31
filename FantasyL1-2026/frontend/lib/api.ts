@@ -210,9 +210,9 @@ export async function saveLineup(
   roundNumber?: number,
   captainPlayerId?: number | null,
   viceCaptainPlayerId?: number | null
-) {
+): Promise<{ message?: string }> {
   const query = roundNumber ? `?round_number=${roundNumber}` : "";
-  return apiFetch(
+  return apiFetch<{ message?: string }>(
     `/fantasy/lineup${query}`,
     {
       method: "PUT",
