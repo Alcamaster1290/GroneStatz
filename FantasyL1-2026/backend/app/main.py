@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import IntegrityError, OperationalError
 
 from app.api.router import router
 from app.core.config import get_settings
@@ -54,6 +54,16 @@ async def _shutdown_scheduler() -> None:
 @app.exception_handler(OperationalError)
 def handle_db_unavailable(request: Request, exc: OperationalError) -> JSONResponse:
     return JSONResponse(status_code=503, content={"detail": "db_unavailable"})
+
+
+@app.exception_handler(IntegrityError)
+def handle_integrity_error(request: Request, exc: IntegrityError) -> JSONResponse:
+    return JSONResponse(status_code=400, content={"detail": "db_integrity_error"})
+
+
+@app.exception_handler(Exception)
+def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
+    return JSONResponse(status_code=500, content={"detail": "server_error"})
 
 
 @app.get("/health")

@@ -25,6 +25,7 @@ from app.models import (
     PriceMovement,
     Round,
     Season,
+    Team,
     User,
 )
 from app.schemas.admin import (
@@ -54,6 +55,25 @@ from app.services.action_log import log_action
 from app.services.scoring import recalc_round_points
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
+
+
+def _validate_fixture_team_ids(
+    db: Session,
+    home_team_id: Optional[int],
+    away_team_id: Optional[int],
+) -> None:
+    team_ids = [team_id for team_id in (home_team_id, away_team_id) if team_id is not None]
+    if not team_ids:
+        return
+    existing = set(
+        db.execute(select(Team.id).where(Team.id.in_(team_ids))).scalars().all()
+    )
+    missing = [str(team_id) for team_id in team_ids if team_id not in existing]
+    if missing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"team_id_not_found:{','.join(missing)}",
+        )
 
 
 def _remove_team_from_league(db: Session, team_id: int) -> None:
@@ -518,6 +538,7 @@ def upsert_fixture(
 ) -> AdminFixtureOut:
     season = get_or_create_season(db)
     round_obj = ensure_round(db, season.id, payload.round_number)
+    _validate_fixture_team_ids(db, payload.home_team_id, payload.away_team_id)
 
     fixture = db.execute(select(Fixture).where(Fixture.match_id == payload.match_id)).scalar_one_or_none()
     if fixture:
@@ -736,8 +757,10 @@ def update_fixture(
         fixture.season_id = season.id
 
     if "home_team_id" in data:
+        _validate_fixture_team_ids(db, data.get("home_team_id"), None)
         fixture.home_team_id = data["home_team_id"]
     if "away_team_id" in data:
+        _validate_fixture_team_ids(db, None, data.get("away_team_id"))
         fixture.away_team_id = data["away_team_id"]
     if "kickoff_at" in data:
         fixture.kickoff_at = data["kickoff_at"]
