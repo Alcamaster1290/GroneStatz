@@ -102,6 +102,35 @@ export type AdminTeam = {
   squad: AdminTeamPlayer[];
 };
 
+export type AdminLineupPlayer = {
+  player_id?: number | null;
+  name?: string | null;
+  short_name?: string | null;
+  position?: Position | string | null;
+  team_id?: number | null;
+  is_injured?: boolean | null;
+};
+
+export type AdminLineupSlot = {
+  slot_index: number;
+  is_starter: boolean;
+  role: Position | string;
+  player_id?: number | null;
+  player?: AdminLineupPlayer | null;
+};
+
+export type AdminTeamLineup = {
+  fantasy_team_id: number;
+  team_name?: string | null;
+  user_email: string;
+  round_number: number;
+  lineup_id: number;
+  created_at: string;
+  captain_player_id?: number | null;
+  vice_captain_player_id?: number | null;
+  slots: AdminLineupSlot[];
+};
+
 export type FantasyTeam = {
   id: number;
   name?: string | null;

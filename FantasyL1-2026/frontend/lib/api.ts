@@ -5,6 +5,7 @@ import {
   AdminRound,
   AdminPriceMovement,
   AdminTeam,
+  AdminTeamLineup,
   AdminPlayerInjury,
   FantasyTeam,
   Fixture,
@@ -306,6 +307,16 @@ export async function getPlayerStats(params: {
 export async function getAdminTeams(adminToken: string, seasonYear?: number): Promise<AdminTeam[]> {
   const query = seasonYear ? `?season_year=${seasonYear}` : "";
   return apiFetch(`/admin/teams${query}`, { headers: { "X-Admin-Token": adminToken } });
+}
+
+export async function getAdminLineups(
+  adminToken: string,
+  roundNumber?: number
+): Promise<AdminTeamLineup[]> {
+  const query = roundNumber ? `?round_number=${roundNumber}` : "";
+  return apiFetch(`/admin/lineups${query}`, {
+    headers: { "X-Admin-Token": adminToken }
+  });
 }
 
 export async function getAdminFixtures(

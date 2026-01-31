@@ -111,6 +111,63 @@ def display_pos(x):
         return "GK"
     return x
 
+
+def normalize_name_key(name: str) -> str:
+    if not name:
+        return ""
+    cleaned = re.sub(r"[^\w\s]", " ", str(name).strip().lower())
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return cleaned
+
+
+def build_team_name_map(teams_df: pd.DataFrame) -> dict[str, int]:
+    if teams_df is None or teams_df.empty:
+        return {}
+    work = normalize_teams(teams_df)
+    mapping: dict[str, int] = {}
+    for _, row in work.iterrows():
+        team_id = row.get("team_id")
+        if pd.isna(team_id):
+            continue
+        team_id = int(team_id)
+        for col in ["team_name", "short_name", "full_name"]:
+            raw = row.get(col)
+            if pd.isna(raw):
+                continue
+            key = normalize_name_key(str(raw))
+            if key and key not in mapping:
+                mapping[key] = team_id
+    return mapping
+
+
+def generate_short_name(full_name: str) -> str | None:
+    if not full_name:
+        return None
+    tokens = [t for t in str(full_name).strip().split() if t]
+    if len(tokens) == 1:
+        return tokens[0]
+    connectors = {
+        "de",
+        "del",
+        "la",
+        "las",
+        "los",
+        "da",
+        "do",
+        "dos",
+        "di",
+        "van",
+        "von",
+        "y",
+    }
+    surname_parts = [tokens[-1]]
+    idx = len(tokens) - 2
+    while idx >= 0 and tokens[idx].lower() in connectors:
+        surname_parts.insert(0, tokens[idx])
+        idx -= 1
+    surname = " ".join(surname_parts)
+    return f"{tokens[0][0]} {surname}".strip()
+
 def safe_cols(df: pd.DataFrame, wanted: list[str]) -> list[str]:
     return [c for c in wanted if c in df.columns]
 
@@ -203,26 +260,62 @@ def parse_player_ids(raw_text: str) -> list[int]:
     return ids
 
 
-def parse_player_rows(raw_text: str) -> list[dict]:
+def parse_player_rows(raw_text: str, team_name_map: dict[str, int] | None = None) -> list[dict]:
     rows = []
     if not raw_text:
         return rows
+    team_name_map = team_name_map or {}
     lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
     for line in lines:
         parts = [p.strip() for p in re.split(r"[,\t;]+", line)]
         if len(parts) < 2:
             continue
-        try:
-            player_id = int(float(parts[0]))
-        except ValueError:
+        player_id = None
+        name = ""
+        short_name = None
+        position = pd.NA
+        team_id = pd.NA
+
+        def _is_number(value: str) -> bool:
+            if value is None:
+                return False
+            try:
+                float(value)
+                return True
+            except ValueError:
+                return False
+
+        if len(parts) >= 3 and (not _is_number(parts[0])) and _is_number(parts[2]):
+            team_name = parts[0]
+            name = parts[1].strip()
+            try:
+                player_id = int(float(parts[2]))
+            except ValueError:
+                player_id = None
+            pos_raw = parts[3].strip() if len(parts) > 3 and parts[3] else ""
+            position = normalize_pos(pos_raw)
+            team_key = normalize_name_key(team_name)
+            team_id = team_name_map.get(team_key, pd.NA)
+            if pd.isna(team_id) and len(parts) > 4 and _is_number(parts[4]):
+                team_id = normalize_team_id(parts[4])
+            short_name = generate_short_name(name)
+            offset = 4
+        else:
+            try:
+                player_id = int(float(parts[0]))
+            except ValueError:
+                player_id = None
+            name = parts[1].strip() if len(parts) > 1 else ""
+            short_name = parts[2].strip() if len(parts) > 2 and parts[2] else None
+            pos_raw = parts[3].strip() if len(parts) > 3 and parts[3] else ""
+            position = normalize_pos(pos_raw)
+            team_id = normalize_team_id(parts[4]) if len(parts) > 4 and parts[4] else pd.NA
+            offset = 5
+
+        if player_id is None or not name:
             continue
-        name = parts[1].strip()
-        if not name:
-            continue
-        short_name = parts[2].strip() if len(parts) > 2 and parts[2] else None
-        pos_raw = parts[3].strip() if len(parts) > 3 and parts[3] else ""
-        position = normalize_pos(pos_raw)
-        team_id = normalize_team_id(parts[4]) if len(parts) > 4 and parts[4] else pd.NA
+        if not short_name:
+            short_name = generate_short_name(name)
 
         def _num(idx: int) -> float:
             if len(parts) <= idx or parts[idx] == "":
@@ -239,12 +332,12 @@ def parse_player_rows(raw_text: str) -> list[dict]:
                 "short_name": short_name,
                 "position": position,
                 "team_id": int(team_id) if pd.notna(team_id) else None,
-                "minutesplayed": _num(5),
-                "matches_played": _num(6),
-                "goals": _num(7),
-                "assists": _num(8),
-                "saves": _num(9),
-                "fouls": _num(10),
+                "minutesplayed": _num(offset + 0),
+                "matches_played": _num(offset + 1),
+                "goals": _num(offset + 2),
+                "assists": _num(offset + 3),
+                "saves": _num(offset + 4),
+                "fouls": _num(offset + 5),
             }
         )
     return rows
@@ -544,6 +637,8 @@ def add_new_player_to_fantasy(
         return players_df, players_fantasy_df
 
     players = update_players_row(players, player_id, position, team_id, name)
+    if not short_name:
+        short_name = generate_short_name(name)
     if short_name:
         if "short_name" not in players.columns:
             players["short_name"] = pd.NA
@@ -604,6 +699,7 @@ if missing_req:
 players_fantasy = normalize_player_columns(read_parquet(FILES["players_fantasy"]))
 players = normalize_player_columns(read_parquet(FILES["players"]))
 teams = normalize_teams(read_parquet(FILES["teams"]))
+team_name_map = build_team_name_map(teams)
 totals = normalize_player_columns(read_parquet(FILES["player_totals"]))
 pmatch = normalize_player_columns(read_parquet(FILES["player_match"]))
 ptr = normalize_player_columns(read_parquet(FILES["player_transfer"]))
@@ -1060,14 +1156,14 @@ with tab_reload:
     st.divider()
     st.subheader("Carga masiva de nuevos jugadores")
     st.caption(
-        "Formato por linea: player_id, nombre, short_name, posicion, team_id, minutos, partidos, goles, asistencias, saves, fouls"
+        "Formato por linea (opcion A): player_id, nombre, short_name, posicion, team_id, minutos, partidos, goles, asistencias, saves, fouls"
     )
     st.info(
-        "Columnas requeridas: player_id, nombre. "
-        "Opcionales: short_name, posicion(GK/D/M/F), team_id, minutos, partidos, goles, asistencias, saves, fouls."
+        "Formato alterno (opcion B): equipo, nombre, player_id, posicion, minutos, partidos, goles, asistencias, saves, fouls.\n"
+        "Columnas requeridas: player_id, nombre. Opcionales: short_name, posicion(GK/D/M/F), team_id, minutos, partidos, goles, asistencias, saves, fouls."
     )
     bulk_text = st.text_area("Jugadores (bulk)", height=140)
-    bulk_rows = parse_player_rows(bulk_text)
+    bulk_rows = parse_player_rows(bulk_text, team_name_map)
     if bulk_text and not bulk_rows:
         st.warning("No se detectaron filas validas.")
     if bulk_rows:
@@ -1087,9 +1183,6 @@ with tab_reload:
         else:
             updated_players = players.copy()
             updated_fantasy = players_fantasy.copy()
-            existing_players = set(
-                updated_players["player_id"].dropna().astype(int).tolist()
-            ) if "player_id" in updated_players.columns else set()
             existing_fantasy = set(
                 updated_fantasy["player_id"].dropna().astype(int).tolist()
             ) if "player_id" in updated_fantasy.columns else set()

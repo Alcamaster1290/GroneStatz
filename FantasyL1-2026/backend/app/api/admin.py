@@ -44,6 +44,9 @@ from app.schemas.admin import (
     AdminPriceMovementOut,
     AdminTeamOut,
     AdminTeamPlayerOut,
+    AdminTeamLineupOut,
+    AdminLineupSlotOut,
+    AdminLineupPlayerOut,
 )
 from app.services.data_pipeline import ingest_parquets_to_duckdb, sync_duckdb_to_postgres
 from app.services.fantasy import ensure_round, get_or_create_season, get_round_by_number
@@ -350,6 +353,110 @@ def list_teams(
                 budget_left=float(team.budget_cap) - budget_used,
                 club_counts=club_map.get(team.id, {}),
                 squad=squad_map.get(team.id, []),
+            )
+        )
+
+    return results
+
+
+@router.get("/lineups", response_model=List[AdminTeamLineupOut])
+def list_lineups(
+    round_number: Optional[int] = Query(default=None, ge=1),
+    db: Session = Depends(get_db),
+) -> List[AdminTeamLineupOut]:
+    season = get_or_create_season(db)
+    if round_number is not None:
+        round_obj = get_round_by_number(db, season.id, round_number)
+        if not round_obj:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+    else:
+        round_obj = (
+            db.execute(
+                select(Round)
+                .where(Round.season_id == season.id, Round.is_closed.is_(False))
+                .order_by(Round.round_number.desc())
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
+        if not round_obj:
+            round_obj = (
+                db.execute(
+                    select(Round)
+                    .where(Round.season_id == season.id)
+                    .order_by(Round.round_number.desc())
+                    .limit(1)
+                )
+                .scalars()
+                .first()
+            )
+    if not round_obj:
+        return []
+
+    lineup_rows = (
+        db.execute(
+            select(FantasyLineup, FantasyTeam, User)
+            .join(FantasyTeam, FantasyTeam.id == FantasyLineup.fantasy_team_id)
+            .join(User, User.id == FantasyTeam.user_id)
+            .where(
+                FantasyTeam.season_id == season.id,
+                FantasyLineup.round_id == round_obj.id,
+            )
+            .order_by(FantasyLineup.created_at.desc())
+        )
+        .all()
+    )
+    if not lineup_rows:
+        return []
+
+    lineup_ids = [lineup.id for lineup, _, _ in lineup_rows]
+    slots_rows = (
+        db.execute(
+            select(FantasyLineupSlot, PlayerCatalog)
+            .outerjoin(PlayerCatalog, FantasyLineupSlot.player_id == PlayerCatalog.player_id)
+            .where(FantasyLineupSlot.lineup_id.in_(lineup_ids))
+        )
+        .all()
+    )
+
+    slot_map: Dict[int, List[AdminLineupSlotOut]] = {lid: [] for lid in lineup_ids}
+    for slot, player in slots_rows:
+        slot_map[slot.lineup_id].append(
+            AdminLineupSlotOut(
+                slot_index=slot.slot_index,
+                is_starter=slot.is_starter,
+                role=slot.role,
+                player_id=slot.player_id,
+                player=(
+                    AdminLineupPlayerOut(
+                        player_id=player.player_id,
+                        name=player.name,
+                        short_name=player.short_name,
+                        position=player.position,
+                        team_id=player.team_id,
+                        is_injured=bool(player.is_injured),
+                    )
+                    if player is not None
+                    else None
+                ),
+            )
+        )
+
+    results: List[AdminTeamLineupOut] = []
+    for lineup, team, user in lineup_rows:
+        slots_sorted = sorted(slot_map.get(lineup.id, []), key=lambda item: item.slot_index)
+        results.append(
+            AdminTeamLineupOut(
+                fantasy_team_id=team.id,
+                team_name=team.name,
+                user_email=user.email,
+                round_number=round_obj.round_number,
+                lineup_id=lineup.id,
+                created_at=lineup.created_at,
+                captain_player_id=lineup.captain_player_id,
+                vice_captain_player_id=lineup.vice_captain_player_id,
+                slots=slots_sorted,
             )
         )
 

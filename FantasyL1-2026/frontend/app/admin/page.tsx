@@ -13,6 +13,7 @@ import {
   getAdminRounds,
   getAdminFixtures,
   getAdminTeams,
+  getAdminLineups,
   rebuildAdminCatalog,
   getCatalogPlayers,
   getTeams,
@@ -29,6 +30,7 @@ import {
   AdminFixture,
   AdminPriceMovement,
   AdminTeam,
+  AdminTeamLineup,
   FixtureStatus
 } from "@/lib/types";
 import type { AdminPlayerListItem } from "@/lib/api";
@@ -39,6 +41,9 @@ export default function AdminTeamsPage() {
   const [adminToken, setAdminToken] = useState("");
   const [seasonYear, setSeasonYear] = useState("");
   const [teams, setTeams] = useState<AdminTeam[]>([]);
+  const [lineups, setLineups] = useState<AdminTeamLineup[]>([]);
+  const [lineupsLoading, setLineupsLoading] = useState(false);
+  const [lineupsError, setLineupsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null);
@@ -532,6 +537,24 @@ export default function AdminTeamsPage() {
     }
   };
 
+  const handleLoadLineups = async () => {
+    if (!adminToken) {
+      setLineupsError("admin_token_required");
+      return;
+    }
+    setLineupsError(null);
+    setLineupsLoading(true);
+    try {
+      const data = await getAdminLineups(adminToken);
+      setLineups(data);
+      localStorage.setItem(ADMIN_TOKEN_KEY, adminToken);
+    } catch (err) {
+      setLineupsError(String(err));
+    } finally {
+      setLineupsLoading(false);
+    }
+  };
+
   const handleDeleteUser = async (userId: number) => {
     if (!adminToken) {
       setError("admin_token_required");
@@ -755,6 +778,98 @@ export default function AdminTeamsPage() {
             ))}
           </div>
         ) : null}
+      </div>
+
+      <div className="space-y-2 pt-2">
+        <h2 className="text-lg font-semibold">XI por ronda pendiente</h2>
+        <p className="text-sm text-muted">
+          Muestra primero el ultimo equipo guardado para la ultima ronda abierta.
+        </p>
+      </div>
+
+      <div className="glass space-y-3 rounded-2xl p-4">
+        <button
+          onClick={handleLoadLineups}
+          className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+        >
+          Cargar XI guardados
+        </button>
+        {lineupsLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
+        {lineupsError ? <p className="text-xs text-warning">{lineupsError}</p> : null}
+        {lineups.length === 0 && !lineupsLoading ? (
+          <p className="text-xs text-muted">Sin lineups guardados para la ronda pendiente.</p>
+        ) : (
+          <div className="space-y-3">
+            {lineups.map((lineup) => {
+              const starters = lineup.slots.filter((slot) => slot.is_starter);
+              const bench = lineup.slots.filter((slot) => !slot.is_starter);
+              return (
+                <div
+                  key={lineup.lineup_id}
+                  className="rounded-2xl border border-white/10 bg-black/20 p-3 text-xs"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-muted">Usuario</p>
+                      <p className="text-sm font-semibold text-ink">
+                        {lineup.user_email}
+                      </p>
+                      <p className="text-xs text-muted">Equipo</p>
+                      <p className="text-xs text-ink">{lineup.team_name || "Sin nombre"}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted">Ronda</p>
+                      <p className="text-sm font-semibold text-accent">
+                        {lineup.round_number}
+                      </p>
+                      <p className="text-[10px] text-muted">
+                        {new Date(lineup.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <div>
+                      <p className="text-[10px] text-muted">Titulares</p>
+                      <div className="mt-1 space-y-1">
+                        {starters.map((slot) => (
+                          <div
+                            key={`${lineup.lineup_id}-s-${slot.slot_index}`}
+                            className="flex items-center justify-between rounded-xl border border-white/10 px-2 py-1"
+                          >
+                            <span className="text-ink">
+                              {slot.player?.short_name ||
+                                slot.player?.name ||
+                                "Sin jugador"}
+                            </span>
+                            <span className="text-[10px] text-muted">{slot.role}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted">Suplentes</p>
+                      <div className="mt-1 space-y-1">
+                        {bench.map((slot) => (
+                          <div
+                            key={`${lineup.lineup_id}-b-${slot.slot_index}`}
+                            className="flex items-center justify-between rounded-xl border border-white/10 px-2 py-1"
+                          >
+                            <span className="text-ink">
+                              {slot.player?.short_name ||
+                                slot.player?.name ||
+                                "Sin jugador"}
+                            </span>
+                            <span className="text-[10px] text-muted">{slot.role}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="space-y-2 pt-2">

@@ -32,6 +32,35 @@ class AdminTeamOut(BaseModel):
     squad: List[AdminTeamPlayerOut]
 
 
+class AdminLineupPlayerOut(BaseModel):
+    player_id: Optional[int] = None
+    name: Optional[str] = None
+    short_name: Optional[str] = None
+    position: Optional[str] = None
+    team_id: Optional[int] = None
+    is_injured: Optional[bool] = None
+
+
+class AdminLineupSlotOut(BaseModel):
+    slot_index: int
+    is_starter: bool
+    role: str
+    player_id: Optional[int] = None
+    player: Optional[AdminLineupPlayerOut] = None
+
+
+class AdminTeamLineupOut(BaseModel):
+    fantasy_team_id: int
+    team_name: Optional[str] = None
+    user_email: str
+    round_number: int
+    lineup_id: int
+    created_at: datetime
+    captain_player_id: Optional[int] = None
+    vice_captain_player_id: Optional[int] = None
+    slots: List[AdminLineupSlotOut]
+
+
 class AdminFixtureBase(BaseModel):
     round_number: int
     match_id: int
