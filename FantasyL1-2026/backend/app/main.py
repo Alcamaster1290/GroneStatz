@@ -12,11 +12,24 @@ origin_regex = settings.CORS_ORIGIN_REGEX.strip() if settings.CORS_ORIGIN_REGEX 
 if origin_regex == "":
     origin_regex = None
 
+allowed_origins = [
+    origin.strip()
+    for origin in settings.CORS_ORIGINS.split(",")
+    if origin.strip()
+]
+if settings.APP_ENV.lower() == "prod":
+    for origin in (
+        "https://fantasyliga1peru.com",
+        "https://www.fantasyliga1peru.com",
+    ):
+        if origin not in allowed_origins:
+            allowed_origins.append(origin)
+
 app = FastAPI(title="Fantasy Liga 1 2026", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()],
+    allow_origins=allowed_origins,
     allow_origin_regex=origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
