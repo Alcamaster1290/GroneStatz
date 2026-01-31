@@ -1183,6 +1183,11 @@ with tab_reload:
         else:
             updated_players = players.copy()
             updated_fantasy = players_fantasy.copy()
+            existing_players = (
+                set(updated_players["player_id"].dropna().astype(int).tolist())
+                if "player_id" in updated_players.columns
+                else set()
+            )
             existing_fantasy = set(
                 updated_fantasy["player_id"].dropna().astype(int).tolist()
             ) if "player_id" in updated_fantasy.columns else set()

@@ -1183,7 +1183,7 @@ export default function TeamPage() {
     : undefined;
 
   const isTestEnv = appEnv === "test";
-  const sizeClass = isTestEnv ? "h-10 w-10" : "h-16 w-16";
+  const sizeClass = isTestEnv ? "h-9 w-9" : "h-12 w-12";
   const badgeClass = "h-[25%] w-[25%]";
   const canPrevRound = roundIndex > 0;
   const canNextRound = roundIndex >= 0 && roundIndex < availableRounds.length - 1;

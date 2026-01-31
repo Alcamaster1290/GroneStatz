@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Iterable, List
 
 from sqlalchemy import func, select
@@ -59,8 +60,16 @@ def validate_squad(db: Session, player_ids: Iterable[int], budget_cap: float = 1
     if any(count > 3 for count in team_counts.values()):
         errors.append("max_3_players_per_team")
 
-    total_price = sum(float(p.price_current) for p in players)
-    if total_price - float(budget_cap) > 1e-6:
+    def _round_price(value: float | Decimal) -> Decimal:
+        try:
+            raw = Decimal(str(value))
+        except Exception:
+            raw = Decimal("0")
+        return raw.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+
+    total_price = sum(_round_price(p.price_current) for p in players)
+    cap_value = _round_price(budget_cap)
+    if total_price - cap_value > Decimal("0.0001"):
         errors.append("budget_exceeded")
 
     return errors

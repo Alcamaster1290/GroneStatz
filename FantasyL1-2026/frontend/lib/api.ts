@@ -39,12 +39,16 @@ function formatValidationErrors(errors: any[]): string[] {
   errors.forEach((error) => {
     const loc = Array.isArray(error.loc) ? error.loc.join(".") : "";
     const type = typeof error.type === "string" ? error.type : "";
+    const hasMinLength =
+      type.includes("min_length") ||
+      type.includes("too_short") ||
+      (error && typeof error.ctx?.min_length === "number");
     if (loc.includes("email")) {
       messages.push("email_invalid");
       return;
     }
     if (loc.includes("password")) {
-      if (type.includes("min_length")) {
+      if (hasMinLength) {
         messages.push("password_min_length");
         return;
       }

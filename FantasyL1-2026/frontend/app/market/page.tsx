@@ -347,6 +347,15 @@ export default function MarketPage() {
     const parsed = Number(trimmed);
     return Number.isFinite(parsed) ? parsed : null;
   };
+  const roundToTenth = (value: number) => Math.round(value * 10) / 10;
+  const normalizeErrorCode = (raw: string) => raw.replace(/^Error:\s*/i, "").trim();
+  const splitErrorCodes = (raw: unknown) => {
+    const cleaned = normalizeErrorCode(String(raw || "") || "api_error");
+    return cleaned
+      .split("|")
+      .map((part) => part.trim())
+      .filter(Boolean);
+  };
 
   const parentRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -642,20 +651,26 @@ export default function MarketPage() {
 
   const clubRuleOk = maxClubCount <= 3;
 
-  const draftBudget = useMemo(
-    () => draftSquad.reduce((sum, player) => sum + player.price_current, 0),
-    [draftSquad]
-  );
-  const budgetLeft = budgetCap - draftBudget;
+  const draftBudget = useMemo(() => {
+    const total = draftSquad.reduce(
+      (sum, player) => sum + roundToTenth(player.price_current),
+      0
+    );
+    return roundToTenth(total);
+  }, [draftSquad]);
+  const budgetLeftRaw = roundToTenth(budgetCap - draftBudget);
+  const budgetLeft = Math.abs(budgetLeftRaw) < 0.05 ? 0 : budgetLeftRaw;
 
   const formatError = (code: string) => {
+    const safeCode = normalizeErrorCode(code);
     const positionCounts = {
       G: playersByPosition.G.length,
       D: playersByPosition.D.length,
       M: playersByPosition.M.length,
       F: playersByPosition.F.length
     };
-    const budgetOver = draftBudget > budgetCap ? (draftBudget - budgetCap).toFixed(1) : "0.0";
+    const budgetOver =
+      draftBudget > budgetCap ? roundToTenth(draftBudget - budgetCap).toFixed(1) : "0.0";
     const messages: Record<
       string,
       { title: string; detail?: string; tone?: "warning" | "danger" }
@@ -717,20 +732,48 @@ export default function MarketPage() {
       },
       round_closed: {
         title: "Ronda cerrada",
-        detail: "La ronda esta cerrada. No puedes guardar cambios.",
+        detail: "La ronda esta cerrada. Guardaremos el equipo para la siguiente ronda.",
         tone: "danger"
       },
       rounds_not_configured: {
         title: "Sin rondas activas",
         detail: "Carga rondas desde Admin para habilitar Mercado.",
         tone: "warning"
+      },
+      network_error: {
+        title: "Sin conexion",
+        detail: "No se puede conectar con el backend. Verifica el servidor.",
+        tone: "danger"
+      },
+      service_unavailable: {
+        title: "Servicio no disponible",
+        detail: "El backend esta caido o no responde.",
+        tone: "danger"
+      },
+      endpoint_not_found: {
+        title: "Endpoint no encontrado",
+        detail: "La API no responde a esta ruta.",
+        tone: "danger"
+      },
+      server_error: {
+        title: "Error del servidor",
+        detail: "Ocurrio un error interno.",
+        tone: "danger"
       }
     };
 
+    if (safeCode.startsWith("players_not_found")) {
+      return {
+        title: "Jugadores no encontrados",
+        detail: safeCode.replace("players_not_found:", "").trim(),
+        tone: "danger"
+      };
+    }
+
     return (
-      messages[code] || {
+      messages[safeCode] || {
         title: "Error",
-        detail: code,
+        detail: safeCode,
         tone: "danger"
       }
     );
@@ -940,7 +983,7 @@ export default function MarketPage() {
       setInPlayerId(null);
       setSheetOpen(false);
     } catch (err) {
-      setErrorPopup([String(err)]);
+      setErrorPopup(splitErrorCodes(err));
     } finally {
       setRandomLoading(false);
     }
@@ -1005,12 +1048,8 @@ export default function MarketPage() {
       setTeamName(team.name || trimmedName);
       setSaveMessage("Equipo guardado");
     } catch (err) {
-      const message = String(err);
-      setErrorPopup([
-        message.includes("network_error")
-          ? "No se puede conectar con el backend. Verifica que el servidor este activo."
-          : message
-      ]);
+      const codes = splitErrorCodes(err);
+      setErrorPopup(codes.length ? codes : ["api_error"]);
     } finally {
       setSaving(false);
     }
