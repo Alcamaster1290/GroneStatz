@@ -68,6 +68,19 @@ def get_current_round(db: Session, season_id: int) -> Optional[Round]:
     return round_obj
 
 
+def get_latest_round(db: Session, season_id: int) -> Optional[Round]:
+    return (
+        db.execute(
+            select(Round)
+            .where(Round.season_id == season_id)
+            .order_by(Round.round_number.desc())
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+
+
 def get_next_open_round(
     db: Session, season_id: int, after_round_number: int
 ) -> Optional[Round]:

@@ -337,6 +337,7 @@ export default function MarketPage() {
   const [welcomeSeen, setWelcomeSeen] = useState(false);
   const [transferInfo, setTransferInfo] = useState<TransferCount | null>(null);
   const [playersAll, setPlayersAll] = useState<Player[] | null>(null);
+  const [budgetCap, setBudgetCap] = useState(100);
   const lastPositionsKey = useRef<string>("");
   const lastTeamKey = useRef<string>("");
 
@@ -382,6 +383,7 @@ export default function MarketPage() {
     const load = async () => {
       const team = await getTeam(token);
       setSquad(team.squad || []);
+      setBudgetCap(Number.isFinite(team.budget_cap) ? team.budget_cap : 100);
       if (!draftLoaded) {
         if (draftSquad.length === 0) {
           setDraftSquad(team.squad || []);
@@ -644,7 +646,7 @@ export default function MarketPage() {
     () => draftSquad.reduce((sum, player) => sum + player.price_current, 0),
     [draftSquad]
   );
-  const budgetLeft = 100 - draftBudget;
+  const budgetLeft = budgetCap - draftBudget;
 
   const formatError = (code: string) => {
     const positionCounts = {
@@ -653,7 +655,7 @@ export default function MarketPage() {
       M: playersByPosition.M.length,
       F: playersByPosition.F.length
     };
-    const budgetOver = draftBudget > 100 ? (draftBudget - 100).toFixed(1) : "0.0";
+    const budgetOver = draftBudget > budgetCap ? (draftBudget - budgetCap).toFixed(1) : "0.0";
     const messages: Record<
       string,
       { title: string; detail?: string; tone?: "warning" | "danger" }
@@ -898,7 +900,7 @@ export default function MarketPage() {
       }
 
       if (squad.length !== 15) return null;
-      const errors = validateSquad(squad);
+      const errors = validateSquad(squad, budgetCap);
       return errors.length === 0 ? squad : null;
     };
 
@@ -917,7 +919,7 @@ export default function MarketPage() {
 
         if (!gk || !defenders || !mids || !forwards) continue;
         const candidate = [...gk, ...defenders, ...mids, ...forwards];
-        const errors = validateSquad(candidate);
+        const errors = validateSquad(candidate, budgetCap);
         if (errors.length === 0) {
           squad = candidate;
           break;
@@ -984,7 +986,7 @@ export default function MarketPage() {
     setSaveMessage(null);
     setSaving(true);
     setConfirmOpen(false);
-    const validationErrors = validateSquad(draftSquad);
+    const validationErrors = validateSquad(draftSquad, budgetCap);
     if (validationErrors.length > 0) {
       setErrorPopup(validationErrors);
       setSaving(false);

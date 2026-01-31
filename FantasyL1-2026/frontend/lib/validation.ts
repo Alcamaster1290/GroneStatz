@@ -1,6 +1,6 @@
 import { LineupSlot, Player } from "./types";
 
-export function validateSquad(players: Player[]): string[] {
+export function validateSquad(players: Player[], budgetCap: number = 100): string[] {
   const errors: string[] = [];
   if (players.length !== 15) errors.push("squad_must_have_15_players");
   const ids = players.map((p) => p.player_id);
@@ -34,7 +34,7 @@ export function validateSquad(players: Player[]): string[] {
     (sum, p) => sum + (p.bought_price ?? p.price_current),
     0
   );
-  if (budgetUsed - 100 > 1e-6) errors.push("budget_exceeded");
+  if (budgetUsed - budgetCap > 1e-6) errors.push("budget_exceeded");
 
   return errors;
 }

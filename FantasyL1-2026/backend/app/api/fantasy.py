@@ -35,6 +35,7 @@ from app.services.fantasy import (
     ensure_lineup,
     get_club_counts,
     get_current_round,
+    get_latest_round,
     get_or_create_fantasy_team,
     get_or_create_season,
     get_next_open_round,
@@ -185,6 +186,8 @@ def get_lineup(
     team = get_or_create_fantasy_team(db, user.id, season.id)
 
     round_obj = get_round_by_number(db, season.id, round_number) if round_number else get_current_round(db, season.id)
+    if not round_obj:
+        round_obj = get_latest_round(db, season.id)
     if not round_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
 
@@ -365,6 +368,8 @@ def get_transfer_count(
         if round_number
         else get_current_round(db, season.id)
     )
+    if not round_obj:
+        round_obj = get_latest_round(db, season.id)
     if not round_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
 
