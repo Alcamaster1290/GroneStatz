@@ -1092,13 +1092,13 @@ export default function AdminTeamsPage() {
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-muted">Kickoff</label>
+            <label className="text-xs text-muted">Kickoff (YYYY-MM-DD HH:mm)</label>
             <input
-              type="datetime-local"
               value={newFixture.kickoff_at}
               onChange={(event) =>
                 setNewFixture((prev) => ({ ...prev, kickoff_at: event.target.value }))
               }
+              placeholder="2026-01-30 15:15"
               className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
             />
           </div>
@@ -1122,22 +1122,24 @@ export default function AdminTeamsPage() {
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-muted">Estadio</label>
+            <label className="text-xs text-muted">Estadio (opcional)</label>
             <input
               value={newFixture.stadium}
               onChange={(event) =>
                 setNewFixture((prev) => ({ ...prev, stadium: event.target.value }))
               }
+              placeholder="Opcional"
               className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-muted">Ciudad</label>
+            <label className="text-xs text-muted">Ciudad (opcional)</label>
             <input
               value={newFixture.city}
               onChange={(event) =>
                 setNewFixture((prev) => ({ ...prev, city: event.target.value }))
               }
+              placeholder="Opcional"
               className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
             />
           </div>

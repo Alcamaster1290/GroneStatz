@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -62,18 +63,47 @@ def _ensure_fixture_teams(
     home_team_id: Optional[int],
     away_team_id: Optional[int],
 ) -> None:
+    if home_team_id is not None and away_team_id is not None and home_team_id == away_team_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="teams_must_differ")
     team_ids = [team_id for team_id in (home_team_id, away_team_id) if team_id is not None]
     if not team_ids:
         return
     existing = set(
         db.execute(select(Team.id).where(Team.id.in_(team_ids))).scalars().all()
     )
-    missing = [team_id for team_id in team_ids if team_id not in existing]
+    missing = {team_id for team_id in team_ids if team_id not in existing}
     if not missing:
         return
-    for team_id in missing:
+    for team_id in sorted(missing):
         db.add(Team(id=team_id))
     db.flush()
+
+
+def _parse_kickoff(value: Optional[str | datetime]) -> Optional[datetime]:
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value
+    text = str(value).strip()
+    if not text:
+        return None
+    for fmt in (
+        "%Y-%m-%dT%H:%M",
+        "%Y-%m-%d %H:%M",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%d/%m/%Y %H:%M",
+        "%d/%m/%Y %I:%M %p",
+        "%d/%m/%Y %I:%M%p",
+    ):
+        try:
+            return datetime.strptime(text, fmt)
+        except ValueError:
+            continue
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_kickoff_at")
 
 
 def _remove_team_from_league(db: Session, team_id: int) -> None:
@@ -539,6 +569,9 @@ def upsert_fixture(
     season = get_or_create_season(db)
     round_obj = ensure_round(db, season.id, payload.round_number)
     _ensure_fixture_teams(db, payload.home_team_id, payload.away_team_id)
+    kickoff_at = _parse_kickoff(payload.kickoff_at)
+    stadium = payload.stadium.strip() if payload.stadium else None
+    city = payload.city.strip() if payload.city else None
 
     fixture = db.execute(select(Fixture).where(Fixture.match_id == payload.match_id)).scalar_one_or_none()
     if fixture:
@@ -546,9 +579,9 @@ def upsert_fixture(
         fixture.season_id = season.id
         fixture.home_team_id = payload.home_team_id
         fixture.away_team_id = payload.away_team_id
-        fixture.kickoff_at = payload.kickoff_at
-        fixture.stadium = payload.stadium
-        fixture.city = payload.city
+        fixture.kickoff_at = kickoff_at
+        fixture.stadium = stadium
+        fixture.city = city
         if payload.status is not None:
             fixture.status = payload.status
         if payload.home_score is not None:
@@ -562,9 +595,9 @@ def upsert_fixture(
             match_id=payload.match_id,
             home_team_id=payload.home_team_id,
             away_team_id=payload.away_team_id,
-            kickoff_at=payload.kickoff_at,
-            stadium=payload.stadium,
-            city=payload.city,
+            kickoff_at=kickoff_at,
+            stadium=stadium,
+            city=city,
             status=payload.status or "Programado",
             home_score=payload.home_score,
             away_score=payload.away_score,
@@ -763,11 +796,11 @@ def update_fixture(
         _ensure_fixture_teams(db, None, data.get("away_team_id"))
         fixture.away_team_id = data["away_team_id"]
     if "kickoff_at" in data:
-        fixture.kickoff_at = data["kickoff_at"]
+        fixture.kickoff_at = _parse_kickoff(data["kickoff_at"])
     if "stadium" in data:
-        fixture.stadium = data["stadium"]
+        fixture.stadium = data["stadium"].strip() if data["stadium"] else None
     if "city" in data:
-        fixture.city = data["city"]
+        fixture.city = data["city"].strip() if data["city"] else None
     if "home_score" in data:
         fixture.home_score = data["home_score"]
     if "away_score" in data:

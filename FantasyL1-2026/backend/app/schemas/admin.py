@@ -66,7 +66,7 @@ class AdminFixtureBase(BaseModel):
     match_id: int
     home_team_id: Optional[int] = None
     away_team_id: Optional[int] = None
-    kickoff_at: Optional[datetime] = None
+    kickoff_at: Optional[str] = None
     stadium: Optional[str] = None
     city: Optional[str] = None
     status: Optional[FixtureStatus] = None
@@ -83,7 +83,7 @@ class AdminFixtureUpdate(BaseModel):
     match_id: Optional[int] = None
     home_team_id: Optional[int] = None
     away_team_id: Optional[int] = None
-    kickoff_at: Optional[datetime] = None
+    kickoff_at: Optional[str] = None
     stadium: Optional[str] = None
     city: Optional[str] = None
     status: Optional[FixtureStatus] = None
