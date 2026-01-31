@@ -138,6 +138,12 @@ export default function AdminTeamsPage() {
 
   useEffect(() => {
     if (!adminToken) return;
+    handleLoad().catch(() => undefined);
+    handleLoadRounds().catch(() => undefined);
+  }, [adminToken]);
+
+  useEffect(() => {
+    if (!adminToken) return;
     setAdminPlayersLoading(true);
     setAdminPlayersError(null);
     getAdminPlayers(adminToken)
@@ -1092,13 +1098,13 @@ export default function AdminTeamsPage() {
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-muted">Kickoff (YYYY-MM-DD HH:mm)</label>
+            <label className="text-xs text-muted">Kickoff (24h)</label>
             <input
+              type="datetime-local"
               value={newFixture.kickoff_at}
               onChange={(event) =>
                 setNewFixture((prev) => ({ ...prev, kickoff_at: event.target.value }))
               }
-              placeholder="2026-01-30 15:15"
               className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
             />
           </div>

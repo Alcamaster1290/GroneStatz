@@ -93,8 +93,6 @@ def _parse_kickoff(value: Optional[str | datetime]) -> Optional[datetime]:
         "%Y-%m-%dT%H:%M:%S",
         "%Y-%m-%d %H:%M:%S",
         "%d/%m/%Y %H:%M",
-        "%d/%m/%Y %I:%M %p",
-        "%d/%m/%Y %I:%M%p",
     ):
         try:
             return datetime.strptime(text, fmt)
