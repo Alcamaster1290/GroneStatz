@@ -2,17 +2,17 @@
 
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import AuthPanel from "@/components/AuthPanel";
 import BottomSheet from "@/components/BottomSheet";
 import MarketFilters from "@/components/MarketFilters";
 import PlayerCard from "@/components/PlayerCard";
-import TeamNameGate from "@/components/TeamNameGate";
-import WelcomeSlideshow from "@/components/WelcomeSlideshow";
 import {
   createTeam,
   getCatalogPlayers,
   getFixtures,
+  getLineup,
   getTeam,
   getTeams,
   getTransferCount,
@@ -136,6 +136,47 @@ const positionLabels: Record<string, string> = {
   M: "Mediocampo",
   F: "Delantero"
 };
+
+function formatRoundDateLabel(dateKey: string): string {
+  if (!dateKey || dateKey === "TBD") return "Por confirmar";
+  const [year, month, day] = dateKey.split("-").map((part) => Number(part));
+  if (!year || !month || !day) return dateKey;
+  const date = new Date(year, month - 1, day);
+  const weekdays = [
+    "Domingo",
+    "Lunes",
+    "Martes",
+    "Miercoles",
+    "Jueves",
+    "Viernes",
+    "Sabado"
+  ];
+  const months = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre"
+  ];
+  const weekday = weekdays[date.getDay()];
+  const monthLabel = months[month - 1];
+  if (!weekday || !monthLabel) return dateKey;
+  return `${weekday} ${day} de ${monthLabel}`;
+}
+
+function kickoffToDateKey(value: string | null | undefined): string {
+  if (!value) return "TBD";
+  const raw = String(value).trim();
+  if (!raw) return "TBD";
+  return raw.split("T")[0].split(" ")[0] || "TBD";
+}
 
 function MarketPlayerDetails({ player, fixtures }: { player: Player; fixtures: Fixture[] }) {
   const displayName = player.short_name || player.shortName || player.name;
@@ -328,18 +369,17 @@ export default function MarketPage() {
   const [saving, setSaving] = useState(false);
   const [randomLoading, setRandomLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [postSavePromptOpen, setPostSavePromptOpen] = useState(false);
+  const [postSaveLaterOpen, setPostSaveLaterOpen] = useState(false);
   const [teamName, setTeamName] = useState("");
   const [teamNameError, setTeamNameError] = useState<string | null>(null);
-  const [needsTeamName, setNeedsTeamName] = useState(false);
-  const [teamLoaded, setTeamLoaded] = useState(false);
-  const [nameGateOpen, setNameGateOpen] = useState(false);
-  const [welcomeOpen, setWelcomeOpen] = useState(false);
-  const [welcomeSeen, setWelcomeSeen] = useState(false);
   const [transferInfo, setTransferInfo] = useState<TransferCount | null>(null);
   const [playersAll, setPlayersAll] = useState<Player[] | null>(null);
   const [budgetCap, setBudgetCap] = useState(100);
+  const [currentRoundNumber, setCurrentRoundNumber] = useState<number | null>(null);
   const lastPositionsKey = useRef<string>("");
   const lastTeamKey = useRef<string>("");
+  const router = useRouter();
 
   const parseMaybeNumber = (value: string) => {
     const trimmed = value.trim();
@@ -402,12 +442,8 @@ export default function MarketPage() {
       if (team.name) {
         setTeamName(team.name);
       }
-      setNeedsTeamName(!team.name?.trim());
-      setTeamLoaded(true);
     };
     load().catch(() => {
-      setNeedsTeamName(true);
-      setTeamLoaded(true);
     });
   }, [token, setSquad, setDraftSquad, draftSquad.length, draftLoaded, setDraftLoaded]);
 
@@ -424,31 +460,11 @@ export default function MarketPage() {
   }, []);
 
   useEffect(() => {
-    if (teamLoaded && needsTeamName) {
-      setNameGateOpen(!welcomeOpen);
-    } else {
-      setNameGateOpen(false);
-    }
-  }, [teamLoaded, needsTeamName, welcomeOpen]);
-
-  const welcomeKey = useMemo(() => {
-    const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
-    return `fantasy_welcome_seen_${safeEmail}`;
-  }, [userEmail]);
-
-  useEffect(() => {
     if (!token) return;
-    const stored = localStorage.getItem(welcomeKey);
-    setWelcomeSeen(stored === "1");
-  }, [token, welcomeKey]);
-
-  useEffect(() => {
-    if (teamLoaded && needsTeamName && !welcomeSeen) {
-      setWelcomeOpen(true);
-    } else {
-      setWelcomeOpen(false);
-    }
-  }, [teamLoaded, needsTeamName, welcomeSeen]);
+    getLineup(token)
+      .then((lineup) => setCurrentRoundNumber(lineup.round_number))
+      .catch(() => setCurrentRoundNumber(null));
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
@@ -609,6 +625,17 @@ export default function MarketPage() {
     });
     return teams.filter((team) => (counts.get(team.id) || 0) > 1);
   }, [teams, playersAll, playersBase]);
+
+  const nextRoundStartLabel = useMemo(() => {
+    if (!currentRoundNumber) return "Por confirmar";
+    const roundDates = fixtures
+      .filter((fixture) => fixture.round_number === currentRoundNumber)
+      .map((fixture) => kickoffToDateKey(fixture.kickoff_at))
+      .filter((dateKey) => dateKey && dateKey !== "TBD")
+      .sort((a, b) => a.localeCompare(b));
+    if (roundDates.length === 0) return "Por confirmar";
+    return formatRoundDateLabel(roundDates[0]);
+  }, [fixtures, currentRoundNumber]);
 
   const rowVirtualizer = useVirtualizer({
     count: filteredPlayers.length,
@@ -780,7 +807,6 @@ export default function MarketPage() {
   };
 
   const handleConfirmPlayer = () => {
-    if (nameGateOpen) return;
     if (!inPlayerId) return;
     const incoming = playersBase.find((player) => player.player_id === inPlayerId);
     if (!incoming) return;
@@ -810,7 +836,6 @@ export default function MarketPage() {
   };
 
   const handleGenerateRandomTeam = async () => {
-    if (nameGateOpen) return;
     setSaveMessage(null);
     setErrorPopup(null);
 
@@ -990,7 +1015,6 @@ export default function MarketPage() {
   };
 
   const handleRemoveFromDraft = (playerId: number) => {
-    if (nameGateOpen) return;
     setDraftSquad((prev) => prev.filter((player) => player.player_id !== playerId));
     if (outPlayerId === playerId) {
       setOutPlayerId(null);
@@ -998,7 +1022,6 @@ export default function MarketPage() {
   };
 
   const handleClearTeam = () => {
-    if (nameGateOpen) return;
     setDraftBackup(draftSquad);
     setDraftSquad([]);
     setOutPlayerId(null);
@@ -1009,16 +1032,16 @@ export default function MarketPage() {
   };
 
   const handleSaveTeam = () => {
-    if (nameGateOpen) return;
     if (!token) return;
     setErrorPopup(null);
     setSaveMessage(null);
     setTeamNameError(null);
+    setPostSavePromptOpen(false);
+    setPostSaveLaterOpen(false);
     setConfirmOpen(true);
   };
 
   const handleConfirmSaveTeam = async () => {
-    if (nameGateOpen) return;
     if (!token) return;
     const trimmedName = teamName.trim();
     if (!trimmedName) {
@@ -1037,7 +1060,6 @@ export default function MarketPage() {
     }
     try {
       await createTeam(token, trimmedName);
-      setNeedsTeamName(false);
       await updateSquad(
         token,
         draftSquad.map((player) => player.player_id)
@@ -1047,6 +1069,7 @@ export default function MarketPage() {
       setDraftSquad(team.squad || []);
       setTeamName(team.name || trimmedName);
       setSaveMessage("Equipo guardado");
+      setPostSavePromptOpen(true);
     } catch (err) {
       const codes = splitErrorCodes(err);
       setErrorPopup(codes.length ? codes : ["api_error"]);
@@ -1205,7 +1228,6 @@ export default function MarketPage() {
                     player={player}
                     compact
                     onClick={() => {
-                      if (nameGateOpen) return;
                       setInPlayerId(player.player_id);
                       setSheetOpen(true);
                     }}
@@ -1362,39 +1384,53 @@ export default function MarketPage() {
         </div>
       ) : null}
 
-      <WelcomeSlideshow
-        open={welcomeOpen}
-        onComplete={() => {
-          localStorage.setItem(welcomeKey, "1");
-          setWelcomeSeen(true);
-          setWelcomeOpen(false);
-          setNameGateOpen(true);
-        }}
-      />
+      {postSavePromptOpen ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
+          <div className="glass w-full max-w-sm space-y-4 rounded-2xl border border-white/10 p-4 text-sm text-ink">
+            <p className="text-base font-semibold">Equipo guardado</p>
+            <p className="text-xs text-muted">
+              Ahora debes seleccionar tu XI titular para la ronda activa.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setPostSavePromptOpen(false);
+                  router.push("/team");
+                }}
+                className="flex-1 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+              >
+                Elegir XI titular
+              </button>
+              <button
+                onClick={() => {
+                  setPostSavePromptOpen(false);
+                  setPostSaveLaterOpen(true);
+                }}
+                className="flex-1 rounded-xl border border-white/20 px-4 py-2 text-sm text-ink"
+              >
+                Mas tarde
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
-      <TeamNameGate
-        open={nameGateOpen}
-        teamName={teamName}
-        onTeamNameChange={setTeamName}
-        error={teamNameError}
-        onSave={async () => {
-          if (!token) return;
-          const trimmedName = teamName.trim();
-          if (!trimmedName) {
-            setTeamNameError("Nombre requerido.");
-            return;
-          }
-          setTeamNameError(null);
-          try {
-            await createTeam(token, trimmedName);
-            setTeamName(trimmedName);
-            setNeedsTeamName(false);
-            setNameGateOpen(false);
-          } catch {
-            setTeamNameError("No se pudo guardar el nombre.");
-          }
-        }}
-      />
+      {postSaveLaterOpen ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
+          <div className="glass w-full max-w-sm space-y-4 rounded-2xl border border-white/10 p-4 text-sm text-ink">
+            <p className="text-base font-semibold">Recordatorio</p>
+            <p className="text-xs text-muted">
+              La siguiente ronda empieza el {nextRoundStartLabel}.
+            </p>
+            <button
+              onClick={() => setPostSaveLaterOpen(false)}
+              className="w-full rounded-xl bg-surface2/60 px-4 py-2 text-sm text-ink"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
