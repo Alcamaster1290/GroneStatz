@@ -222,17 +222,19 @@ export async function saveLineup(
   slots: LineupSlot[],
   roundNumber?: number,
   captainPlayerId?: number | null,
-  viceCaptainPlayerId?: number | null
-): Promise<{ message?: string }> {
+  viceCaptainPlayerId?: number | null,
+  reset?: boolean
+): Promise<{ message?: string; errors?: string[] }> {
   const query = roundNumber ? `?round_number=${roundNumber}` : "";
-  return apiFetch<{ message?: string }>(
+  return apiFetch<{ message?: string; errors?: string[] }>(
     `/fantasy/lineup${query}`,
     {
       method: "PUT",
       body: JSON.stringify({
         slots,
         captain_player_id: captainPlayerId ?? null,
-        vice_captain_player_id: viceCaptainPlayerId ?? null
+        vice_captain_player_id: viceCaptainPlayerId ?? null,
+        reset: Boolean(reset)
       })
     },
     token

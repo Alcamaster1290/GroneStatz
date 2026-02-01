@@ -59,6 +59,7 @@ class LineupUpdateIn(BaseModel):
     slots: List[LineupSlotIn]
     captain_player_id: Optional[int] = None
     vice_captain_player_id: Optional[int] = None
+    reset: bool = False
 
 
 class TransferIn(BaseModel):

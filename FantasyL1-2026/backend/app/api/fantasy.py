@@ -233,6 +233,12 @@ def update_lineup(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="round_closed")
 
     lineup = ensure_lineup(db, team.id, round_obj.id)
+    if payload.reset:
+        db.execute(delete(FantasyLineupSlot).where(FantasyLineupSlot.lineup_id == lineup.id))
+        lineup.captain_player_id = None
+        lineup.vice_captain_player_id = None
+        db.commit()
+        return ValidationResult(ok=True, errors=[])
     errors = validate_lineup(db, team.id, payload.slots)
     if not errors:
         player_ids = {slot.player_id for slot in payload.slots if slot.player_id is not None}

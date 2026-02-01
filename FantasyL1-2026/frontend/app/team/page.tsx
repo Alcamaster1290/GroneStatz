@@ -891,6 +891,14 @@ export default function TeamPage() {
     } catch {
       // ignore storage errors
     }
+    if (!token || !currentRound) return;
+    saveLineup(token, emptySlots, currentRound, null, null, true)
+      .then(() => {
+        setSaveMessage("XI restablecido");
+      })
+      .catch((err) => {
+        setSaveErrors([String(err)]);
+      });
   };
 
   useEffect(() => {
