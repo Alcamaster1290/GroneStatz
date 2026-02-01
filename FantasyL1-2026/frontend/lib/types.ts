@@ -39,6 +39,7 @@ export type LineupSlot = {
 export type LineupOut = {
   lineup_id: number;
   round_number: number;
+  is_closed: boolean;
   captain_player_id?: number | null;
   vice_captain_player_id?: number | null;
   slots: LineupSlot[];

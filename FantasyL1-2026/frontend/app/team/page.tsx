@@ -751,6 +751,7 @@ export default function TeamPage() {
         try {
           const lineup = await getLineup(token);
           setCurrentRound(lineup.round_number);
+          setRoundStatus(lineup.is_closed ? "Cerrada" : "Pendiente");
           const lineupCaptainId = lineup.captain_player_id ?? null;
           const lineupViceCaptainId = lineup.vice_captain_player_id ?? null;
           const squadById = new Map(
@@ -803,7 +804,6 @@ export default function TeamPage() {
               setViceCaptainId(lineupViceCaptainId);
             }
           setRoundMissing(false);
-          setRoundStatus("Pendiente");
           getFixtures()
             .then((allFixtures) => {
               setAllFixtures(allFixtures);
@@ -827,7 +827,7 @@ export default function TeamPage() {
                 setCurrentRound(nextRound);
                 setFixtures(allFixtures.filter((fixture) => fixture.round_number === nextRound));
                 setRoundMissing(false);
-                setRoundStatus("Cerrada");
+                setRoundStatus(null);
               } else {
                 setRoundMissing(true);
                 setCurrentRound(null);
