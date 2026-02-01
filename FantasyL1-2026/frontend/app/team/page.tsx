@@ -428,6 +428,7 @@ export default function TeamPage() {
     []
   );
   const [roundStatus, setRoundStatus] = useState<string | null>(null);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [appEnv, setAppEnv] = useState<string>("local");
   const [roundMissing, setRoundMissing] = useState(false);
   const [teamName, setTeamName] = useState("");
@@ -852,7 +853,21 @@ export default function TeamPage() {
     load().catch(() => {
       setTeamLoaded(true);
     });
-    }, [token, userEmail, setSquad, setLineupSlots, setCurrentRound, setCaptainId, setViceCaptainId]);
+  }, [token, userEmail, setSquad, setLineupSlots, setCurrentRound, setCaptainId, setViceCaptainId]);
+
+  const handleResetLineup = () => {
+    if (roundStatus !== "Pendiente") {
+      return;
+    }
+    setLineupSlots(buildDefaultSlots());
+    setCaptainId(null);
+    setViceCaptainId(null);
+    try {
+      localStorage.removeItem(draftKey);
+    } catch {
+      // ignore storage errors
+    }
+  };
 
   useEffect(() => {
     getTeams().then(setTeams).catch(() => undefined);
@@ -1374,7 +1389,42 @@ export default function TeamPage() {
         <p className="mt-3 text-[11px] text-muted">
           El capitan triplica su puntaje; si no juega, el vicecapitan recibe el bonus.
         </p>
+        {roundStatus === "Pendiente" ? (
+          <div className="mt-4">
+            <button
+              onClick={() => setResetConfirmOpen(true)}
+              className="w-full rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+            >
+              Restablecer XI titular
+            </button>
+          </div>
+        ) : null}
       </div>
+
+      {resetConfirmOpen ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
+          <div className="glass w-full max-w-sm rounded-2xl border border-white/10 p-4">
+            <p className="text-sm font-semibold text-ink">¿Estás seguro?</p>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  handleResetLineup();
+                  setResetConfirmOpen(false);
+                }}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+              >
+                Si
+              </button>
+              <button
+                onClick={() => setResetConfirmOpen(false)}
+                className="rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-ink"
+              >
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <FabMenu onSave={handleSave} />
 
