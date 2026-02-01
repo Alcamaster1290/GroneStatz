@@ -34,6 +34,7 @@ export type LineupSlot = {
   is_starter: boolean;
   role: Position;
   player_id: number | null;
+  player?: Player | null;
 };
 
 export type LineupOut = {

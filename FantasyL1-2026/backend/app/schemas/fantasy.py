@@ -51,13 +51,31 @@ class LineupSlotIn(BaseModel):
     player_id: Optional[int] = None
 
 
+class LineupPlayerOut(BaseModel):
+    player_id: int
+    name: str
+    short_name: Optional[str] = None
+    position: str
+    team_id: int
+    price_current: float
+    is_injured: bool
+
+
+class LineupSlotOut(BaseModel):
+    slot_index: int
+    is_starter: bool
+    role: str
+    player_id: Optional[int] = None
+    player: Optional[LineupPlayerOut] = None
+
+
 class LineupOut(BaseModel):
     lineup_id: int
     round_number: int
     is_closed: bool
     captain_player_id: Optional[int] = None
     vice_captain_player_id: Optional[int] = None
-    slots: List[LineupSlotIn]
+    slots: List[LineupSlotOut]
 
 
 class LineupUpdateIn(BaseModel):

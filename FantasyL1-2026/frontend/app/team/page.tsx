@@ -388,7 +388,9 @@ function PitchRow({
       <p className="text-[10px] uppercase tracking-[0.2em] text-muted">{label}</p>
       <div className="flex flex-wrap items-center justify-center gap-2">
         {slots.map((slot) => {
-            const player = slot.player_id ? squadMap.get(slot.player_id) : undefined;
+            const player =
+              (slot.player_id ? squadMap.get(slot.player_id) : undefined) ||
+              (slot.player ?? undefined);
             const opponent = player ? opponentByTeamId.get(player.team_id) : undefined;
             return (
               <PitchSlot
@@ -780,11 +782,16 @@ export default function TeamPage() {
           const normalizedSlots = (lineup.slots || []).map((slot) => {
             if (slot.player_id) {
               const player = squadById.get(slot.player_id);
+              const fallbackPlayer = slot.player ?? null;
               if (player) {
-                return { ...slot, role: player.position };
+                return { ...slot, role: player.position, player: fallbackPlayer };
               }
+              if (fallbackPlayer) {
+                return { ...slot, role: fallbackPlayer.position, player: fallbackPlayer };
+              }
+              return { ...slot, player: fallbackPlayer };
             }
-            return slot;
+            return { ...slot, player: slot.player ?? null };
           });
             const draftKeyForRound = `fantasy_lineup_draft_${(userEmail || "anon").trim() || "anon"}_${lineup.round_number}`;
             const storedDraft = localStorage.getItem(draftKeyForRound);
@@ -1216,11 +1223,16 @@ export default function TeamPage() {
       const normalizedSlots = (lineup.slots || []).map((slot) => {
         if (slot.player_id) {
           const player = squadById.get(slot.player_id);
+          const fallbackPlayer = slot.player ?? null;
           if (player) {
-            return { ...slot, role: player.position };
+            return { ...slot, role: player.position, player: fallbackPlayer };
           }
+          if (fallbackPlayer) {
+            return { ...slot, role: fallbackPlayer.position, player: fallbackPlayer };
+          }
+          return { ...slot, player: fallbackPlayer };
         }
-        return slot;
+        return { ...slot, player: slot.player ?? null };
       });
       setLineupSlots(normalizedSlots);
       setCaptainId(lineupCaptainId);
@@ -1260,13 +1272,15 @@ export default function TeamPage() {
   const benchCandidates = bench
     .filter((slot) => slot.player_id)
     .map((slot) => {
-      const player = squadMap.get(slot.player_id as number);
+      const player =
+        (slot.player_id ? squadMap.get(slot.player_id) : undefined) || slot.player;
       return player ? { slot, player } : null;
     })
     .filter((item): item is { slot: LineupSlot; player: Player } => item !== null);
-  const selectedPlayer = selectedSlot?.player_id
-    ? squadMap.get(selectedSlot.player_id)
-    : undefined;
+  const selectedPlayer =
+    (selectedSlot?.player_id ? squadMap.get(selectedSlot.player_id) : undefined) ||
+    selectedSlot?.player ||
+    undefined;
   const selectedOpponent = selectedPlayer
     ? opponentByTeamId.get(selectedPlayer.team_id)
     : undefined;
@@ -1763,7 +1777,7 @@ export default function TeamPage() {
       <BottomSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
-        title={selectedSlot?.player_id ? squadMap.get(selectedSlot.player_id)?.name : "Slot"}
+        title={selectedPlayer ? selectedPlayer.name : "Slot"}
       >
         {selectedSlot ? (
           <div className="space-y-4">

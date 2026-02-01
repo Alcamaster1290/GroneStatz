@@ -217,6 +217,15 @@ def get_lineup(
         .all()
     )
     slots_sorted = sorted(slots, key=lambda s: s.slot_index)
+    player_ids = [slot.player_id for slot in slots_sorted if slot.player_id is not None]
+    player_map = {}
+    if player_ids:
+        players = (
+            db.execute(select(PlayerCatalog).where(PlayerCatalog.player_id.in_(player_ids)))
+            .scalars()
+            .all()
+        )
+        player_map = {player.player_id: player for player in players}
 
     return LineupOut(
         lineup_id=lineup.id,
@@ -230,6 +239,19 @@ def get_lineup(
                 "is_starter": slot.is_starter,
                 "role": slot.role,
                 "player_id": slot.player_id,
+                "player": (
+                    {
+                        "player_id": player.player_id,
+                        "name": player.name,
+                        "short_name": player.short_name,
+                        "position": player.position,
+                        "team_id": player.team_id,
+                        "price_current": float(player.price_current),
+                        "is_injured": bool(player.is_injured),
+                    }
+                    if (player := player_map.get(slot.player_id)) is not None
+                    else None
+                ),
             }
             for slot in slots_sorted
         ],
