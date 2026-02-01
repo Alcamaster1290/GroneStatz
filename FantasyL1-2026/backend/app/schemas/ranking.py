@@ -32,6 +32,7 @@ class RankingEntryOut(BaseModel):
     team_name: str
     total_points: float
     captain_player_id: int | None = None
+    favorite_team_id: int | None = None
     rounds: List[RankingRoundOut]
 
 

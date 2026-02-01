@@ -18,12 +18,13 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
 
     team_rows = (
         db.execute(
-            select(FantasyTeam.id, FantasyTeam.name)
+            select(FantasyTeam.id, FantasyTeam.name, FantasyTeam.favorite_team_id)
             .where(FantasyTeam.season_id == season.id, FantasyTeam.id.in_(team_ids))
         )
         .all()
     )
     team_map = {row[0]: row[1] or "Sin nombre" for row in team_rows}
+    favorite_map = {row[0]: row[2] for row in team_rows}
 
     round_numbers = (
         db.execute(
@@ -126,6 +127,7 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
                 team_name=team_map.get(team_id, "Sin nombre"),
                 total_points=cumulative,
                 captain_player_id=captain_map.get(team_id),
+                favorite_team_id=favorite_map.get(team_id),
                 rounds=rounds,
             )
         )

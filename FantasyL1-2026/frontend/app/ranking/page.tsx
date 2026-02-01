@@ -74,6 +74,25 @@ function RankingTable({
                     </span>
                   </span>
                 ) : null}
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-surface2/60">
+                  <img
+                    src={
+                      entry.favorite_team_id
+                        ? `/images/teams/${entry.favorite_team_id}.png`
+                        : "/favicon.png"
+                    }
+                    alt=""
+                    className="h-full w-full rounded-full object-cover"
+                    onError={(event) => {
+                      const img = event.currentTarget as HTMLImageElement;
+                      if (img.src.includes("/favicon.png")) {
+                        img.style.display = "none";
+                      } else {
+                        img.src = "/favicon.png";
+                      }
+                    }}
+                  />
+                </span>
                 <button
                   type="button"
                   onClick={() => onSelectTeam?.(entry.fantasy_team_id, entry.team_name)}

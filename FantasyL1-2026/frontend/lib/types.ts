@@ -241,6 +241,7 @@ export type RankingEntry = {
   team_name: string;
   total_points: number;
   captain_player_id?: number | null;
+  favorite_team_id?: number | null;
   rounds: RankingRound[];
 };
 
