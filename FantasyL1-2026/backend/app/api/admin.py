@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete, func, select, text, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin
@@ -564,6 +565,10 @@ def upsert_fixture(
     payload: AdminFixtureCreate,
     db: Session = Depends(get_db),
 ) -> AdminFixtureOut:
+    if payload.round_number < 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="round_invalid")
+    if payload.match_id < 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="match_id_invalid")
     season = get_or_create_season(db)
     round_obj = ensure_round(db, season.id, payload.round_number)
     _ensure_fixture_teams(db, payload.home_team_id, payload.away_team_id)
@@ -572,20 +577,23 @@ def upsert_fixture(
     city = payload.city.strip() if payload.city else None
 
     fixture = db.execute(select(Fixture).where(Fixture.match_id == payload.match_id)).scalar_one_or_none()
-    if fixture:
-        fixture.round_id = round_obj.id
-        fixture.season_id = season.id
-        fixture.home_team_id = payload.home_team_id
-        fixture.away_team_id = payload.away_team_id
-        fixture.kickoff_at = kickoff_at
-        fixture.stadium = stadium
-        fixture.city = city
+    def _apply_fixture_fields(target: Fixture) -> None:
+        target.round_id = round_obj.id
+        target.season_id = season.id
+        target.home_team_id = payload.home_team_id
+        target.away_team_id = payload.away_team_id
+        target.kickoff_at = kickoff_at
+        target.stadium = stadium
+        target.city = city
         if payload.status is not None:
-            fixture.status = payload.status
+            target.status = payload.status
         if payload.home_score is not None:
-            fixture.home_score = payload.home_score
+            target.home_score = payload.home_score
         if payload.away_score is not None:
-            fixture.away_score = payload.away_score
+            target.away_score = payload.away_score
+
+    if fixture:
+        _apply_fixture_fields(fixture)
     else:
         fixture = Fixture(
             season_id=season.id,
@@ -601,9 +609,21 @@ def upsert_fixture(
             away_score=payload.away_score,
         )
         db.add(fixture)
-
-    db.commit()
-    db.refresh(fixture)
+    try:
+        db.commit()
+        db.refresh(fixture)
+    except IntegrityError:
+        db.rollback()
+        existing = (
+            db.execute(select(Fixture).where(Fixture.match_id == payload.match_id))
+            .scalar_one_or_none()
+        )
+        if not existing:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="db_integrity_error")
+        _apply_fixture_fields(existing)
+        db.commit()
+        db.refresh(existing)
+        fixture = existing
 
     return AdminFixtureOut(
         id=fixture.id,
