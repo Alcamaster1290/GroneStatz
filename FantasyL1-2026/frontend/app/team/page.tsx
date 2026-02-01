@@ -22,9 +22,18 @@ import PlayerAvatarSquare from "@/components/PlayerAvatarSquare";
 import StickyTopBar from "@/components/StickyTopBar";
 import TeamNameGate from "@/components/TeamNameGate";
 import WelcomeSlideshow from "@/components/WelcomeSlideshow";
-import { createTeam, getFixtures, getHealth, getLineup, getTeam, getTeams, saveLineup } from "@/lib/api";
+import {
+  createTeam,
+  getFixtures,
+  getHealth,
+  getLineup,
+  getRounds,
+  getTeam,
+  getTeams,
+  saveLineup
+} from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
-import { Fixture, LineupSlot, Player } from "@/lib/types";
+import { Fixture, LineupSlot, Player, RoundInfo } from "@/lib/types";
 import { validateLineup, validateSquad } from "@/lib/validation";
 
 const DEFAULT_SLOTS: LineupSlot[] = [
@@ -427,6 +436,7 @@ export default function TeamPage() {
   const [teams, setTeams] = useState<{ id: number; name_short?: string; name_full?: string }[]>(
     []
   );
+  const [roundsInfo, setRoundsInfo] = useState<RoundInfo[]>([]);
   const [roundStatus, setRoundStatus] = useState<string | null>(null);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [appEnv, setAppEnv] = useState<string>("local");
@@ -886,6 +896,18 @@ export default function TeamPage() {
   useEffect(() => {
     getTeams().then(setTeams).catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    getRounds().then(setRoundsInfo).catch(() => setRoundsInfo([]));
+  }, []);
+
+  useEffect(() => {
+    if (!currentRound) return;
+    const info = roundsInfo.find((round) => round.round_number === currentRound);
+    if (info) {
+      setRoundStatus(info.is_closed ? "Cerrada" : "Pendiente");
+    }
+  }, [currentRound, roundsInfo]);
 
   useEffect(() => {
     getHealth()

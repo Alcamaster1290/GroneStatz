@@ -16,6 +16,7 @@ import {
   PlayerStatsEntry,
   PublicLineup,
   RankingResponse,
+  RoundInfo,
   TransferCount
 } from "./types";
 
@@ -295,6 +296,10 @@ export async function getTeams(): Promise<
 export async function getFixtures(roundNumber?: number): Promise<Fixture[]> {
   const query = roundNumber ? `?round_number=${roundNumber}` : "";
   return apiFetch(`/catalog/fixtures${query}`);
+}
+
+export async function getRounds(): Promise<RoundInfo[]> {
+  return apiFetch("/catalog/rounds");
 }
 
 export async function getPlayerStats(params: {

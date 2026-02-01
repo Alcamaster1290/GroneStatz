@@ -18,7 +18,7 @@ from app.models import (
     Round,
     Team,
 )
-from app.schemas.catalog import FixtureOut, PlayerCatalogOut, PlayerStatsOut, TeamOut
+from app.schemas.catalog import FixtureOut, PlayerCatalogOut, PlayerStatsOut, RoundOut, TeamOut
 from app.services.fantasy import get_current_round, get_or_create_season
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
@@ -276,4 +276,26 @@ def list_fixtures(
             away_score=fixture.away_score,
         )
         for fixture, round_no in rows
+    ]
+
+
+@router.get("/rounds", response_model=List[RoundOut])
+def list_rounds(db: Session = Depends(get_db)) -> List[RoundOut]:
+    season = get_or_create_season(db)
+    rows = (
+        db.execute(
+            select(Round.round_number, Round.is_closed, Round.starts_at, Round.ends_at)
+            .where(Round.season_id == season.id)
+            .order_by(Round.round_number)
+        )
+        .all()
+    )
+    return [
+        RoundOut(
+            round_number=row[0],
+            is_closed=row[1],
+            starts_at=row[2],
+            ends_at=row[3],
+        )
+        for row in rows
     ]

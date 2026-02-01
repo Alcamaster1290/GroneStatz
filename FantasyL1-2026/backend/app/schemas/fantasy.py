@@ -49,6 +49,7 @@ class LineupSlotIn(BaseModel):
 class LineupOut(BaseModel):
     lineup_id: int
     round_number: int
+    is_closed: bool
     captain_player_id: Optional[int] = None
     vice_captain_player_id: Optional[int] = None
     slots: List[LineupSlotIn]

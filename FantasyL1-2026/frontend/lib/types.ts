@@ -59,6 +59,13 @@ export type Fixture = {
   away_score?: number | null;
 };
 
+export type RoundInfo = {
+  round_number: number;
+  is_closed: boolean;
+  starts_at?: string | null;
+  ends_at?: string | null;
+};
+
 export type PlayerStatsEntry = {
   player_id: number;
   name: string;

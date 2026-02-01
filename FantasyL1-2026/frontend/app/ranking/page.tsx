@@ -12,13 +12,20 @@ import {
   getRankingGeneral,
   getRankingLeague,
   getRankingLineup,
+  getRounds,
   getTeam,
   joinLeague,
   leaveLeague,
   removeLeagueMember
 } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
-import { League, PublicLineup, PublicLineupSlot, RankingResponse } from "@/lib/types";
+import {
+  League,
+  PublicLineup,
+  PublicLineupSlot,
+  RankingResponse,
+  RoundInfo
+} from "@/lib/types";
 
 const positionLabels: Record<string, string> = {
   G: "Arquero",
@@ -30,11 +37,13 @@ const positionLabels: Record<string, string> = {
 function RankingTable({
   title,
   data,
-  onSelectTeam
+  onSelectTeam,
+  roundStatusMap
 }: {
   title: string;
   data: RankingResponse | null;
   onSelectTeam?: (fantasyTeamId: number, teamName: string) => void;
+  roundStatusMap?: Map<number, boolean>;
 }) {
   if (!data || data.entries.length === 0) {
     return (
@@ -94,7 +103,16 @@ function RankingTable({
                     key={`${entry.fantasy_team_id}-${round.round_number}`}
                     className="rounded-full border border-white/10 px-2 py-1"
                   >
-                    R{round.round_number}: {round.cumulative.toFixed(1)}
+                    <span className="flex flex-col leading-tight">
+                      <span>
+                        R{round.round_number}: {round.cumulative.toFixed(1)}
+                      </span>
+                      {roundStatusMap?.has(round.round_number) ? (
+                        <span className="text-[9px] text-muted">
+                          {roundStatusMap.get(round.round_number) ? "Cerrada" : "Pendiente"}
+                        </span>
+                      ) : null}
+                    </span>
                   </span>
                 ))
               )}
@@ -128,6 +146,7 @@ export default function RankingPage() {
   const [leagueRanking, setLeagueRanking] = useState<RankingResponse | null>(null);
   const [generalRanking, setGeneralRanking] = useState<RankingResponse | null>(null);
   const [rankingError, setRankingError] = useState<string | null>(null);
+  const [roundsInfo, setRoundsInfo] = useState<RoundInfo[]>([]);
 
   const [createName, setCreateName] = useState("");
   const [joinCode, setJoinCode] = useState("");
@@ -230,6 +249,7 @@ export default function RankingPage() {
     getRankingGeneral(token)
       .then(setGeneralRanking)
       .catch((err) => setRankingError(String(err)));
+    getRounds().then(setRoundsInfo).catch(() => setRoundsInfo([]));
   }, [token]);
 
   useEffect(() => {
@@ -338,6 +358,10 @@ export default function RankingPage() {
     return lineupData?.slots.filter((slot) => !slot.is_starter) ?? [];
   }, [lineupData]);
 
+  const roundStatusMap = useMemo(() => {
+    return new Map(roundsInfo.map((round) => [round.round_number, round.is_closed]));
+  }, [roundsInfo]);
+
   const renderSlot = (slot: PublicLineupSlot) => {
     const player = slot.player ?? null;
     const isCaptain = player && lineupData?.captain_player_id === player.player_id;
@@ -427,6 +451,7 @@ export default function RankingPage() {
               title={`Tabla ${league.name}`}
               data={leagueRanking}
               onSelectTeam={handleViewLineup}
+              roundStatusMap={roundStatusMap}
             />
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted">
@@ -520,6 +545,7 @@ export default function RankingPage() {
         title="Ranking general"
         data={generalRanking}
         onSelectTeam={handleViewLineup}
+        roundStatusMap={roundStatusMap}
       />
 
       {lineupOpen ? (

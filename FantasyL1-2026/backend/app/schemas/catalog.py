@@ -61,3 +61,10 @@ class FixtureOut(BaseModel):
     status: str
     home_score: Optional[int] = None
     away_score: Optional[int] = None
+
+
+class RoundOut(BaseModel):
+    round_number: int
+    is_closed: bool
+    starts_at: Optional[datetime] = None
+    ends_at: Optional[datetime] = None

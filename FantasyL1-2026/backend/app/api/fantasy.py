@@ -202,6 +202,7 @@ def get_lineup(
     return LineupOut(
         lineup_id=lineup.id,
         round_number=round_obj.round_number,
+        is_closed=round_obj.is_closed,
         captain_player_id=lineup.captain_player_id,
         vice_captain_player_id=lineup.vice_captain_player_id,
         slots=[
