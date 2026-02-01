@@ -74,25 +74,23 @@ function RankingTable({
                     </span>
                   </span>
                 ) : null}
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-surface2/60">
-                  <img
-                    src={
-                      entry.favorite_team_id
-                        ? `/images/teams/${entry.favorite_team_id}.png`
-                        : "/favicon.png"
+                <img
+                  src={
+                    entry.favorite_team_id
+                      ? `/images/teams/${entry.favorite_team_id}.png`
+                      : "/favicon.png"
+                  }
+                  alt=""
+                  className="h-6 w-6 object-contain"
+                  onError={(event) => {
+                    const img = event.currentTarget as HTMLImageElement;
+                    if (img.src.includes("/favicon.png")) {
+                      img.style.display = "none";
+                    } else {
+                      img.src = "/favicon.png";
                     }
-                    alt=""
-                    className="h-full w-full rounded-full object-cover"
-                    onError={(event) => {
-                      const img = event.currentTarget as HTMLImageElement;
-                      if (img.src.includes("/favicon.png")) {
-                        img.style.display = "none";
-                      } else {
-                        img.src = "/favicon.png";
-                      }
-                    }}
-                  />
-                </span>
+                  }}
+                />
                 <button
                   type="button"
                   onClick={() => onSelectTeam?.(entry.fantasy_team_id, entry.team_name)}
@@ -465,13 +463,11 @@ export default function RankingPage() {
           <span>Equipo favorito:</span>
           {favoriteTeamId ? (
             <span className="flex items-center gap-2 rounded-full border border-white/10 px-2 py-1">
-              <span className="h-5 w-5 rounded-full bg-surface2/60 p-1">
-                <img
-                  src={`/images/teams/${favoriteTeamId}.png`}
-                  alt=""
-                  className="h-full w-full object-contain"
-                />
-              </span>
+              <img
+                src={`/images/teams/${favoriteTeamId}.png`}
+                alt=""
+                className="h-5 w-5 object-contain"
+              />
               <span className="text-ink">
                 {teamNameById.get(favoriteTeamId) || `Equipo ${favoriteTeamId}`}
               </span>
@@ -479,9 +475,10 @@ export default function RankingPage() {
           ) : (
             <button
               onClick={() => setFavoriteGateOpen(true)}
-              className="rounded-full border border-white/10 px-3 py-1 text-xs text-ink"
+              className="flex items-center gap-2 rounded-full border border-white/10 px-2 py-1 text-xs text-ink"
             >
-              Elegir equipo
+              <img src="/favicon.png" alt="" className="h-5 w-5 object-contain" />
+              <span>Sin equipo</span>
             </button>
           )}
         </div>
