@@ -1131,6 +1131,10 @@ export default function TeamPage() {
       setSaveErrors(["rounds_not_configured"]);
       return;
     }
+    if (roundStatus === "Cerrada") {
+      setSaveErrors(["round_closed"]);
+      return;
+    }
     if (!token) return;
     setSaveErrors(null);
     setSaveMessage(null);
@@ -1188,7 +1192,7 @@ export default function TeamPage() {
       setCaptainId(lineupCaptainId);
       setViceCaptainId(lineupViceCaptainId);
       setRoundMissing(false);
-      setRoundStatus("Pendiente");
+      setRoundStatus(lineup.is_closed ? "Cerrada" : "Pendiente");
       setFixtures(allFixtures.filter((fixture) => fixture.round_number === roundNumber));
     } catch (err) {
       setSaveErrors([String(err)]);
