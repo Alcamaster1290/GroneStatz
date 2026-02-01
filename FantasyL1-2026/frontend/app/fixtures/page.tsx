@@ -211,7 +211,7 @@ export default function FixturesPage() {
             disabled={!canPrevRound}
             className="rounded-lg border border-white/10 px-2 py-1 text-ink disabled:opacity-40"
           >
-            <
+            {"<"}
           </button>
           <span className="text-muted">Ronda {selectedRound ?? "-"}</span>
           <button
@@ -224,7 +224,7 @@ export default function FixturesPage() {
             disabled={!canNextRound}
             className="rounded-lg border border-white/10 px-2 py-1 text-ink disabled:opacity-40"
           >
-            >
+            {">"}
           </button>
         </div>
       </div>

@@ -372,7 +372,6 @@ export default function MarketPage() {
   const [postSavePromptOpen, setPostSavePromptOpen] = useState(false);
   const [postSaveLaterOpen, setPostSaveLaterOpen] = useState(false);
   const [teamName, setTeamName] = useState("");
-  const [teamNameError, setTeamNameError] = useState<string | null>(null);
   const [transferInfo, setTransferInfo] = useState<TransferCount | null>(null);
   const [playersAll, setPlayersAll] = useState<Player[] | null>(null);
   const [budgetCap, setBudgetCap] = useState(100);
@@ -1035,7 +1034,6 @@ export default function MarketPage() {
     if (!token) return;
     setErrorPopup(null);
     setSaveMessage(null);
-    setTeamNameError(null);
     setPostSavePromptOpen(false);
     setPostSaveLaterOpen(false);
     setConfirmOpen(true);
@@ -1043,11 +1041,6 @@ export default function MarketPage() {
 
   const handleConfirmSaveTeam = async () => {
     if (!token) return;
-    const trimmedName = teamName.trim();
-    if (!trimmedName) {
-      setTeamNameError("Nombre requerido.");
-      return;
-    }
     setErrorPopup(null);
     setSaveMessage(null);
     setSaving(true);
@@ -1059,7 +1052,10 @@ export default function MarketPage() {
       return;
     }
     try {
-      await createTeam(token, trimmedName);
+      const trimmedName = teamName.trim();
+      if (trimmedName) {
+        await createTeam(token, trimmedName);
+      }
       await updateSquad(
         token,
         draftSquad.map((player) => player.player_id)
@@ -1351,17 +1347,6 @@ export default function MarketPage() {
             <p className="text-xs text-muted">
               Estas seguro que quieres guardar este equipo?
             </p>
-            <div className="space-y-2">
-              <label className="text-xs text-muted">Nombre oficial del equipo</label>
-              <input
-                value={teamName}
-                onChange={(event) => setTeamName(event.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
-              />
-              {teamNameError ? (
-                <p className="text-xs text-warning">Ingresa un nombre para continuar.</p>
-              ) : null}
-            </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmOpen(false)}
@@ -1371,10 +1356,10 @@ export default function MarketPage() {
               </button>
               <button
                 onClick={handleConfirmSaveTeam}
-                disabled={!teamName.trim() || saving}
+                disabled={saving}
                 className={
                   "flex-1 rounded-xl px-4 py-2 text-sm font-semibold " +
-                  (teamName.trim() ? "bg-accent text-black" : "border border-white/10 text-muted")
+                  (!saving ? "bg-accent text-black" : "border border-white/10 text-muted")
                 }
               >
                 Guardar
