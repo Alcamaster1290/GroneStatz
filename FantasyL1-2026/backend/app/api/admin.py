@@ -6,7 +6,8 @@ from typing import Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy import insert
 from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin
@@ -591,9 +592,15 @@ def upsert_fixture(
         "away_score": payload.away_score,
     }
 
-    stmt = pg_insert(Fixture).values(**values)
+    fixture_table = Fixture.__table__
     update_values = {k: v for k, v in values.items() if k != "match_id"}
-    stmt = stmt.on_conflict_do_update(index_elements=["match_id"], set_=update_values)
+    if db.bind and db.bind.dialect.name == "postgresql":
+        stmt = pg_insert(fixture_table).values(**values)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[fixture_table.c.match_id], set_=update_values
+        )
+    else:
+        stmt = insert(fixture_table).values(**values)
     try:
         db.execute(stmt)
         db.commit()
@@ -602,6 +609,10 @@ def upsert_fixture(
         detail = "db_integrity_error"
         if exc.orig:
             detail = f"db_integrity_error: {exc.orig}"
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+    except SQLAlchemyError as exc:
+        db.rollback()
+        detail = f"db_error: {exc}"
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
 
     fixture = db.execute(select(Fixture).where(Fixture.match_id == payload.match_id)).scalar_one()
