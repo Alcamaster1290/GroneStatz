@@ -5,9 +5,8 @@ from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete, func, select, text, update
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy import insert
+from sqlalchemy import insert, update
 from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin
@@ -592,17 +591,15 @@ def upsert_fixture(
         "away_score": payload.away_score,
     }
 
-    fixture_table = Fixture.__table__
-    update_values = {k: v for k, v in values.items() if k != "match_id"}
-    if db.bind and db.bind.dialect.name == "postgresql":
-        stmt = pg_insert(fixture_table).values(**values)
-        stmt = stmt.on_conflict_do_update(
-            index_elements=[fixture_table.c.match_id], set_=update_values
-        )
-    else:
-        stmt = insert(fixture_table).values(**values)
     try:
-        db.execute(stmt)
+        update_values = {k: v for k, v in values.items() if k != "match_id"}
+        updated = db.execute(
+            update(Fixture)
+            .where(Fixture.match_id == payload.match_id)
+            .values(**update_values)
+        )
+        if not updated.rowcount:
+            db.execute(insert(Fixture).values(**values))
         db.commit()
     except IntegrityError as exc:
         db.rollback()
