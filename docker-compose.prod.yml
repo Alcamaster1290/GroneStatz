@@ -58,6 +58,7 @@ services:
       - traefik.http.routers.api.entrypoints=websecure
       - traefik.http.routers.api.tls.certresolver=le
       - traefik.http.routers.api.middlewares=api-ratelimit,api-cors
+      - traefik.docker.network=edge
       - traefik.http.middlewares.api-ratelimit.ratelimit.average=50
       - traefik.http.middlewares.api-ratelimit.ratelimit.burst=20
       - traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlist=https://fantasyliga1peru.com,https://www.fantasyliga1peru.com
@@ -88,6 +89,7 @@ services:
       - traefik.http.routers.web.rule=Host(`fantasyliga1peru.com`,`www.fantasyliga1peru.com`)
       - traefik.http.routers.web.entrypoints=websecure
       - traefik.http.routers.web.tls.certresolver=le
+      - traefik.docker.network=edge
       - traefik.http.services.web.loadbalancer.server.port=3000
     networks:
       - edge
