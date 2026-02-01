@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete, func, select, text, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -576,54 +577,34 @@ def upsert_fixture(
     stadium = payload.stadium.strip() if payload.stadium else None
     city = payload.city.strip() if payload.city else None
 
-    fixture = db.execute(select(Fixture).where(Fixture.match_id == payload.match_id)).scalar_one_or_none()
-    def _apply_fixture_fields(target: Fixture) -> None:
-        target.round_id = round_obj.id
-        target.season_id = season.id
-        target.home_team_id = payload.home_team_id
-        target.away_team_id = payload.away_team_id
-        target.kickoff_at = kickoff_at
-        target.stadium = stadium
-        target.city = city
-        if payload.status is not None:
-            target.status = payload.status
-        if payload.home_score is not None:
-            target.home_score = payload.home_score
-        if payload.away_score is not None:
-            target.away_score = payload.away_score
+    values = {
+        "season_id": season.id,
+        "round_id": round_obj.id,
+        "match_id": payload.match_id,
+        "home_team_id": payload.home_team_id,
+        "away_team_id": payload.away_team_id,
+        "kickoff_at": kickoff_at,
+        "stadium": stadium,
+        "city": city,
+        "status": payload.status or "Programado",
+        "home_score": payload.home_score,
+        "away_score": payload.away_score,
+    }
 
-    if fixture:
-        _apply_fixture_fields(fixture)
-    else:
-        fixture = Fixture(
-            season_id=season.id,
-            round_id=round_obj.id,
-            match_id=payload.match_id,
-            home_team_id=payload.home_team_id,
-            away_team_id=payload.away_team_id,
-            kickoff_at=kickoff_at,
-            stadium=stadium,
-            city=city,
-            status=payload.status or "Programado",
-            home_score=payload.home_score,
-            away_score=payload.away_score,
-        )
-        db.add(fixture)
+    stmt = pg_insert(Fixture).values(**values)
+    update_values = {k: v for k, v in values.items() if k != "match_id"}
+    stmt = stmt.on_conflict_do_update(index_elements=["match_id"], set_=update_values)
     try:
+        db.execute(stmt)
         db.commit()
-        db.refresh(fixture)
-    except IntegrityError:
+    except IntegrityError as exc:
         db.rollback()
-        existing = (
-            db.execute(select(Fixture).where(Fixture.match_id == payload.match_id))
-            .scalar_one_or_none()
-        )
-        if not existing:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="db_integrity_error")
-        _apply_fixture_fields(existing)
-        db.commit()
-        db.refresh(existing)
-        fixture = existing
+        detail = "db_integrity_error"
+        if exc.orig:
+            detail = f"db_integrity_error: {exc.orig}"
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+
+    fixture = db.execute(select(Fixture).where(Fixture.match_id == payload.match_id)).scalar_one()
 
     return AdminFixtureOut(
         id=fixture.id,
