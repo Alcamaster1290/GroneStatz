@@ -106,7 +106,8 @@ export type AdminTeam = {
   budget_cap: number;
   budget_used: number;
   budget_left: number;
-  club_counts: Record<number, number>;
+  club_counts: Record<number, number>
+  favorite_team_id?: number | null;
   squad: AdminTeamPlayer[];
 };
 
@@ -145,7 +146,8 @@ export type FantasyTeam = {
   budget_cap: number;
   budget_used: number;
   budget_left: number;
-  club_counts: Record<number, number>;
+  club_counts: Record<number, number>
+  favorite_team_id?: number | null;
   squad: Player[];
 };
 

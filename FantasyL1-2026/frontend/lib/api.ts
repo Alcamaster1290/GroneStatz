@@ -201,6 +201,18 @@ export async function createTeam(token: string, name?: string) {
   );
 }
 
+
+export async function updateFavoriteTeam(token: string, teamId: number): Promise<FantasyTeam> {
+  return apiFetch(
+    "/fantasy/team/favorite",
+    {
+      method: "PUT",
+      body: JSON.stringify({ team_id: teamId })
+    },
+    token
+  );
+}
+
 export async function updateSquad(token: string, playerIds: number[]) {
   return apiFetch(
     "/fantasy/team/squad",

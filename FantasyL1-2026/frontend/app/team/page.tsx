@@ -16,6 +16,7 @@ import AuthPanel from "@/components/AuthPanel";
 import BottomSheet from "@/components/BottomSheet";
 import DraggablePlayer from "@/components/DraggablePlayer";
 import FabMenu from "@/components/FabMenu";
+import FavoriteTeamGate from "@/components/FavoriteTeamGate";
 import LineupSlotCard from "@/components/LineupSlotCard";
 import PlayerCard from "@/components/PlayerCard";
 import PlayerAvatarSquare from "@/components/PlayerAvatarSquare";
@@ -30,7 +31,8 @@ import {
   getRounds,
   getTeam,
   getTeams,
-  saveLineup
+  saveLineup,
+  updateFavoriteTeam
 } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
 import { Fixture, LineupSlot, Player, RoundInfo } from "@/lib/types";
@@ -442,13 +444,17 @@ export default function TeamPage() {
   const [appEnv, setAppEnv] = useState<string>("local");
   const [roundMissing, setRoundMissing] = useState(false);
   const [teamName, setTeamName] = useState("");
+  const [favoriteTeamId, setFavoriteTeamId] = useState<number | null>(null);
   const [needsTeamName, setNeedsTeamName] = useState(false);
+  const [needsFavoriteTeam, setNeedsFavoriteTeam] = useState(false);
   const [teamLoaded, setTeamLoaded] = useState(false);
   const [nameGateOpen, setNameGateOpen] = useState(false);
+  const [favoriteGateOpen, setFavoriteGateOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [welcomeSeen, setWelcomeSeen] = useState(false);
   const [postWelcomeRedirect, setPostWelcomeRedirect] = useState(false);
   const [teamNameError, setTeamNameError] = useState<string | null>(null);
+  const [favoriteError, setFavoriteError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const router = useRouter();
 
@@ -756,6 +762,10 @@ export default function TeamPage() {
         const savedName = team.name || "";
         setTeamName(savedName);
         setNeedsTeamName(!savedName.trim());
+        const favoriteId =
+          typeof team.favorite_team_id === "number" ? team.favorite_team_id : null;
+        setFavoriteTeamId(favoriteId);
+        setNeedsFavoriteTeam(!favoriteId);
         setTeamLoaded(true);
 
         try {
@@ -924,12 +934,19 @@ export default function TeamPage() {
   }, []);
 
   useEffect(() => {
-    if (teamLoaded && needsTeamName) {
-      setNameGateOpen(!welcomeOpen);
+    if (teamLoaded && (needsTeamName || needsFavoriteTeam)) {
+      if (needsFavoriteTeam) {
+        setFavoriteGateOpen(!welcomeOpen);
+        setNameGateOpen(false);
+      } else {
+        setNameGateOpen(!welcomeOpen);
+        setFavoriteGateOpen(false);
+      }
     } else {
       setNameGateOpen(false);
+      setFavoriteGateOpen(false);
     }
-  }, [teamLoaded, needsTeamName, welcomeOpen]);
+  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeOpen]);
 
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
@@ -943,12 +960,12 @@ export default function TeamPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (teamLoaded && needsTeamName && !welcomeSeen) {
+    if (teamLoaded && (needsTeamName || needsFavoriteTeam) && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
     }
-  }, [teamLoaded, needsTeamName, welcomeSeen]);
+  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeSeen]);
 
   useEffect(() => {
     if (!token || roundMissing || !currentRound) return;
@@ -1509,7 +1526,37 @@ export default function TeamPage() {
           setWelcomeSeen(true);
           setWelcomeOpen(false);
           setPostWelcomeRedirect(true);
-          setNameGateOpen(true);
+          if (needsFavoriteTeam) {
+            setFavoriteGateOpen(true);
+          } else {
+            setNameGateOpen(true);
+          }
+        }}
+      />
+
+      <FavoriteTeamGate
+        open={favoriteGateOpen}
+        selectedTeamId={favoriteTeamId}
+        onSelect={(teamId) => setFavoriteTeamId(teamId)}
+        error={favoriteError}
+        onClose={() => {
+          if (!needsFavoriteTeam) {
+            setFavoriteGateOpen(false);
+          }
+        }}
+        onSave={async () => {
+          if (!token || !favoriteTeamId) return;
+          setFavoriteError(null);
+          try {
+            await updateFavoriteTeam(token, favoriteTeamId);
+            setNeedsFavoriteTeam(false);
+            setFavoriteGateOpen(false);
+            if (needsTeamName) {
+              setNameGateOpen(true);
+            }
+          } catch {
+            setFavoriteError("No se pudo guardar el equipo favorito.");
+          }
         }}
       />
 

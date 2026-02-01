@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import AuthPanel from "@/components/AuthPanel";
+import FavoriteTeamGate from "@/components/FavoriteTeamGate";
 import TeamNameGate from "@/components/TeamNameGate";
 import WelcomeSlideshow from "@/components/WelcomeSlideshow";
 import {
@@ -12,20 +13,15 @@ import {
   getRankingGeneral,
   getRankingLeague,
   getRankingLineup,
-  getRounds,
   getTeam,
+  getTeams,
   joinLeague,
   leaveLeague,
-  removeLeagueMember
+  removeLeagueMember,
+  updateFavoriteTeam
 } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
-import {
-  League,
-  PublicLineup,
-  PublicLineupSlot,
-  RankingResponse,
-  RoundInfo
-} from "@/lib/types";
+import { League, PublicLineup, PublicLineupSlot, RankingResponse } from "@/lib/types";
 
 const positionLabels: Record<string, string> = {
   G: "Arquero",
@@ -37,13 +33,11 @@ const positionLabels: Record<string, string> = {
 function RankingTable({
   title,
   data,
-  onSelectTeam,
-  roundStatusMap
+  onSelectTeam
 }: {
   title: string;
   data: RankingResponse | null;
   onSelectTeam?: (fantasyTeamId: number, teamName: string) => void;
-  roundStatusMap?: Map<number, boolean>;
 }) {
   if (!data || data.entries.length === 0) {
     return (
@@ -103,16 +97,7 @@ function RankingTable({
                     key={`${entry.fantasy_team_id}-${round.round_number}`}
                     className="rounded-full border border-white/10 px-2 py-1"
                   >
-                    <span className="flex flex-col leading-tight">
-                      <span>
-                        R{round.round_number}: {round.cumulative.toFixed(1)}
-                      </span>
-                      {roundStatusMap?.has(round.round_number) ? (
-                        <span className="text-[9px] text-muted">
-                          {roundStatusMap.get(round.round_number) ? "Cerrada" : "Pendiente"}
-                        </span>
-                      ) : null}
-                    </span>
+                    R{round.round_number}: {round.cumulative.toFixed(1)}
                   </span>
                 ))
               )}
@@ -133,6 +118,11 @@ export default function RankingPage() {
   const [teamName, setTeamName] = useState("");
   const [needsTeamName, setNeedsTeamName] = useState(false);
   const [teamId, setTeamId] = useState<number | null>(null);
+  const [favoriteTeamId, setFavoriteTeamId] = useState<number | null>(null);
+  const [favoriteGateOpen, setFavoriteGateOpen] = useState(false);
+  const [needsFavoriteTeam, setNeedsFavoriteTeam] = useState(false);
+  const [favoriteError, setFavoriteError] = useState<string | null>(null);
+  const [teams, setTeams] = useState<{ id: number; name_short?: string; name_full?: string }[]>([]);
   const [teamLoaded, setTeamLoaded] = useState(false);
   const [nameGateOpen, setNameGateOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
@@ -146,7 +136,6 @@ export default function RankingPage() {
   const [leagueRanking, setLeagueRanking] = useState<RankingResponse | null>(null);
   const [generalRanking, setGeneralRanking] = useState<RankingResponse | null>(null);
   const [rankingError, setRankingError] = useState<string | null>(null);
-  const [roundsInfo, setRoundsInfo] = useState<RoundInfo[]>([]);
 
   const [createName, setCreateName] = useState("");
   const [joinCode, setJoinCode] = useState("");
@@ -174,22 +163,32 @@ export default function RankingPage() {
       .then((team) => {
         setTeamName(team.name || "");
         setTeamId(team.id ?? null);
+        setFavoriteTeamId(team.favorite_team_id ?? null);
+        setNeedsFavoriteTeam(!team.favorite_team_id);
         setNeedsTeamName(!team.name?.trim());
         setTeamLoaded(true);
       })
       .catch(() => {
         setNeedsTeamName(true);
+        setNeedsFavoriteTeam(true);
         setTeamLoaded(true);
       });
   }, [token]);
 
   useEffect(() => {
-    if (teamLoaded && needsTeamName) {
-      setNameGateOpen(!welcomeOpen);
+    if (teamLoaded && (needsTeamName || needsFavoriteTeam)) {
+      if (needsFavoriteTeam) {
+        setFavoriteGateOpen(!welcomeOpen);
+        setNameGateOpen(false);
+      } else {
+        setNameGateOpen(!welcomeOpen);
+        setFavoriteGateOpen(false);
+      }
     } else {
+      setFavoriteGateOpen(false);
       setNameGateOpen(false);
     }
-  }, [teamLoaded, needsTeamName, welcomeOpen]);
+  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeOpen]);
 
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
@@ -203,12 +202,12 @@ export default function RankingPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (teamLoaded && needsTeamName && !welcomeSeen) {
+    if (teamLoaded && (needsTeamName || needsFavoriteTeam) && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
     }
-  }, [teamLoaded, needsTeamName, welcomeSeen]);
+  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeSeen]);
 
   const loadLeague = async () => {
     if (!token) return;
@@ -249,7 +248,7 @@ export default function RankingPage() {
     getRankingGeneral(token)
       .then(setGeneralRanking)
       .catch((err) => setRankingError(String(err)));
-    getRounds().then(setRoundsInfo).catch(() => setRoundsInfo([]));
+    getTeams().then(setTeams).catch(() => setTeams([]));
   }, [token]);
 
   useEffect(() => {
@@ -358,9 +357,11 @@ export default function RankingPage() {
     return lineupData?.slots.filter((slot) => !slot.is_starter) ?? [];
   }, [lineupData]);
 
-  const roundStatusMap = useMemo(() => {
-    return new Map(roundsInfo.map((round) => [round.round_number, round.is_closed]));
-  }, [roundsInfo]);
+  const teamNameById = useMemo(() => {
+    return new Map(
+      teams.map((team) => [team.id, team.name_short || team.name_full || `Equipo ${team.id}`])
+    );
+  }, [teams]);
 
   const renderSlot = (slot: PublicLineupSlot) => {
     const player = slot.player ?? null;
@@ -432,6 +433,30 @@ export default function RankingPage() {
       <div>
         <h1 className="text-xl font-semibold">Ranking</h1>
         <p className="text-sm text-muted">Ligas privadas y ranking general.</p>
+        <div className="mt-3 flex items-center gap-2 text-xs text-muted">
+          <span>Equipo favorito:</span>
+          {favoriteTeamId ? (
+            <span className="flex items-center gap-2 rounded-full border border-white/10 px-2 py-1">
+              <span className="h-5 w-5 rounded-full bg-surface2/60 p-1">
+                <img
+                  src={`/images/teams/${favoriteTeamId}.png`}
+                  alt=""
+                  className="h-full w-full object-contain"
+                />
+              </span>
+              <span className="text-ink">
+                {teamNameById.get(favoriteTeamId) || `Equipo ${favoriteTeamId}`}
+              </span>
+            </span>
+          ) : (
+            <button
+              onClick={() => setFavoriteGateOpen(true)}
+              className="rounded-full border border-white/10 px-3 py-1 text-xs text-ink"
+            >
+              Elegir equipo
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="glass space-y-3 rounded-2xl p-4">
@@ -451,7 +476,6 @@ export default function RankingPage() {
               title={`Tabla ${league.name}`}
               data={leagueRanking}
               onSelectTeam={handleViewLineup}
-              roundStatusMap={roundStatusMap}
             />
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted">
@@ -545,7 +569,6 @@ export default function RankingPage() {
         title="Ranking general"
         data={generalRanking}
         onSelectTeam={handleViewLineup}
-        roundStatusMap={roundStatusMap}
       />
 
       {lineupOpen ? (
@@ -607,9 +630,40 @@ export default function RankingPage() {
           localStorage.setItem(welcomeKey, "1");
           setWelcomeSeen(true);
           setWelcomeOpen(false);
-          setNameGateOpen(true);
+          if (needsFavoriteTeam) {
+            setFavoriteGateOpen(true);
+          } else {
+            setNameGateOpen(true);
+          }
         }}
       />
+
+      <FavoriteTeamGate
+        open={favoriteGateOpen}
+        selectedTeamId={favoriteTeamId}
+        onSelect={(teamId) => setFavoriteTeamId(teamId)}
+        onSave={async () => {
+          if (!token || !favoriteTeamId) return;
+          setFavoriteError(null);
+          try {
+            await updateFavoriteTeam(token, favoriteTeamId);
+            setNeedsFavoriteTeam(false);
+            setFavoriteGateOpen(false);
+            setNameGateOpen(true);
+          } catch (err) {
+            setFavoriteError(String(err));
+          }
+        }}
+        onClose={() => {
+          if (!needsFavoriteTeam) {
+            setFavoriteGateOpen(false);
+          }
+        }}
+      />
+
+      {favoriteError ? (
+        <div className="glass rounded-2xl p-3 text-xs text-warning">{favoriteError}</div>
+      ) : null}
 
       <TeamNameGate
         open={nameGateOpen}

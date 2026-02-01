@@ -95,6 +95,7 @@ class FantasyTeam(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
     season_id = Column(Integer, ForeignKey("seasons.id"), nullable=False)
     name = Column(String(60), nullable=True)
+    favorite_team_id = Column(Integer, ForeignKey("teams.id"), nullable=True)
     budget_cap = Column(Numeric(5, 1), nullable=False, server_default="100.0")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 

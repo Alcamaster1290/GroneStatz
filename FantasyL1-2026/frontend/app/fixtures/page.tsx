@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 
 import AuthPanel from "@/components/AuthPanel";
+import FavoriteTeamGate from "@/components/FavoriteTeamGate";
 import TeamNameGate from "@/components/TeamNameGate";
 import WelcomeSlideshow from "@/components/WelcomeSlideshow";
-import { createTeam, getFixtures, getTeam, getTeams } from "@/lib/api";
+import { createTeam, getFixtures, getRounds, getTeam, getTeams, updateFavoriteTeam } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
-import { Fixture } from "@/lib/types";
+import { Fixture, RoundInfo } from "@/lib/types";
 
 function TeamLogo({ teamId }: { teamId: number | null | undefined }) {
   const [hidden, setHidden] = useState(false);
@@ -81,13 +82,19 @@ export default function FixturesPage() {
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [teams, setTeams] = useState<{ id: number; name_short?: string; name_full?: string }[]>([]);
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
+  const [roundsInfo, setRoundsInfo] = useState<RoundInfo[]>([]);
+  const [roundStatus, setRoundStatus] = useState<string | null>(null);
   const [teamName, setTeamName] = useState("");
+  const [favoriteTeamId, setFavoriteTeamId] = useState<number | null>(null);
   const [needsTeamName, setNeedsTeamName] = useState(false);
+  const [needsFavoriteTeam, setNeedsFavoriteTeam] = useState(false);
   const [teamLoaded, setTeamLoaded] = useState(false);
   const [nameGateOpen, setNameGateOpen] = useState(false);
+  const [favoriteGateOpen, setFavoriteGateOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [welcomeSeen, setWelcomeSeen] = useState(false);
   const [teamNameError, setTeamNameError] = useState<string | null>(null);
+  const [favoriteError, setFavoriteError] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
@@ -106,6 +113,10 @@ export default function FixturesPage() {
       .then((team) => {
         setTeamName(team.name || "");
         setNeedsTeamName(!team.name?.trim());
+        const favoriteId =
+          typeof team.favorite_team_id === "number" ? team.favorite_team_id : null;
+        setFavoriteTeamId(favoriteId);
+        setNeedsFavoriteTeam(!favoriteId);
         setTeamLoaded(true);
       })
       .catch(() => {
@@ -115,12 +126,19 @@ export default function FixturesPage() {
   }, [token]);
 
   useEffect(() => {
-    if (teamLoaded && needsTeamName) {
-      setNameGateOpen(!welcomeOpen);
+    if (teamLoaded && (needsTeamName || needsFavoriteTeam)) {
+      if (needsFavoriteTeam) {
+        setFavoriteGateOpen(!welcomeOpen);
+        setNameGateOpen(false);
+      } else {
+        setNameGateOpen(!welcomeOpen);
+        setFavoriteGateOpen(false);
+      }
     } else {
       setNameGateOpen(false);
+      setFavoriteGateOpen(false);
     }
-  }, [teamLoaded, needsTeamName, welcomeOpen]);
+  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeOpen]);
 
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
@@ -134,16 +152,17 @@ export default function FixturesPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (teamLoaded && needsTeamName && !welcomeSeen) {
+    if (teamLoaded && (needsTeamName || needsFavoriteTeam) && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
     }
-  }, [teamLoaded, needsTeamName, welcomeSeen]);
+  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeSeen]);
 
   useEffect(() => {
     getFixtures().then(setFixtures).catch(() => undefined);
     getTeams().then(setTeams).catch(() => undefined);
+    getRounds().then(setRoundsInfo).catch(() => setRoundsInfo([]));
   }, []);
 
   const roundNumbers = useMemo(() => {
@@ -159,6 +178,19 @@ export default function FixturesPage() {
     if (selectedRound && roundNumbers.includes(selectedRound)) return;
     setSelectedRound(roundNumbers[0]);
   }, [roundNumbers, selectedRound]);
+
+  useEffect(() => {
+    if (!selectedRound) {
+      setRoundStatus(null);
+      return;
+    }
+    const info = roundsInfo.find((round) => round.round_number === selectedRound);
+    if (info) {
+      setRoundStatus(info.is_closed ? "Cerrada" : "Pendiente");
+    } else {
+      setRoundStatus(null);
+    }
+  }, [roundsInfo, selectedRound]);
 
   const teamMap = useMemo(() => {
     return new Map(
@@ -214,6 +246,11 @@ export default function FixturesPage() {
             {"<"}
           </button>
           <span className="text-muted">Ronda {selectedRound ?? "-"}</span>
+          {roundStatus ? (
+            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-muted">
+              {roundStatus}
+            </span>
+          ) : null}
           <button
             type="button"
             onClick={() => {
@@ -235,7 +272,14 @@ export default function FixturesPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Ronda {selectedRound}</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-semibold">Ronda {selectedRound}</h2>
+            {roundStatus ? (
+              <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-muted">
+                {roundStatus}
+              </span>
+            ) : null}
+          </div>
           {Object.entries(roundsByDate)
             .sort(([a], [b]) => {
               if (a === "TBD") return 1;
@@ -287,7 +331,37 @@ export default function FixturesPage() {
           localStorage.setItem(welcomeKey, "1");
           setWelcomeSeen(true);
           setWelcomeOpen(false);
-          setNameGateOpen(true);
+          if (needsFavoriteTeam) {
+            setFavoriteGateOpen(true);
+          } else {
+            setNameGateOpen(true);
+          }
+        }}
+      />
+
+      <FavoriteTeamGate
+        open={favoriteGateOpen}
+        selectedTeamId={favoriteTeamId}
+        onSelect={(teamId) => setFavoriteTeamId(teamId)}
+        error={favoriteError}
+        onClose={() => {
+          if (!needsFavoriteTeam) {
+            setFavoriteGateOpen(false);
+          }
+        }}
+        onSave={async () => {
+          if (!token || !favoriteTeamId) return;
+          setFavoriteError(null);
+          try {
+            await updateFavoriteTeam(token, favoriteTeamId);
+            setNeedsFavoriteTeam(false);
+            setFavoriteGateOpen(false);
+            if (needsTeamName) {
+              setNameGateOpen(true);
+            }
+          } catch {
+            setFavoriteError("No se pudo guardar el equipo favorito.");
+          }
         }}
       />
 

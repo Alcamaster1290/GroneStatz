@@ -23,6 +23,7 @@ from app.schemas.fantasy import (
     FantasyTeamCreate,
     FantasyTeamOut,
     FantasyTeamPlayerOut,
+    FavoriteTeamUpdateIn,
     LineupOut,
     LineupUpdateIn,
     SquadUpdateIn,
@@ -128,6 +129,7 @@ def _build_team_response(
     return FantasyTeamOut(
         id=team.id,
         name=team.name,
+        favorite_team_id=team.favorite_team_id,
         budget_cap=float(team.budget_cap),
         budget_used=budget_used,
         budget_left=budget_left,
@@ -174,6 +176,22 @@ def update_squad(
     round_id = current_round.id if current_round else None
     replace_squad(db, team.id, payload.player_ids, bought_round_id=round_id)
     return ValidationResult(ok=True, errors=[])
+
+
+@router.put("/team/favorite", response_model=FantasyTeamOut)
+def update_favorite_team(
+    payload: FavoriteTeamUpdateIn,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+) -> FantasyTeamOut:
+    season = get_or_create_season(db)
+    team = get_or_create_fantasy_team(db, user.id, season.id)
+    exists = db.execute(select(Team.id).where(Team.id == payload.team_id)).scalar_one_or_none()
+    if not exists:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="team_not_found")
+    team.favorite_team_id = payload.team_id
+    db.commit()
+    return _build_team_response(db, team.id)
 
 
 @router.get("/lineup", response_model=LineupOut)

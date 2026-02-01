@@ -8,6 +8,10 @@ class FantasyTeamCreate(BaseModel):
     name: Optional[str] = None
 
 
+class FavoriteTeamUpdateIn(BaseModel):
+    team_id: int
+
+
 class FantasyTeamPlayerOut(BaseModel):
     player_id: int
     name: str
@@ -28,6 +32,7 @@ class FantasyTeamPlayerOut(BaseModel):
 class FantasyTeamOut(BaseModel):
     id: int
     name: Optional[str]
+    favorite_team_id: Optional[int] = None
     budget_cap: float
     budget_used: float
     budget_left: float
