@@ -859,11 +859,25 @@ export default function TeamPage() {
     if (roundStatus !== "Pendiente") {
       return;
     }
-    setLineupSlots(buildDefaultSlots());
+    const emptySlots = buildDefaultSlots();
+    setLineupSlots(emptySlots);
     setCaptainId(null);
     setViceCaptainId(null);
+    setSaveErrors([]);
     try {
-      localStorage.removeItem(draftKey);
+      if (currentRound) {
+        localStorage.setItem(
+          draftKey,
+          JSON.stringify({
+            roundNumber: currentRound,
+            slots: emptySlots,
+            captainId: null,
+            viceCaptainId: null
+          })
+        );
+      } else {
+        localStorage.removeItem(draftKey);
+      }
     } catch {
       // ignore storage errors
     }
