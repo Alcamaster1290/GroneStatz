@@ -599,7 +599,8 @@ def upsert_fixture(
             .values(**update_values)
         )
         if not updated.rowcount:
-            db.execute(insert(Fixture).values(**values))
+            next_id = db.execute(select(func.coalesce(func.max(Fixture.id), 0) + 1)).scalar_one()
+            db.execute(insert(Fixture).values(id=next_id, **values))
         db.commit()
     except IntegrityError as exc:
         db.rollback()
