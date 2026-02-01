@@ -18,6 +18,7 @@ from app.models import (
     PlayerRoundStat,
     PointsRound,
     Round,
+    Team,
 )
 from app.schemas.fantasy import (
     FantasyTeamCreate,

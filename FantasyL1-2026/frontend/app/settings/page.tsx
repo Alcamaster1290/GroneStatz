@@ -61,7 +61,12 @@ export default function SettingsPage() {
   }, [token]);
 
   useEffect(() => {
-    if (teamLoaded && (needsTeamName || needsFavoriteTeam)) {
+    if (!teamLoaded) {
+      setNameGateOpen(false);
+      setFavoriteGateOpen(false);
+      return;
+    }
+    if (!welcomeSeen && (needsTeamName || needsFavoriteTeam)) {
       if (needsFavoriteTeam) {
         setFavoriteGateOpen(!welcomeOpen);
         setNameGateOpen(false);
@@ -69,11 +74,15 @@ export default function SettingsPage() {
         setNameGateOpen(!welcomeOpen);
         setFavoriteGateOpen(false);
       }
+      return;
+    }
+    setFavoriteGateOpen(false);
+    if (needsTeamName) {
+      setNameGateOpen(true);
     } else {
       setNameGateOpen(false);
-      setFavoriteGateOpen(false);
     }
-  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeOpen]);
+  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeOpen, welcomeSeen]);
 
   const welcomeKey = `fantasy_welcome_seen_${userEmail && userEmail.trim() ? userEmail.trim() : "anon"}`;
 

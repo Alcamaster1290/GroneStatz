@@ -176,7 +176,12 @@ export default function RankingPage() {
   }, [token]);
 
   useEffect(() => {
-    if (teamLoaded && (needsTeamName || needsFavoriteTeam)) {
+    if (!teamLoaded) {
+      setFavoriteGateOpen(false);
+      setNameGateOpen(false);
+      return;
+    }
+    if (!welcomeSeen && (needsTeamName || needsFavoriteTeam)) {
       if (needsFavoriteTeam) {
         setFavoriteGateOpen(!welcomeOpen);
         setNameGateOpen(false);
@@ -184,11 +189,15 @@ export default function RankingPage() {
         setNameGateOpen(!welcomeOpen);
         setFavoriteGateOpen(false);
       }
+      return;
+    }
+    setFavoriteGateOpen(false);
+    if (needsTeamName) {
+      setNameGateOpen(true);
     } else {
-      setFavoriteGateOpen(false);
       setNameGateOpen(false);
     }
-  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeOpen]);
+  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeOpen, welcomeSeen]);
 
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
