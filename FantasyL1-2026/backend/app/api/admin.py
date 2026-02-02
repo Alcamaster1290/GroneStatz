@@ -778,17 +778,21 @@ def upsert_player_stats(
     ]
 
     for row in rows:
-        if row["clean_sheet"] is not None and row["goals_conceded"] is not None:
-            continue
         fixture = fixture_map.get(row["match_id"])
         player = player_map.get(row["player_id"])
         if not fixture or not player:
             continue
-        conceded = row["goals_conceded"]
+        if fixture.home_score is None or fixture.away_score is None:
+            continue
+        total_goals = int(fixture.home_score or 0) + int(fixture.away_score or 0)
+        if total_goals <= 0:
+            continue
+        conceded = _goals_conceded_from_fixture(fixture, player.team_id)
         if conceded is None:
-            conceded = _goals_conceded_from_fixture(fixture, player.team_id)
+            continue
+        if row["goals_conceded"] in (None, 0):
             row["goals_conceded"] = conceded
-        if row["clean_sheet"] is None and conceded is not None:
+        if row["clean_sheet"] in (None, 0):
             position = (player.position or "").upper()
             minutes = int(row["minutesplayed"] or 0)
             if position in {"G", "GK", "D", "M"} and minutes > 0:
