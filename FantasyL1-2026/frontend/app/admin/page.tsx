@@ -10,6 +10,7 @@ import {
   getAdminLeagues,
   getAdminLogs,
   getAdminPriceMovements,
+  getAdminTransfers,
   getAdminRounds,
   getAdminFixtures,
   getAdminTeams,
@@ -29,6 +30,7 @@ import {
   AdminRound,
   AdminFixture,
   AdminPriceMovement,
+  AdminTransfer,
   AdminTeam,
   AdminTeamLineup,
   FixtureStatus
@@ -115,6 +117,10 @@ export default function AdminTeamsPage() {
   const [priceMovements, setPriceMovements] = useState<AdminPriceMovement[]>([]);
   const [priceLoading, setPriceLoading] = useState(false);
   const [priceError, setPriceError] = useState<string | null>(null);
+  const [transferRound, setTransferRound] = useState("");
+  const [transferLogs, setTransferLogs] = useState<AdminTransfer[]>([]);
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [transferError, setTransferError] = useState<string | null>(null);
   const [rounds, setRounds] = useState<AdminRound[]>([]);
   const [roundsLoading, setRoundsLoading] = useState(false);
   const [roundsError, setRoundsError] = useState<string | null>(null);
@@ -543,6 +549,25 @@ export default function AdminTeamsPage() {
     }
   };
 
+  const handleLoadTransfers = async () => {
+    if (!adminToken) {
+      setTransferError("admin_token_required");
+      return;
+    }
+    setTransferError(null);
+    setTransferLoading(true);
+    try {
+      const roundValue = transferRound ? Number(transferRound) : undefined;
+      const data = await getAdminTransfers(adminToken, roundValue);
+      setTransferLogs(data);
+      localStorage.setItem(ADMIN_TOKEN_KEY, adminToken);
+    } catch (err) {
+      setTransferError(String(err));
+    } finally {
+      setTransferLoading(false);
+    }
+  };
+
   const handleLoadLineups = async () => {
     if (!adminToken) {
       setLineupsError("admin_token_required");
@@ -684,108 +709,138 @@ export default function AdminTeamsPage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
         <h1 className="text-xl font-semibold">Dashboard</h1>
         <p className="text-sm text-muted">Equipos guardados por usuario.</p>
       </div>
 
-      <div className="glass space-y-3 rounded-2xl p-4">
-        <label className="text-xs text-muted">Admin Token</label>
-        <input
-          value={adminToken}
-          onChange={(event) => setAdminToken(event.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
-        />
-        <p className="text-xs text-muted">Usa el valor de `ADMIN_TOKEN` en `FantasyL1-2026/.env`.</p>
-        <label className="text-xs text-muted">Season year (opcional)</label>
-        <input
-          value={seasonYear}
-          onChange={(event) => setSeasonYear(event.target.value)}
-          className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
-        />
-        <button
-          onClick={handleLoad}
-          className="w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
-        >
-          Cargar equipos
-        </button>
-        {error ? <p className="text-xs text-warning">{error}</p> : null}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="glass rounded-2xl border border-white/10 px-4 py-3 text-xs">
+          <p className="text-muted">Equipos</p>
+          <p className="text-lg font-semibold text-ink">{teams.length}</p>
+        </div>
+        <div className="glass rounded-2xl border border-white/10 px-4 py-3 text-xs">
+          <p className="text-muted">Rondas</p>
+          <p className="text-lg font-semibold text-ink">{rounds.length}</p>
+        </div>
+        <div className="glass rounded-2xl border border-white/10 px-4 py-3 text-xs">
+          <p className="text-muted">Jugadores</p>
+          <p className="text-lg font-semibold text-ink">{adminPlayersSummary.total}</p>
+          <p className="text-[11px] text-muted">
+            Lesionados {adminPlayersSummary.injured} - Sin elegir {adminPlayersSummary.unselected}
+          </p>
+        </div>
+        <div className="glass rounded-2xl border border-white/10 px-4 py-3 text-xs">
+          <p className="text-muted">Movimientos</p>
+          <p className="text-lg font-semibold text-ink">{priceMovements.length}</p>
+          <p className="text-[11px] text-muted">Transferencias {transferLogs.length}</p>
+        </div>
       </div>
 
-      <div className="space-y-2 pt-2">
-        <h2 className="text-lg font-semibold">Cierre de rondas</h2>
-        <p className="text-sm text-muted">Marca rondas como cerradas.</p>
-      </div>
-
-      <div className="glass space-y-3 rounded-2xl p-4">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex flex-wrap gap-2">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-4">
+          <div className="glass space-y-3 rounded-2xl p-4">
+            <label className="text-xs text-muted">Admin Token</label>
             <input
-              type="number"
-              value={openRoundNumber}
-              onChange={(event) => setOpenRoundNumber(event.target.value)}
-              placeholder="Ronda a abrir"
-              className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+              value={adminToken}
+              onChange={(event) => setAdminToken(event.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+            />
+            <p className="text-xs text-muted">Usa el valor de `ADMIN_TOKEN` en `FantasyL1-2026/.env`.</p>
+            <label className="text-xs text-muted">Season year (opcional)</label>
+            <input
+              value={seasonYear}
+              onChange={(event) => setSeasonYear(event.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
             />
             <button
-              onClick={handleOpenRound}
-              className="rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+              onClick={handleLoad}
+              className="w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
             >
-              Activar ronda
+              Cargar equipos
             </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <input
-              type="number"
-              value={closeRoundNumber}
-              onChange={(event) => setCloseRoundNumber(event.target.value)}
-              placeholder="Ronda a cerrar"
-              className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
-            />
-            <button
-              onClick={handleCloseRound}
-              className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
-            >
-              Cerrar ronda
-            </button>
+            {error ? <p className="text-xs text-warning">{error}</p> : null}
           </div>
         </div>
-        <button
-          onClick={handleLoadRounds}
-          className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
-        >
-          Ver rondas
-        </button>
-        {roundActionMessage ? <p className="text-xs text-muted">{roundActionMessage}</p> : null}
-        {roundsError ? <p className="text-xs text-warning">{roundsError}</p> : null}
-        {roundsLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
-        {rounds.length > 0 ? (
+
+        <div className="space-y-4">
           <div className="space-y-2">
-            {rounds.map((round) => (
-              <div
-                key={round.id}
-                className="flex items-center justify-between rounded-2xl border border-white/10 px-3 py-2 text-xs"
-              >
-                <div>
-                  <p className="text-ink">Ronda {round.round_number}</p>
-                  <p className="text-muted">
-                    {round.is_closed ? "Cerrada" : "Abierta"}
-                  </p>
-                </div>
-                <span
-                  className={
-                    round.is_closed ? "text-emerald-300" : "text-amber-300"
-                  }
-                >
-                  {round.is_closed ? "OK" : "Pendiente"}
-                </span>
-              </div>
-            ))}
+            <h2 className="text-lg font-semibold">Cierre de rondas</h2>
+            <p className="text-sm text-muted">Marca rondas como cerradas.</p>
           </div>
-        ) : null}
+
+          <div className="glass space-y-3 rounded-2xl p-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex flex-wrap gap-2">
+                <input
+                  type="number"
+                  value={openRoundNumber}
+                  onChange={(event) => setOpenRoundNumber(event.target.value)}
+                  placeholder="Ronda a abrir"
+                  className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+                />
+                <button
+                  onClick={handleOpenRound}
+                  className="rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+                >
+                  Activar ronda
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <input
+                  type="number"
+                  value={closeRoundNumber}
+                  onChange={(event) => setCloseRoundNumber(event.target.value)}
+                  placeholder="Ronda a cerrar"
+                  className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+                />
+                <button
+                  onClick={handleCloseRound}
+                  className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+                >
+                  Cerrar ronda
+                </button>
+              </div>
+            </div>
+            <button
+              onClick={handleLoadRounds}
+              className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+            >
+              Ver rondas
+            </button>
+            {roundActionMessage ? <p className="text-xs text-muted">{roundActionMessage}</p> : null}
+            {roundsError ? <p className="text-xs text-warning">{roundsError}</p> : null}
+            {roundsLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
+            {rounds.length > 0 ? (
+              <div className="space-y-2">
+                {rounds.map((round) => (
+                  <div
+                    key={round.id}
+                    className="flex items-center justify-between rounded-2xl border border-white/10 px-3 py-2 text-xs"
+                  >
+                    <div>
+                      <p className="text-ink">Ronda {round.round_number}</p>
+                      <p className="text-muted">
+                        {round.is_closed ? "Cerrada" : "Abierta"}
+                      </p>
+                    </div>
+                    <span
+                      className={
+                        round.is_closed ? "text-emerald-300" : "text-amber-300"
+                      }
+                    >
+                      {round.is_closed ? "OK" : "Pendiente"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
       </div>
 
+      <div className="columns-1 lg:columns-2 lg:gap-6">
       <div className="space-y-2 pt-2">
         <h2 className="text-lg font-semibold">XI por ronda pendiente</h2>
         <p className="text-sm text-muted">
@@ -1593,6 +1648,76 @@ export default function AdminTeamsPage() {
           </div>
         )}
       </div>
+
+      <div className="space-y-2 pt-2">
+        <h2 className="text-lg font-semibold">Transferencias por ronda</h2>
+        <p className="text-sm text-muted">
+          Registro de compras/ventas realizadas por los usuarios.
+        </p>
+      </div>
+
+      <div className="glass space-y-3 rounded-2xl p-4">
+        <div className="flex flex-wrap gap-2">
+          <input
+            type="number"
+            value={transferRound}
+            onChange={(event) => setTransferRound(event.target.value)}
+            placeholder="Ronda (opcional)"
+            className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+          />
+          <button
+            onClick={handleLoadTransfers}
+            className="rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+          >
+            Cargar transferencias
+          </button>
+        </div>
+        {transferError ? <p className="text-xs text-warning">{transferError}</p> : null}
+        {transferLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
+        {!transferLoading && transferLogs.length === 0 ? (
+          <p className="text-xs text-muted">Sin transferencias registradas.</p>
+        ) : (
+          <div className="space-y-2">
+            {transferLogs.map((transfer) => (
+              <div
+                key={transfer.id}
+                className="rounded-2xl border border-white/10 px-3 py-2 text-xs text-ink"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted">
+                  <span>Ronda {transfer.round_number}</span>
+                  <span>{transfer.user_email}</span>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] text-muted">Sale</p>
+                    <p className="text-sm font-semibold">
+                      {transfer.out_player?.short_name || transfer.out_player?.name || "?"}
+                    </p>
+                    <p className="text-[11px] text-muted">
+                      {transfer.out_price.toFixed(1)} M - actual {transfer.out_price_current.toFixed(1)} M
+                    </p>
+                  </div>
+                  <div className="text-center text-xs text-muted">-></div>
+                  <div className="text-right">
+                    <p className="text-[11px] text-muted">Entra</p>
+                    <p className="text-sm font-semibold">
+                      {transfer.in_player?.short_name || transfer.in_player?.name || "?"}
+                    </p>
+                    <p className="text-[11px] text-muted">
+                      {transfer.in_price.toFixed(1)} M - actual {transfer.in_price_current.toFixed(1)} M
+                    </p>
+                    <p className="text-[11px] text-muted">
+                      Fee {transfer.transfer_fee.toFixed(1)} M - Presupuesto {transfer.budget_after.toFixed(1)} M
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      </div>
     </div>
   );
 }
+

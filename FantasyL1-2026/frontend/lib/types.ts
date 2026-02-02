@@ -180,6 +180,31 @@ export type AdminPriceMovement = {
   delta: number;
 };
 
+export type AdminTransferPlayer = {
+  player_id: number;
+  name: string;
+  short_name?: string | null;
+  position: Position | string;
+  team_id: number;
+};
+
+export type AdminTransfer = {
+  id: number;
+  fantasy_team_id: number;
+  team_name?: string | null;
+  user_email: string;
+  round_number: number;
+  created_at: string;
+  out_player?: AdminTransferPlayer | null;
+  in_player?: AdminTransferPlayer | null;
+  out_price: number;
+  in_price: number;
+  out_price_current: number;
+  in_price_current: number;
+  transfer_fee: number;
+  budget_after: number;
+};
+
 export type AdminRound = {
   id: number;
   round_number: number;

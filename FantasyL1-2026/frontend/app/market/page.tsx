@@ -16,6 +16,7 @@ import {
   getTeam,
   getTeams,
   getTransferCount,
+  transferPlayer,
   updateSquad
 } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
@@ -467,6 +468,13 @@ export default function MarketPage() {
 
   useEffect(() => {
     if (!token) return;
+    getTransferCount(token)
+      .then(setTransferInfo)
+      .catch(() => setTransferInfo(null));
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
     if (!sheetOpen) return;
     getTransferCount(token)
       .then(setTransferInfo)
@@ -756,11 +764,21 @@ export default function MarketPage() {
         detail: "Intenta de nuevo o ajusta el catalogo.",
         tone: "warning"
       },
-      round_closed: {
-        title: "Ronda cerrada",
-        detail: "La ronda esta cerrada. Guardaremos el equipo para la siguiente ronda.",
-        tone: "danger"
-      },
+        round_closed: {
+          title: "Ronda cerrada",
+          detail: "La ronda esta cerrada. Guardaremos el equipo para la siguiente ronda.",
+          tone: "danger"
+        },
+        out_player_not_in_squad: {
+          title: "Jugador no esta en tu plantel",
+          detail: "Selecciona un jugador que ya forme parte de tu equipo.",
+          tone: "danger"
+        },
+        in_player_already_in_squad: {
+          title: "Jugador ya esta en tu plantel",
+          detail: "El jugador elegido ya pertenece a tu equipo.",
+          tone: "warning"
+        },
       rounds_not_configured: {
         title: "Sin rondas activas",
         detail: "Carga rondas desde Admin para habilitar Mercado.",
@@ -805,7 +823,7 @@ export default function MarketPage() {
     );
   };
 
-  const handleConfirmPlayer = () => {
+  const handleConfirmPlayer = async () => {
     if (!inPlayerId) return;
     const incoming = playersBase.find((player) => player.player_id === inPlayerId);
     if (!incoming) return;
@@ -818,16 +836,37 @@ export default function MarketPage() {
       return;
     }
 
-    setDraftSquad((prev) => {
-      let next = prev;
-      if (outPlayerId) {
-        next = prev.filter((player) => player.player_id !== outPlayerId);
+    const shouldTransfer =
+      Boolean(outPlayerId) && Boolean(token) && squad.length === 15 && draftLoaded;
+
+    if (shouldTransfer && outPlayerId && token) {
+      try {
+        await transferPlayer(token, outPlayerId, incoming.player_id, currentRoundNumber || undefined);
+        const team = await getTeam(token);
+        setSquad(team.squad || []);
+        setDraftSquad(team.squad || []);
+        setBudgetCap(Number.isFinite(team.budget_cap) ? team.budget_cap : 100);
+        getTransferCount(token)
+          .then(setTransferInfo)
+          .catch(() => setTransferInfo(null));
+        setSaveMessage("Transferencia guardada");
+      } catch (err) {
+        const codes = splitErrorCodes(err);
+        setActionError(codes[0] || "api_error");
+        return;
       }
-      if (!next.some((player) => player.player_id === incoming.player_id)) {
-        next = [...next, incoming];
-      }
-      return next;
-    });
+    } else {
+      setDraftSquad((prev) => {
+        let next = prev;
+        if (outPlayerId) {
+          next = prev.filter((player) => player.player_id !== outPlayerId);
+        }
+        if (!next.some((player) => player.player_id === incoming.player_id)) {
+          next = [...next, incoming];
+        }
+        return next;
+      });
+    }
 
     setSheetOpen(false);
     setInPlayerId(null);
@@ -1060,6 +1099,9 @@ export default function MarketPage() {
         token,
         draftSquad.map((player) => player.player_id)
       );
+      getTransferCount(token)
+        .then(setTransferInfo)
+        .catch(() => setTransferInfo(null));
       const team = await getTeam(token);
       setSquad(team.squad || []);
       setDraftSquad(team.squad || []);
@@ -1096,6 +1138,20 @@ export default function MarketPage() {
             }
           >
             Max 3 jugadores del mismo club
+          </span>
+          <span
+            className={
+              "rounded-full border px-3 py-1 " +
+              (transferInfo && transferInfo.transfers_used === 0
+                ? "border-emerald-400/40 text-emerald-200"
+                : "border-amber-400/40 text-amber-200")
+            }
+          >
+            {transferInfo
+              ? transferInfo.transfers_used === 0
+                ? "Transferencia libre disponible"
+                : "Transferencia libre usada"
+              : "Transferencia libre"}
           </span>
         </div>
       </div>

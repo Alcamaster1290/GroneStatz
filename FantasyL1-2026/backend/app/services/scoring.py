@@ -147,6 +147,8 @@ def recalc_round_points(
         points -= fouls // 5
 
         position = (player.position or "").upper()
+        if position in {"G", "GK"} and saves > 0:
+            points += saves // 5
         if position in {"G", "GK"} and minutes > 0 and conceded is not None:
             points -= conceded
         if position in {"G", "GK", "D", "M"} and minutes > 0:

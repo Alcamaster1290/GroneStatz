@@ -151,6 +151,31 @@ class AdminPriceMovementOut(BaseModel):
     delta: float
 
 
+class AdminTransferPlayerOut(BaseModel):
+    player_id: int
+    name: str
+    short_name: Optional[str] = None
+    position: str
+    team_id: int
+
+
+class AdminTransferOut(BaseModel):
+    id: int
+    fantasy_team_id: int
+    team_name: Optional[str] = None
+    user_email: str
+    round_number: int
+    created_at: datetime
+    out_player: Optional[AdminTransferPlayerOut] = None
+    in_player: Optional[AdminTransferPlayerOut] = None
+    out_price: float
+    in_price: float
+    out_price_current: float
+    in_price_current: float
+    transfer_fee: float
+    budget_after: float
+
+
 class AdminRoundOut(BaseModel):
     id: int
     round_number: int

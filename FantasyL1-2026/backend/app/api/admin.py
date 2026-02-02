@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy import insert, update
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
 from app.api.deps import require_admin
 from app.core.config import get_settings
@@ -51,6 +51,8 @@ from app.schemas.admin import (
     AdminTeamLineupOut,
     AdminLineupSlotOut,
     AdminLineupPlayerOut,
+    AdminTransferOut,
+    AdminTransferPlayerOut,
 )
 from app.services.data_pipeline import ingest_parquets_to_duckdb, sync_duckdb_to_postgres
 from app.services.fantasy import ensure_round, get_or_create_season, get_round_by_number
@@ -751,20 +753,116 @@ def list_price_movements(
         query = query.where(Round.round_number == round_number)
 
     rows = db.execute(query).all()
-    return [
-        AdminPriceMovementOut(
-            round_number=round_no,
-            player_id=player.player_id,
-            name=player.name,
-            short_name=player.short_name,
-            position=player.position,
-            team_id=player.team_id,
-            price_current=float(player.price_current),
-            points=float(movement.points),
-            delta=float(movement.delta),
+      return [
+          AdminPriceMovementOut(
+              round_number=round_no,
+              player_id=player.player_id,
+              name=player.name,
+              short_name=player.short_name,
+              position=player.position,
+              team_id=player.team_id,
+              price_current=float(player.price_current),
+              points=float(movement.points),
+              delta=float(movement.delta),
+          )
+          for movement, player, round_no in rows
+      ]
+
+
+@router.get("/transfers", response_model=List[AdminTransferOut])
+def list_transfers(
+    round_number: Optional[int] = Query(default=None, ge=1),
+    db: Session = Depends(get_db),
+) -> List[AdminTransferOut]:
+    season = get_or_create_season(db)
+    out_player = aliased(PlayerCatalog)
+    in_player = aliased(PlayerCatalog)
+    query = (
+        select(
+            FantasyTransfer,
+            FantasyTeam,
+            User,
+            Round.round_number,
+            out_player,
+            in_player,
         )
-        for movement, player, round_no in rows
-    ]
+        .join(FantasyTeam, FantasyTeam.id == FantasyTransfer.fantasy_team_id)
+        .join(User, User.id == FantasyTeam.user_id)
+        .join(Round, Round.id == FantasyTransfer.round_id)
+        .join(out_player, out_player.player_id == FantasyTransfer.out_player_id)
+        .join(in_player, in_player.player_id == FantasyTransfer.in_player_id)
+        .where(FantasyTeam.season_id == season.id)
+        .order_by(FantasyTransfer.created_at.desc())
+    )
+    if round_number is not None:
+        query = query.where(Round.round_number == round_number)
+
+    rows = db.execute(query).all()
+    if not rows:
+        return []
+
+    current_budget_map = {
+        team.id: float(team.budget_cap)
+        for _, team, _, _, _, _ in rows
+    }
+
+    fee_by_transfer_id: Dict[int, float] = {}
+    grouped: Dict[tuple[int, int], List[FantasyTransfer]] = {}
+    for transfer, team, _, _, _, _ in rows:
+        grouped.setdefault((team.id, transfer.round_id), []).append(transfer)
+
+    for transfers in grouped.values():
+        sorted_transfers = sorted(transfers, key=lambda t: (t.created_at, t.id))
+        for index, transfer in enumerate(sorted_transfers):
+            fee_by_transfer_id[transfer.id] = 0.0 if index == 0 else 0.5
+
+    sorted_by_time = sorted(rows, key=lambda row: row[0].created_at, reverse=True)
+    budget_offset: Dict[int, float] = {team_id: 0.0 for team_id in current_budget_map}
+
+    results: List[AdminTransferOut] = []
+    for transfer, team, user, round_no, out_p, in_p in sorted_by_time:
+        fee = fee_by_transfer_id.get(transfer.id, 0.0)
+        budget_after = current_budget_map.get(team.id, 0.0) + budget_offset.get(team.id, 0.0)
+        results.append(
+            AdminTransferOut(
+                id=transfer.id,
+                fantasy_team_id=team.id,
+                team_name=team.name,
+                user_email=user.email,
+                round_number=round_no,
+                created_at=transfer.created_at,
+                out_player=(
+                    AdminTransferPlayerOut(
+                        player_id=out_p.player_id,
+                        name=out_p.name,
+                        short_name=out_p.short_name,
+                        position=out_p.position,
+                        team_id=out_p.team_id,
+                    )
+                    if out_p
+                    else None
+                ),
+                in_player=(
+                    AdminTransferPlayerOut(
+                        player_id=in_p.player_id,
+                        name=in_p.name,
+                        short_name=in_p.short_name,
+                        position=in_p.position,
+                        team_id=in_p.team_id,
+                    )
+                    if in_p
+                    else None
+                ),
+                out_price=float(transfer.out_price),
+                in_price=float(transfer.in_price),
+                out_price_current=float(out_p.price_current),
+                in_price_current=float(in_p.price_current),
+                transfer_fee=fee,
+                budget_after=budget_after,
+            )
+        )
+        budget_offset[team.id] = budget_offset.get(team.id, 0.0) + fee
+    return results
 
 
 @router.put("/fixtures/{fixture_id}", response_model=AdminFixtureOut)
