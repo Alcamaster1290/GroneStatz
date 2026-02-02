@@ -426,6 +426,23 @@ export async function openAdminRound(
   );
 }
 
+export async function recalcAdminRound(
+  adminToken: string,
+  roundNumber: number,
+  applyPrices = false,
+  writePriceHistory = false
+): Promise<{ ok: boolean; round_number: number; points_rows?: number; prices_updated?: number }> {
+  const search = new URLSearchParams({
+    round_number: String(roundNumber),
+    apply_prices: String(applyPrices),
+    write_price_history: String(writePriceHistory)
+  });
+  return apiFetch(`/admin/recalc_round?${search.toString()}`, {
+    method: "POST",
+    headers: { "X-Admin-Token": adminToken }
+  });
+}
+
 export async function getAdminLeagues(adminToken: string): Promise<AdminLeague[]> {
   return apiFetch("/admin/leagues", { headers: { "X-Admin-Token": adminToken } });
 }

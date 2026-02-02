@@ -21,6 +21,7 @@ import {
   getTeams,
   getAdminPlayers,
   openAdminRound,
+  recalcAdminRound,
   updateAdminFixture,
   upsertAdminPlayerStats,
   updateAdminPlayerInjury
@@ -100,6 +101,21 @@ export default function AdminTeamsPage() {
   const [statsInput, setStatsInput] = useState("");
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsMessage, setStatsMessage] = useState<string | null>(null);
+  const [statsRows, setStatsRows] = useState<
+    {
+      player_id: number;
+      match_id: number;
+      goals: number;
+      assists: number;
+      minutesplayed: number;
+      saves: number;
+      fouls: number;
+      yellow_cards: number;
+      red_cards: number;
+      clean_sheet?: number;
+      goals_conceded?: number;
+    }[]
+  >([]);
   const [injuryPlayerId, setInjuryPlayerId] = useState("");
   const [injuryStatus, setInjuryStatus] = useState(false);
   const [injuryLoading, setInjuryLoading] = useState(false);
@@ -359,41 +375,22 @@ export default function AdminTeamsPage() {
     });
   };
 
-  const handleUploadStats = async () => {
-    if (!adminToken) {
-      setStatsMessage("admin_token_required");
-      return;
-    }
-    if (!statsRound.trim()) {
-      setStatsMessage("round_required");
-      return;
-    }
-    const roundNumber = Number(statsRound);
-    if (!Number.isFinite(roundNumber) || roundNumber < 1) {
-      setStatsMessage("round_invalid");
-      return;
-    }
-
-    const lines = statsInput
+  const parseStatsLines = (input: string) => {
+    const lines = input
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
 
-    if (lines.length === 0) {
-      setStatsMessage("no_stats");
-      return;
-    }
-
-    const items: {
+    const rows: {
       player_id: number;
       match_id: number;
-      goals?: number;
-      assists?: number;
-      minutesplayed?: number;
-      saves?: number;
-      fouls?: number;
-      yellow_cards?: number;
-      red_cards?: number;
+      goals: number;
+      assists: number;
+      minutesplayed: number;
+      saves: number;
+      fouls: number;
+      yellow_cards: number;
+      red_cards: number;
       clean_sheet?: number;
       goals_conceded?: number;
     }[] = [];
@@ -415,7 +412,7 @@ export default function AdminTeamsPage() {
       const red_cards = parts[8] ? Number(parts[8]) : 0;
       const clean_sheet = parts[9] ? Number(parts[9]) : undefined;
       const goals_conceded = parts[10] ? Number(parts[10]) : undefined;
-      items.push({
+      rows.push({
         player_id: playerId,
         match_id: matchId,
         goals: Number.isFinite(goals) ? goals : 0,
@@ -434,8 +431,35 @@ export default function AdminTeamsPage() {
       });
     }
 
-    if (items.length === 0) {
-      setStatsMessage("no_valid_rows");
+    return rows;
+  };
+
+  useEffect(() => {
+    if (!statsInput.trim()) {
+      setStatsRows([]);
+      return;
+    }
+    setStatsRows(parseStatsLines(statsInput));
+  }, [statsInput]);
+
+  const handleUploadStats = async () => {
+    if (!adminToken) {
+      setStatsMessage("admin_token_required");
+      return;
+    }
+    if (!statsRound.trim()) {
+      setStatsMessage("round_required");
+      return;
+    }
+    const roundNumber = Number(statsRound);
+    if (!Number.isFinite(roundNumber) || roundNumber < 1) {
+      setStatsMessage("round_invalid");
+      return;
+    }
+
+    const rows = statsRows.length ? statsRows : parseStatsLines(statsInput);
+    if (rows.length === 0) {
+      setStatsMessage("no_stats");
       return;
     }
 
@@ -444,7 +468,7 @@ export default function AdminTeamsPage() {
     try {
       const result = await upsertAdminPlayerStats(adminToken, {
         round_number: roundNumber,
-        items
+        items: rows
       });
       setStatsMessage(`ok_${result.count}`);
     } catch (err) {
@@ -452,6 +476,63 @@ export default function AdminTeamsPage() {
     } finally {
       setStatsLoading(false);
     }
+  };
+
+  const handleRecalcRound = async () => {
+    if (!adminToken) {
+      setStatsMessage("admin_token_required");
+      return;
+    }
+    if (!statsRound.trim()) {
+      setStatsMessage("round_required");
+      return;
+    }
+    const roundNumber = Number(statsRound);
+    if (!Number.isFinite(roundNumber) || roundNumber < 1) {
+      setStatsMessage("round_invalid");
+      return;
+    }
+    setStatsLoading(true);
+    setStatsMessage(null);
+    try {
+      const result = await recalcAdminRound(adminToken, roundNumber, false, false);
+      setStatsMessage(`recalc_ok_${result.round_number}`);
+    } catch (err) {
+      setStatsMessage(String(err));
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const updateStatsRow = (
+    index: number,
+    field:
+      | "player_id"
+      | "match_id"
+      | "goals"
+      | "assists"
+      | "minutesplayed"
+      | "saves"
+      | "fouls"
+      | "yellow_cards"
+      | "red_cards"
+      | "clean_sheet"
+      | "goals_conceded",
+    value: string
+  ) => {
+    setStatsRows((prev) => {
+      const next = [...prev];
+      const parsed = value.trim() === "" ? undefined : Number(value);
+      const numeric = Number.isFinite(parsed as number) ? (parsed as number) : 0;
+      const row = { ...next[index] };
+      if (field === "clean_sheet" || field === "goals_conceded") {
+        row[field] = value.trim() === "" ? undefined : numeric;
+      } else {
+        row[field] = numeric;
+      }
+      next[index] = row;
+      return next;
+    });
   };
 
   const handleUpdateInjury = async () => {
@@ -1522,12 +1603,110 @@ export default function AdminTeamsPage() {
             placeholder="player_id,match_id,goals,assists,minutes,saves,fouls,yellow,red,clean_sheet,goals_conceded"
             />
         </div>
+        {statsRows.length ? (
+          <div className="max-h-80 overflow-auto rounded-xl border border-white/10 bg-black/20 p-2 text-[11px] text-muted">
+            <div className="grid grid-cols-11 gap-2 px-2 pb-2 font-semibold text-ink">
+              <span>player_id</span>
+              <span>match_id</span>
+              <span>goals</span>
+              <span>assists</span>
+              <span>minutes</span>
+              <span>saves</span>
+              <span>fouls</span>
+              <span>yellow</span>
+              <span>red</span>
+              <span>clean</span>
+              <span>conceded</span>
+            </div>
+            <div className="space-y-2">
+              {statsRows.map((row, index) => (
+                <div
+                  key={`${row.player_id}-${row.match_id}-${index}`}
+                  className="grid grid-cols-11 gap-2 px-2"
+                >
+                  <input
+                    value={row.player_id}
+                    onChange={(event) => updateStatsRow(index, "player_id", event.target.value)}
+                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                  />
+                  <input
+                    value={row.match_id}
+                    onChange={(event) => updateStatsRow(index, "match_id", event.target.value)}
+                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                  />
+                  <input
+                    value={row.goals}
+                    onChange={(event) => updateStatsRow(index, "goals", event.target.value)}
+                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                  />
+                  <input
+                    value={row.assists}
+                    onChange={(event) => updateStatsRow(index, "assists", event.target.value)}
+                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                  />
+                  <input
+                    value={row.minutesplayed}
+                    onChange={(event) =>
+                      updateStatsRow(index, "minutesplayed", event.target.value)
+                    }
+                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                  />
+                  <input
+                    value={row.saves}
+                    onChange={(event) => updateStatsRow(index, "saves", event.target.value)}
+                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                  />
+                  <input
+                    value={row.fouls}
+                    onChange={(event) => updateStatsRow(index, "fouls", event.target.value)}
+                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                  />
+                  <input
+                    value={row.yellow_cards}
+                    onChange={(event) =>
+                      updateStatsRow(index, "yellow_cards", event.target.value)
+                    }
+                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                  />
+                  <input
+                    value={row.red_cards}
+                    onChange={(event) =>
+                      updateStatsRow(index, "red_cards", event.target.value)
+                    }
+                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                  />
+                  <input
+                    value={row.clean_sheet ?? ""}
+                    onChange={(event) =>
+                      updateStatsRow(index, "clean_sheet", event.target.value)
+                    }
+                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                  />
+                  <input
+                    value={row.goals_conceded ?? ""}
+                    onChange={(event) =>
+                      updateStatsRow(index, "goals_conceded", event.target.value)
+                    }
+                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
         <button
           onClick={handleUploadStats}
           className="w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
           disabled={statsLoading}
         >
           {statsLoading ? "Cargando..." : "Cargar stats"}
+        </button>
+        <button
+          onClick={handleRecalcRound}
+          className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+          disabled={statsLoading}
+        >
+          Calcular puntos para el partido
         </button>
         {statsMessage ? <p className="text-xs text-muted">{statsMessage}</p> : null}
       </div>
