@@ -272,7 +272,8 @@ function PitchSlot({
   sizeClass,
   badgeClass,
   isCaptain,
-  isViceCaptain
+  isViceCaptain,
+  showPoints
 }: {
   slot: LineupSlot;
   player?: Player;
@@ -282,6 +283,7 @@ function PitchSlot({
   badgeClass: string;
   isCaptain: boolean;
   isViceCaptain: boolean;
+  showPoints: boolean;
 }) {
   const { setNodeRef: setDropRef, isOver } = useDroppable({
     id: `slot-${slot.slot_index}`,
@@ -299,6 +301,10 @@ function PitchSlot({
     : undefined;
 
   const displayName = player ? player.short_name || player.shortName || player.name : "Disponible";
+  const pointsValue =
+    player && typeof player.points_round === "number"
+      ? Math.trunc(player.points_round)
+      : null;
 
   return (
     <div ref={setDropRef}>
@@ -332,6 +338,11 @@ function PitchSlot({
                     className={`absolute -bottom-1 -left-1 z-30 flex ${badgeClass} -translate-x-[10%] -translate-y-[10%] items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-black`}
                   >
                     V
+                  </span>
+                ) : null}
+                {showPoints && pointsValue !== null ? (
+                  <span className="absolute -top-1 -right-1 z-30 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-black/80 px-1 text-[10px] font-semibold text-ink">
+                    {pointsValue}
                   </span>
                 ) : null}
               </>
@@ -371,7 +382,8 @@ function PitchRow({
   sizeClass,
   badgeClass,
   captainId,
-  viceCaptainId
+  viceCaptainId,
+  showPoints
 }: {
   label: string;
   slots: LineupSlot[];
@@ -382,6 +394,7 @@ function PitchRow({
   badgeClass: string;
   captainId: number | null;
   viceCaptainId: number | null;
+  showPoints: boolean;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -403,6 +416,7 @@ function PitchRow({
                 badgeClass={badgeClass}
                 isCaptain={Boolean(player && captainId === player.player_id)}
                 isViceCaptain={Boolean(player && viceCaptainId === player.player_id)}
+                showPoints={showPoints}
               />
             );
           })}
@@ -1371,6 +1385,7 @@ export default function TeamPage() {
               badgeClass={badgeClass}
               captainId={captainId}
               viceCaptainId={viceCaptainId}
+              showPoints={roundStatus === "Cerrada"}
             />
             <PitchRow
               label="Medio"
@@ -1382,6 +1397,7 @@ export default function TeamPage() {
               badgeClass={badgeClass}
               captainId={captainId}
               viceCaptainId={viceCaptainId}
+              showPoints={roundStatus === "Cerrada"}
             />
             <PitchRow
               label="Defensa"
@@ -1393,6 +1409,7 @@ export default function TeamPage() {
               badgeClass={badgeClass}
               captainId={captainId}
               viceCaptainId={viceCaptainId}
+              showPoints={roundStatus === "Cerrada"}
             />
             <PitchRow
               label="Arquero"
@@ -1404,6 +1421,7 @@ export default function TeamPage() {
               badgeClass={badgeClass}
               captainId={captainId}
               viceCaptainId={viceCaptainId}
+              showPoints={roundStatus === "Cerrada"}
             />
             </div>
           </div>
