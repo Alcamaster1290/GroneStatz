@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     CORS_ORIGIN_REGEX: str = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
     SCHEDULER_ENABLED: bool = True
     SCHEDULER_INTERVAL_SECONDS: int = 300
+    SYNC_SKIP_PRUNE_MISSING_PLAYERS: bool = False
 
     model_config = SettingsConfigDict(
         env_file=str(env_path),

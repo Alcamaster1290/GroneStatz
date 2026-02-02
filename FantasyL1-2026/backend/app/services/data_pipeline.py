@@ -279,7 +279,10 @@ def sync_duckdb_to_postgres(settings: Settings | None = None) -> None:
             for row in player_rows
         ]
         _upsert_players(db, players_payload)
-        _prune_missing_players(db, [row[0] for row in player_rows])
+        if settings.SYNC_SKIP_PRUNE_MISSING_PLAYERS:
+            logger.info("skip_prune_missing_players enabled")
+        else:
+            _prune_missing_players(db, [row[0] for row in player_rows])
 
         # Fixtures are not synced from parquet. They are managed via admin.
         db.commit()
