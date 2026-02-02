@@ -840,7 +840,6 @@ export default function AdminTeamsPage() {
         </div>
       </div>
 
-      <div className="columns-1 lg:columns-2 lg:gap-6">
       <div className="space-y-2 pt-2">
         <h2 className="text-lg font-semibold">XI por ronda pendiente</h2>
         <p className="text-sm text-muted">
@@ -1715,7 +1714,6 @@ export default function AdminTeamsPage() {
             ))}
           </div>
         )}
-      </div>
       </div>
     </div>
   );
