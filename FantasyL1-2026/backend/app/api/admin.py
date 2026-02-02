@@ -784,9 +784,6 @@ def upsert_player_stats(
             continue
         if fixture.home_score is None or fixture.away_score is None:
             continue
-        total_goals = int(fixture.home_score or 0) + int(fixture.away_score or 0)
-        if total_goals <= 0:
-            continue
         conceded = _goals_conceded_from_fixture(fixture, player.team_id)
         if conceded is None:
             continue
