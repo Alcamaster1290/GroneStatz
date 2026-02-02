@@ -25,6 +25,7 @@ class RankingRoundOut(BaseModel):
     round_number: int
     points: float
     cumulative: float
+    price_delta: float = 0.0
 
 
 class RankingEntryOut(BaseModel):

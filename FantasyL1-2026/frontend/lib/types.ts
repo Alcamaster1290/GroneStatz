@@ -235,6 +235,7 @@ export type RankingRound = {
   round_number: number;
   points: number;
   cumulative: number;
+  price_delta?: number;
 };
 
 export type RankingEntry = {

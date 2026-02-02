@@ -5,7 +5,14 @@ from typing import Dict, List, Tuple
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import FantasyLineup, FantasyLineupSlot, FantasyTeam, PointsRound, Round
+from app.models import (
+    FantasyLineup,
+    FantasyLineupSlot,
+    FantasyTeam,
+    PointsRound,
+    PriceMovement,
+    Round,
+)
 from app.schemas.ranking import RankingEntryOut, RankingOut, RankingRoundOut
 from app.services.fantasy import get_current_round, get_or_create_season
 
@@ -61,9 +68,37 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
         .all()
     )
 
+    delta_rows = (
+        db.execute(
+            select(
+                FantasyLineup.fantasy_team_id,
+                Round.round_number,
+                func.coalesce(func.sum(PriceMovement.delta), 0).label("delta"),
+            )
+            .join(Round, Round.id == FantasyLineup.round_id)
+            .join(FantasyLineupSlot, FantasyLineupSlot.lineup_id == FantasyLineup.id)
+            .outerjoin(
+                PriceMovement,
+                (PriceMovement.round_id == FantasyLineup.round_id)
+                & (PriceMovement.player_id == FantasyLineupSlot.player_id)
+                & (PriceMovement.season_id == season.id),
+            )
+            .where(
+                FantasyLineup.fantasy_team_id.in_(team_ids),
+                Round.season_id == season.id,
+            )
+            .group_by(FantasyLineup.fantasy_team_id, Round.round_number)
+        )
+        .all()
+    )
+
     points_map: Dict[Tuple[int, int], float] = {
         (team_id, round_number): float(points)
         for team_id, round_number, points in points_rows
+    }
+    delta_map: Dict[Tuple[int, int], float] = {
+        (team_id, round_number): float(delta)
+        for team_id, round_number, delta in delta_rows
     }
 
     captain_map: Dict[int, int | None] = {}
@@ -113,12 +148,14 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
         cumulative = 0.0
         for round_number in round_numbers:
             points = points_map.get((team_id, round_number), 0.0)
+            delta = delta_map.get((team_id, round_number), 0.0)
             cumulative += points
             rounds.append(
                 RankingRoundOut(
                     round_number=round_number,
                     points=points,
                     cumulative=cumulative,
+                    price_delta=delta,
                 )
             )
         entries.append(
