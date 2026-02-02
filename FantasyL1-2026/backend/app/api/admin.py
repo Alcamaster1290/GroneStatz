@@ -753,20 +753,20 @@ def list_price_movements(
         query = query.where(Round.round_number == round_number)
 
     rows = db.execute(query).all()
-      return [
-          AdminPriceMovementOut(
-              round_number=round_no,
-              player_id=player.player_id,
-              name=player.name,
-              short_name=player.short_name,
-              position=player.position,
-              team_id=player.team_id,
-              price_current=float(player.price_current),
-              points=float(movement.points),
-              delta=float(movement.delta),
-          )
-          for movement, player, round_no in rows
-      ]
+    return [
+        AdminPriceMovementOut(
+            round_number=round_no,
+            player_id=player.player_id,
+            name=player.name,
+            short_name=player.short_name,
+            position=player.position,
+            team_id=player.team_id,
+            price_current=float(player.price_current),
+            points=float(movement.points),
+            delta=float(movement.delta),
+        )
+        for movement, player, round_no in rows
+    ]
 
 
 @router.get("/transfers", response_model=List[AdminTransferOut])
