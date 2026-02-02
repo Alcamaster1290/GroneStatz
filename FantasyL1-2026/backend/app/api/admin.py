@@ -1077,11 +1077,17 @@ def list_rounds(db: Session = Depends(get_db)) -> List[AdminRoundOut]:
         .scalars()
         .all()
     )
+    pending_round = next((row.round_number for row in rows if not row.is_closed), None)
     return [
         AdminRoundOut(
             id=row.id,
             round_number=row.round_number,
             is_closed=row.is_closed,
+            status=(
+                "Cerrada"
+                if row.is_closed
+                else ("Pendiente" if pending_round == row.round_number else "Proximamente")
+            ),
             starts_at=row.starts_at,
             ends_at=row.ends_at,
         )

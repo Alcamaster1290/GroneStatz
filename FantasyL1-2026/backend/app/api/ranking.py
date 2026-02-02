@@ -8,7 +8,12 @@ from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models import FantasyLineup, FantasyLineupSlot, FantasyTeam, League, LeagueMember, PlayerCatalog, Round
 from app.schemas.ranking import PublicLineupOut, RankingOut
-from app.services.fantasy import get_or_create_fantasy_team, get_or_create_season
+from app.services.fantasy import (
+    get_current_round,
+    get_latest_round,
+    get_or_create_fantasy_team,
+    get_or_create_season,
+)
 from app.services.ranking import build_rankings
 
 router = APIRouter(prefix="/ranking", tags=["ranking"])
@@ -77,11 +82,18 @@ def get_team_lineup(
     if not team:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="team_not_found")
 
+    pending_round = get_current_round(db, season.id)
+    round_obj = pending_round or get_latest_round(db, season.id)
+    if not round_obj:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+
     lineup = (
         db.execute(
             select(FantasyLineup)
-            .where(FantasyLineup.fantasy_team_id == fantasy_team_id)
-            .order_by(FantasyLineup.round_id.desc())
+            .where(
+                FantasyLineup.fantasy_team_id == fantasy_team_id,
+                FantasyLineup.round_id == round_obj.id,
+            )
         )
         .scalars()
         .first()
@@ -89,11 +101,7 @@ def get_team_lineup(
     if not lineup:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="lineup_not_found")
 
-    round_number = (
-        db.execute(select(Round.round_number).where(Round.id == lineup.round_id))
-        .scalars()
-        .first()
-    )
+    round_number = round_obj.round_number
     slots_rows = (
         db.execute(
             select(FantasyLineupSlot, PlayerCatalog)

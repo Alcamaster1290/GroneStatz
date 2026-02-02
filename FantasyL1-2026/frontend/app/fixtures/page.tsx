@@ -195,7 +195,9 @@ export default function FixturesPage() {
     }
     const info = roundsInfo.find((round) => round.round_number === selectedRound);
     if (info) {
-      setRoundStatus(info.is_closed ? "Cerrada" : "Pendiente");
+      setRoundStatus(
+        info.status ? info.status : info.is_closed ? "Cerrada" : "Pendiente"
+      );
     } else {
       setRoundStatus(null);
     }

@@ -847,7 +847,7 @@ export default function AdminTeamsPage() {
                     <div>
                       <p className="text-ink">Ronda {round.round_number}</p>
                       <p className="text-muted">
-                        {round.is_closed ? "Cerrada" : "Abierta"}
+                        {round.status ? round.status : round.is_closed ? "Cerrada" : "Abierta"}
                       </p>
                     </div>
                     <span
@@ -855,7 +855,7 @@ export default function AdminTeamsPage() {
                         round.is_closed ? "text-emerald-300" : "text-amber-300"
                       }
                     >
-                      {round.is_closed ? "OK" : "Pendiente"}
+                      {round.status ? round.status : round.is_closed ? "OK" : "Pendiente"}
                     </span>
                   </div>
                 ))}
@@ -868,7 +868,7 @@ export default function AdminTeamsPage() {
       <div className="space-y-2 pt-2">
         <h2 className="text-lg font-semibold">XI por ronda pendiente</h2>
         <p className="text-sm text-muted">
-          Muestra primero el ultimo equipo guardado para la ultima ronda abierta.
+          Muestra el ultimo equipo guardado para la proxima ronda pendiente.
         </p>
       </div>
 

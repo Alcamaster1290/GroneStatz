@@ -290,10 +290,16 @@ def list_rounds(db: Session = Depends(get_db)) -> List[RoundOut]:
         )
         .all()
     )
+    pending_round = next((row[0] for row in rows if not row[1]), None)
     return [
         RoundOut(
             round_number=row[0],
             is_closed=row[1],
+            status=(
+                "Cerrada"
+                if row[1]
+                else ("Pendiente" if pending_round == row[0] else "Proximamente")
+            ),
             starts_at=row[2],
             ends_at=row[3],
         )

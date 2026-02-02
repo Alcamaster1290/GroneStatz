@@ -66,5 +66,6 @@ class FixtureOut(BaseModel):
 class RoundOut(BaseModel):
     round_number: int
     is_closed: bool
+    status: Optional[str] = None
     starts_at: Optional[datetime] = None
     ends_at: Optional[datetime] = None

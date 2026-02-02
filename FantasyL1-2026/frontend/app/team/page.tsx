@@ -773,7 +773,10 @@ export default function TeamPage() {
         try {
           const lineup = await getLineup(token);
           setCurrentRound(lineup.round_number);
-          setRoundStatus(lineup.is_closed ? "Cerrada" : "Pendiente");
+          const info = roundsInfo.find((round) => round.round_number === lineup.round_number);
+          setRoundStatus(
+            info?.status ? info.status : lineup.is_closed ? "Cerrada" : "Pendiente"
+          );
           const lineupCaptainId = lineup.captain_player_id ?? null;
           const lineupViceCaptainId = lineup.vice_captain_player_id ?? null;
           const squadById = new Map(
@@ -930,7 +933,9 @@ export default function TeamPage() {
     if (!currentRound) return;
     const info = roundsInfo.find((round) => round.round_number === currentRound);
     if (info) {
-      setRoundStatus(info.is_closed ? "Cerrada" : "Pendiente");
+      setRoundStatus(
+        info.status ? info.status : info.is_closed ? "Cerrada" : "Pendiente"
+      );
     }
   }, [currentRound, roundsInfo]);
 
@@ -1238,7 +1243,10 @@ export default function TeamPage() {
       setCaptainId(lineupCaptainId);
       setViceCaptainId(lineupViceCaptainId);
       setRoundMissing(false);
-      setRoundStatus(lineup.is_closed ? "Cerrada" : "Pendiente");
+      const info = roundsInfo.find((round) => round.round_number === lineup.round_number);
+      setRoundStatus(
+        info?.status ? info.status : lineup.is_closed ? "Cerrada" : "Pendiente"
+      );
       setFixtures(allFixtures.filter((fixture) => fixture.round_number === roundNumber));
     } catch (err) {
       setSaveErrors([String(err)]);

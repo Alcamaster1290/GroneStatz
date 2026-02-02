@@ -63,6 +63,7 @@ export type Fixture = {
 export type RoundInfo = {
   round_number: number;
   is_closed: boolean;
+  status?: string | null;
   starts_at?: string | null;
   ends_at?: string | null;
 };
@@ -228,6 +229,7 @@ export type AdminRound = {
   id: number;
   round_number: number;
   is_closed: boolean;
+  status?: string | null;
   starts_at?: string | null;
   ends_at?: string | null;
 };
