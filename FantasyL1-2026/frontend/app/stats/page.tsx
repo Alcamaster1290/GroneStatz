@@ -17,6 +17,36 @@ const positionLabels: Record<string, string> = {
   F: "Delantero"
 };
 
+const renderSparkline = (values: number[]) => {
+  if (!values.length) return null;
+  const width = 56;
+  const height = 18;
+  const min = Math.min(...values, 0);
+  const max = Math.max(...values, 0);
+  const range = max - min || 1;
+  const points = values
+    .map((value, index) => {
+      const x = (index / Math.max(values.length - 1, 1)) * width;
+      const y = height - ((value - min) / range) * height;
+      return `${x},${y}`;
+    })
+    .join(" ");
+  const trend = values[values.length - 1] - values[0];
+  const stroke = trend >= 0 ? "#34d399" : "#f87171";
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <polyline
+        fill="none"
+        stroke={stroke}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points}
+      />
+    </svg>
+  );
+};
+
 export default function StatsPage() {
   const token = useFantasyStore((state) => state.token);
   const setToken = useFantasyStore((state) => state.setToken);
@@ -262,84 +292,118 @@ export default function StatsPage() {
           players.map((player) => {
             const percent = Math.min(100, Math.max(0, player.selected_percent));
             const isKeeper = player.position === "G";
+            const rounds = player.rounds ?? [];
+            const roundPoints = rounds.map((round) => round.points);
+            const trend = roundPoints.length
+              ? roundPoints[roundPoints.length - 1] - roundPoints[0]
+              : 0;
             return (
               <div
                 key={player.player_id}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-3"
+                className="space-y-2 rounded-2xl border border-white/10 bg-black/20 px-3 py-3"
               >
-                <div className="flex items-center gap-3">
-                  <div className="relative h-12 w-12 overflow-hidden rounded-full bg-surface2/60">
-                    <img
-                      src={`/images/players/${player.player_id}.png`}
-                      alt=""
-                      className="h-full w-full object-cover"
-                      onError={(event) => {
-                        (event.currentTarget as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                    <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black/70 text-[9px] text-ink">
-                      {player.position}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-ink">
-                        {player.short_name || player.name}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-12 w-12 overflow-hidden rounded-full bg-surface2/60">
+                      <img
+                        src={`/images/players/${player.player_id}.png`}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        onError={(event) => {
+                          (event.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                      <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black/70 text-[9px] text-ink">
+                        {player.position}
                       </span>
-                      {player.is_injured ? (
-                        <span className="rounded-full border border-red-400/40 bg-red-500/10 px-2 py-0.5 text-[10px] text-red-200">
-                          Lesionado
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-ink">
+                          {player.short_name || player.name}
                         </span>
-                      ) : null}
+                        {player.is_injured ? (
+                          <span className="rounded-full border border-red-400/40 bg-red-500/10 px-2 py-0.5 text-[10px] text-red-200">
+                            Lesionado
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-muted">
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-black/40">
+                          <img
+                            src={`/images/teams/${player.team_id}.png`}
+                            alt=""
+                            className="h-full w-full object-contain"
+                          />
+                        </span>
+                        <span>{positionLabels[player.position] || player.position}</span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-muted">
+                        <span>Min {player.minutesplayed}</span>
+                        {isKeeper ? (
+                          <span>At {player.saves}</span>
+                        ) : (
+                          <>
+                            <span>G {player.goals}</span>
+                            <span>A {player.assists}</span>
+                          </>
+                        )}
+                        <span>F {player.fouls}</span>
+                        <span className="inline-flex items-center gap-1">
+                          <span className="inline-block h-[12px] w-[8px] rounded-sm bg-yellow-400" />
+                          {player.yellow_cards}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <span className="inline-block h-[12px] w-[8px] rounded-sm bg-red-500" />
+                          {player.red_cards}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] text-muted">
-                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-black/40">
-                        <img
-                          src={`/images/teams/${player.team_id}.png`}
-                          alt=""
-                          className="h-full w-full object-contain"
-                        />
-                      </span>
-                      <span>{positionLabels[player.position] || player.position}</span>
-                    </div>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-muted">
-                      <span>Min {player.minutesplayed}</span>
-                      {isKeeper ? (
-                        <span>At {player.saves}</span>
+                  </div>
+                  <div className="flex flex-col items-end gap-2 text-right">
+                    <p className="text-sm font-semibold text-accent">
+                      {player.price_current.toFixed(1)}
+                    </p>
+                    <div className="flex items-center gap-1 text-[10px] text-muted">
+                      {renderSparkline(roundPoints)}
+                      {roundPoints.length ? (
+                        <span className={trend >= 0 ? "text-emerald-300" : "text-red-300"}>
+                          Δ {trend >= 0 ? "+" : ""}
+                          {trend.toFixed(1)}
+                        </span>
                       ) : (
-                        <>
-                          <span>G {player.goals}</span>
-                          <span>A {player.assists}</span>
-                        </>
+                        <span>Sin rondas</span>
                       )}
-                      <span>F {player.fouls}</span>
-                      <span className="inline-flex items-center gap-1">
-                        <span className="inline-block h-[12px] w-[8px] rounded-sm bg-yellow-400" />
-                        {player.yellow_cards}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <span className="inline-block h-[12px] w-[8px] rounded-sm bg-red-500" />
-                        {player.red_cards}
-                      </span>
+                    </div>
+                    <p className="text-xs font-semibold text-indigo-300">
+                      {percent.toFixed(1)}%
+                    </p>
+                    <p className="text-[10px] text-muted">
+                      En equipos: {player.selected_count}
+                    </p>
+                    <div className="h-1 w-16 rounded-full bg-white/10">
+                      <div
+                        className="h-full rounded-full bg-yellow-400"
+                        style={{ width: `${percent}%` }}
+                      />
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-2 text-right">
-                  <p className="text-sm font-semibold text-accent">
-                    {player.price_current.toFixed(1)}
-                  </p>
-                  <p className="text-xs font-semibold text-indigo-300">
-                    {percent.toFixed(1)}%
-                  </p>
-                  <p className="text-[10px] text-muted">
-                    En equipos: {player.selected_count}
-                  </p>
-                  <div className="h-1 w-16 rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-yellow-400"
-                      style={{ width: `${percent}%` }}
-                    />
-                  </div>
+                <div className="flex flex-wrap gap-2 text-[10px] text-muted">
+                  {rounds.length === 0 ? (
+                    <span className="rounded-full border border-white/10 px-2 py-1">
+                      Sin rondas
+                    </span>
+                  ) : (
+                    rounds.map((round) => (
+                      <span
+                        key={`${player.player_id}-round-${round.round_number}`}
+                        className="rounded-full border border-white/10 px-2 py-1"
+                      >
+                        R{round.round_number}: {round.points.toFixed(1)}
+                      </span>
+                    ))
+                  )}
                 </div>
               </div>
             );

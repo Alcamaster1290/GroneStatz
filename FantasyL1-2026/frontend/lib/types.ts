@@ -86,6 +86,7 @@ export type PlayerStatsEntry = {
   fouls: number;
   yellow_cards: number;
   red_cards: number;
+  rounds?: { round_number: number; points: number }[];
 };
 
 export type AdminTeamPlayer = {

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -31,6 +31,11 @@ class PlayerCatalogOut(BaseModel):
     updated_at: datetime
 
 
+class PlayerRoundPointsOut(BaseModel):
+    round_number: int
+    points: float
+
+
 class PlayerStatsOut(BaseModel):
     player_id: int
     name: str
@@ -48,6 +53,7 @@ class PlayerStatsOut(BaseModel):
     fouls: int
     yellow_cards: int
     red_cards: int
+    rounds: List[PlayerRoundPointsOut] = []
 
 
 class FixtureOut(BaseModel):

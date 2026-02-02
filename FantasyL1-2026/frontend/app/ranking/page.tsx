@@ -39,35 +39,6 @@ function RankingTable({
   data: RankingResponse | null;
   onSelectTeam?: (fantasyTeamId: number, teamName: string) => void;
 }) {
-  const renderSparkline = (values: number[]) => {
-    if (!values.length) return null;
-    const width = 64;
-    const height = 20;
-    const min = Math.min(...values, 0);
-    const max = Math.max(...values, 0);
-    const range = max - min || 1;
-    const points = values
-      .map((value, index) => {
-        const x = (index / Math.max(values.length - 1, 1)) * width;
-        const y = height - ((value - min) / range) * height;
-        return `${x},${y}`;
-      })
-      .join(" ");
-    const trend = values[values.length - 1] - values[0];
-    const stroke = trend >= 0 ? "#34d399" : "#f87171";
-    return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-        <polyline
-          fill="none"
-          stroke={stroke}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          points={points}
-        />
-      </svg>
-    );
-  };
   if (!data || data.entries.length === 0) {
     return (
       <div className="glass rounded-2xl p-4 text-xs text-muted">
@@ -129,15 +100,6 @@ function RankingTable({
                 </button>
               </div>
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 text-xs text-muted">
-                  {renderSparkline(entry.rounds.map((round) => round.price_delta || 0))}
-                  <span>
-                    Δ{" "}
-                    {entry.rounds.length
-                      ? entry.rounds[entry.rounds.length - 1].price_delta?.toFixed(1) ?? "0.0"
-                      : "0.0"}
-                  </span>
-                </div>
                 <span className="text-sm font-semibold text-accent">
                   {entry.total_points.toFixed(1)}
                 </span>
@@ -154,17 +116,7 @@ function RankingTable({
                     key={`${entry.fantasy_team_id}-${round.round_number}`}
                     className="rounded-full border border-white/10 px-2 py-1"
                   >
-                    R{round.round_number}: {round.cumulative.toFixed(1)}{" "}
-                    <span
-                      className={
-                        (round.price_delta || 0) >= 0
-                          ? "text-emerald-300"
-                          : "text-red-300"
-                      }
-                    >
-                      {(round.price_delta || 0) >= 0 ? "▲" : "▼"}{" "}
-                      {Math.abs(round.price_delta || 0).toFixed(1)}
-                    </span>
+                    R{round.round_number}: {round.cumulative.toFixed(1)}
                   </span>
                 ))
               )}

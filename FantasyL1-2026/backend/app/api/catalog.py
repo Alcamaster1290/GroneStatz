@@ -231,6 +231,22 @@ def list_player_stats(
         .offset(offset)
     )
     rows = db.execute(query).all()
+    points_round_map: dict[int, list[dict[str, float | int]]] = {}
+    if rows:
+        player_ids = [row[0].player_id for row in rows]
+        points_rows = db.execute(
+            select(PointsRound.player_id, Round.round_number, PointsRound.points)
+            .join(Round, PointsRound.round_id == Round.id)
+            .where(
+                PointsRound.season_id == season.id,
+                PointsRound.player_id.in_(player_ids),
+            )
+            .order_by(Round.round_number)
+        ).all()
+        for player_id, round_number, points in points_rows:
+            points_round_map.setdefault(player_id, []).append(
+                {"round_number": int(round_number), "points": float(points or 0)}
+            )
 
     results: List[PlayerStatsOut] = []
     for row in rows:
@@ -255,6 +271,7 @@ def list_player_stats(
                 fouls=int(row[5] or 0),
                 yellow_cards=int(row[6] or 0),
                 red_cards=int(row[7] or 0),
+                rounds=points_round_map.get(player.player_id, []),
             )
         )
 
