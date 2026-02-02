@@ -121,7 +121,7 @@ def recalc_round_points(
         # Determine effective clean sheet / conceded for stats + scoring.
         fixture = fixture_map.get(row.match_id)
         conceded: int | None = goals_conceded_value
-        if conceded is None and fixture and fixture.status == "Finalizado":
+        if conceded is None and fixture and fixture.home_score is not None and fixture.away_score is not None:
             conceded = _goals_conceded(fixture, player.team_id)
         if minutes > 0:
             if clean_sheet_value is not None:

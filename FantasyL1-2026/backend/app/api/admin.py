@@ -901,7 +901,7 @@ def _calc_match_points(
     )
 
     conceded = goals_conceded_value
-    if conceded is None and fixture and fixture.status == "Finalizado":
+    if conceded is None and fixture and fixture.home_score is not None and fixture.away_score is not None:
         conceded = _goals_conceded_from_fixture(fixture, player.team_id)
 
     points = 0.0
