@@ -736,6 +736,28 @@ def upsert_player_stats(
     season = get_or_create_season(db)
     round_obj = ensure_round(db, season.id, payload.round_number)
 
+    match_ids = {item.match_id for item in payload.items}
+    player_ids = {item.player_id for item in payload.items}
+
+    fixtures = (
+        db.execute(
+            select(Fixture).where(
+                Fixture.season_id == season.id,
+                Fixture.match_id.in_(match_ids),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    fixture_map = {fixture.match_id: fixture for fixture in fixtures}
+
+    players = (
+        db.execute(select(PlayerCatalog).where(PlayerCatalog.player_id.in_(player_ids)))
+        .scalars()
+        .all()
+    )
+    player_map = {player.player_id: player for player in players}
+
     rows = [
         {
             "season_id": season.id,
@@ -754,6 +776,23 @@ def upsert_player_stats(
         }
         for item in payload.items
     ]
+
+    for row in rows:
+        if row["clean_sheet"] is not None and row["goals_conceded"] is not None:
+            continue
+        fixture = fixture_map.get(row["match_id"])
+        player = player_map.get(row["player_id"])
+        if not fixture or not player:
+            continue
+        conceded = row["goals_conceded"]
+        if conceded is None:
+            conceded = _goals_conceded_from_fixture(fixture, player.team_id)
+            row["goals_conceded"] = conceded
+        if row["clean_sheet"] is None and conceded is not None:
+            position = (player.position or "").upper()
+            minutes = int(row["minutesplayed"] or 0)
+            if position in {"G", "GK", "D", "M"} and minutes > 0:
+                row["clean_sheet"] = 1 if conceded == 0 else 0
 
     db.execute(
         text(

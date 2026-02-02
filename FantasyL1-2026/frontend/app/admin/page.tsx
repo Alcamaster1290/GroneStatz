@@ -473,7 +473,8 @@ export default function AdminTeamsPage() {
         round_number: roundNumber,
         items: rows
       });
-      setStatsMessage(`ok_${result.count}`);
+      await recalcAdminRound(adminToken, roundNumber, false, false);
+      setStatsMessage(`ok_${result.count}_recalc`);
     } catch (err) {
       setStatsMessage(String(err));
     } finally {
