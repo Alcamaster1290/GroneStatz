@@ -686,10 +686,10 @@ export default function MarketPage() {
   const clubRuleOk = maxClubCount <= 3;
 
   const draftBudget = useMemo(() => {
-    const total = draftSquad.reduce(
-      (sum, player) => sum + roundToTenth(player.price_current),
-      0
-    );
+    const total = draftSquad.reduce((sum, player) => {
+      const price = player.bought_price ?? player.price_current;
+      return sum + roundToTenth(price);
+    }, 0);
     return roundToTenth(total);
   }, [draftSquad]);
   const budgetLeftRaw = roundToTenth(budgetCap - draftBudget);
