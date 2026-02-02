@@ -141,7 +141,7 @@ def recalc_round_points(
 
         if minutes >= 90:
             points += 2
-        elif minutes >= 45:
+        elif minutes > 0:
             points += 1
 
         points -= fouls // 5
