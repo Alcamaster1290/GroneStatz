@@ -176,6 +176,24 @@ class AdminTransferOut(BaseModel):
     budget_after: float
 
 
+class AdminMatchPlayerOut(BaseModel):
+    match_id: int
+    player_id: int
+    name: str
+    short_name: Optional[str] = None
+    position: Optional[str] = None
+    team_id: Optional[int] = None
+    minutesplayed: int
+    goals: int
+    assists: int
+    saves: int
+    fouls: int
+    yellow_cards: int
+    red_cards: int
+    clean_sheet: Optional[int] = None
+    goals_conceded: Optional[int] = None
+    points: float
+
 class AdminRoundOut(BaseModel):
     id: int
     round_number: int

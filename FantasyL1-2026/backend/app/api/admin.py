@@ -45,6 +45,7 @@ from app.schemas.admin import (
     AdminPlayerStatOut,
     AdminPlayerInjuryIn,
     AdminPlayerInjuryOut,
+    AdminMatchPlayerOut,
     AdminPriceMovementOut,
     AdminTeamOut,
     AdminTeamPlayerOut,
@@ -426,7 +427,7 @@ def list_lineups(
             db.execute(
                 select(Round)
                 .where(Round.season_id == season.id, Round.is_closed.is_(False))
-                .order_by(Round.round_number.desc())
+                .order_by(Round.round_number.asc())
                 .limit(1)
             )
             .scalars()
@@ -734,6 +735,138 @@ def list_player_stats(
         )
         for row in rows
     ]
+
+
+def _goals_conceded_from_fixture(fixture: Fixture | None, team_id: int | None) -> int | None:
+    if fixture is None or team_id is None:
+        return None
+    if fixture.home_score is None or fixture.away_score is None:
+        return None
+    if fixture.home_team_id == team_id:
+        return fixture.away_score
+    if fixture.away_team_id == team_id:
+        return fixture.home_score
+    return None
+
+
+def _calc_match_points(
+    player: PlayerCatalog,
+    stat: PlayerMatchStat,
+    fixture: Fixture | None,
+) -> tuple[float, int | None, int | None]:
+    minutes = int(stat.minutesplayed or 0)
+    goals = int(stat.goals or 0)
+    assists = int(stat.assists or 0)
+    saves = int(stat.saves or 0)
+    fouls = int(stat.fouls or 0)
+    yellow_cards = int(getattr(stat, "yellow_cards", 0) or 0)
+    red_cards = int(getattr(stat, "red_cards", 0) or 0)
+    clean_sheet_flag = stat.clean_sheet if hasattr(stat, "clean_sheet") else None
+    goals_conceded_override = stat.goals_conceded if hasattr(stat, "goals_conceded") else None
+    clean_sheet_value = int(clean_sheet_flag) if clean_sheet_flag is not None else None
+    goals_conceded_value = (
+        int(goals_conceded_override) if goals_conceded_override is not None else None
+    )
+
+    conceded = goals_conceded_value
+    if conceded is None and fixture and fixture.status == "Finalizado":
+        conceded = _goals_conceded_from_fixture(fixture, player.team_id)
+
+    points = 0.0
+    points += goals * 4
+    points += (goals // 3) * 3
+    points += assists * 3
+    points -= yellow_cards * 3
+    points -= red_cards * 5
+
+    if minutes >= 90:
+        points += 2
+    elif minutes > 0:
+        points += 1
+
+    points -= fouls // 5
+
+    position = (player.position or "").upper()
+    if position in {"G", "GK"} and saves > 0:
+        points += saves // 5
+    if position in {"G", "GK"} and minutes > 0 and conceded is not None:
+        points -= conceded
+    if position in {"G", "GK", "D", "M"} and minutes > 0:
+        if clean_sheet_value is not None:
+            if clean_sheet_value == 1:
+                points += 3
+        elif conceded == 0:
+            points += 3
+
+    return points, clean_sheet_value, conceded
+
+
+@router.get("/match-stats", response_model=List[AdminMatchPlayerOut])
+def list_match_stats(
+    match_id: int = Query(..., ge=1),
+    round_number: Optional[int] = Query(default=None, ge=1),
+    db: Session = Depends(get_db),
+) -> List[AdminMatchPlayerOut]:
+    season = get_or_create_season(db)
+    round_obj = None
+    if round_number is not None:
+        round_obj = get_round_by_number(db, season.id, round_number)
+        if not round_obj:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+
+    fixture_query = select(Fixture).where(
+        Fixture.season_id == season.id, Fixture.match_id == match_id
+    )
+    if round_obj is not None:
+        fixture_query = fixture_query.where(Fixture.round_id == round_obj.id)
+    fixture = db.execute(fixture_query).scalar_one_or_none()
+
+    query = select(PlayerMatchStat).where(
+        PlayerMatchStat.season_id == season.id,
+        PlayerMatchStat.match_id == match_id,
+    )
+    if round_obj is not None:
+        query = query.where(PlayerMatchStat.round_id == round_obj.id)
+    rows = db.execute(query).scalars().all()
+    if not rows:
+        return []
+
+    player_ids = {row.player_id for row in rows}
+    players = (
+        db.execute(select(PlayerCatalog).where(PlayerCatalog.player_id.in_(player_ids)))
+        .scalars()
+        .all()
+    )
+    player_map = {player.player_id: player for player in players}
+
+    results: List[AdminMatchPlayerOut] = []
+    for row in rows:
+        player = player_map.get(row.player_id)
+        if not player:
+            continue
+        points, clean_sheet_value, conceded = _calc_match_points(player, row, fixture)
+        results.append(
+            AdminMatchPlayerOut(
+                match_id=match_id,
+                player_id=row.player_id,
+                name=player.name,
+                short_name=player.short_name,
+                position=player.position,
+                team_id=player.team_id,
+                minutesplayed=int(row.minutesplayed or 0),
+                goals=int(row.goals or 0),
+                assists=int(row.assists or 0),
+                saves=int(row.saves or 0),
+                fouls=int(row.fouls or 0),
+                yellow_cards=int(getattr(row, "yellow_cards", 0) or 0),
+                red_cards=int(getattr(row, "red_cards", 0) or 0),
+                clean_sheet=clean_sheet_value,
+                goals_conceded=conceded,
+                points=float(points),
+            )
+        )
+
+    return sorted(results, key=lambda item: (-(item.points or 0), item.name))
 
 
 @router.get("/price-movements", response_model=List[AdminPriceMovementOut])

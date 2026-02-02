@@ -13,6 +13,7 @@ import {
   getAdminTransfers,
   getAdminRounds,
   getAdminFixtures,
+  getAdminMatchStats,
   getAdminTeams,
   getAdminLineups,
   rebuildAdminCatalog,
@@ -29,6 +30,7 @@ import {
   AdminLeague,
   AdminRound,
   AdminFixture,
+  AdminMatchPlayer,
   AdminPriceMovement,
   AdminTransfer,
   AdminTeam,
@@ -53,6 +55,10 @@ export default function AdminTeamsPage() {
   const [fixtures, setFixtures] = useState<AdminFixture[]>([]);
   const [fixtureLoading, setFixtureLoading] = useState(false);
   const [fixtureError, setFixtureError] = useState<string | null>(null);
+  const [matchStats, setMatchStats] = useState<AdminMatchPlayer[]>([]);
+  const [matchStatsLoading, setMatchStatsLoading] = useState(false);
+  const [matchStatsError, setMatchStatsError] = useState<string | null>(null);
+  const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [teamsCatalog, setTeamsCatalog] = useState<
     { id: number; name_short?: string | null; name_full?: string | null }[]
   >([]);
@@ -522,6 +528,25 @@ export default function AdminTeamsPage() {
       setPriceError(String(err));
     } finally {
       setPriceLoading(false);
+    }
+  };
+
+  const handleLoadMatchStats = async (matchId: number, roundNumber?: number) => {
+    if (!adminToken) {
+      setMatchStatsError("admin_token_required");
+      return;
+    }
+    setMatchStatsError(null);
+    setMatchStatsLoading(true);
+    setSelectedMatchId(matchId);
+    try {
+      const stats = await getAdminMatchStats(adminToken, matchId, roundNumber);
+      setMatchStats(stats);
+    } catch (err) {
+      setMatchStatsError(String(err));
+      setMatchStats([]);
+    } finally {
+      setMatchStatsLoading(false);
     }
   };
 
@@ -1406,10 +1431,67 @@ export default function AdminTeamsPage() {
                 >
                   Guardar cambios
                 </button>
+                <button
+                  onClick={() =>
+                    handleLoadMatchStats(
+                      fixture.match_id,
+                      fixture.round_number ? Number(fixture.round_number) : undefined
+                    )
+                  }
+                  className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+                >
+                  Ver stats del partido
+                </button>
               </div>
             );
           })
         )}
+      </div>
+
+      <div className="glass space-y-3 rounded-2xl p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-ink">Stats del partido</p>
+            <p className="text-xs text-muted">
+              {selectedMatchId ? `Match #${selectedMatchId}` : "Selecciona un match"}
+            </p>
+          </div>
+          {matchStatsLoading ? <span className="text-xs text-muted">Cargando...</span> : null}
+        </div>
+        {matchStatsError ? <p className="text-xs text-warning">{matchStatsError}</p> : null}
+        {selectedMatchId && !matchStatsLoading && matchStats.length === 0 ? (
+          <p className="text-xs text-muted">Sin stats cargados para este partido.</p>
+        ) : null}
+        {matchStats.length ? (
+          <div className="space-y-2">
+            {matchStats.map((stat) => (
+              <div
+                key={`${stat.match_id}-${stat.player_id}`}
+                className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-ink">
+                    {stat.short_name || stat.name} #{stat.player_id}
+                  </div>
+                  <div className="text-sm font-semibold text-ink">
+                    {stat.points.toFixed(1)} pts
+                  </div>
+                </div>
+                <div className="mt-2 grid gap-2 text-[11px] text-muted sm:grid-cols-3 lg:grid-cols-4">
+                  <span>Min: {stat.minutesplayed}</span>
+                  <span>Goles: {stat.goals}</span>
+                  <span>Asist: {stat.assists}</span>
+                  <span>Atajadas: {stat.saves}</span>
+                  <span>Faltas: {stat.fouls}</span>
+                  <span>Amarillas: {stat.yellow_cards}</span>
+                  <span>Rojas: {stat.red_cards}</span>
+                  <span>CS: {stat.clean_sheet ?? "-"}</span>
+                  <span>GC: {stat.goals_conceded ?? "-"}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
       </div>
 
         <div className="space-y-2 pt-2">

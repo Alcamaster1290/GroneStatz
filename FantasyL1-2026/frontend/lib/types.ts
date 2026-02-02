@@ -168,6 +168,25 @@ export type AdminFixture = {
   away_score?: number | null;
 };
 
+export type AdminMatchPlayer = {
+  match_id: number;
+  player_id: number;
+  name: string;
+  short_name?: string | null;
+  position?: Position | string | null;
+  team_id?: number | null;
+  minutesplayed: number;
+  goals: number;
+  assists: number;
+  saves: number;
+  fouls: number;
+  yellow_cards: number;
+  red_cards: number;
+  clean_sheet?: number | null;
+  goals_conceded?: number | null;
+  points: number;
+};
+
 export type AdminPriceMovement = {
   round_number: number;
   player_id: number;
