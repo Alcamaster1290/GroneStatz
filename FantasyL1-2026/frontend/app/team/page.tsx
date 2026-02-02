@@ -140,12 +140,34 @@ function PlayerFantasyDetails({
   const isKeeper = player.position === "G";
   const points =
     typeof player.points_total === "number" ? player.points_total.toFixed(1) : "--";
-  const primaryStatLabel = isKeeper ? "Atajadas" : "Goles";
-  const primaryStatValue = isKeeper ? player.saves ?? 0 : player.goals ?? 0;
-  const secondaryStatLabel = isKeeper ? "Goles recibidos" : "Asistencias";
+  const hasRoundStats =
+    typeof player.goals_round === "number" ||
+    typeof player.assists_round === "number" ||
+    typeof player.saves_round === "number";
+  const primaryStatLabel = isKeeper
+    ? hasRoundStats
+      ? "Atajadas (Ronda)"
+      : "Atajadas"
+    : hasRoundStats
+      ? "Goles (Ronda)"
+      : "Goles";
+  const primaryStatValue = isKeeper
+    ? hasRoundStats
+      ? player.saves_round ?? 0
+      : player.saves ?? 0
+    : hasRoundStats
+      ? player.goals_round ?? 0
+      : player.goals ?? 0;
+  const secondaryStatLabel = isKeeper
+    ? "Goles recibidos"
+    : hasRoundStats
+      ? "Asistencias (Ronda)"
+      : "Asistencias";
   const secondaryStatValue = isKeeper
     ? player.goals_conceded ?? 0
-    : player.assists ?? 0;
+    : hasRoundStats
+      ? player.assists_round ?? 0
+      : player.assists ?? 0;
   const formatKickoff = (kickoff: string | null) => {
     if (!kickoff) return "Por confirmar";
     const normalized = kickoff.replace("T", " ").trim();

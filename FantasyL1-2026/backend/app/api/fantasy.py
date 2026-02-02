@@ -66,6 +66,7 @@ def _build_team_response(
     points_map = {}
     total_points_map = {}
     totals_stats_map = {}
+    round_stats_map = {}
     if rows:
         player_ids = [player.player_id for player, _ in rows]
         total_points_rows = db.execute(
@@ -110,10 +111,34 @@ def _build_team_response(
                 )
             ).all()
             points_map = {player_id: float(points) for player_id, points in points_rows}
+            round_stats_rows = (
+                db.execute(
+                    select(
+                        PlayerRoundStat.player_id,
+                        PlayerRoundStat.goals,
+                        PlayerRoundStat.assists,
+                        PlayerRoundStat.saves,
+                    ).where(
+                        PlayerRoundStat.season_id == team.season_id,
+                        PlayerRoundStat.round_id == round_obj.id,
+                        PlayerRoundStat.player_id.in_(player_ids),
+                    )
+                )
+                .all()
+            )
+            round_stats_map = {
+                player_id: {
+                    "goals": int(goals or 0),
+                    "assists": int(assists or 0),
+                    "saves": int(saves or 0),
+                }
+                for player_id, goals, assists, saves in round_stats_rows
+            }
 
     squad = []
     for player, team_player in rows:
         totals = totals_stats_map.get(player.player_id)
+        round_stats = round_stats_map.get(player.player_id)
         squad.append(
             FantasyTeamPlayerOut(
                 player_id=player.player_id,
@@ -127,6 +152,9 @@ def _build_team_response(
                 goals=int(player.goals or 0),
                 assists=int(player.assists or 0),
                 saves=int(player.saves or 0),
+                goals_round=round_stats["goals"] if round_stats else None,
+                assists_round=round_stats["assists"] if round_stats else None,
+                saves_round=round_stats["saves"] if round_stats else None,
                 points_round=points_map.get(player.player_id),
                 points_total=total_points_map.get(player.player_id, 0.0),
                 clean_sheets=totals["clean_sheets"] if totals else 0,

@@ -12,6 +12,9 @@ export type Player = {
   goals?: number;
   assists?: number;
   saves?: number;
+  goals_round?: number | null;
+  assists_round?: number | null;
+  saves_round?: number | null;
   fouls?: number;
   yellow_cards?: number;
   red_cards?: number;

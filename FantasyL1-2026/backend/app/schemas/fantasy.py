@@ -24,6 +24,9 @@ class FantasyTeamPlayerOut(BaseModel):
     goals: int = 0
     assists: int = 0
     saves: int = 0
+    goals_round: Optional[int] = None
+    assists_round: Optional[int] = None
+    saves_round: Optional[int] = None
     points_round: Optional[float] = None
     points_total: Optional[float] = None
     clean_sheets: Optional[int] = None
