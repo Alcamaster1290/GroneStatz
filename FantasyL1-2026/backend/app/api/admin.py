@@ -750,6 +750,20 @@ def upsert_player_stats(
         .all()
     )
     fixture_map = {fixture.match_id: fixture for fixture in fixtures}
+    missing_matches = match_ids.difference(fixture_map.keys())
+    if missing_matches:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"fixture_not_found:{sorted(missing_matches)}",
+        )
+    mismatch_round = [
+        fixture.match_id for fixture in fixtures if fixture.round_id != round_obj.id
+    ]
+    if mismatch_round:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"fixture_round_mismatch:{sorted(mismatch_round)}",
+        )
 
     players = (
         db.execute(select(PlayerCatalog).where(PlayerCatalog.player_id.in_(player_ids)))

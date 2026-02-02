@@ -66,3 +66,21 @@ class PublicLineupOut(BaseModel):
     captain_player_id: int | None = None
     vice_captain_player_id: int | None = None
     slots: List[PublicLineupSlotOut]
+
+
+class PublicMarketPlayerOut(BaseModel):
+    player_id: int
+    name: str
+    short_name: str | None = None
+    position: str
+    team_id: int
+    is_injured: bool
+    price_current: float
+    bought_price: float
+    points_total: float
+
+
+class PublicMarketOut(BaseModel):
+    fantasy_team_id: int
+    team_name: str
+    players: List[PublicMarketPlayerOut]

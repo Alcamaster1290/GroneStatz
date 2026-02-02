@@ -326,6 +326,24 @@ export type PublicLineup = {
   slots: PublicLineupSlot[];
 };
 
+export type PublicMarketPlayer = {
+  player_id: number;
+  name: string;
+  short_name?: string | null;
+  position: Position;
+  team_id: number;
+  is_injured: boolean;
+  price_current: number;
+  bought_price: number;
+  points_total: number;
+};
+
+export type PublicMarket = {
+  fantasy_team_id: number;
+  team_name: string;
+  players: PublicMarketPlayer[];
+};
+
 export type TransferCount = {
   round_number: number;
   transfers_used: number;

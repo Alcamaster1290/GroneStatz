@@ -1,13 +1,23 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
-from app.models import FantasyLineup, FantasyLineupSlot, FantasyTeam, League, LeagueMember, PlayerCatalog, Round
-from app.schemas.ranking import PublicLineupOut, RankingOut
+from app.models import (
+    FantasyLineup,
+    FantasyLineupSlot,
+    FantasyTeam,
+    FantasyTeamPlayer,
+    League,
+    LeagueMember,
+    PlayerCatalog,
+    PointsRound,
+    Round,
+)
+from app.schemas.ranking import PublicLineupOut, PublicMarketOut, RankingOut
 from app.services.fantasy import (
     get_current_round,
     get_latest_round,
@@ -141,4 +151,72 @@ def get_team_lineup(
         captain_player_id=lineup.captain_player_id,
         vice_captain_player_id=lineup.vice_captain_player_id,
         slots=slots_sorted,
+    )
+
+
+@router.get("/team/{fantasy_team_id}/market", response_model=PublicMarketOut)
+def get_team_market(
+    fantasy_team_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+) -> PublicMarketOut:
+    season = get_or_create_season(db)
+    team = (
+        db.execute(
+            select(FantasyTeam).where(
+                FantasyTeam.id == fantasy_team_id,
+                FantasyTeam.season_id == season.id,
+            )
+        )
+        .scalars()
+        .first()
+    )
+    if not team:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="team_not_found")
+
+    rows = (
+        db.execute(
+            select(PlayerCatalog, FantasyTeamPlayer)
+            .join(FantasyTeamPlayer, FantasyTeamPlayer.player_id == PlayerCatalog.player_id)
+            .where(FantasyTeamPlayer.fantasy_team_id == team.id)
+        )
+        .all()
+    )
+    if not rows:
+        return PublicMarketOut(fantasy_team_id=team.id, team_name=team.name or f"Equipo {team.id}", players=[])
+
+    player_ids = [player.player_id for player, _ in rows]
+    points_rows = (
+        db.execute(
+            select(PointsRound.player_id, func.coalesce(func.sum(PointsRound.points), 0))
+            .where(
+                PointsRound.season_id == season.id,
+                PointsRound.player_id.in_(player_ids),
+            )
+            .group_by(PointsRound.player_id)
+        )
+        .all()
+    )
+    points_map = {player_id: float(points) for player_id, points in points_rows}
+
+    players = [
+        {
+            "player_id": player.player_id,
+            "name": player.name,
+            "short_name": player.short_name,
+            "position": player.position,
+            "team_id": player.team_id,
+            "is_injured": bool(player.is_injured),
+            "price_current": float(player.price_current),
+            "bought_price": float(team_player.bought_price),
+            "points_total": points_map.get(player.player_id, 0.0),
+        }
+        for player, team_player in rows
+    ]
+    players_sorted = sorted(players, key=lambda item: (item["position"] or "", item["name"] or ""))
+
+    return PublicMarketOut(
+        fantasy_team_id=team.id,
+        team_name=team.name or f"Equipo {team.id}",
+        players=players_sorted,
     )

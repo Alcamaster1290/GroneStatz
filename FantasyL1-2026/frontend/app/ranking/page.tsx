@@ -13,6 +13,7 @@ import {
   getRankingGeneral,
   getRankingLeague,
   getRankingLineup,
+  getRankingMarket,
   getTeam,
   getTeams,
   joinLeague,
@@ -21,7 +22,14 @@ import {
   updateFavoriteTeam
 } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
-import { League, PublicLineup, PublicLineupSlot, RankingResponse } from "@/lib/types";
+import {
+  League,
+  PublicLineup,
+  PublicLineupSlot,
+  PublicMarket,
+  PublicMarketPlayer,
+  RankingResponse
+} from "@/lib/types";
 
 const positionLabels: Record<string, string> = {
   G: "Arquero",
@@ -164,6 +172,11 @@ export default function RankingPage() {
   const [lineupError, setLineupError] = useState<string | null>(null);
   const [lineupData, setLineupData] = useState<PublicLineup | null>(null);
   const [lineupTeamName, setLineupTeamName] = useState("");
+  const [lineupTeamId, setLineupTeamId] = useState<number | null>(null);
+  const [detailView, setDetailView] = useState<"lineup" | "market">("lineup");
+  const [marketLoading, setMarketLoading] = useState(false);
+  const [marketError, setMarketError] = useState<string | null>(null);
+  const [marketData, setMarketData] = useState<PublicMarket | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
@@ -355,10 +368,14 @@ export default function RankingPage() {
   const handleViewLineup = async (fantasyTeamId: number, teamName: string) => {
     if (!token) return;
     setLineupTeamName(teamName);
+    setLineupTeamId(fantasyTeamId);
     setLineupOpen(true);
     setLineupLoading(true);
     setLineupError(null);
     setLineupData(null);
+    setDetailView("lineup");
+    setMarketData(null);
+    setMarketError(null);
     try {
       const data = await getRankingLineup(token, fantasyTeamId);
       setLineupData(data);
@@ -367,6 +384,21 @@ export default function RankingPage() {
       setLineupError(String(err));
     } finally {
       setLineupLoading(false);
+    }
+  };
+
+  const loadMarket = async (fantasyTeamId: number, teamName: string) => {
+    if (!token) return;
+    setMarketLoading(true);
+    setMarketError(null);
+    try {
+      const data = await getRankingMarket(token, fantasyTeamId);
+      setMarketData(data);
+      setLineupTeamName(data.team_name || teamName);
+    } catch (err) {
+      setMarketError(String(err));
+    } finally {
+      setMarketLoading(false);
     }
   };
 
@@ -449,6 +481,46 @@ export default function RankingPage() {
               V
             </span>
           ) : null}
+        </div>
+      </div>
+    );
+  };
+
+  const renderMarketPlayer = (player: PublicMarketPlayer) => {
+    const positionLabel = positionLabels[player.position] || player.position;
+    return (
+      <div
+        key={`market-${player.player_id}`}
+        className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs"
+      >
+        <div className="flex items-center gap-2">
+          <div className="relative h-9 w-9 overflow-hidden rounded-full bg-surface2/60 ring-1 ring-white/10">
+            <img
+              src={`/images/players/${player.player_id}.png`}
+              alt=""
+              className="h-full w-full object-cover"
+              onError={(event) => {
+                (event.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
+            <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black/70">
+              <img
+                src={`/images/teams/${player.team_id}.png`}
+                alt=""
+                className="h-full w-full object-contain"
+              />
+            </span>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-ink">
+              {player.short_name || player.name}
+            </p>
+            <p className="text-[10px] text-muted">{positionLabel}</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] text-muted">Pts totales</p>
+          <p className="text-sm font-semibold text-ink">{player.points_total.toFixed(1)}</p>
         </div>
       </div>
     );
@@ -612,12 +684,43 @@ export default function RankingPage() {
                     : "Sin ronda registrada"}
                 </p>
               </div>
-              <button
-                onClick={() => setLineupOpen(false)}
-                className="rounded-full border border-white/10 px-3 py-1 text-xs text-ink"
-              >
-                Cerrar
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setDetailView("lineup")}
+                  className={
+                    "rounded-full px-3 py-1 text-xs " +
+                    (detailView === "lineup"
+                      ? "bg-accent text-black"
+                      : "border border-white/10 text-ink")
+                  }
+                >
+                  XI titular
+                </button>
+                <button
+                  onClick={() => {
+                    setDetailView("market");
+                    if (lineupTeamId) {
+                      if (!marketData || marketData.fantasy_team_id !== lineupTeamId) {
+                        loadMarket(lineupTeamId, lineupTeamName || "Equipo");
+                      }
+                    }
+                  }}
+                  className={
+                    "rounded-full px-3 py-1 text-xs " +
+                    (detailView === "market"
+                      ? "bg-accent text-black"
+                      : "border border-white/10 text-ink")
+                  }
+                >
+                  Mercado
+                </button>
+                <button
+                  onClick={() => setLineupOpen(false)}
+                  className="rounded-full border border-white/10 px-3 py-1 text-xs text-ink"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
 
             {lineupLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
@@ -629,7 +732,7 @@ export default function RankingPage() {
               </p>
             ) : null}
 
-            {!lineupLoading && lineupData ? (
+            {detailView === "lineup" && !lineupLoading && lineupData ? (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-muted">
@@ -645,6 +748,26 @@ export default function RankingPage() {
                   </div>
                   <div className="space-y-2">{bench.map(renderSlot)}</div>
                 </div>
+              </div>
+            ) : null}
+
+            {detailView === "market" ? (
+              <div className="space-y-3">
+                {marketLoading ? (
+                  <p className="text-xs text-muted">Cargando mercado...</p>
+                ) : null}
+                {marketError ? (
+                  <p className="text-xs text-warning">{marketError}</p>
+                ) : null}
+                {!marketLoading && marketData ? (
+                  <div className="space-y-2">
+                    {marketData.players.length === 0 ? (
+                      <p className="text-xs text-muted">Sin jugadores en mercado.</p>
+                    ) : (
+                      marketData.players.map(renderMarketPlayer)
+                    )}
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>

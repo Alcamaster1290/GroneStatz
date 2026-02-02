@@ -17,6 +17,7 @@ import {
   Player,
   PlayerStatsEntry,
   PublicLineup,
+  PublicMarket,
   RankingResponse,
   RoundInfo,
   TransferCount
@@ -711,4 +712,11 @@ export async function getRankingLineup(
   fantasyTeamId: number
 ): Promise<PublicLineup> {
   return apiFetch(`/ranking/team/${fantasyTeamId}/lineup`, {}, token);
+}
+
+export async function getRankingMarket(
+  token: string,
+  fantasyTeamId: number
+): Promise<PublicMarket> {
+  return apiFetch(`/ranking/team/${fantasyTeamId}/market`, {}, token);
 }
