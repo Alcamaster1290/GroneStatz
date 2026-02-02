@@ -262,6 +262,98 @@ def recalc_round(
         raise
 
 
+@router.post("/recalc_match")
+def recalc_match(
+    match_id: int = Query(..., ge=1),
+    apply_prices: bool = Query(default=False),
+    write_price_history: bool = Query(default=False),
+    db: Session = Depends(get_db),
+) -> dict:
+    season = get_or_create_season(db)
+    fixture = (
+        db.execute(
+            select(Fixture).where(
+                Fixture.season_id == season.id,
+                Fixture.match_id == match_id,
+            )
+        )
+        .scalars()
+        .first()
+    )
+    if not fixture:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="fixture_not_found")
+
+    round_number = db.execute(select(Round.round_number).where(Round.id == fixture.round_id)).scalar_one()
+    result = recalc_round_points(
+        db,
+        round_number=round_number,
+        apply_prices=apply_prices,
+        write_price_history=write_price_history,
+    )
+    log_action(
+        db,
+        category="round",
+        action="recalc_match",
+        details={
+            "match_id": match_id,
+            "round_number": round_number,
+            "apply_prices": apply_prices,
+            "write_price_history": write_price_history,
+        },
+    )
+    return result
+
+
+@router.post("/rounds/status")
+def set_round_status(
+    round_number: int = Query(..., ge=1),
+    status_value: str = Query(..., alias="status"),
+    db: Session = Depends(get_db),
+) -> dict:
+    season = get_or_create_season(db)
+    round_obj = get_round_by_number(db, season.id, round_number)
+    if not round_obj:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+
+    normalized = status_value.strip().capitalize()
+    if normalized not in {"Cerrada", "Pendiente", "Proximamente"}:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_status")
+
+    if normalized == "Cerrada":
+        round_obj.is_closed = True
+        db.commit()
+        return {"ok": True, "round_number": round_number, "status": "Cerrada"}
+
+    rounds = (
+        db.execute(select(Round).where(Round.season_id == season.id).order_by(Round.round_number))
+        .scalars()
+        .all()
+    )
+    if not rounds:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+
+    if normalized == "Pendiente":
+        pending_round = round_number
+    else:
+        open_before = [round.round_number for round in rounds if not round.is_closed and round.round_number < round_number]
+        if open_before:
+            pending_round = min(open_before)
+        else:
+            previous = [round.round_number for round in rounds if round.round_number < round_number]
+            if not previous:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="pending_round_required")
+            pending_round = max(previous)
+
+    for round_item in rounds:
+        if round_item.round_number < pending_round:
+            round_item.is_closed = True
+        else:
+            round_item.is_closed = False
+
+    db.commit()
+    return {"ok": True, "round_number": round_number, "status": normalized, "pending_round": pending_round}
+
+
 @router.post("/seed_season_rounds")
 def seed_season_rounds(
     rounds: Optional[int] = Query(default=None, ge=1),

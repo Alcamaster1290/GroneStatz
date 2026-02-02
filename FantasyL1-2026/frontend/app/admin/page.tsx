@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import PlayerCard from "@/components/PlayerCard";
 import {
   createAdminFixture,
-  closeAdminRound,
   deleteAdminUser,
   getAdminLeagues,
   getAdminLogs,
@@ -20,9 +19,10 @@ import {
   getCatalogPlayers,
   getTeams,
   getAdminPlayers,
-  openAdminRound,
+  recalcAdminMatch,
   recalcAdminRound,
   updateAdminFixture,
+  updateAdminRoundStatus,
   upsertAdminPlayerStats,
   updateAdminPlayerInjury
 } from "@/lib/api";
@@ -98,6 +98,7 @@ export default function AdminTeamsPage() {
   const statusOptions: FixtureStatus[] = ["Programado", "Postergado", "Finalizado"];
 
   const [statsRound, setStatsRound] = useState("");
+  const [statsMatchId, setStatsMatchId] = useState("");
   const [statsInput, setStatsInput] = useState("");
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsMessage, setStatsMessage] = useState<string | null>(null);
@@ -146,8 +147,10 @@ export default function AdminTeamsPage() {
   const [rounds, setRounds] = useState<AdminRound[]>([]);
   const [roundsLoading, setRoundsLoading] = useState(false);
   const [roundsError, setRoundsError] = useState<string | null>(null);
-  const [closeRoundNumber, setCloseRoundNumber] = useState("");
-  const [openRoundNumber, setOpenRoundNumber] = useState("");
+  const [roundStatusNumber, setRoundStatusNumber] = useState("");
+  const [roundStatusValue, setRoundStatusValue] = useState<
+    "Cerrada" | "Pendiente" | "Proximamente"
+  >("Pendiente");
   const [roundActionMessage, setRoundActionMessage] = useState<string | null>(null);
   const [leagues, setLeagues] = useState<AdminLeague[]>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
@@ -504,6 +507,32 @@ export default function AdminTeamsPage() {
     }
   };
 
+  const handleRecalcMatch = async () => {
+    if (!adminToken) {
+      setStatsMessage("admin_token_required");
+      return;
+    }
+    if (!statsMatchId.trim()) {
+      setStatsMessage("match_required");
+      return;
+    }
+    const matchId = Number(statsMatchId);
+    if (!Number.isFinite(matchId) || matchId < 1) {
+      setStatsMessage("match_invalid");
+      return;
+    }
+    setStatsLoading(true);
+    setStatsMessage(null);
+    try {
+      const result = await recalcAdminMatch(adminToken, matchId, false, false);
+      setStatsMessage(`recalc_match_ok_${result.round_number}`);
+    } catch (err) {
+      setStatsMessage(String(err));
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   const updateStatsRow = (
     index: number,
     field:
@@ -727,49 +756,25 @@ export default function AdminTeamsPage() {
     }
   };
 
-  const handleCloseRound = async () => {
+  const handleUpdateRoundStatus = async () => {
     if (!adminToken) {
       setRoundActionMessage("admin_token_required");
       return;
     }
-    if (!closeRoundNumber.trim()) {
+    if (!roundStatusNumber.trim()) {
       setRoundActionMessage("round_required");
       return;
     }
-    const roundNumber = Number(closeRoundNumber);
+    const roundNumber = Number(roundStatusNumber);
     if (!Number.isFinite(roundNumber) || roundNumber < 1) {
       setRoundActionMessage("round_invalid");
       return;
     }
     setRoundActionMessage(null);
     try {
-      await closeAdminRound(adminToken, roundNumber);
+      await updateAdminRoundStatus(adminToken, roundNumber, roundStatusValue);
       await handleLoadRounds();
-      setRoundActionMessage("round_closed");
-    } catch (err) {
-      setRoundActionMessage(String(err));
-    }
-  };
-
-  const handleOpenRound = async () => {
-    if (!adminToken) {
-      setRoundActionMessage("admin_token_required");
-      return;
-    }
-    if (!openRoundNumber.trim()) {
-      setRoundActionMessage("round_required");
-      return;
-    }
-    const roundNumber = Number(openRoundNumber);
-    if (!Number.isFinite(roundNumber) || roundNumber < 1) {
-      setRoundActionMessage("round_invalid");
-      return;
-    }
-    setRoundActionMessage(null);
-    try {
-      await openAdminRound(adminToken, roundNumber);
-      await handleLoadRounds();
-      setRoundActionMessage("round_opened");
+      setRoundActionMessage(`round_status_${roundStatusValue.toLowerCase()}`);
     } catch (err) {
       setRoundActionMessage(String(err));
     }
@@ -821,7 +826,7 @@ export default function AdminTeamsPage() {
         <p className="text-sm text-muted">Equipos guardados por usuario.</p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="space-y-3">
         <div className="glass rounded-2xl border border-white/10 px-4 py-3 text-xs">
           <p className="text-muted">Equipos</p>
           <p className="text-lg font-semibold text-ink">{teams.length}</p>
@@ -844,7 +849,7 @@ export default function AdminTeamsPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="space-y-6">
         <div className="space-y-4">
           <div className="glass space-y-3 rounded-2xl p-4">
             <label className="text-xs text-muted">Admin Token</label>
@@ -872,43 +877,37 @@ export default function AdminTeamsPage() {
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold">Cierre de rondas</h2>
-            <p className="text-sm text-muted">Marca rondas como cerradas.</p>
+            <h2 className="text-lg font-semibold">Estado de rondas</h2>
+            <p className="text-sm text-muted">
+              Configura la ronda Pendiente y las próximas rondas.
+            </p>
           </div>
 
           <div className="glass space-y-3 rounded-2xl p-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-wrap gap-2">
-                <input
-                  type="number"
-                  value={openRoundNumber}
-                  onChange={(event) => setOpenRoundNumber(event.target.value)}
-                  placeholder="Ronda a abrir"
-                  className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
-                />
-                <button
-                  onClick={handleOpenRound}
-                  className="rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
-                >
-                  Activar ronda
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <input
-                  type="number"
-                  value={closeRoundNumber}
-                  onChange={(event) => setCloseRoundNumber(event.target.value)}
-                  placeholder="Ronda a cerrar"
-                  className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
-                />
-                <button
-                  onClick={handleCloseRound}
-                  className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
-                >
-                  Cerrar ronda
-                </button>
-              </div>
-            </div>
+            <input
+              type="number"
+              value={roundStatusNumber}
+              onChange={(event) => setRoundStatusNumber(event.target.value)}
+              placeholder="Número de ronda"
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+            />
+            <select
+              value={roundStatusValue}
+              onChange={(event) =>
+                setRoundStatusValue(event.target.value as "Cerrada" | "Pendiente" | "Proximamente")
+              }
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+            >
+              <option value="Pendiente">Pendiente</option>
+              <option value="Proximamente">Proximamente</option>
+              <option value="Cerrada">Cerrada</option>
+            </select>
+            <button
+              onClick={handleUpdateRoundStatus}
+              className="w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+            >
+              Actualizar estado
+            </button>
             <button
               onClick={handleLoadRounds}
               className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
@@ -993,7 +992,7 @@ export default function AdminTeamsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <div className="mt-3 space-y-3">
                     <div>
                       <p className="text-[10px] text-muted">Titulares</p>
                       <div className="mt-1 space-y-1">
@@ -1200,7 +1199,7 @@ export default function AdminTeamsPage() {
 
       <div className="glass space-y-3 rounded-2xl p-4">
         <p className="text-sm font-semibold text-ink">Nuevo partido</p>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-3">
           <div className="space-y-1">
             <label className="text-xs text-muted">Ronda</label>
             <input
@@ -1378,7 +1377,7 @@ export default function AdminTeamsPage() {
                   <span className="text-xs text-muted">{fixture.status}</span>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-3">
                   <div className="space-y-1">
                     <label className="text-xs text-muted">Ronda</label>
                     <input
@@ -1558,7 +1557,7 @@ export default function AdminTeamsPage() {
                     {stat.points.toFixed(1)} pts
                   </div>
                 </div>
-                <div className="mt-2 grid gap-2 text-[11px] text-muted sm:grid-cols-3 lg:grid-cols-4">
+                <div className="mt-2 space-y-1 text-[11px] text-muted">
                   <span>Min: {stat.minutesplayed}</span>
                   <span>Goles: {stat.goals}</span>
                   <span>Asist: {stat.assists}</span>
@@ -1701,12 +1700,28 @@ export default function AdminTeamsPage() {
         >
           {statsLoading ? "Cargando..." : "Cargar stats"}
         </button>
+        <div className="space-y-2 rounded-2xl border border-white/10 bg-black/20 p-3">
+          <label className="text-xs text-muted">Match ID</label>
+          <input
+            value={statsMatchId}
+            onChange={(event) => setStatsMatchId(event.target.value)}
+            className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+            placeholder="Ej: 15438954"
+          />
+          <button
+            onClick={handleRecalcMatch}
+            className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+            disabled={statsLoading}
+          >
+            Calcular puntos para el partido
+          </button>
+        </div>
         <button
           onClick={handleRecalcRound}
           className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
           disabled={statsLoading}
         >
-          Calcular puntos para el partido
+          Recalcular ronda (sin precios)
         </button>
         {statsMessage ? <p className="text-xs text-muted">{statsMessage}</p> : null}
       </div>
