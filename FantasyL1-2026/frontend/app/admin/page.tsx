@@ -1697,7 +1697,7 @@ export default function AdminTeamsPage() {
                       {transfer.out_price.toFixed(1)} M - actual {transfer.out_price_current.toFixed(1)} M
                     </p>
                   </div>
-                  <div className="text-center text-xs text-muted">-></div>
+                  <div className="text-center text-xs text-muted">&gt;</div>
                   <div className="text-right">
                     <p className="text-[11px] text-muted">Entra</p>
                     <p className="text-sm font-semibold">
@@ -1720,4 +1720,5 @@ export default function AdminTeamsPage() {
     </div>
   );
 }
+
 
