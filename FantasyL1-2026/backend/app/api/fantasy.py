@@ -64,9 +64,38 @@ def _build_team_response(
         .all()
     )
     points_map = {}
-    round_stats_map = {}
+    total_points_map = {}
+    totals_stats_map = {}
     if rows:
         player_ids = [player.player_id for player, _ in rows]
+        total_points_rows = db.execute(
+            select(PointsRound.player_id, func.coalesce(func.sum(PointsRound.points), 0))
+            .where(
+                PointsRound.season_id == team.season_id,
+                PointsRound.player_id.in_(player_ids),
+            )
+            .group_by(PointsRound.player_id)
+        ).all()
+        total_points_map = {player_id: float(points) for player_id, points in total_points_rows}
+        totals_stats_rows = db.execute(
+            select(
+                PlayerRoundStat.player_id,
+                func.coalesce(func.sum(PlayerRoundStat.clean_sheets), 0),
+                func.coalesce(func.sum(PlayerRoundStat.goals_conceded), 0),
+            )
+            .where(
+                PlayerRoundStat.season_id == team.season_id,
+                PlayerRoundStat.player_id.in_(player_ids),
+            )
+            .group_by(PlayerRoundStat.player_id)
+        ).all()
+        totals_stats_map = {
+            player_id: {
+                "clean_sheets": int(clean_sheets or 0),
+                "goals_conceded": int(goals_conceded or 0),
+            }
+            for player_id, clean_sheets, goals_conceded in totals_stats_rows
+        }
         round_obj = (
             get_round_by_number(db, team.season_id, round_number)
             if round_number
@@ -82,28 +111,9 @@ def _build_team_response(
             ).all()
             points_map = {player_id: float(points) for player_id, points in points_rows}
 
-            stats_rows = db.execute(
-                select(
-                    PlayerRoundStat.player_id,
-                    PlayerRoundStat.clean_sheets,
-                    PlayerRoundStat.goals_conceded,
-                ).where(
-                    PlayerRoundStat.season_id == team.season_id,
-                    PlayerRoundStat.round_id == round_obj.id,
-                    PlayerRoundStat.player_id.in_(player_ids),
-                )
-            ).all()
-            round_stats_map = {
-                player_id: {
-                    "clean_sheets": int(clean_sheets or 0),
-                    "goals_conceded": int(goals_conceded or 0),
-                }
-                for player_id, clean_sheets, goals_conceded in stats_rows
-            }
-
     squad = []
     for player, team_player in rows:
-        stats = round_stats_map.get(player.player_id)
+        totals = totals_stats_map.get(player.player_id)
         squad.append(
             FantasyTeamPlayerOut(
                 player_id=player.player_id,
@@ -118,8 +128,9 @@ def _build_team_response(
                 assists=int(player.assists or 0),
                 saves=int(player.saves or 0),
                 points_round=points_map.get(player.player_id),
-                clean_sheets=stats["clean_sheets"] if stats else (0 if round_stats_map else None),
-                goals_conceded=stats["goals_conceded"] if stats else (0 if round_stats_map else None),
+                points_total=total_points_map.get(player.player_id, 0.0),
+                clean_sheets=totals["clean_sheets"] if totals else 0,
+                goals_conceded=totals["goals_conceded"] if totals else 0,
             )
         )
 

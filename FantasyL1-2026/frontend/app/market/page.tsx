@@ -183,7 +183,7 @@ function MarketPlayerDetails({ player, fixtures }: { player: Player; fixtures: F
   const displayName = player.short_name || player.shortName || player.name;
   const isKeeper = player.position === "G";
   const points =
-    typeof player.points_round === "number" ? player.points_round.toFixed(1) : "--";
+    typeof player.points_total === "number" ? player.points_total.toFixed(1) : "--";
   const primaryStatLabel = isKeeper ? "Atajadas" : "Goles";
   const primaryStatValue = isKeeper ? player.saves ?? 0 : player.goals ?? 0;
   const secondaryStatLabel = isKeeper ? "Goles recibidos" : "Asistencias";
@@ -241,7 +241,7 @@ function MarketPlayerDetails({ player, fixtures }: { player: Player; fixtures: F
       ) : null}
       <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/20 p-3 text-xs">
         <div className="space-y-1">
-          <p className="text-[10px] uppercase text-muted">Puntaje ronda</p>
+          <p className="text-[10px] uppercase text-muted">Puntaje total</p>
           <p className="text-sm font-semibold text-ink">{points}</p>
         </div>
         <div className="space-y-1">

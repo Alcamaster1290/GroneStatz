@@ -50,6 +50,25 @@ def list_players(
         .group_by(PlayerMatchStat.player_id)
         .subquery()
     )
+    points_total_subq = (
+        select(
+            PointsRound.player_id.label("player_id"),
+            func.coalesce(func.sum(PointsRound.points), 0).label("points_total"),
+        )
+        .where(PointsRound.season_id == season.id)
+        .group_by(PointsRound.player_id)
+        .subquery()
+    )
+    totals_stats_subq = (
+        select(
+            PlayerRoundStat.player_id.label("player_id"),
+            func.coalesce(func.sum(PlayerRoundStat.clean_sheets), 0).label("clean_sheets_total"),
+            func.coalesce(func.sum(PlayerRoundStat.goals_conceded), 0).label("goals_conceded_total"),
+        )
+        .where(PlayerRoundStat.season_id == season.id)
+        .group_by(PlayerRoundStat.player_id)
+        .subquery()
+    )
 
     query = (
         select(
@@ -59,8 +78,13 @@ def list_players(
             stats_subq.c.minutesplayed,
             stats_subq.c.saves,
             stats_subq.c.fouls,
+            func.coalesce(points_total_subq.c.points_total, 0).label("points_total"),
+            func.coalesce(totals_stats_subq.c.clean_sheets_total, 0).label("clean_sheets_total"),
+            func.coalesce(totals_stats_subq.c.goals_conceded_total, 0).label("goals_conceded_total"),
         )
         .outerjoin(stats_subq, PlayerCatalog.player_id == stats_subq.c.player_id)
+        .outerjoin(points_total_subq, PlayerCatalog.player_id == points_total_subq.c.player_id)
+        .outerjoin(totals_stats_subq, PlayerCatalog.player_id == totals_stats_subq.c.player_id)
     )
     if position:
         query = query.where(PlayerCatalog.position == position)
@@ -76,7 +100,6 @@ def list_players(
     query = query.order_by(PlayerCatalog.name).limit(limit).offset(offset)
     rows = db.execute(query).all()
     points_map = {}
-    round_stats_map = {}
     if rows and round_obj:
         player_ids = [row[0].player_id for row in rows]
         points_rows = db.execute(
@@ -87,24 +110,6 @@ def list_players(
             )
         ).all()
         points_map = {player_id: float(points) for player_id, points in points_rows}
-        stats_rows = db.execute(
-            select(
-                PlayerRoundStat.player_id,
-                PlayerRoundStat.clean_sheets,
-                PlayerRoundStat.goals_conceded,
-            ).where(
-                PlayerRoundStat.season_id == season.id,
-                PlayerRoundStat.round_id == round_obj.id,
-                PlayerRoundStat.player_id.in_(player_ids),
-            )
-        ).all()
-        round_stats_map = {
-            player_id: {
-                "clean_sheets": int(clean_sheets or 0),
-                "goals_conceded": int(goals_conceded or 0),
-            }
-            for player_id, clean_sheets, goals_conceded in stats_rows
-        }
     results: List[PlayerCatalogOut] = []
     for row in rows:
         player = row[0]
@@ -114,7 +119,9 @@ def list_players(
         saves = row[4] if row[4] is not None else player.saves
         fouls = row[5] if row[5] is not None else player.fouls
 
-        stats = round_stats_map.get(player.player_id)
+        points_total = float(row[6] or 0)
+        clean_sheets_total = int(row[7] or 0)
+        goals_conceded_total = int(row[8] or 0)
         results.append(
             PlayerCatalogOut(
                 player_id=player.player_id,
@@ -131,8 +138,9 @@ def list_players(
                 saves=int(saves or 0),
                 fouls=int(fouls or 0),
                 points_round=points_map.get(player.player_id),
-                clean_sheets=stats["clean_sheets"] if stats else (0 if round_stats_map else None),
-                goals_conceded=stats["goals_conceded"] if stats else (0 if round_stats_map else None),
+                points_total=points_total,
+                clean_sheets=clean_sheets_total,
+                goals_conceded=goals_conceded_total,
                 updated_at=player.updated_at,
             )
         )

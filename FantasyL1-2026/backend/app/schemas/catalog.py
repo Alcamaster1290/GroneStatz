@@ -25,6 +25,7 @@ class PlayerCatalogOut(BaseModel):
     saves: int
     fouls: int
     points_round: Optional[float] = None
+    points_total: Optional[float] = None
     clean_sheets: Optional[int] = None
     goals_conceded: Optional[int] = None
     updated_at: datetime

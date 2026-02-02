@@ -16,6 +16,7 @@ export type Player = {
   yellow_cards?: number;
   red_cards?: number;
   points_round?: number;
+  points_total?: number;
   clean_sheets?: number;
   goals_conceded?: number;
   bought_price?: number;
