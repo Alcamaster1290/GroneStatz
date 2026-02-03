@@ -190,9 +190,11 @@ function MarketPlayerDetails({ player, fixtures }: { player: Player; fixtures: F
   const priceDelta =
     "price_delta" in player ? (player as { price_delta?: number }).price_delta : undefined;
   if (typeof priceDelta === "number") {
+    const deltaSymbol = priceDelta === 0 ? "-" : priceDelta > 0 ? "▲" : "▼";
+    const deltaValue = priceDelta === 0 ? "-" : priceDelta.toFixed(1);
     stats.push({
       label: "Variacion",
-      value: `${priceDelta >= 0 ? "+" : ""}${priceDelta.toFixed(1)}`
+      value: `${deltaSymbol} ${deltaValue}`
     });
   }
   if (isKeeper) {

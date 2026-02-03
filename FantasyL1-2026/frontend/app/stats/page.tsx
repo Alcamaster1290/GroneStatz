@@ -318,6 +318,15 @@ export default function StatsPage() {
             const rounds = player.rounds ?? [];
             const roundPoints = rounds.map((round) => round.points);
             const priceDelta = typeof player.price_delta === "number" ? player.price_delta : 0;
+            const deltaTone =
+              priceDelta === 0
+                ? "text-amber-300"
+                : priceDelta > 0
+                  ? "text-emerald-300"
+                  : "text-red-300";
+            const deltaSymbol =
+              priceDelta === 0 ? "-" : priceDelta > 0 ? "\u25B2" : "\u25BC";
+            const deltaValue = priceDelta === 0 ? "-" : priceDelta.toFixed(1);
             return (
               <div
                 key={player.player_id}
@@ -387,10 +396,7 @@ export default function StatsPage() {
                     </p>
                     <div className="flex items-center gap-1 text-[10px] text-muted">
                       {renderSparkline(roundPoints)}
-                      <span className={priceDelta >= 0 ? "text-emerald-300" : "text-red-300"}>
-                        Δ {priceDelta >= 0 ? "+" : ""}
-                        {priceDelta.toFixed(1)}
-                      </span>
+                      <span className={deltaTone}>\u0394 {deltaSymbol} {deltaValue}</span>
                     </div>
                     <p className="text-xs font-semibold text-indigo-300">
                       {percent.toFixed(1)}%

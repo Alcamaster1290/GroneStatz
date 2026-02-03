@@ -59,6 +59,16 @@ export default function PlayerCard({
   const goalsConceded = player.goals_conceded ?? 0;
   const pointsTotal = typeof player.points_total === "number" ? player.points_total : 0;
   const priceDelta = typeof player.price_delta === "number" ? player.price_delta : null;
+  const deltaTone =
+    priceDelta === null
+      ? null
+      : priceDelta === 0
+        ? "text-amber-300"
+        : priceDelta > 0
+          ? "text-emerald-300"
+          : "text-red-300";
+  const deltaSymbol =
+    priceDelta === null ? "" : priceDelta === 0 ? "-" : priceDelta > 0 ? "▲" : "▼";
   const isGoalkeeper = player.position === "G";
   const isDefender = player.position === "D";
   const isInjured = Boolean(player.is_injured);
@@ -119,14 +129,8 @@ export default function PlayerCard({
       <div className="text-right">
         <p className="text-sm font-semibold text-accent">{player.price_current.toFixed(1)}</p>
         {priceDelta !== null ? (
-          <p
-            className={clsx(
-              "text-[10px]",
-              priceDelta >= 0 ? "text-emerald-300" : "text-red-300"
-            )}
-          >
-            {priceDelta >= 0 ? "+" : ""}
-            {priceDelta.toFixed(1)}
+          <p className={clsx("text-[10px]", deltaTone)}>
+            {deltaSymbol} {priceDelta === 0 ? "-" : priceDelta.toFixed(1)}
           </p>
         ) : null}
       </div>
