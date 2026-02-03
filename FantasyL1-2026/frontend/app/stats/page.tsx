@@ -396,7 +396,7 @@ export default function StatsPage() {
                     </p>
                     <div className="flex items-center gap-1 text-[10px] text-muted">
                       {renderSparkline(roundPoints)}
-                      <span className={deltaTone}>Δ {deltaSymbol} {deltaValue}</span>
+                      <span className={deltaTone}>{deltaSymbol} {deltaValue}</span>
                     </div>
                     <p className="text-xs font-semibold text-indigo-300">
                       {percent.toFixed(1)}%
