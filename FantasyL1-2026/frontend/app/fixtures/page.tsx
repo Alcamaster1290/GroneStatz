@@ -275,6 +275,10 @@ export default function FixturesPage() {
     }, {} as Record<string, Fixture[]>);
   }, [roundFixtures]);
 
+  const sortedMatchStats = useMemo(() => {
+    return [...matchStats].sort((a, b) => (b.points || 0) - (a.points || 0));
+  }, [matchStats]);
+
   if (!token) return <AuthPanel />;
 
   const roundIndex = selectedRound ? roundNumbers.indexOf(selectedRound) : -1;
@@ -421,9 +425,9 @@ export default function FixturesPage() {
               <p className="text-xs text-warning">{matchStatsError}</p>
             ) : null}
             {!matchStatsLoading && !matchStatsError ? (
-              matchStats.length ? (
+              sortedMatchStats.length ? (
                 <div className="space-y-2">
-                  {matchStats.map((row) => {
+                  {sortedMatchStats.map((row) => {
                     const pointsLabel = Math.trunc(row.points);
                     const statLine = [
                       `Min ${row.minutesplayed}`,
