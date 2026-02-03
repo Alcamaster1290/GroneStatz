@@ -15,6 +15,7 @@ from app.models import (
     PlayerMatchStat,
     PlayerRoundStat,
     PointsRound,
+    PriceMovement,
     Round,
     Team,
 )
@@ -78,6 +79,28 @@ def list_players(
         .group_by(PlayerRoundStat.player_id)
         .subquery()
     )
+    latest_price_movement_subq = (
+        select(
+            PriceMovement.player_id.label("player_id"),
+            func.max(PriceMovement.round_id).label("round_id"),
+        )
+        .where(PriceMovement.season_id == season.id)
+        .group_by(PriceMovement.player_id)
+        .subquery()
+    )
+    price_movement_subq = (
+        select(
+            PriceMovement.player_id.label("player_id"),
+            PriceMovement.delta.label("price_delta"),
+        )
+        .join(
+            latest_price_movement_subq,
+            (PriceMovement.player_id == latest_price_movement_subq.c.player_id)
+            & (PriceMovement.round_id == latest_price_movement_subq.c.round_id),
+        )
+        .where(PriceMovement.season_id == season.id)
+        .subquery()
+    )
 
     query = (
         select(
@@ -90,10 +113,12 @@ def list_players(
             func.coalesce(points_total_subq.c.points_total, 0).label("points_total"),
             func.coalesce(totals_stats_subq.c.clean_sheets_total, 0).label("clean_sheets_total"),
             func.coalesce(totals_stats_subq.c.goals_conceded_total, 0).label("goals_conceded_total"),
+            price_movement_subq.c.price_delta,
         )
         .outerjoin(stats_subq, PlayerCatalog.player_id == stats_subq.c.player_id)
         .outerjoin(points_total_subq, PlayerCatalog.player_id == points_total_subq.c.player_id)
         .outerjoin(totals_stats_subq, PlayerCatalog.player_id == totals_stats_subq.c.player_id)
+        .outerjoin(price_movement_subq, PlayerCatalog.player_id == price_movement_subq.c.player_id)
     )
     if position:
         query = query.where(PlayerCatalog.position == position)
@@ -106,7 +131,7 @@ def list_players(
     if min_price is not None:
         query = query.where(PlayerCatalog.price_current >= min_price)
 
-    query = query.order_by(PlayerCatalog.name).limit(limit).offset(offset)
+        query = query.order_by(PlayerCatalog.name).limit(limit).offset(offset)
     rows = db.execute(query).all()
     points_map = {}
     if rows and round_obj:
@@ -131,6 +156,7 @@ def list_players(
         points_total = float(row[6] or 0)
         clean_sheets_total = int(row[7] or 0)
         goals_conceded_total = int(row[8] or 0)
+        price_delta = float(row[9]) if row[9] is not None else None
         results.append(
             PlayerCatalogOut(
                 player_id=player.player_id,
@@ -139,6 +165,7 @@ def list_players(
                 position=player.position,
                 team_id=player.team_id,
                 price_current=float(player.price_current),
+                price_delta=price_delta,
                 is_injured=bool(player.is_injured),
                 minutesplayed=int(minutesplayed or 0),
                 matches_played=player.matches_played,

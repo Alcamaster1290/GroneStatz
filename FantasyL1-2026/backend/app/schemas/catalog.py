@@ -17,6 +17,7 @@ class PlayerCatalogOut(BaseModel):
     position: str
     team_id: int
     price_current: float
+    price_delta: Optional[float] = None
     is_injured: bool
     minutesplayed: int
     matches_played: int

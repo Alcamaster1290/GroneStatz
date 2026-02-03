@@ -119,6 +119,7 @@ export type PlayerStatsEntry = {
   position: Position;
   team_id: number;
   price_current: number;
+  price_delta?: number | null;
   is_injured?: boolean;
   selected_count: number;
   selected_percent: number;

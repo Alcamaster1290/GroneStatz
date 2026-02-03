@@ -187,6 +187,12 @@ function MarketPlayerDetails({ player, fixtures }: { player: Player; fixtures: F
   const stats: { label: string; value: number | string; accent?: boolean }[] = [
     { label: "Puntos", value: pointsValue }
   ];
+  if (typeof player.price_delta === "number") {
+    stats.push({
+      label: "Variacion",
+      value: `${player.price_delta >= 0 ? "+" : ""}${player.price_delta.toFixed(1)}`
+    });
+  }
   if (isKeeper) {
     stats.push(
       { label: "Atajadas", value: player.saves ?? 0 },
