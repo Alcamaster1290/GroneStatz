@@ -233,6 +233,15 @@ export type AdminMatchPlayer = {
   points: number;
 };
 
+export type AdminRoundTopPlayer = {
+  player_id: number;
+  name: string;
+  short_name?: string | null;
+  position?: Position | string | null;
+  team_id?: number | null;
+  points: number;
+};
+
 export type AdminPriceMovement = {
   round_number: number;
   player_id: number;

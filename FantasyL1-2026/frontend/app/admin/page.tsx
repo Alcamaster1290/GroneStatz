@@ -15,6 +15,7 @@ import {
   getAdminMatchStats,
   getAdminTeams,
   getAdminLineups,
+  getAdminRoundTopPlayers,
   rebuildAdminCatalog,
   getCatalogPlayers,
   getTeams,
@@ -32,6 +33,7 @@ import {
   AdminRound,
   AdminFixture,
   AdminMatchPlayer,
+  AdminRoundTopPlayer,
   AdminPriceMovement,
   AdminTransfer,
   AdminTeam,
@@ -102,6 +104,9 @@ export default function AdminTeamsPage() {
   const [statsInput, setStatsInput] = useState("");
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsMessage, setStatsMessage] = useState<string | null>(null);
+  const [roundTopPlayers, setRoundTopPlayers] = useState<AdminRoundTopPlayer[]>([]);
+  const [roundTopLoading, setRoundTopLoading] = useState(false);
+  const [roundTopError, setRoundTopError] = useState<string | null>(null);
   const [statsRows, setStatsRows] = useState<
     {
       player_id: number;
@@ -193,6 +198,22 @@ export default function AdminTeamsPage() {
   useEffect(() => {
     getTeams().then(setTeamsCatalog).catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (!adminToken) return;
+    const roundValue = Number(statsRound);
+    if (!roundValue || Number.isNaN(roundValue)) {
+      setRoundTopPlayers([]);
+      setRoundTopError(null);
+      return;
+    }
+    setRoundTopLoading(true);
+    setRoundTopError(null);
+    getAdminRoundTopPlayers(adminToken, roundValue)
+      .then((data) => setRoundTopPlayers(data))
+      .catch((err) => setRoundTopError(String(err)))
+      .finally(() => setRoundTopLoading(false));
+  }, [adminToken, statsRound]);
 
   const teamMap = useMemo(() => {
     return new Map(
@@ -1592,6 +1613,36 @@ export default function AdminTeamsPage() {
             onChange={(event) => setStatsRound(event.target.value)}
             className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
           />
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-ink">Top 10 jugadores (ronda)</p>
+            {roundTopLoading ? <span className="text-[11px] text-muted">Cargando...</span> : null}
+          </div>
+          {roundTopError ? <p className="mt-1 text-[11px] text-warning">{roundTopError}</p> : null}
+          {!roundTopLoading && !roundTopError && roundTopPlayers.length === 0 ? (
+            <p className="mt-1 text-[11px] text-muted">Sin datos cargados para la ronda.</p>
+          ) : null}
+          {roundTopPlayers.length ? (
+            <div className="mt-2 space-y-1 text-[11px] text-muted">
+              {roundTopPlayers.map((player, index) => (
+                <div
+                  key={`${player.player_id}-${index}`}
+                  className="flex items-center justify-between"
+                >
+                  <div className="text-ink">
+                    {index + 1}. {player.short_name || player.name}
+                    {player.team_id ? (
+                      <span className="ml-1 text-[10px] text-muted">
+                        ({teamMap.get(player.team_id) || player.team_id})
+                      </span>
+                    ) : null}
+                  </div>
+                  <span className="text-ink">{player.points.toFixed(1)} pts</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
         <div className="space-y-1">
           <label className="text-xs text-muted">Datos</label>

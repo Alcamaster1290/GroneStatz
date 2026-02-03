@@ -26,6 +26,7 @@ from app.models import (
     PlayerMatchStat,
     PasswordResetToken,
     PriceMovement,
+    PointsRound,
     Round,
     Season,
     Team,
@@ -46,6 +47,7 @@ from app.schemas.admin import (
     AdminPlayerInjuryIn,
     AdminPlayerInjuryOut,
     AdminMatchPlayerOut,
+    AdminRoundTopPlayerOut,
     AdminPriceMovementOut,
     AdminTeamOut,
     AdminTeamPlayerOut,
@@ -969,6 +971,60 @@ def list_match_stats(
         )
 
     return sorted(results, key=lambda item: (-(item.points or 0), item.name))
+
+
+@router.get("/rounds/top_players", response_model=List[AdminRoundTopPlayerOut])
+def list_round_top_players(
+    round_number: int = Query(..., ge=1),
+    db: Session = Depends(get_db),
+) -> List[AdminRoundTopPlayerOut]:
+    season = get_or_create_season(db)
+    round_obj = get_round_by_number(db, season.id, round_number)
+    if not round_obj:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+
+    points_rows = db.execute(
+        select(
+            PointsRound.player_id,
+            func.coalesce(func.sum(PointsRound.points), 0).label("points"),
+        )
+        .where(
+            PointsRound.season_id == season.id,
+            PointsRound.round_id == round_obj.id,
+        )
+        .group_by(PointsRound.player_id)
+        .order_by(text("points DESC"))
+        .limit(10)
+    ).all()
+
+    if not points_rows:
+        return []
+
+    player_ids = [row[0] for row in points_rows]
+    players = (
+        db.execute(select(PlayerCatalog).where(PlayerCatalog.player_id.in_(player_ids)))
+        .scalars()
+        .all()
+    )
+    player_map = {player.player_id: player for player in players}
+
+    results: List[AdminRoundTopPlayerOut] = []
+    for player_id, points in points_rows:
+        player = player_map.get(player_id)
+        if not player:
+            continue
+        results.append(
+            AdminRoundTopPlayerOut(
+                player_id=player_id,
+                name=player.name,
+                short_name=player.short_name,
+                position=player.position,
+                team_id=player.team_id,
+                points=float(points or 0),
+            )
+        )
+
+    return results
 
 
 @router.get("/price-movements", response_model=List[AdminPriceMovementOut])

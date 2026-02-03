@@ -194,6 +194,14 @@ class AdminMatchPlayerOut(BaseModel):
     goals_conceded: Optional[int] = None
     points: float
 
+class AdminRoundTopPlayerOut(BaseModel):
+    player_id: int
+    name: str
+    short_name: Optional[str] = None
+    position: Optional[str] = None
+    team_id: Optional[int] = None
+    points: float
+
 class AdminRoundOut(BaseModel):
     id: int
     round_number: int

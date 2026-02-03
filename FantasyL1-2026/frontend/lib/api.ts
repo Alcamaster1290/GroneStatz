@@ -4,6 +4,7 @@ import {
   AdminLeague,
   AdminRound,
   AdminPriceMovement,
+  AdminRoundTopPlayer,
   AdminTeam,
   AdminTeamLineup,
   AdminPlayerInjury,
@@ -375,6 +376,18 @@ export async function getAdminMatchStats(
   }
   const query = search.toString();
   return apiFetch(`/admin/match-stats?${query}`, { headers: { "X-Admin-Token": adminToken } });
+}
+
+export async function getAdminRoundTopPlayers(
+  adminToken: string,
+  roundNumber: number
+): Promise<AdminRoundTopPlayer[]> {
+  const search = new URLSearchParams({
+    round_number: String(roundNumber)
+  });
+  return apiFetch(`/admin/rounds/top_players?${search.toString()}`, {
+    headers: { "X-Admin-Token": adminToken }
+  });
 }
 
 export async function getAdminPriceMovements(
