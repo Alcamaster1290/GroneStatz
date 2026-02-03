@@ -104,6 +104,7 @@ export default function AdminTeamsPage() {
   const [statsInput, setStatsInput] = useState("");
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsMessage, setStatsMessage] = useState<string | null>(null);
+  const [statsMode, setStatsMode] = useState<"chunk" | "manual">("chunk");
   const [roundTopPlayers, setRoundTopPlayers] = useState<AdminRoundTopPlayer[]>([]);
   const [roundTopLoading, setRoundTopLoading] = useState(false);
   const [roundTopError, setRoundTopError] = useState<string | null>(null);
@@ -1654,96 +1655,132 @@ export default function AdminTeamsPage() {
             placeholder="player_id,match_id,goals,assists,minutes,saves,fouls,yellow,red,clean_sheet,goals_conceded"
             />
         </div>
-        {statsRows.length ? (
-          <div className="max-h-80 overflow-auto rounded-xl border border-white/10 bg-black/20 p-2 text-[11px] text-muted">
-            <div className="grid grid-cols-11 gap-2 px-2 pb-2 font-semibold text-ink">
-              <span>player_id</span>
-              <span>match_id</span>
-              <span>goals</span>
-              <span>assists</span>
-              <span>minutes</span>
-              <span>saves</span>
-              <span>fouls</span>
-              <span>yellow</span>
-              <span>red</span>
-              <span>clean</span>
-              <span>conceded</span>
-            </div>
-            <div className="space-y-2">
-              {statsRows.map((row, index) => (
-                <div
-                  key={`${row.player_id}-${row.match_id}-${index}`}
-                  className="grid grid-cols-11 gap-2 px-2"
-                >
-                  <input
-                    value={row.player_id}
-                    onChange={(event) => updateStatsRow(index, "player_id", event.target.value)}
-                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
-                  />
-                  <input
-                    value={row.match_id}
-                    onChange={(event) => updateStatsRow(index, "match_id", event.target.value)}
-                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
-                  />
-                  <input
-                    value={row.goals}
-                    onChange={(event) => updateStatsRow(index, "goals", event.target.value)}
-                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
-                  />
-                  <input
-                    value={row.assists}
-                    onChange={(event) => updateStatsRow(index, "assists", event.target.value)}
-                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
-                  />
-                  <input
-                    value={row.minutesplayed}
-                    onChange={(event) =>
-                      updateStatsRow(index, "minutesplayed", event.target.value)
-                    }
-                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
-                  />
-                  <input
-                    value={row.saves}
-                    onChange={(event) => updateStatsRow(index, "saves", event.target.value)}
-                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
-                  />
-                  <input
-                    value={row.fouls}
-                    onChange={(event) => updateStatsRow(index, "fouls", event.target.value)}
-                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
-                  />
-                  <input
-                    value={row.yellow_cards}
-                    onChange={(event) =>
-                      updateStatsRow(index, "yellow_cards", event.target.value)
-                    }
-                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
-                  />
-                  <input
-                    value={row.red_cards}
-                    onChange={(event) =>
-                      updateStatsRow(index, "red_cards", event.target.value)
-                    }
-                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
-                  />
-                  <input
-                    value={row.clean_sheet ?? ""}
-                    onChange={(event) =>
-                      updateStatsRow(index, "clean_sheet", event.target.value)
-                    }
-                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
-                  />
-                  <input
-                    value={row.goals_conceded ?? ""}
-                    onChange={(event) =>
-                      updateStatsRow(index, "goals_conceded", event.target.value)
-                    }
-                    className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
-                  />
-                </div>
-              ))}
-            </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted">
+          <span>Modo de carga</span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setStatsMode("chunk")}
+              className={`rounded-full border px-2 py-1 ${
+                statsMode === "chunk" ? "border-accent text-ink" : "border-white/10"
+              }`}
+            >
+              Chunk
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatsMode("manual")}
+              className={`rounded-full border px-2 py-1 ${
+                statsMode === "manual" ? "border-accent text-ink" : "border-white/10"
+              }`}
+            >
+              Manual
+            </button>
           </div>
+        </div>
+        {statsMode === "chunk" ? (
+          <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-[11px] text-muted">
+            {statsRows.length ? (
+              <span>
+                Chunk cargado: <span className="text-ink">{statsRows.length}</span> filas.
+              </span>
+            ) : (
+              <span>Pega el chunk completo arriba y se cargará automáticamente.</span>
+            )}
+          </div>
+        ) : null}
+        {statsRows.length ? (
+          statsMode === "manual" ? (
+            <div className="max-h-80 overflow-auto rounded-xl border border-white/10 bg-black/20 p-2 text-[11px] text-muted">
+              <div className="grid grid-cols-11 gap-2 px-2 pb-2 font-semibold text-ink">
+                <span>player_id</span>
+                <span>match_id</span>
+                <span>goals</span>
+                <span>assists</span>
+                <span>minutes</span>
+                <span>saves</span>
+                <span>fouls</span>
+                <span>yellow</span>
+                <span>red</span>
+                <span>clean</span>
+                <span>conceded</span>
+              </div>
+              <div className="space-y-2">
+                {statsRows.map((row, index) => (
+                  <div
+                    key={`${row.player_id}-${row.match_id}-${index}`}
+                    className="grid grid-cols-11 gap-2 px-2"
+                  >
+                    <input
+                      value={row.player_id}
+                      onChange={(event) => updateStatsRow(index, "player_id", event.target.value)}
+                      className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                    />
+                    <input
+                      value={row.match_id}
+                      onChange={(event) => updateStatsRow(index, "match_id", event.target.value)}
+                      className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                    />
+                    <input
+                      value={row.goals}
+                      onChange={(event) => updateStatsRow(index, "goals", event.target.value)}
+                      className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                    />
+                    <input
+                      value={row.assists}
+                      onChange={(event) => updateStatsRow(index, "assists", event.target.value)}
+                      className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                    />
+                    <input
+                      value={row.minutesplayed}
+                      onChange={(event) =>
+                        updateStatsRow(index, "minutesplayed", event.target.value)
+                      }
+                      className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                    />
+                    <input
+                      value={row.saves}
+                      onChange={(event) => updateStatsRow(index, "saves", event.target.value)}
+                      className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                    />
+                    <input
+                      value={row.fouls}
+                      onChange={(event) => updateStatsRow(index, "fouls", event.target.value)}
+                      className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                    />
+                    <input
+                      value={row.yellow_cards}
+                      onChange={(event) =>
+                        updateStatsRow(index, "yellow_cards", event.target.value)
+                      }
+                      className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                    />
+                    <input
+                      value={row.red_cards}
+                      onChange={(event) =>
+                        updateStatsRow(index, "red_cards", event.target.value)
+                      }
+                      className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                    />
+                    <input
+                      value={row.clean_sheet ?? ""}
+                      onChange={(event) =>
+                        updateStatsRow(index, "clean_sheet", event.target.value)
+                      }
+                      className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                    />
+                    <input
+                      value={row.goals_conceded ?? ""}
+                      onChange={(event) =>
+                        updateStatsRow(index, "goals_conceded", event.target.value)
+                      }
+                      className="rounded-lg border border-white/10 bg-black/30 px-2 py-1"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null
         ) : null}
         <button
           onClick={handleUploadStats}
