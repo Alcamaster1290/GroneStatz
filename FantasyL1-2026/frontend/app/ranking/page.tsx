@@ -124,7 +124,7 @@ function RankingTable({
                     key={`${entry.fantasy_team_id}-${round.round_number}`}
                     className="rounded-full border border-white/10 px-2 py-1"
                   >
-                    R{round.round_number}: {round.cumulative.toFixed(1)}
+                    R{round.round_number}: {round.points.toFixed(1)}
                   </span>
                 ))
               )}
