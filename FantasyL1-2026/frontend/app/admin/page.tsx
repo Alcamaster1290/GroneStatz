@@ -568,6 +568,32 @@ export default function AdminTeamsPage() {
     }
   };
 
+  const handleRecalcRoundPrices = async () => {
+    if (!adminToken) {
+      setStatsMessage("admin_token_required");
+      return;
+    }
+    if (!statsRound.trim()) {
+      setStatsMessage("round_required");
+      return;
+    }
+    const roundNumber = Number(statsRound);
+    if (!Number.isFinite(roundNumber) || roundNumber < 1) {
+      setStatsMessage("round_invalid");
+      return;
+    }
+    setStatsLoading(true);
+    setStatsMessage(null);
+    try {
+      const result = await recalcAdminRound(adminToken, roundNumber, true, true);
+      setStatsMessage(`recalc_prices_ok_${result.round_number}`);
+    } catch (err) {
+      setStatsMessage(String(err));
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
   const handleRecalcMatch = async () => {
     if (!adminToken) {
       setStatsMessage("admin_token_required");
@@ -1849,6 +1875,13 @@ export default function AdminTeamsPage() {
           disabled={statsLoading}
         >
           Recalcular ronda (sin precios)
+        </button>
+        <button
+          onClick={handleRecalcRoundPrices}
+          className="w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+          disabled={statsLoading}
+        >
+          Aplicar variacion de precios (ronda)
         </button>
         {statsMessage ? <p className="text-xs text-muted">{statsMessage}</p> : null}
         {statsErrors.length ? (
