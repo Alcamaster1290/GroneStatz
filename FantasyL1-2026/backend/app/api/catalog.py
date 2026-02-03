@@ -79,13 +79,9 @@ def list_players(
         .group_by(PlayerRoundStat.player_id)
         .subquery()
     )
-    latest_price_movement_subq = (
-        select(
-            PriceMovement.player_id.label("player_id"),
-            func.max(PriceMovement.round_id).label("round_id"),
-        )
+    latest_price_round_subq = (
+        select(func.max(PriceMovement.round_id).label("round_id"))
         .where(PriceMovement.season_id == season.id)
-        .group_by(PriceMovement.player_id)
         .subquery()
     )
     price_movement_subq = (
@@ -93,12 +89,10 @@ def list_players(
             PriceMovement.player_id.label("player_id"),
             PriceMovement.delta.label("price_delta"),
         )
-        .join(
-            latest_price_movement_subq,
-            (PriceMovement.player_id == latest_price_movement_subq.c.player_id)
-            & (PriceMovement.round_id == latest_price_movement_subq.c.round_id),
+        .where(
+            PriceMovement.season_id == season.id,
+            PriceMovement.round_id == latest_price_round_subq.c.round_id,
         )
-        .where(PriceMovement.season_id == season.id)
         .subquery()
     )
 
