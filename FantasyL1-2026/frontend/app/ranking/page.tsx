@@ -486,6 +486,32 @@ export default function RankingPage() {
     return !lineupRoundInfo.is_closed;
   }, [lineupRoundInfo]);
 
+  const bonusPlayerId = useMemo(() => {
+    if (!lineupData) return null;
+    const captainId = lineupData.captain_player_id ?? null;
+    const viceId = lineupData.vice_captain_player_id ?? null;
+    if (lineupIsPending) return null;
+
+    const findSlot = (playerId: number | null) =>
+      lineupData.slots.find((slot) => slot.player_id === playerId);
+
+    const captainSlot = findSlot(captainId);
+    const captainPoints = captainSlot?.points ?? 0;
+    const captainInjured = captainSlot?.player?.is_injured ?? false;
+    if (captainSlot?.is_starter && captainPoints !== 0 && !captainInjured) {
+      return captainId;
+    }
+
+    const viceSlot = findSlot(viceId);
+    const vicePoints = viceSlot?.points ?? 0;
+    const viceInjured = viceSlot?.player?.is_injured ?? false;
+    if (viceSlot?.is_starter && vicePoints !== 0 && !viceInjured) {
+      return viceId;
+    }
+
+    return null;
+  }, [lineupData, lineupIsPending]);
+
   const renderSlot = (slot: PublicLineupSlot) => {
     const player = slot.player ?? null;
     const isCaptain = player && lineupData?.captain_player_id === player.player_id;
@@ -496,7 +522,12 @@ export default function RankingPage() {
       : positionLabels[slot.role] || slot.role;
     const points = slot.points ?? 0;
     const price = player ? marketPriceByPlayerId.get(player.player_id) ?? 0 : 0;
-    const displayValue = lineupIsPending ? price : points;
+    const displayValue =
+      lineupIsPending
+        ? price
+        : slot.player_id && slot.player_id === bonusPlayerId
+          ? points * 3
+          : points;
 
     return (
       <div
