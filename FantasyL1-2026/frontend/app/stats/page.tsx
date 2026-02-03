@@ -74,7 +74,9 @@ export default function StatsPage() {
   const [query, setQuery] = useState("");
   const [position, setPosition] = useState<Position | "">("");
   const [teamId, setTeamId] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  const [sortKey, setSortKey] = useState<
+    "points" | "goals" | "assists" | "price" | "selected"
+  >("selected");
 
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
@@ -161,7 +163,6 @@ export default function StatsPage() {
     q?: string;
     position?: Position;
     team_id?: number;
-    max_price?: number;
   }) => {
     const limit = 200;
     const maxPages = 30;
@@ -185,15 +186,9 @@ export default function StatsPage() {
       const data = await fetchAllStats({
         q: query.trim() || undefined,
         position: position || undefined,
-        team_id: teamId ? Number(teamId) : undefined,
-        max_price: maxPrice ? Number(maxPrice) : undefined
+        team_id: teamId ? Number(teamId) : undefined
       });
-      const sorted = [...data].sort((a, b) => {
-        const diff = (b.selected_percent || 0) - (a.selected_percent || 0);
-        if (diff !== 0) return diff;
-        return (b.price_current || 0) - (a.price_current || 0);
-      });
-      setPlayers(sorted);
+      setPlayers(data);
     } catch (err) {
       setError(String(err));
     } finally {
@@ -212,6 +207,28 @@ export default function StatsPage() {
       })
       .catch(() => undefined);
   }, []);
+
+  const sortedPlayers = useMemo(() => {
+    const list = [...players];
+    const getPointsTotal = (player: PlayerStatsEntry) =>
+      (player.rounds || []).reduce((sum, round) => sum + (round.points || 0), 0);
+    list.sort((a, b) => {
+      switch (sortKey) {
+        case "points":
+          return getPointsTotal(b) - getPointsTotal(a);
+        case "goals":
+          return (b.goals || 0) - (a.goals || 0);
+        case "assists":
+          return (b.assists || 0) - (a.assists || 0);
+        case "price":
+          return (b.price_current || 0) - (a.price_current || 0);
+        case "selected":
+        default:
+          return (b.selected_count || 0) - (a.selected_count || 0);
+      }
+    });
+    return list;
+  }, [players, sortKey]);
 
   if (!token) {
     return <AuthPanel />;
@@ -265,14 +282,20 @@ export default function StatsPage() {
             </select>
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-muted">Precio maximo</label>
-            <input
-              type="number"
-              step="0.1"
-              value={maxPrice}
-              onChange={(event) => setMaxPrice(event.target.value)}
+            <label className="text-xs text-muted">Ordenar por</label>
+            <select
+              value={sortKey}
+              onChange={(event) =>
+                setSortKey(event.target.value as "points" | "goals" | "assists" | "price" | "selected")
+              }
               className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
-            />
+            >
+              <option value="selected">Veces elegido</option>
+              <option value="points">Puntos</option>
+              <option value="goals">Goles</option>
+              <option value="assists">Asistencias</option>
+              <option value="price">Precio</option>
+            </select>
           </div>
         </div>
         <button
@@ -286,10 +309,10 @@ export default function StatsPage() {
 
       <div className="space-y-3">
         {loading ? <p className="text-xs text-muted">Cargando...</p> : null}
-        {players.length === 0 && !loading ? (
+        {sortedPlayers.length === 0 && !loading ? (
           <p className="text-xs text-muted">Sin jugadores para mostrar.</p>
         ) : (
-          players.map((player) => {
+          sortedPlayers.map((player) => {
             const percent = Math.min(100, Math.max(0, player.selected_percent));
             const isKeeper = player.position === "G";
             const rounds = player.rounds ?? [];
