@@ -127,7 +127,7 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
         def eligible(player_id: int | None) -> bool:
             if not player_id:
                 return False
-            if player_points.get(player_id, 0.0) <= 0:
+            if player_points.get(player_id, 0.0) == 0:
                 return False
             if injury_map.get(player_id, False):
                 return False
