@@ -105,6 +105,9 @@ export default function AdminTeamsPage() {
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsMessage, setStatsMessage] = useState<string | null>(null);
   const [statsMode, setStatsMode] = useState<"chunk" | "manual">("chunk");
+  const [statsErrors, setStatsErrors] = useState<
+    { line: number; reason: string; raw: string }[]
+  >([]);
   const [roundTopPlayers, setRoundTopPlayers] = useState<AdminRoundTopPlayer[]>([]);
   const [roundTopLoading, setRoundTopLoading] = useState(false);
   const [roundTopError, setRoundTopError] = useState<string | null>(null);
@@ -419,14 +422,19 @@ export default function AdminTeamsPage() {
       clean_sheet?: number;
       goals_conceded?: number;
     }[] = [];
+    const errors: { line: number; reason: string; raw: string }[] = [];
 
-    for (const line of lines) {
+    lines.forEach((line, index) => {
       const parts = line.split(/[,\t;]/).map((part) => part.trim());
-      if (parts.length < 2) continue;
+      if (parts.length < 2) {
+        errors.push({ line: index + 1, reason: "columnas_insuficientes", raw: line });
+        return;
+      }
       const playerId = Number(parts[0]);
       const matchId = Number(parts[1]);
       if (!Number.isFinite(playerId) || !Number.isFinite(matchId)) {
-        continue;
+        errors.push({ line: index + 1, reason: "player_id_o_match_id_invalido", raw: line });
+        return;
       }
       const goals = parts[2] ? Number(parts[2]) : 0;
       const assists = parts[3] ? Number(parts[3]) : 0;
@@ -437,6 +445,28 @@ export default function AdminTeamsPage() {
       const red_cards = parts[8] ? Number(parts[8]) : 0;
       const clean_sheet = parts[9] ? Number(parts[9]) : undefined;
       const goals_conceded = parts[10] ? Number(parts[10]) : undefined;
+
+      const numericFields = [
+        { key: "goals", value: goals },
+        { key: "assists", value: assists },
+        { key: "minutes", value: minutesplayed },
+        { key: "saves", value: saves },
+        { key: "fouls", value: fouls },
+        { key: "yellow", value: yellow_cards },
+        { key: "red", value: red_cards }
+      ];
+      const optionalFields = [
+        { key: "clean_sheet", value: clean_sheet },
+        { key: "goals_conceded", value: goals_conceded }
+      ];
+      if (numericFields.some((field) => !Number.isFinite(field.value))) {
+        errors.push({ line: index + 1, reason: "valores_numericos_invalidos", raw: line });
+        return;
+      }
+      if (optionalFields.some((field) => field.value !== undefined && !Number.isFinite(field.value))) {
+        errors.push({ line: index + 1, reason: "valores_opcionales_invalidos", raw: line });
+        return;
+      }
       rows.push({
         player_id: playerId,
         match_id: matchId,
@@ -454,9 +484,9 @@ export default function AdminTeamsPage() {
           ? (goals_conceded as number)
           : undefined
       });
-    }
+    });
 
-    return rows;
+    return { rows, errors };
   };
 
   useEffect(() => {
@@ -464,7 +494,9 @@ export default function AdminTeamsPage() {
       setStatsRows([]);
       return;
     }
-    setStatsRows(parseStatsLines(statsInput));
+    const parsed = parseStatsLines(statsInput);
+    setStatsRows(parsed.rows);
+    setStatsErrors(parsed.errors);
   }, [statsInput]);
 
   const handleUploadStats = async () => {
@@ -482,7 +514,13 @@ export default function AdminTeamsPage() {
       return;
     }
 
-    const rows = statsRows.length ? statsRows : parseStatsLines(statsInput);
+    const parsed = statsRows.length
+      ? { rows: statsRows, errors: statsErrors }
+      : parseStatsLines(statsInput);
+    const rows = parsed.rows;
+    if (parsed.errors.length) {
+      setStatsErrors(parsed.errors);
+    }
     if (rows.length === 0) {
       setStatsMessage("no_stats");
       return;
@@ -1813,6 +1851,19 @@ export default function AdminTeamsPage() {
           Recalcular ronda (sin precios)
         </button>
         {statsMessage ? <p className="text-xs text-muted">{statsMessage}</p> : null}
+        {statsErrors.length ? (
+          <div className="space-y-1 rounded-xl border border-warning/40 bg-warning/10 p-3 text-[11px] text-warning">
+            <p className="font-semibold">Filas descartadas por error ({statsErrors.length})</p>
+            <div className="max-h-40 space-y-1 overflow-auto">
+              {statsErrors.map((error) => (
+                <div key={`${error.line}-${error.raw}`} className="flex flex-col">
+                  <span>Linea {error.line}: {error.reason}</span>
+                  <span className="text-[10px] text-warning/80">{error.raw}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="space-y-2 pt-2">
