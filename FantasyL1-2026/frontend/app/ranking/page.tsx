@@ -174,9 +174,6 @@ export default function RankingPage() {
   const [lineupTeamName, setLineupTeamName] = useState("");
   const [lineupTeamId, setLineupTeamId] = useState<number | null>(null);
   const [lineupRoundNumber, setLineupRoundNumber] = useState<number | null>(null);
-  const [detailView, setDetailView] = useState<"lineup" | "market">("lineup");
-  const [marketLoading, setMarketLoading] = useState(false);
-  const [marketError, setMarketError] = useState<string | null>(null);
   const [marketData, setMarketData] = useState<PublicMarket | null>(null);
 
   useEffect(() => {
@@ -408,26 +405,23 @@ export default function RankingPage() {
     setLineupLoading(true);
     setLineupError(null);
     setLineupData(null);
-    setDetailView("lineup");
     setMarketData(null);
-    setMarketError(null);
     const initialRound =
       availableRounds.length > 0 ? availableRounds[availableRounds.length - 1] : null;
+    if (fantasyTeamId) {
+      loadMarket(fantasyTeamId, teamName);
+    }
     await loadLineup(fantasyTeamId, teamName, initialRound);
   };
 
   const loadMarket = async (fantasyTeamId: number, teamName: string) => {
     if (!token) return;
-    setMarketLoading(true);
-    setMarketError(null);
     try {
       const data = await getRankingMarket(token, fantasyTeamId);
       setMarketData(data);
       setLineupTeamName(data.team_name || teamName);
     } catch (err) {
-      setMarketError(String(err));
-    } finally {
-      setMarketLoading(false);
+      console.error(err);
     }
   };
 
@@ -445,6 +439,14 @@ export default function RankingPage() {
   const bench = useMemo(() => {
     return lineupData?.slots.filter((slot) => !slot.is_starter) ?? [];
   }, [lineupData]);
+
+  const marketPointsByPlayerId = useMemo(() => {
+    const map = new Map<number, number>();
+    marketData?.players.forEach((player) => {
+      map.set(player.player_id, player.points_total ?? 0);
+    });
+    return map;
+  }, [marketData]);
 
   const lineupRoundIndex = useMemo(() => {
     if (!lineupRoundNumber) return -1;
@@ -468,6 +470,7 @@ export default function RankingPage() {
     const positionLabel = player
       ? positionLabels[player.position] || player.position
       : positionLabels[slot.role] || slot.role;
+    const points = player ? marketPointsByPlayerId.get(player.player_id) ?? 0 : 0;
 
     return (
       <div
@@ -507,7 +510,12 @@ export default function RankingPage() {
             <p className="text-[10px] text-muted">{positionLabel}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          {player ? (
+            <span className="text-xs font-semibold text-ink">
+              {Math.round(points)}
+            </span>
+          ) : null}
           {isCaptain ? (
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-yellow-300 text-[10px] font-bold text-black">
               C
@@ -710,80 +718,14 @@ export default function RankingPage() {
       {lineupOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6">
           <div className="glass max-h-[85vh] w-full max-w-xl space-y-4 overflow-y-auto rounded-2xl p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-semibold text-ink">
-                  {lineupData?.team_name || lineupTeamName || "Equipo"}
-                </h3>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (canPrevLineupRound && lineupTeamId) {
-                        const nextRound = availableRounds[lineupRoundIndex - 1];
-                        loadLineup(lineupTeamId, lineupTeamName || "Equipo", nextRound);
-                      }
-                    }}
-                    disabled={!canPrevLineupRound}
-                    className="rounded-lg border border-white/10 px-2 py-1 text-ink disabled:opacity-40"
-                  >
-                    {"<"}
-                  </button>
-                  <span>
-                    {lineupRoundNumber ? `Ronda ${lineupRoundNumber}` : "Sin ronda"}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (canNextLineupRound && lineupTeamId) {
-                        const nextRound = availableRounds[lineupRoundIndex + 1];
-                        loadLineup(lineupTeamId, lineupTeamName || "Equipo", nextRound);
-                      }
-                    }}
-                    disabled={!canNextLineupRound}
-                    className="rounded-lg border border-white/10 px-2 py-1 text-ink disabled:opacity-40"
-                  >
-                    {">"}
-                  </button>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setDetailView("lineup")}
-                  className={
-                    "rounded-full px-3 py-1 text-xs " +
-                    (detailView === "lineup"
-                      ? "bg-accent text-black"
-                      : "border border-white/10 text-ink")
-                  }
-                >
-                  XI titular
-                </button>
-                <button
-                  onClick={() => {
-                    setDetailView("market");
-                    if (lineupTeamId) {
-                      if (!marketData || marketData.fantasy_team_id !== lineupTeamId) {
-                        loadMarket(lineupTeamId, lineupTeamName || "Equipo");
-                      }
-                    }
-                  }}
-                  className={
-                    "rounded-full px-3 py-1 text-xs " +
-                    (detailView === "market"
-                      ? "bg-accent text-black"
-                      : "border border-white/10 text-ink")
-                  }
-                >
-                  Mercado
-                </button>
-                <button
-                  onClick={() => setLineupOpen(false)}
-                  className="rounded-full border border-white/10 px-3 py-1 text-xs text-ink"
-                >
-                  Cerrar
-                </button>
-              </div>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-lg font-semibold text-ink">XI titular</h3>
+              <button
+                onClick={() => setLineupOpen(false)}
+                className="rounded-full border border-white/10 px-3 py-1 text-xs text-ink"
+              >
+                X
+              </button>
             </div>
 
             {lineupLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
@@ -795,7 +737,7 @@ export default function RankingPage() {
               </p>
             ) : null}
 
-            {detailView === "lineup" && !lineupLoading && lineupData ? (
+            {!lineupLoading && lineupData ? (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-muted">
@@ -811,26 +753,6 @@ export default function RankingPage() {
                   </div>
                   <div className="space-y-2">{bench.map(renderSlot)}</div>
                 </div>
-              </div>
-            ) : null}
-
-            {detailView === "market" ? (
-              <div className="space-y-3">
-                {marketLoading ? (
-                  <p className="text-xs text-muted">Cargando mercado...</p>
-                ) : null}
-                {marketError ? (
-                  <p className="text-xs text-warning">{marketError}</p>
-                ) : null}
-                {!marketLoading && marketData ? (
-                  <div className="space-y-2">
-                    {marketData.players.length === 0 ? (
-                      <p className="text-xs text-muted">Sin jugadores en mercado.</p>
-                    ) : (
-                      marketData.players.map(renderMarketPlayer)
-                    )}
-                  </div>
-                ) : null}
               </div>
             ) : null}
           </div>
