@@ -801,6 +801,31 @@ export default function TeamPage() {
     return Math.round(total * 10) / 10;
   }, [captainId, viceCaptainId, currentRound, lineupSlots, squad]);
 
+  const selectedPlayer =
+    (selectedSlot?.player_id ? squadMap.get(selectedSlot.player_id) : undefined) ||
+    selectedSlot?.player ||
+    undefined;
+  const selectedOpponent = selectedPlayer
+    ? opponentByTeamId.get(selectedPlayer.team_id)
+    : undefined;
+
+  useEffect(() => {
+    if (!selectedPlayer) {
+      setPlayerMatches([]);
+      setPlayerMatchesError(null);
+      return;
+    }
+    setPlayerMatchesLoading(true);
+    setPlayerMatchesError(null);
+    getPlayerMatches(selectedPlayer.player_id)
+      .then((data) => setPlayerMatches(data))
+      .catch((err) => {
+        setPlayerMatches([]);
+        setPlayerMatchesError(String(err));
+      })
+      .finally(() => setPlayerMatchesLoading(false));
+  }, [selectedPlayer?.player_id]);
+
 
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
@@ -1345,30 +1370,6 @@ export default function TeamPage() {
       return player ? { slot, player } : null;
     })
     .filter((item): item is { slot: LineupSlot; player: Player } => item !== null);
-  const selectedPlayer =
-    (selectedSlot?.player_id ? squadMap.get(selectedSlot.player_id) : undefined) ||
-    selectedSlot?.player ||
-    undefined;
-  const selectedOpponent = selectedPlayer
-    ? opponentByTeamId.get(selectedPlayer.team_id)
-    : undefined;
-
-  useEffect(() => {
-    if (!selectedPlayer) {
-      setPlayerMatches([]);
-      setPlayerMatchesError(null);
-      return;
-    }
-    setPlayerMatchesLoading(true);
-    setPlayerMatchesError(null);
-    getPlayerMatches(selectedPlayer.player_id)
-      .then((data) => setPlayerMatches(data))
-      .catch((err) => {
-        setPlayerMatches([]);
-        setPlayerMatchesError(String(err));
-      })
-      .finally(() => setPlayerMatchesLoading(false));
-  }, [selectedPlayer?.player_id]);
 
   const isTestEnv = appEnv === "test";
   const sizeClass = isTestEnv ? "h-9 w-9" : "h-12 w-12";
