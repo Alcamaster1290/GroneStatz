@@ -727,6 +727,37 @@ export default function RankingPage() {
                 X
               </button>
             </div>
+            {lineupRoundNumber ? (
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (canPrevLineupRound && lineupTeamId) {
+                      const nextRound = availableRounds[lineupRoundIndex - 1];
+                      loadLineup(lineupTeamId, lineupTeamName || "Equipo", nextRound);
+                    }
+                  }}
+                  disabled={!canPrevLineupRound}
+                  className="rounded-lg border border-white/10 px-2 py-1 text-ink disabled:opacity-40"
+                >
+                  {"<"}
+                </button>
+                <span>Ronda {lineupRoundNumber}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (canNextLineupRound && lineupTeamId) {
+                      const nextRound = availableRounds[lineupRoundIndex + 1];
+                      loadLineup(lineupTeamId, lineupTeamName || "Equipo", nextRound);
+                    }
+                  }}
+                  disabled={!canNextLineupRound}
+                  className="rounded-lg border border-white/10 px-2 py-1 text-ink disabled:opacity-40"
+                >
+                  {">"}
+                </button>
+              </div>
+            ) : null}
 
             {lineupLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
             {lineupError ? (
