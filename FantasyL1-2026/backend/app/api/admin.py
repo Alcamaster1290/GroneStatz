@@ -773,6 +773,7 @@ def upsert_player_stats(
         .all()
     )
     player_map = {player.player_id: player for player in players}
+    missing_players = sorted(player_ids.difference(player_map.keys()))
 
     rows = [
         {
@@ -791,6 +792,7 @@ def upsert_player_stats(
             "goals_conceded": item.goals_conceded,
         }
         for item in payload.items
+        if item.player_id in player_map
     ]
 
     for row in rows:
@@ -845,7 +847,10 @@ def upsert_player_stats(
         action="upsert",
         details={"round_number": payload.round_number, "count": len(rows)},
     )
-    return {"ok": True, "count": len(rows)}
+    response = {"ok": True, "count": len(rows)}
+    if missing_players:
+        response["skipped_missing_players"] = missing_players
+    return response
 
 
 @router.get("/player-stats", response_model=List[AdminPlayerStatOut])
