@@ -14,6 +14,7 @@ import {
   getRankingLeague,
   getRankingLineup,
   getRankingMarket,
+  getRounds,
   getTeam,
   getTeams,
   joinLeague,
@@ -28,7 +29,8 @@ import {
   PublicLineupSlot,
   PublicMarket,
   PublicMarketPlayer,
-  RankingResponse
+  RankingResponse,
+  RoundInfo
 } from "@/lib/types";
 
 const positionLabels: Record<string, string> = {
@@ -175,6 +177,7 @@ export default function RankingPage() {
   const [lineupTeamId, setLineupTeamId] = useState<number | null>(null);
   const [lineupRoundNumber, setLineupRoundNumber] = useState<number | null>(null);
   const [marketData, setMarketData] = useState<PublicMarket | null>(null);
+  const [roundsInfo, setRoundsInfo] = useState<RoundInfo[]>([]);
 
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
@@ -204,6 +207,10 @@ export default function RankingPage() {
         setTeamLoaded(true);
       });
   }, [token]);
+
+  useEffect(() => {
+    getRounds().then(setRoundsInfo).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!teamLoaded) {
@@ -440,10 +447,10 @@ export default function RankingPage() {
     return lineupData?.slots.filter((slot) => !slot.is_starter) ?? [];
   }, [lineupData]);
 
-  const marketPointsByPlayerId = useMemo(() => {
+  const marketPriceByPlayerId = useMemo(() => {
     const map = new Map<number, number>();
     marketData?.players.forEach((player) => {
-      map.set(player.player_id, player.points_total ?? 0);
+      map.set(player.player_id, player.price_current ?? 0);
     });
     return map;
   }, [marketData]);
@@ -462,6 +469,23 @@ export default function RankingPage() {
     );
   }, [teams]);
 
+  const roundInfoByNumber = useMemo(() => {
+    return new Map(roundsInfo.map((round) => [round.round_number, round]));
+  }, [roundsInfo]);
+
+  const lineupRoundInfo = useMemo(() => {
+    if (!lineupRoundNumber) return null;
+    return roundInfoByNumber.get(lineupRoundNumber) ?? null;
+  }, [lineupRoundNumber, roundInfoByNumber]);
+
+  const lineupIsPending = useMemo(() => {
+    if (!lineupRoundInfo) return false;
+    if (lineupRoundInfo.status) {
+      return lineupRoundInfo.status === "Pendiente";
+    }
+    return !lineupRoundInfo.is_closed;
+  }, [lineupRoundInfo]);
+
   const renderSlot = (slot: PublicLineupSlot) => {
     const player = slot.player ?? null;
     const isCaptain = player && lineupData?.captain_player_id === player.player_id;
@@ -470,7 +494,9 @@ export default function RankingPage() {
     const positionLabel = player
       ? positionLabels[player.position] || player.position
       : positionLabels[slot.role] || slot.role;
-    const points = player ? marketPointsByPlayerId.get(player.player_id) ?? 0 : 0;
+    const points = slot.points ?? 0;
+    const price = player ? marketPriceByPlayerId.get(player.player_id) ?? 0 : 0;
+    const displayValue = lineupIsPending ? price : points;
 
     return (
       <div
@@ -513,7 +539,7 @@ export default function RankingPage() {
         <div className="flex items-center gap-2">
           {player ? (
             <span className="text-xs font-semibold text-ink">
-              {Math.round(points)}
+              {lineupIsPending ? displayValue.toFixed(1) : Math.round(displayValue)}
             </span>
           ) : null}
           {isCaptain ? (

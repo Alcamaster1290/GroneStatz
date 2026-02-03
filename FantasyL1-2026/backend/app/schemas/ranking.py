@@ -57,6 +57,7 @@ class PublicLineupSlotOut(BaseModel):
     role: str
     player_id: int | None = None
     player: PublicLineupPlayerOut | None = None
+    points: float | None = None
 
 
 class PublicLineupOut(BaseModel):

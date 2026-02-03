@@ -176,6 +176,17 @@ def get_team_lineup(
         )
         .all()
     )
+    player_ids = {slot.player_id for slot, _ in slots_rows if slot.player_id}
+    points_map: dict[int, float] = {}
+    if player_ids:
+        points_rows = db.execute(
+            select(PointsRound.player_id, PointsRound.points).where(
+                PointsRound.season_id == season.id,
+                PointsRound.round_id == round_obj.id,
+                PointsRound.player_id.in_(player_ids),
+            )
+        ).all()
+        points_map = {player_id: float(points or 0) for player_id, points in points_rows}
     slots: list[dict] = []
     for slot, player in slots_rows:
         slots.append(
@@ -184,6 +195,7 @@ def get_team_lineup(
                 "is_starter": slot.is_starter,
                 "role": slot.role,
                 "player_id": slot.player_id,
+                "points": points_map.get(slot.player_id, 0.0) if slot.player_id else 0.0,
                 "player": (
                     {
                         "player_id": player.player_id,

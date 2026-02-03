@@ -367,6 +367,7 @@ export type PublicLineupSlot = {
   role: Position;
   player_id?: number | null;
   player?: PublicLineupPlayer | null;
+  points?: number | null;
 };
 
 export type PublicLineup = {
