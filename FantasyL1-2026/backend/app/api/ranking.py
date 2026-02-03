@@ -129,7 +129,43 @@ def get_team_lineup(
         .first()
     )
     if not lineup:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="lineup_not_found")
+        fallback = (
+            db.execute(
+                select(FantasyLineup, Round)
+                .join(Round, Round.id == FantasyLineup.round_id)
+                .where(
+                    FantasyLineup.fantasy_team_id == fantasy_team_id,
+                    Round.season_id == season.id,
+                    Round.is_closed.is_(True),
+                )
+                .order_by(Round.round_number.desc())
+            )
+            .first()
+        )
+        if not fallback:
+            fallback = (
+                db.execute(
+                    select(FantasyLineup, Round)
+                    .join(Round, Round.id == FantasyLineup.round_id)
+                    .where(
+                        FantasyLineup.fantasy_team_id == fantasy_team_id,
+                        Round.season_id == season.id,
+                    )
+                    .order_by(Round.round_number.desc())
+                )
+                .first()
+            )
+        if fallback:
+            lineup, round_obj = fallback
+        else:
+            return PublicLineupOut(
+                fantasy_team_id=team.id,
+                team_name=team.name or f"Equipo {team.id}",
+                round_number=round_obj.round_number,
+                captain_player_id=None,
+                vice_captain_player_id=None,
+                slots=[],
+            )
 
     round_number = round_obj.round_number
     slots_rows = (
