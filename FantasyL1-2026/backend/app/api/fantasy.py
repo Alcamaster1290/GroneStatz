@@ -258,6 +258,8 @@ def get_lineup(
     slots_sorted = sorted(slots, key=lambda s: s.slot_index)
     player_ids = [slot.player_id for slot in slots_sorted if slot.player_id is not None]
     player_map = {}
+    injured_map: dict[int, bool] = {}
+    points_map: dict[int, float] = {}
     if player_ids:
         players = (
             db.execute(select(PlayerCatalog).where(PlayerCatalog.player_id.in_(player_ids)))
@@ -265,6 +267,37 @@ def get_lineup(
             .all()
         )
         player_map = {player.player_id: player for player in players}
+        injured_map = {player.player_id: bool(player.is_injured) for player in players}
+        points_rows = db.execute(
+            select(PointsRound.player_id, PointsRound.points).where(
+                PointsRound.season_id == season.id,
+                PointsRound.round_id == round_obj.id,
+                PointsRound.player_id.in_(player_ids),
+            )
+        ).all()
+        points_map = {player_id: float(points or 0) for player_id, points in points_rows}
+
+    starter_ids = {
+        slot.player_id for slot in slots_sorted if slot.player_id is not None and slot.is_starter
+    }
+    captain_id = lineup.captain_player_id
+    vice_captain_id = lineup.vice_captain_player_id
+    captain_points = points_map.get(captain_id, 0.0) if captain_id else 0.0
+    vice_points = points_map.get(vice_captain_id, 0.0) if vice_captain_id else 0.0
+    captain_injured = injured_map.get(captain_id, False) if captain_id else False
+    vice_injured = injured_map.get(vice_captain_id, False) if vice_captain_id else False
+    bonus_player_id: int | None = None
+    if captain_id in starter_ids and not captain_injured and captain_points != 0:
+        bonus_player_id = captain_id
+    elif vice_captain_id in starter_ids and not vice_injured and vice_points != 0:
+        bonus_player_id = vice_captain_id
+
+    def resolve_points(player_id: int | None) -> float | None:
+        if player_id is None:
+            return None
+        if player_id in points_map:
+            return points_map[player_id]
+        return 0.0 if round_obj.is_closed else None
 
     return LineupOut(
         lineup_id=lineup.id,
@@ -278,6 +311,14 @@ def get_lineup(
                 "is_starter": slot.is_starter,
                 "role": slot.role,
                 "player_id": slot.player_id,
+                "points_round": resolve_points(slot.player_id),
+                "points_with_bonus": (
+                    None
+                    if (points_round := resolve_points(slot.player_id)) is None
+                    else points_round * 3
+                    if slot.player_id == bonus_player_id
+                    else points_round
+                ),
                 "player": (
                     {
                         "player_id": player.player_id,

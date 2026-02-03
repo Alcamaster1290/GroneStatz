@@ -335,10 +335,15 @@ function PitchSlot({
     : undefined;
 
   const displayName = player ? player.short_name || player.shortName || player.name : "Disponible";
-  const pointsValue =
-    player && typeof player.points_round === "number"
-      ? Math.trunc(player.points_round)
-      : null;
+  const rawPoints =
+    typeof slot.points_with_bonus === "number"
+      ? slot.points_with_bonus
+      : typeof slot.points_round === "number"
+        ? slot.points_round
+        : player && typeof player.points_round === "number"
+          ? player.points_round
+          : null;
+  const pointsValue = typeof rawPoints === "number" ? Math.trunc(rawPoints) : null;
 
   return (
     <div ref={setDropRef}>
@@ -793,9 +798,9 @@ export default function TeamPage() {
     const captainInjured = captainId ? injuredById.get(captainId) ?? false : false;
     const vicePoints = viceCaptainId ? pointsById.get(viceCaptainId) ?? 0 : 0;
     const viceInjured = viceCaptainId ? injuredById.get(viceCaptainId) ?? false : false;
-    if (captainId && captainPoints > 0 && !captainInjured) {
+    if (captainId && captainPoints !== 0 && !captainInjured) {
       total += 2 * captainPoints;
-    } else if (viceCaptainId && vicePoints > 0 && !viceInjured) {
+    } else if (viceCaptainId && vicePoints !== 0 && !viceInjured) {
       total += 2 * vicePoints;
     }
     return Math.round(total * 10) / 10;

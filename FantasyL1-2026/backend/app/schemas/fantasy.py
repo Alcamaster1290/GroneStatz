@@ -70,6 +70,8 @@ class LineupSlotOut(BaseModel):
     is_starter: bool
     role: str
     player_id: Optional[int] = None
+    points_round: Optional[float] = None
+    points_with_bonus: Optional[float] = None
     player: Optional[LineupPlayerOut] = None
 
 

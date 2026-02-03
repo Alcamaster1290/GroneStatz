@@ -58,8 +58,7 @@ export default function PlayerCard({
   const saves = player.saves ?? 0;
   const goalsConceded = player.goals_conceded ?? 0;
   const pointsTotal = typeof player.points_total === "number" ? player.points_total : 0;
-  const priceDelta =
-    "price_delta" in player ? (player as { price_delta?: number }).price_delta : null;
+  const priceDelta = typeof player.price_delta === "number" ? player.price_delta : null;
   const isGoalkeeper = player.position === "G";
   const isDefender = player.position === "D";
   const isInjured = Boolean(player.is_injured);

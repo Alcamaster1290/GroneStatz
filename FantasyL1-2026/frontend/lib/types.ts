@@ -8,6 +8,7 @@ export type Player = {
   position: Position;
   team_id: number;
   price_current: number;
+  price_delta?: number | null;
   is_injured?: boolean;
   goals?: number;
   assists?: number;
@@ -38,6 +39,8 @@ export type LineupSlot = {
   is_starter: boolean;
   role: Position;
   player_id: number | null;
+  points_round?: number | null;
+  points_with_bonus?: number | null;
   player?: Player | null;
 };
 
