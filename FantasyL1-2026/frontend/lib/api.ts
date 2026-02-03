@@ -20,6 +20,8 @@ import {
   PublicMarket,
   RankingResponse,
   RoundInfo,
+  MatchPlayerStat,
+  PlayerMatch,
   TransferCount
 } from "./types";
 
@@ -709,9 +711,11 @@ export async function getRankingLeague(token: string): Promise<RankingResponse> 
 
 export async function getRankingLineup(
   token: string,
-  fantasyTeamId: number
+  fantasyTeamId: number,
+  roundNumber?: number
 ): Promise<PublicLineup> {
-  return apiFetch(`/ranking/team/${fantasyTeamId}/lineup`, {}, token);
+  const query = roundNumber ? `?round_number=${roundNumber}` : "";
+  return apiFetch(`/ranking/team/${fantasyTeamId}/lineup${query}`, {}, token);
 }
 
 export async function getRankingMarket(
@@ -719,4 +723,12 @@ export async function getRankingMarket(
   fantasyTeamId: number
 ): Promise<PublicMarket> {
   return apiFetch(`/ranking/team/${fantasyTeamId}/market`, {}, token);
+}
+
+export async function getMatchStats(matchId: number): Promise<MatchPlayerStat[]> {
+  return apiFetch(`/catalog/match-stats?match_id=${matchId}`);
+}
+
+export async function getPlayerMatches(playerId: number): Promise<PlayerMatch[]> {
+  return apiFetch(`/catalog/player-matches?player_id=${playerId}`);
 }

@@ -37,6 +37,90 @@ def _goals_conceded(fixture: Fixture, team_id: int | None) -> int | None:
     return None
 
 
+def _resolve_fixture_overrides(
+    player: PlayerCatalog,
+    minutes: int,
+    fixture: Fixture | None,
+    clean_sheet_value: int | None,
+    goals_conceded_value: int | None,
+) -> tuple[int | None, int | None, int | None]:
+    if not fixture or fixture.home_score is None or fixture.away_score is None:
+        return clean_sheet_value, goals_conceded_value, None
+
+    conceded_from_fixture = _goals_conceded(fixture, player.team_id)
+
+    if goals_conceded_value is None or goals_conceded_value == 0:
+        if conceded_from_fixture is not None:
+            goals_conceded_value = conceded_from_fixture
+
+    if clean_sheet_value is None or clean_sheet_value == 0:
+        position = (player.position or "").upper()
+        if position in {"G", "GK", "D", "M"} and minutes > 0:
+            if conceded_from_fixture is not None:
+                clean_sheet_value = 1 if conceded_from_fixture == 0 else 0
+
+    return clean_sheet_value, goals_conceded_value, conceded_from_fixture
+
+
+def calc_match_points(
+    player: PlayerCatalog, stat: PlayerMatchStat, fixture: Fixture | None
+) -> tuple[float, int | None, int | None]:
+    minutes = int(stat.minutesplayed or 0)
+    goals = int(stat.goals or 0)
+    assists = int(stat.assists or 0)
+    saves = int(stat.saves or 0)
+    fouls = int(stat.fouls or 0)
+    yellow_cards = int(getattr(stat, "yellow_cards", 0) or 0)
+    red_cards = int(getattr(stat, "red_cards", 0) or 0)
+
+    clean_sheet_flag = stat.clean_sheet if hasattr(stat, "clean_sheet") else None
+    goals_conceded_override = stat.goals_conceded if hasattr(stat, "goals_conceded") else None
+    clean_sheet_value = int(clean_sheet_flag) if clean_sheet_flag is not None else None
+    goals_conceded_value = (
+        int(goals_conceded_override) if goals_conceded_override is not None else None
+    )
+
+    clean_sheet_value, goals_conceded_value, conceded_from_fixture = _resolve_fixture_overrides(
+        player,
+        minutes,
+        fixture,
+        clean_sheet_value,
+        goals_conceded_value,
+    )
+
+    conceded: int | None = goals_conceded_value
+    if conceded is None and conceded_from_fixture is not None:
+        conceded = conceded_from_fixture
+
+    points = 0.0
+    points += goals * 4
+    points += (goals // 3) * 3
+    points += assists * 3
+    points -= yellow_cards * 3
+    points -= red_cards * 5
+
+    if minutes >= 90:
+        points += 2
+    elif minutes > 0:
+        points += 1
+
+    points -= fouls // 5
+
+    position = (player.position or "").upper()
+    if position in {"G", "GK"} and saves > 0:
+        points += saves // 5
+    if position in {"G", "GK"} and minutes > 0 and conceded is not None:
+        points -= conceded
+    if position in {"G", "GK", "D", "M"} and minutes > 0:
+        if clean_sheet_value is not None:
+            if clean_sheet_value == 1:
+                points += 3
+        elif conceded == 0:
+            points += 3
+
+    return points, clean_sheet_value, conceded
+
+
 def recalc_round_points(
     db: Session,
     round_number: int,
@@ -120,9 +204,16 @@ def recalc_round_points(
         stats["red_cards"] += red_cards
         # Determine effective clean sheet / conceded for stats + scoring.
         fixture = fixture_map.get(row.match_id)
+        clean_sheet_value, goals_conceded_value, conceded_from_fixture = _resolve_fixture_overrides(
+            player,
+            minutes,
+            fixture,
+            clean_sheet_value,
+            goals_conceded_value,
+        )
         conceded: int | None = goals_conceded_value
-        if conceded is None and fixture and fixture.home_score is not None and fixture.away_score is not None:
-            conceded = _goals_conceded(fixture, player.team_id)
+        if conceded is None and conceded_from_fixture is not None:
+            conceded = conceded_from_fixture
         if minutes > 0:
             if clean_sheet_value is not None:
                 if clean_sheet_value == 1:

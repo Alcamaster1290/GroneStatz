@@ -173,6 +173,7 @@ export default function RankingPage() {
   const [lineupData, setLineupData] = useState<PublicLineup | null>(null);
   const [lineupTeamName, setLineupTeamName] = useState("");
   const [lineupTeamId, setLineupTeamId] = useState<number | null>(null);
+  const [lineupRoundNumber, setLineupRoundNumber] = useState<number | null>(null);
   const [detailView, setDetailView] = useState<"lineup" | "market">("lineup");
   const [marketLoading, setMarketLoading] = useState(false);
   const [marketError, setMarketError] = useState<string | null>(null);
@@ -365,6 +366,40 @@ export default function RankingPage() {
     }
   };
 
+  const availableRounds = useMemo(() => {
+    if (generalRanking?.round_numbers?.length) {
+      return generalRanking.round_numbers.slice();
+    }
+    if (leagueRanking?.round_numbers?.length) {
+      return leagueRanking.round_numbers.slice();
+    }
+    return [];
+  }, [generalRanking, leagueRanking]);
+
+  const loadLineup = async (
+    fantasyTeamId: number,
+    teamName: string,
+    roundNumber?: number | null
+  ) => {
+    if (!token) return;
+    setLineupLoading(true);
+    setLineupError(null);
+    try {
+      const data = await getRankingLineup(
+        token,
+        fantasyTeamId,
+        roundNumber ?? undefined
+      );
+      setLineupData(data);
+      setLineupTeamName(data.team_name || teamName);
+      setLineupRoundNumber(data.round_number ?? roundNumber ?? null);
+    } catch (err) {
+      setLineupError(String(err));
+    } finally {
+      setLineupLoading(false);
+    }
+  };
+
   const handleViewLineup = async (fantasyTeamId: number, teamName: string) => {
     if (!token) return;
     setLineupTeamName(teamName);
@@ -376,15 +411,9 @@ export default function RankingPage() {
     setDetailView("lineup");
     setMarketData(null);
     setMarketError(null);
-    try {
-      const data = await getRankingLineup(token, fantasyTeamId);
-      setLineupData(data);
-      setLineupTeamName(data.team_name || teamName);
-    } catch (err) {
-      setLineupError(String(err));
-    } finally {
-      setLineupLoading(false);
-    }
+    const initialRound =
+      availableRounds.length > 0 ? availableRounds[availableRounds.length - 1] : null;
+    await loadLineup(fantasyTeamId, teamName, initialRound);
   };
 
   const loadMarket = async (fantasyTeamId: number, teamName: string) => {
@@ -416,6 +445,14 @@ export default function RankingPage() {
   const bench = useMemo(() => {
     return lineupData?.slots.filter((slot) => !slot.is_starter) ?? [];
   }, [lineupData]);
+
+  const lineupRoundIndex = useMemo(() => {
+    if (!lineupRoundNumber) return -1;
+    return availableRounds.indexOf(lineupRoundNumber);
+  }, [availableRounds, lineupRoundNumber]);
+  const canPrevLineupRound = lineupRoundIndex > 0;
+  const canNextLineupRound =
+    lineupRoundIndex >= 0 && lineupRoundIndex < availableRounds.length - 1;
 
   const teamNameById = useMemo(() => {
     return new Map(
@@ -678,11 +715,37 @@ export default function RankingPage() {
                 <h3 className="text-lg font-semibold text-ink">
                   {lineupData?.team_name || lineupTeamName || "Equipo"}
                 </h3>
-                <p className="text-xs text-muted">
-                  {lineupData?.round_number
-                    ? `Ronda ${lineupData.round_number}`
-                    : "Sin ronda registrada"}
-                </p>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (canPrevLineupRound && lineupTeamId) {
+                        const nextRound = availableRounds[lineupRoundIndex - 1];
+                        loadLineup(lineupTeamId, lineupTeamName || "Equipo", nextRound);
+                      }
+                    }}
+                    disabled={!canPrevLineupRound}
+                    className="rounded-lg border border-white/10 px-2 py-1 text-ink disabled:opacity-40"
+                  >
+                    {"<"}
+                  </button>
+                  <span>
+                    {lineupRoundNumber ? `Ronda ${lineupRoundNumber}` : "Sin ronda"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (canNextLineupRound && lineupTeamId) {
+                        const nextRound = availableRounds[lineupRoundIndex + 1];
+                        loadLineup(lineupTeamId, lineupTeamName || "Equipo", nextRound);
+                      }
+                    }}
+                    disabled={!canNextLineupRound}
+                    className="rounded-lg border border-white/10 px-2 py-1 text-ink disabled:opacity-40"
+                  >
+                    {">"}
+                  </button>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <button

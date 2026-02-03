@@ -182,14 +182,29 @@ function kickoffToDateKey(value: string | null | undefined): string {
 function MarketPlayerDetails({ player, fixtures }: { player: Player; fixtures: Fixture[] }) {
   const displayName = player.short_name || player.shortName || player.name;
   const isKeeper = player.position === "G";
-  const points =
-    typeof player.points_total === "number" ? player.points_total.toFixed(1) : "--";
-  const primaryStatLabel = isKeeper ? "Atajadas" : "Goles";
-  const primaryStatValue = isKeeper ? player.saves ?? 0 : player.goals ?? 0;
-  const secondaryStatLabel = isKeeper ? "Goles recibidos" : "Asistencias";
-  const secondaryStatValue = isKeeper
-    ? player.goals_conceded ?? 0
-    : player.assists ?? 0;
+  const pointsValue =
+    typeof player.points_total === "number" ? Math.trunc(player.points_total) : 0;
+  const stats: { label: string; value: number | string; accent?: boolean }[] = [
+    { label: "Puntos", value: pointsValue }
+  ];
+  if (isKeeper) {
+    stats.push(
+      { label: "Atajadas", value: player.saves ?? 0 },
+      { label: "Goles", value: player.goals ?? 0 },
+      { label: "Goles recibidos", value: player.goals_conceded ?? 0 }
+    );
+  } else if (player.position === "D") {
+    stats.push(
+      { label: "Goles", value: player.goals ?? 0 },
+      { label: "Goles recibidos", value: player.goals_conceded ?? 0 }
+    );
+  } else {
+    stats.push(
+      { label: "Goles", value: player.goals ?? 0 },
+      { label: "Asistencias", value: player.assists ?? 0 }
+    );
+  }
+  stats.push({ label: "Precio", value: player.price_current.toFixed(1), accent: true });
 
   const formatKickoff = (kickoff: string | null) => {
     if (!kickoff) return "Por confirmar";
@@ -240,22 +255,18 @@ function MarketPlayerDetails({ player, fixtures }: { player: Player; fixtures: F
         </div>
       ) : null}
       <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/20 p-3 text-xs">
-        <div className="space-y-1">
-          <p className="text-[10px] uppercase text-muted">Puntaje total</p>
-          <p className="text-sm font-semibold text-ink">{points}</p>
-        </div>
-        <div className="space-y-1">
-          <p className="text-[10px] uppercase text-muted">{primaryStatLabel}</p>
-          <p className="text-sm font-semibold text-ink">{primaryStatValue}</p>
-        </div>
-        <div className="space-y-1">
-          <p className="text-[10px] uppercase text-muted">{secondaryStatLabel}</p>
-          <p className="text-sm font-semibold text-ink">{secondaryStatValue}</p>
-        </div>
-        <div className="space-y-1">
-          <p className="text-[10px] uppercase text-muted">Precio</p>
-          <p className="text-sm font-semibold text-accent">{player.price_current.toFixed(1)}</p>
-        </div>
+        {stats.map((stat) => (
+          <div key={stat.label} className="space-y-1">
+            <p className="text-[10px] uppercase text-muted">{stat.label}</p>
+            <p
+              className={
+                "text-sm font-semibold " + (stat.accent ? "text-accent" : "text-ink")
+              }
+            >
+              {stat.value}
+            </p>
+          </div>
+        ))}
       </div>
       <div className="space-y-2">
         <p className="text-xs font-semibold text-ink">Partidos</p>
@@ -1279,6 +1290,7 @@ export default function MarketPage() {
                   <PlayerCard
                     player={player}
                     compact
+                    showPoints
                     onClick={() => {
                       setInPlayerId(player.player_id);
                       setSheetOpen(true);
@@ -1296,7 +1308,7 @@ export default function MarketPage() {
             <p className="text-xs uppercase text-muted">Sale</p>
             {outPlayer ? (
               <div className="space-y-2">
-                <PlayerCard player={outPlayer} compact />
+                <PlayerCard player={outPlayer} compact showPoints />
                 <MarketPlayerDetails player={outPlayer} fixtures={fixtures} />
               </div>
             ) : (
@@ -1307,7 +1319,7 @@ export default function MarketPage() {
             <p className="text-xs uppercase text-muted">Entra</p>
             {inPlayer ? (
               <div className="space-y-2">
-                <PlayerCard player={inPlayer} compact />
+                <PlayerCard player={inPlayer} compact showPoints />
                 <MarketPlayerDetails player={inPlayer} fixtures={fixtures} />
               </div>
             ) : (

@@ -18,8 +18,17 @@ from app.models import (
     Round,
     Team,
 )
-from app.schemas.catalog import FixtureOut, PlayerCatalogOut, PlayerStatsOut, RoundOut, TeamOut
+from app.schemas.catalog import (
+    FixtureOut,
+    MatchPlayerStatOut,
+    PlayerCatalogOut,
+    PlayerMatchOut,
+    PlayerStatsOut,
+    RoundOut,
+    TeamOut,
+)
 from app.services.fantasy import get_current_round, get_or_create_season
+from app.services.scoring import calc_match_points
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
 
@@ -330,3 +339,135 @@ def list_rounds(db: Session = Depends(get_db)) -> List[RoundOut]:
         )
         for row in rows
     ]
+
+
+@router.get("/match-stats", response_model=List[MatchPlayerStatOut])
+def list_match_stats(
+    match_id: int = Query(..., ge=1), db: Session = Depends(get_db)
+) -> List[MatchPlayerStatOut]:
+    season = get_or_create_season(db)
+    fixture_row = (
+        db.execute(
+            select(Fixture, Round.round_number)
+            .join(Round, Fixture.round_id == Round.id)
+            .where(Fixture.season_id == season.id, Fixture.match_id == match_id)
+        )
+        .first()
+    )
+    if not fixture_row:
+        return []
+
+    fixture, _round_number = fixture_row
+
+    stats_rows = (
+        db.execute(
+            select(PlayerMatchStat, PlayerCatalog)
+            .join(PlayerCatalog, PlayerCatalog.player_id == PlayerMatchStat.player_id)
+            .where(
+                PlayerMatchStat.season_id == season.id,
+                PlayerMatchStat.match_id == match_id,
+            )
+        )
+        .all()
+    )
+    results: List[MatchPlayerStatOut] = []
+    for stat, player in stats_rows:
+        points, clean_sheet_value, conceded = calc_match_points(player, stat, fixture)
+        results.append(
+            MatchPlayerStatOut(
+                match_id=stat.match_id,
+                player_id=player.player_id,
+                name=player.name,
+                short_name=player.short_name,
+                position=player.position,
+                team_id=player.team_id,
+                minutesplayed=int(stat.minutesplayed or 0),
+                goals=int(stat.goals or 0),
+                assists=int(stat.assists or 0),
+                saves=int(stat.saves or 0),
+                fouls=int(stat.fouls or 0),
+                yellow_cards=int(getattr(stat, "yellow_cards", 0) or 0),
+                red_cards=int(getattr(stat, "red_cards", 0) or 0),
+                clean_sheet=clean_sheet_value,
+                goals_conceded=conceded,
+                points=float(points),
+            )
+        )
+
+    return results
+
+
+@router.get("/player-matches", response_model=List[PlayerMatchOut])
+def list_player_matches(
+    player_id: int = Query(..., ge=1), db: Session = Depends(get_db)
+) -> List[PlayerMatchOut]:
+    season = get_or_create_season(db)
+    player = (
+        db.execute(select(PlayerCatalog).where(PlayerCatalog.player_id == player_id))
+        .scalars()
+        .first()
+    )
+    if not player:
+        return []
+
+    fixtures_rows = (
+        db.execute(
+            select(Fixture, Round.round_number)
+            .join(Round, Fixture.round_id == Round.id)
+            .where(
+                Fixture.season_id == season.id,
+                (Fixture.home_team_id == player.team_id)
+                | (Fixture.away_team_id == player.team_id),
+            )
+            .order_by(Fixture.kickoff_at, Fixture.match_id)
+        )
+        .all()
+    )
+
+    stats_rows = (
+        db.execute(
+            select(PlayerMatchStat)
+            .where(
+                PlayerMatchStat.season_id == season.id,
+                PlayerMatchStat.player_id == player_id,
+            )
+        )
+        .scalars()
+        .all()
+    )
+    stats_map = {row.match_id: row for row in stats_rows}
+
+    results: List[PlayerMatchOut] = []
+    for fixture, round_number in fixtures_rows:
+        stat = stats_map.get(fixture.match_id)
+        clean_sheet_value: int | None = None
+        goals_conceded_value: int | None = None
+        points_value: float | None = None
+        if stat:
+            points_value, clean_sheet_value, goals_conceded_value = calc_match_points(
+                player, stat, fixture
+            )
+        results.append(
+            PlayerMatchOut(
+                match_id=fixture.match_id,
+                round_number=round_number,
+                kickoff_at=fixture.kickoff_at,
+                status=fixture.status,
+                home_team_id=fixture.home_team_id,
+                away_team_id=fixture.away_team_id,
+                home_score=fixture.home_score,
+                away_score=fixture.away_score,
+                minutesplayed=int(stat.minutesplayed or 0) if stat else None,
+                goals=int(stat.goals or 0) if stat else None,
+                assists=int(stat.assists or 0) if stat else None,
+                saves=int(stat.saves or 0) if stat else None,
+                fouls=int(stat.fouls or 0) if stat else None,
+                yellow_cards=int(getattr(stat, "yellow_cards", 0) or 0) if stat else None,
+                red_cards=int(getattr(stat, "red_cards", 0) or 0) if stat else None,
+                clean_sheet=clean_sheet_value,
+                goals_conceded=goals_conceded_value,
+                points=float(points_value) if points_value is not None else None,
+            )
+        )
+
+    return results

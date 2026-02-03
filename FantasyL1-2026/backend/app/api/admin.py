@@ -58,7 +58,7 @@ from app.schemas.admin import (
 from app.services.data_pipeline import ingest_parquets_to_duckdb, sync_duckdb_to_postgres
 from app.services.fantasy import ensure_round, get_or_create_season, get_round_by_number
 from app.services.action_log import log_action
-from app.services.scoring import recalc_round_points
+from app.services.scoring import calc_match_points, recalc_round_points
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
@@ -900,51 +900,7 @@ def _calc_match_points(
     stat: PlayerMatchStat,
     fixture: Fixture | None,
 ) -> tuple[float, int | None, int | None]:
-    minutes = int(stat.minutesplayed or 0)
-    goals = int(stat.goals or 0)
-    assists = int(stat.assists or 0)
-    saves = int(stat.saves or 0)
-    fouls = int(stat.fouls or 0)
-    yellow_cards = int(getattr(stat, "yellow_cards", 0) or 0)
-    red_cards = int(getattr(stat, "red_cards", 0) or 0)
-    clean_sheet_flag = stat.clean_sheet if hasattr(stat, "clean_sheet") else None
-    goals_conceded_override = stat.goals_conceded if hasattr(stat, "goals_conceded") else None
-    clean_sheet_value = int(clean_sheet_flag) if clean_sheet_flag is not None else None
-    goals_conceded_value = (
-        int(goals_conceded_override) if goals_conceded_override is not None else None
-    )
-
-    conceded = goals_conceded_value
-    if conceded is None and fixture and fixture.home_score is not None and fixture.away_score is not None:
-        conceded = _goals_conceded_from_fixture(fixture, player.team_id)
-
-    points = 0.0
-    points += goals * 4
-    points += (goals // 3) * 3
-    points += assists * 3
-    points -= yellow_cards * 3
-    points -= red_cards * 5
-
-    if minutes >= 90:
-        points += 2
-    elif minutes > 0:
-        points += 1
-
-    points -= fouls // 5
-
-    position = (player.position or "").upper()
-    if position in {"G", "GK"} and saves > 0:
-        points += saves // 5
-    if position in {"G", "GK"} and minutes > 0 and conceded is not None:
-        points -= conceded
-    if position in {"G", "GK", "D", "M"} and minutes > 0:
-        if clean_sheet_value is not None:
-            if clean_sheet_value == 1:
-                points += 3
-        elif conceded == 0:
-            points += 3
-
-    return points, clean_sheet_value, conceded
+    return calc_match_points(player, stat, fixture)
 
 
 @router.get("/match-stats", response_model=List[AdminMatchPlayerOut])

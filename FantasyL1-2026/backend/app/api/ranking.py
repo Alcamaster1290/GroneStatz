@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -18,12 +18,7 @@ from app.models import (
     Round,
 )
 from app.schemas.ranking import PublicLineupOut, PublicMarketOut, RankingOut
-from app.services.fantasy import (
-    get_current_round,
-    get_latest_round,
-    get_or_create_fantasy_team,
-    get_or_create_season,
-)
+from app.services.fantasy import get_or_create_fantasy_team, get_or_create_season
 from app.services.ranking import build_rankings
 
 router = APIRouter(prefix="/ranking", tags=["ranking"])
@@ -75,6 +70,7 @@ def ranking_league(
 @router.get("/team/{fantasy_team_id}/lineup", response_model=PublicLineupOut)
 def get_team_lineup(
     fantasy_team_id: int,
+    round_number: int | None = Query(default=None, ge=1),
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ) -> PublicLineupOut:
@@ -92,8 +88,32 @@ def get_team_lineup(
     if not team:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="team_not_found")
 
-    pending_round = get_current_round(db, season.id)
-    round_obj = pending_round or get_latest_round(db, season.id)
+    rounds = (
+        db.execute(
+            select(Round).where(Round.season_id == season.id).order_by(Round.round_number)
+        )
+        .scalars()
+        .all()
+    )
+    if not rounds:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+
+    pending_round_number = next((round.round_number for round in rounds if not round.is_closed), None)
+    closed_rounds = [round.round_number for round in rounds if round.is_closed]
+    allowed_rounds = {
+        round.round_number
+        for round in rounds
+        if round.is_closed or (pending_round_number and round.round_number == pending_round_number)
+    }
+
+    if round_number is None:
+        round_number = pending_round_number or (max(closed_rounds) if closed_rounds else None)
+    if round_number is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+    if round_number not in allowed_rounds:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="round_not_allowed")
+
+    round_obj = next((round for round in rounds if round.round_number == round_number), None)
     if not round_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
 

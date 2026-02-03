@@ -43,18 +43,23 @@ function PlayerFace({ playerId, sizeClass }: { playerId: number; sizeClass: stri
 export default function PlayerCard({
   player,
   onClick,
-  compact = false
+  compact = false,
+  showPoints = false
 }: {
   player: Player;
   onClick?: () => void;
   compact?: boolean;
+  showPoints?: boolean;
 }) {
   const avatarSize = compact ? "h-9 w-9" : "h-11 w-11";
   const teamSize = compact ? "h-7 w-7" : "h-8 w-8";
   const goals = player.goals ?? 0;
   const assists = player.assists ?? 0;
   const saves = player.saves ?? 0;
+  const goalsConceded = player.goals_conceded ?? 0;
+  const pointsTotal = typeof player.points_total === "number" ? player.points_total : 0;
   const isGoalkeeper = player.position === "G";
+  const isDefender = player.position === "D";
   const isInjured = Boolean(player.is_injured);
 
   return (
@@ -90,13 +95,23 @@ export default function PlayerCard({
               </span>
             ) : null}
             {isGoalkeeper ? (
-              <span>Atajadas {saves}</span>
+              <>
+                <span>Atajadas {saves}</span>
+                <span>Goles {goals}</span>
+                <span>GC {goalsConceded}</span>
+              </>
+            ) : isDefender ? (
+              <>
+                <span>Goles {goals}</span>
+                <span>GC {goalsConceded}</span>
+              </>
             ) : (
               <>
                 <span>Goles {goals}</span>
                 <span>Asist {assists}</span>
               </>
             )}
+            {showPoints ? <span>Puntos {pointsTotal.toFixed(1)}</span> : null}
           </div>
         </div>
       </div>

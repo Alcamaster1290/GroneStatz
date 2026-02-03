@@ -6,9 +6,17 @@ import AuthPanel from "@/components/AuthPanel";
 import FavoriteTeamGate from "@/components/FavoriteTeamGate";
 import TeamNameGate from "@/components/TeamNameGate";
 import WelcomeSlideshow from "@/components/WelcomeSlideshow";
-import { createTeam, getFixtures, getRounds, getTeam, getTeams, updateFavoriteTeam } from "@/lib/api";
+import {
+  createTeam,
+  getFixtures,
+  getMatchStats,
+  getRounds,
+  getTeam,
+  getTeams,
+  updateFavoriteTeam
+} from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
-import { Fixture, RoundInfo } from "@/lib/types";
+import { Fixture, MatchPlayerStat, RoundInfo } from "@/lib/types";
 
 function TeamLogo({ teamId }: { teamId: number | null | undefined }) {
   const [hidden, setHidden] = useState(false);
@@ -73,6 +81,13 @@ function formatDateLabel(dateKey: string): string {
   return `${weekday} ${day} de ${monthLabel}`;
 }
 
+const positionLabels: Record<string, string> = {
+  G: "Arquero",
+  D: "Defensa",
+  M: "Mediocampo",
+  F: "Delantero"
+};
+
 export default function FixturesPage() {
   const token = useFantasyStore((state) => state.token);
   const setToken = useFantasyStore((state) => state.setToken);
@@ -84,6 +99,11 @@ export default function FixturesPage() {
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
   const [roundsInfo, setRoundsInfo] = useState<RoundInfo[]>([]);
   const [roundStatus, setRoundStatus] = useState<string | null>(null);
+  const [matchStatsOpen, setMatchStatsOpen] = useState(false);
+  const [matchStatsLoading, setMatchStatsLoading] = useState(false);
+  const [matchStatsError, setMatchStatsError] = useState<string | null>(null);
+  const [matchStats, setMatchStats] = useState<MatchPlayerStat[]>([]);
+  const [selectedMatch, setSelectedMatch] = useState<Fixture | null>(null);
   const [teamName, setTeamName] = useState("");
   const [favoriteTeamId, setFavoriteTeamId] = useState<number | null>(null);
   const [needsTeamName, setNeedsTeamName] = useState(false);
@@ -214,6 +234,30 @@ export default function FixturesPage() {
     return fixtures.filter((fixture) => fixture.round_number === selectedRound);
   }, [fixtures, selectedRound]);
 
+  const canShowMatchStats = (fixture: Fixture) => {
+    if (fixture.status !== "Finalizado") return false;
+    if (fixture.home_score == null || fixture.away_score == null) return false;
+    return fixture.home_score !== 0 || fixture.away_score !== 0;
+  };
+
+  const handleMatchClick = async (fixture: Fixture) => {
+    if (!canShowMatchStats(fixture)) return;
+    setSelectedMatch(fixture);
+    setMatchStatsOpen(true);
+    setMatchStatsLoading(true);
+    setMatchStatsError(null);
+    try {
+      const data = await getMatchStats(fixture.match_id);
+      const filtered = data.filter((row) => row.points !== 0);
+      setMatchStats(filtered);
+    } catch (err) {
+      setMatchStats([]);
+      setMatchStatsError(String(err));
+    } finally {
+      setMatchStatsLoading(false);
+    }
+  };
+
   const roundsByDate = useMemo(() => {
     const toKey = (value: string | null | undefined) => {
       if (!value) return "TBD";
@@ -306,9 +350,17 @@ export default function FixturesPage() {
                     formatKickoff(a.kickoff_at).localeCompare(formatKickoff(b.kickoff_at))
                   )
                   .map((match) => (
-                    <div
+                    <button
                       key={match.id}
-                      className="glass flex items-center justify-between rounded-2xl p-4"
+                      type="button"
+                      onClick={() => handleMatchClick(match)}
+                      disabled={!canShowMatchStats(match)}
+                      className={
+                        "glass flex w-full items-center justify-between rounded-2xl p-4 text-left transition " +
+                        (canShowMatchStats(match)
+                          ? "hover:border-white/20"
+                          : "opacity-80")
+                      }
                     >
                       <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-2 text-sm text-ink">
@@ -328,13 +380,112 @@ export default function FixturesPage() {
                             ? `${match.home_score} - ${match.away_score}`
                             : ""}
                         </p>
+                        {canShowMatchStats(match) ? (
+                          <p className="text-[10px] text-muted">Ver stats</p>
+                        ) : null}
                       </div>
-                    </div>
+                    </button>
                   ))}
               </div>
             ))}
         </div>
       )}
+
+      {matchStatsOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6">
+          <div className="glass max-h-[85vh] w-full max-w-2xl space-y-4 overflow-y-auto rounded-2xl p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-ink">Stats del partido</h3>
+                <p className="text-xs text-muted">
+                  {selectedMatch
+                    ? `${teamMap.get(selectedMatch.home_team_id ?? 0) || "Home"} vs ${
+                        teamMap.get(selectedMatch.away_team_id ?? 0) || "Away"
+                      }`
+                    : ""}
+                </p>
+              </div>
+              <button
+                onClick={() => setMatchStatsOpen(false)}
+                className="rounded-full border border-white/10 px-3 py-1 text-xs text-ink"
+              >
+                Cerrar
+              </button>
+            </div>
+            {matchStatsLoading ? (
+              <p className="text-xs text-muted">Cargando stats...</p>
+            ) : null}
+            {matchStatsError ? (
+              <p className="text-xs text-warning">{matchStatsError}</p>
+            ) : null}
+            {!matchStatsLoading && !matchStatsError ? (
+              matchStats.length ? (
+                <div className="space-y-2">
+                  {matchStats.map((row) => {
+                    const pointsLabel = Math.trunc(row.points);
+                    const statLine = [
+                      `Min ${row.minutesplayed}`,
+                      `G ${row.goals}`,
+                      `A ${row.assists}`
+                    ];
+                    if (row.position === "G") {
+                      statLine.push(`Atj ${row.saves}`);
+                      statLine.push(`GC ${row.goals_conceded ?? 0}`);
+                    } else if (row.position === "D") {
+                      statLine.push(`GC ${row.goals_conceded ?? 0}`);
+                    }
+                    statLine.push(`TA ${row.yellow_cards}`, `TR ${row.red_cards}`);
+                    if (row.clean_sheet != null) {
+                      statLine.push(`CS ${row.clean_sheet}`);
+                    }
+                    return (
+                      <div
+                        key={`${row.match_id}-${row.player_id}`}
+                        className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="relative h-9 w-9 overflow-hidden rounded-full bg-surface2/60 ring-1 ring-white/10">
+                            <img
+                              src={`/images/players/${row.player_id}.png`}
+                              alt=""
+                              className="h-full w-full object-cover"
+                              onError={(event) => {
+                                (event.currentTarget as HTMLImageElement).style.display = "none";
+                              }}
+                            />
+                            <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black/70">
+                              <img
+                                src={`/images/teams/${row.team_id}.png`}
+                                alt=""
+                                className="h-full w-full object-contain"
+                              />
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-ink">
+                              {row.short_name || row.name}
+                            </p>
+                            <p className="text-[10px] text-muted">
+                              {positionLabels[row.position] || row.position}
+                            </p>
+                            <p className="text-[10px] text-muted">{statLine.join(" · ")}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] text-muted">Puntos</p>
+                          <p className="text-sm font-semibold text-ink">{pointsLabel}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-muted">Sin puntos registrados para este partido.</p>
+              )
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <WelcomeSlideshow
         open={welcomeOpen}

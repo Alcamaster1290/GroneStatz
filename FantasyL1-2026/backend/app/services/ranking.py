@@ -9,6 +9,7 @@ from app.models import (
     FantasyLineup,
     FantasyLineupSlot,
     FantasyTeam,
+    PlayerCatalog,
     PointsRound,
     PriceMovement,
     Round,
@@ -33,40 +34,111 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
     team_map = {row[0]: row[1] or "Sin nombre" for row in team_rows}
     favorite_map = {row[0]: row[2] for row in team_rows}
 
-    round_numbers = (
+    round_rows = (
         db.execute(
-            select(Round.round_number)
+            select(Round.round_number, Round.is_closed)
             .where(Round.season_id == season.id)
             .order_by(Round.round_number)
         )
-        .scalars()
         .all()
     )
+    pending_round = next((row[0] for row in round_rows if not row[1]), None)
+    if pending_round is None:
+        round_numbers = [row[0] for row in round_rows]
+    else:
+        round_numbers = [
+            row[0]
+            for row in round_rows
+            if row[1] or row[0] == pending_round
+        ]
 
-    points_rows = (
+    lineup_rows = (
         db.execute(
             select(
+                FantasyLineup.id,
                 FantasyLineup.fantasy_team_id,
                 Round.round_number,
-                func.coalesce(func.sum(PointsRound.points), 0).label("points"),
+                FantasyLineup.captain_player_id,
+                FantasyLineup.vice_captain_player_id,
             )
             .join(Round, Round.id == FantasyLineup.round_id)
-            .join(FantasyLineupSlot, FantasyLineupSlot.lineup_id == FantasyLineup.id)
-            .outerjoin(
-                PointsRound,
-                (PointsRound.round_id == FantasyLineup.round_id)
-                & (PointsRound.player_id == FantasyLineupSlot.player_id)
-                & (PointsRound.season_id == season.id),
-            )
             .where(
                 FantasyLineup.fantasy_team_id.in_(team_ids),
                 Round.season_id == season.id,
-                FantasyLineupSlot.is_starter.is_(True),
+                Round.round_number.in_(round_numbers) if round_numbers else True,
             )
-            .group_by(FantasyLineup.fantasy_team_id, Round.round_number)
         )
         .all()
     )
+
+    lineup_ids = [row[0] for row in lineup_rows]
+    slot_rows = []
+    if lineup_ids:
+        slot_rows = (
+            db.execute(
+                select(
+                    FantasyLineupSlot.lineup_id,
+                    FantasyLineupSlot.player_id,
+                    func.coalesce(PointsRound.points, 0).label("points"),
+                )
+                .join(FantasyLineup, FantasyLineupSlot.lineup_id == FantasyLineup.id)
+                .join(Round, Round.id == FantasyLineup.round_id)
+                .outerjoin(
+                    PointsRound,
+                    (PointsRound.round_id == FantasyLineup.round_id)
+                    & (PointsRound.player_id == FantasyLineupSlot.player_id)
+                    & (PointsRound.season_id == season.id),
+                )
+                .where(
+                    FantasyLineupSlot.is_starter.is_(True),
+                    FantasyLineupSlot.lineup_id.in_(lineup_ids),
+                )
+            )
+            .all()
+        )
+
+    player_ids = {row[1] for row in slot_rows if row[1] is not None}
+    injury_map: Dict[int, bool] = {}
+    if player_ids:
+        injury_rows = (
+            db.execute(
+                select(PlayerCatalog.player_id, PlayerCatalog.is_injured).where(
+                    PlayerCatalog.player_id.in_(player_ids)
+                )
+            )
+            .all()
+        )
+        injury_map = {player_id: bool(is_injured) for player_id, is_injured in injury_rows}
+
+    lineup_player_points: Dict[int, Dict[int, float]] = {}
+    lineup_totals: Dict[int, float] = {}
+    for lineup_id, player_id, points in slot_rows:
+        if player_id is None:
+            continue
+        lineup_points = lineup_player_points.setdefault(lineup_id, {})
+        lineup_points[player_id] = lineup_points.get(player_id, 0.0) + float(points)
+        lineup_totals[lineup_id] = lineup_totals.get(lineup_id, 0.0) + float(points)
+
+    points_map: Dict[Tuple[int, int], float] = {}
+    for lineup_id, team_id, round_number, captain_id, vice_id in lineup_rows:
+        total = lineup_totals.get(lineup_id, 0.0)
+        player_points = lineup_player_points.get(lineup_id, {})
+
+        def eligible(player_id: int | None) -> bool:
+            if not player_id:
+                return False
+            if player_points.get(player_id, 0.0) <= 0:
+                return False
+            if injury_map.get(player_id, False):
+                return False
+            return True
+
+        if eligible(captain_id):
+            total += 2 * player_points.get(captain_id, 0.0)
+        elif eligible(vice_id):
+            total += 2 * player_points.get(vice_id, 0.0)
+
+        points_map[(team_id, round_number)] = total
 
     delta_rows = (
         db.execute(
@@ -86,61 +158,39 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
             .where(
                 FantasyLineup.fantasy_team_id.in_(team_ids),
                 Round.season_id == season.id,
+                Round.round_number.in_(round_numbers) if round_numbers else True,
             )
             .group_by(FantasyLineup.fantasy_team_id, Round.round_number)
         )
         .all()
     )
 
-    points_map: Dict[Tuple[int, int], float] = {
-        (team_id, round_number): float(points)
-        for team_id, round_number, points in points_rows
-    }
+    # points_map populated above
     delta_map: Dict[Tuple[int, int], float] = {
         (team_id, round_number): float(delta)
         for team_id, round_number, delta in delta_rows
     }
 
     captain_map: Dict[int, int | None] = {}
-    current_round = get_current_round(db, season.id)
-    if current_round:
+    closed_rounds = [row[0] for row in round_rows if row[1]]
+    target_round = max(closed_rounds) if closed_rounds else pending_round
+    if target_round is not None:
         lineup_rows = (
             db.execute(
-                select(FantasyLineup.fantasy_team_id, FantasyLineup.captain_player_id).where(
+                select(FantasyLineup.fantasy_team_id, FantasyLineup.captain_player_id)
+                .join(Round, Round.id == FantasyLineup.round_id)
+                .where(
                     FantasyLineup.fantasy_team_id.in_(team_ids),
-                    FantasyLineup.round_id == current_round.id,
+                    Round.round_number == target_round,
+                    Round.season_id == season.id,
                 )
             )
             .all()
         )
         captain_map = {team_id: captain_id for team_id, captain_id in lineup_rows}
-    else:
-        latest_rounds = (
-            db.execute(
-                select(
-                    FantasyLineup.fantasy_team_id,
-                    func.max(FantasyLineup.round_id).label("max_round_id"),
-                )
-                .where(FantasyLineup.fantasy_team_id.in_(team_ids))
-                .group_by(FantasyLineup.fantasy_team_id)
-            )
-            .all()
-        )
-        latest_map = {team_id: round_id for team_id, round_id in latest_rounds}
-        if latest_map:
-            lineup_rows = (
-                db.execute(
-                    select(FantasyLineup.fantasy_team_id, FantasyLineup.captain_player_id).where(
-                        FantasyLineup.fantasy_team_id.in_(latest_map.keys()),
-                        FantasyLineup.round_id.in_(latest_map.values()),
-                    )
-                )
-                .all()
-            )
-            captain_map = {team_id: captain_id for team_id, captain_id in lineup_rows}
 
     if not round_numbers:
-        round_numbers = sorted({round_number for _, round_number, _ in points_rows})
+        round_numbers = sorted({round_number for _, round_number in points_map.keys()})
 
     entries: List[RankingEntryOut] = []
     for team_id in team_ids:

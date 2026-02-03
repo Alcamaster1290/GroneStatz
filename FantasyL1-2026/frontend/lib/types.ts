@@ -72,6 +72,46 @@ export type RoundInfo = {
   ends_at?: string | null;
 };
 
+export type MatchPlayerStat = {
+  match_id: number;
+  player_id: number;
+  name: string;
+  short_name?: string | null;
+  position: Position;
+  team_id: number;
+  minutesplayed: number;
+  goals: number;
+  assists: number;
+  saves: number;
+  fouls: number;
+  yellow_cards: number;
+  red_cards: number;
+  clean_sheet?: number | null;
+  goals_conceded?: number | null;
+  points: number;
+};
+
+export type PlayerMatch = {
+  match_id: number;
+  round_number: number;
+  kickoff_at?: string | null;
+  status: string;
+  home_team_id?: number | null;
+  away_team_id?: number | null;
+  home_score?: number | null;
+  away_score?: number | null;
+  minutesplayed?: number | null;
+  goals?: number | null;
+  assists?: number | null;
+  saves?: number | null;
+  fouls?: number | null;
+  yellow_cards?: number | null;
+  red_cards?: number | null;
+  clean_sheet?: number | null;
+  goals_conceded?: number | null;
+  points?: number | null;
+};
+
 export type PlayerStatsEntry = {
   player_id: number;
   name: string;

@@ -28,6 +28,7 @@ import {
   getFixtures,
   getHealth,
   getLineup,
+  getPlayerMatches,
   getRounds,
   getTeam,
   getTeams,
@@ -35,7 +36,7 @@ import {
   updateFavoriteTeam
 } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
-import { Fixture, LineupSlot, Player, RoundInfo } from "@/lib/types";
+import { Fixture, LineupSlot, Player, PlayerMatch, RoundInfo } from "@/lib/types";
 import { validateLineup, validateSquad } from "@/lib/validation";
 
 const DEFAULT_SLOTS: LineupSlot[] = [
@@ -127,14 +128,14 @@ const positionLabels: Record<string, string> = {
 
 function PlayerFantasyDetails({
   player,
-  roundNumber: _roundNumber,
   teamName,
-  fixtures
+  matches,
+  loadingMatches
 }: {
   player: Player;
-  roundNumber: number | null;
   teamName?: string;
-  fixtures: Fixture[];
+  matches: PlayerMatch[];
+  loadingMatches?: boolean;
 }) {
   const displayName = player.short_name || player.shortName || player.name;
   const isKeeper = player.position === "G";
@@ -168,7 +169,7 @@ function PlayerFantasyDetails({
     : hasRoundStats
       ? player.assists_round ?? 0
       : player.assists ?? 0;
-  const formatKickoff = (kickoff: string | null) => {
+  const formatKickoff = (kickoff: string | null | undefined) => {
     if (!kickoff) return "Por confirmar";
     const normalized = kickoff.replace("T", " ").trim();
     const [datePart, timePart] = normalized.split(" ");
@@ -177,17 +178,13 @@ function PlayerFantasyDetails({
     const time = timePart ? timePart.slice(0, 5) : "";
     return `${day}/${month}/${shortYear}${time ? `, ${time}` : ""}`;
   };
-  const teamFixtures = fixtures
-    .filter(
-      (fixture) =>
-        fixture.home_team_id === player.team_id || fixture.away_team_id === player.team_id
-    )
+  const teamMatches = matches
+    .slice()
     .sort((a, b) => {
       const aKey = a.kickoff_at ? a.kickoff_at : "9999-99-99";
       const bKey = b.kickoff_at ? b.kickoff_at : "9999-99-99";
       return aKey.localeCompare(bKey);
-    })
-    .slice(0, 3);
+    });
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
@@ -236,14 +233,31 @@ function PlayerFantasyDetails({
       </div>
       <div className="space-y-2">
         <p className="text-xs font-semibold text-ink">Partidos</p>
-        {teamFixtures.length ? (
+        {loadingMatches ? (
+          <p className="text-xs text-muted">Cargando partidos...</p>
+        ) : teamMatches.length ? (
           <div className="space-y-2">
-            {teamFixtures.map((fixture) => {
+            {teamMatches.map((fixture) => {
               const homeId = fixture.home_team_id;
               const awayId = fixture.away_team_id;
+              const pointsLabel =
+                typeof fixture.points === "number"
+                  ? Math.trunc(fixture.points).toString()
+                  : "--";
+              const statLine = [
+                `Min ${fixture.minutesplayed ?? 0}`,
+                `G ${fixture.goals ?? 0}`,
+                `A ${fixture.assists ?? 0}`
+              ];
+              if (isKeeper) {
+                statLine.push(`Atj ${fixture.saves ?? 0}`);
+                statLine.push(`GC ${fixture.goals_conceded ?? 0}`);
+              } else if (player.position === "D") {
+                statLine.push(`GC ${fixture.goals_conceded ?? 0}`);
+              }
               return (
                 <div
-                  key={fixture.id}
+                  key={fixture.match_id}
                   className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs"
                 >
                   <div className="flex items-center gap-2">
@@ -267,8 +281,10 @@ function PlayerFantasyDetails({
                       ) : null}
                     </span>
                   </div>
-                  <div className="text-right text-[10px] text-muted">
+                  <div className="flex flex-col items-end gap-1 text-right text-[10px] text-muted">
                     <p>{formatKickoff(fixture.kickoff_at)}</p>
+                    <p className="text-ink">Pts {pointsLabel}</p>
+                    <p className="text-[9px] text-muted">{statLine.join(" · ")}</p>
                   </div>
                 </div>
               );
@@ -469,6 +485,9 @@ export default function TeamPage() {
   const [saveErrors, setSaveErrors] = useState<string[] | null>(null);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [allFixtures, setAllFixtures] = useState<Fixture[]>([]);
+  const [playerMatches, setPlayerMatches] = useState<PlayerMatch[]>([]);
+  const [playerMatchesLoading, setPlayerMatchesLoading] = useState(false);
+  const [playerMatchesError, setPlayerMatchesError] = useState<string | null>(null);
   const [teams, setTeams] = useState<{ id: number; name_short?: string; name_full?: string }[]>(
     []
   );
@@ -761,17 +780,26 @@ export default function TeamPage() {
     const pointsById = new Map(
       squad.map((player) => [player.player_id, typeof player.points_round === "number" ? player.points_round : 0])
     );
+    const injuredById = new Map(
+      squad.map((player) => [player.player_id, Boolean(player.is_injured)])
+    );
     let total = 0;
     lineupSlots.forEach((slot) => {
       if (slot.is_starter && slot.player_id) {
         total += pointsById.get(slot.player_id) ?? 0;
       }
     });
-    if (captainId) {
-      total += 2 * (pointsById.get(captainId) ?? 0);
+    const captainPoints = captainId ? pointsById.get(captainId) ?? 0 : 0;
+    const captainInjured = captainId ? injuredById.get(captainId) ?? false : false;
+    const vicePoints = viceCaptainId ? pointsById.get(viceCaptainId) ?? 0 : 0;
+    const viceInjured = viceCaptainId ? injuredById.get(viceCaptainId) ?? false : false;
+    if (captainId && captainPoints > 0 && !captainInjured) {
+      total += 2 * captainPoints;
+    } else if (viceCaptainId && vicePoints > 0 && !viceInjured) {
+      total += 2 * vicePoints;
     }
     return Math.round(total * 10) / 10;
-  }, [captainId, currentRound, lineupSlots, squad]);
+  }, [captainId, viceCaptainId, currentRound, lineupSlots, squad]);
 
 
   useEffect(() => {
@@ -1325,6 +1353,23 @@ export default function TeamPage() {
     ? opponentByTeamId.get(selectedPlayer.team_id)
     : undefined;
 
+  useEffect(() => {
+    if (!selectedPlayer) {
+      setPlayerMatches([]);
+      setPlayerMatchesError(null);
+      return;
+    }
+    setPlayerMatchesLoading(true);
+    setPlayerMatchesError(null);
+    getPlayerMatches(selectedPlayer.player_id)
+      .then((data) => setPlayerMatches(data))
+      .catch((err) => {
+        setPlayerMatches([]);
+        setPlayerMatchesError(String(err));
+      })
+      .finally(() => setPlayerMatchesLoading(false));
+  }, [selectedPlayer?.player_id]);
+
   const isTestEnv = appEnv === "test";
   const sizeClass = isTestEnv ? "h-9 w-9" : "h-12 w-12";
   const badgeClass = "h-[25%] w-[25%]";
@@ -1711,10 +1756,13 @@ export default function TeamPage() {
                   <PlayerCard player={selectedPlayer} compact />
                   <PlayerFantasyDetails
                     player={selectedPlayer}
-                    roundNumber={currentRound}
                     teamName={teamNameById.get(selectedPlayer.team_id)}
-                    fixtures={fixtures}
+                    matches={playerMatches}
+                    loadingMatches={playerMatchesLoading}
                   />
+                  {playerMatchesError ? (
+                    <p className="text-[11px] text-warning">{playerMatchesError}</p>
+                  ) : null}
                 </div>
               ) : (
                 <p className="text-xs text-muted">Slot vacio.</p>
@@ -1830,10 +1878,13 @@ export default function TeamPage() {
                 <PlayerCard player={selectedPlayer} />
                 <PlayerFantasyDetails
                   player={selectedPlayer}
-                  roundNumber={currentRound}
                   teamName={teamNameById.get(selectedPlayer.team_id)}
-                  fixtures={fixtures}
+                  matches={playerMatches}
+                  loadingMatches={playerMatchesLoading}
                 />
+                {playerMatchesError ? (
+                  <p className="text-[11px] text-warning">{playerMatchesError}</p>
+                ) : null}
                 {selectedSlot.is_starter && selectedOpponent ? (
                   <div className="flex items-center gap-2 text-xs text-muted">
                     <span>Rival:</span>
