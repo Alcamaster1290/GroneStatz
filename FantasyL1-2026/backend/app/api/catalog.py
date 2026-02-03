@@ -229,6 +229,23 @@ def list_player_stats(
         .subquery()
     )
 
+    latest_price_round_subq = (
+        select(func.max(PriceMovement.round_id).label("round_id"))
+        .where(PriceMovement.season_id == season.id)
+        .subquery()
+    )
+    price_movement_subq = (
+        select(
+            PriceMovement.player_id.label("player_id"),
+            PriceMovement.delta.label("price_delta"),
+        )
+        .where(
+            PriceMovement.season_id == season.id,
+            PriceMovement.round_id == latest_price_round_subq.c.round_id,
+        )
+        .subquery()
+    )
+
     query = (
         select(
             PlayerCatalog,
@@ -240,9 +257,11 @@ def list_player_stats(
             stats_subq.c.yellow_cards,
             stats_subq.c.red_cards,
             func.coalesce(selected_subq.c.selected_count, 0).label("selected_count"),
+            price_movement_subq.c.price_delta,
         )
         .outerjoin(stats_subq, PlayerCatalog.player_id == stats_subq.c.player_id)
         .outerjoin(selected_subq, PlayerCatalog.player_id == selected_subq.c.player_id)
+        .outerjoin(price_movement_subq, PlayerCatalog.player_id == price_movement_subq.c.player_id)
     )
     if position:
         query = query.where(PlayerCatalog.position == position)
@@ -283,6 +302,7 @@ def list_player_stats(
         player = row[0]
         selected_count = int(row[8] or 0)
         selected_percent = (selected_count / total_teams * 100) if total_teams > 0 else 0.0
+        price_delta = float(row[9]) if row[9] is not None else None
         results.append(
             PlayerStatsOut(
                 player_id=player.player_id,
@@ -291,6 +311,7 @@ def list_player_stats(
                 position=player.position,
                 team_id=player.team_id,
                 price_current=float(player.price_current),
+                price_delta=price_delta,
                 is_injured=bool(player.is_injured),
                 selected_count=selected_count,
                 selected_percent=selected_percent,

@@ -317,9 +317,7 @@ export default function StatsPage() {
             const isKeeper = player.position === "G";
             const rounds = player.rounds ?? [];
             const roundPoints = rounds.map((round) => round.points);
-            const trend = roundPoints.length
-              ? roundPoints[roundPoints.length - 1] - roundPoints[0]
-              : 0;
+            const priceDelta = typeof player.price_delta === "number" ? player.price_delta : 0;
             return (
               <div
                 key={player.player_id}
@@ -389,14 +387,10 @@ export default function StatsPage() {
                     </p>
                     <div className="flex items-center gap-1 text-[10px] text-muted">
                       {renderSparkline(roundPoints)}
-                      {roundPoints.length ? (
-                        <span className={trend >= 0 ? "text-emerald-300" : "text-red-300"}>
-                          Δ {trend >= 0 ? "+" : ""}
-                          {trend.toFixed(1)}
-                        </span>
-                      ) : (
-                        <span>Sin rondas</span>
-                      )}
+                      <span className={priceDelta >= 0 ? "text-emerald-300" : "text-red-300"}>
+                        Δ {priceDelta >= 0 ? "+" : ""}
+                        {priceDelta.toFixed(1)}
+                      </span>
                     </div>
                     <p className="text-xs font-semibold text-indigo-300">
                       {percent.toFixed(1)}%

@@ -44,6 +44,7 @@ class PlayerStatsOut(BaseModel):
     position: str
     team_id: int
     price_current: float
+    price_delta: Optional[float] = None
     is_injured: bool
     selected_count: int
     selected_percent: float
