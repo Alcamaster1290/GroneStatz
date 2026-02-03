@@ -248,7 +248,9 @@ export default function FixturesPage() {
     setMatchStatsError(null);
     try {
       const data = await getMatchStats(fixture.match_id);
-      const filtered = data.filter((row) => row.points !== 0);
+      const filtered = data
+        .filter((row) => row.points !== 0)
+        .sort((a, b) => (b.points || 0) - (a.points || 0));
       setMatchStats(filtered);
     } catch (err) {
       setMatchStats([]);
@@ -381,7 +383,7 @@ export default function FixturesPage() {
                             : ""}
                         </p>
                         {canShowMatchStats(match) ? (
-                          <p className="text-[10px] text-muted">Ver stats</p>
+                          <p className="text-[10px] text-muted">Ver puntos</p>
                         ) : null}
                       </div>
                     </button>
@@ -413,7 +415,7 @@ export default function FixturesPage() {
               </button>
             </div>
             {matchStatsLoading ? (
-              <p className="text-xs text-muted">Cargando stats...</p>
+              <p className="text-xs text-muted">Cargando puntos...</p>
             ) : null}
             {matchStatsError ? (
               <p className="text-xs text-warning">{matchStatsError}</p>
