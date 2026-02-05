@@ -183,7 +183,16 @@ def validate_transfer(
 
     squad_rows = (
         db.execute(
-            select(FantasyTeamPlayer.player_id, FantasyTeamPlayer.bought_price).where(
+            select(
+                FantasyTeamPlayer.player_id,
+                FantasyTeamPlayer.bought_price,
+                PlayerCatalog.price_current,
+            )
+            .join(
+                PlayerCatalog,
+                PlayerCatalog.player_id == FantasyTeamPlayer.player_id,
+            )
+            .where(
                 FantasyTeamPlayer.fantasy_team_id == fantasy_team_id
             )
         )
@@ -208,11 +217,24 @@ def validate_transfer(
         errors.append(f"players_not_found: {in_player_id}")
         return errors
 
+    out_row = next((row for row in squad_rows if row.player_id == out_player_id), None)
+    if out_row is None:
+        errors.append("out_player_not_in_squad")
+        return errors
+
     new_ids = [pid for pid in squad_ids if pid != out_player_id] + [in_player_id]
-    effective_cap = _round_price(budget_cap) - _round_price(next_transfer_fee)
+    out_bought_price = _round_price(out_row.bought_price)
+    out_current_price = _round_price(out_row.price_current)
+    realized_gain = out_current_price - out_bought_price
+    effective_cap = (
+        _round_price(budget_cap)
+        + realized_gain
+        - _round_price(next_transfer_fee)
+    ).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
 
     # Budget for transfer validation follows team accounting:
     # keep existing bought prices, replace outgoing with incoming current price.
+    # Realize outgoing player gain/loss so transfers can use market appreciation.
     budget_prices = {
         row.player_id: _round_price(row.bought_price)
         for row in squad_rows

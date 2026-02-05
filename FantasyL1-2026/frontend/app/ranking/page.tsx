@@ -111,7 +111,7 @@ function RankingTable({
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-accent">
-                  {entry.total_points.toFixed(1)}
+                  {Math.round(entry.total_points)}
                 </span>
               </div>
             </div>
@@ -126,7 +126,7 @@ function RankingTable({
                     key={`${entry.fantasy_team_id}-${round.round_number}`}
                     className="rounded-full border border-white/10 px-2 py-1"
                   >
-                    R{round.round_number}: {round.points.toFixed(1)}
+                    R{round.round_number}: {Math.round(round.points)}
                   </span>
                 ))
               )}
@@ -403,6 +403,10 @@ export default function RankingPage() {
     if (!token) return;
     setLineupLoading(true);
     setLineupError(null);
+    setLineupData(null);
+    if (roundNumber) {
+      setLineupRoundNumber(roundNumber);
+    }
     try {
       const data = await getRankingLineup(
         token,
@@ -493,6 +497,10 @@ export default function RankingPage() {
     return roundInfoByNumber.get(lineupRoundNumber) ?? null;
   }, [lineupRoundNumber, roundInfoByNumber]);
   const lineupErrorCode = normalizeErrorCode(lineupError);
+  const isMarketOnlyError = lineupErrorCode === "market_complete_without_lineup";
+  const isMissingLineupError =
+    lineupErrorCode === "market_complete_without_lineup" ||
+    lineupErrorCode === "lineup_not_found";
 
   const lineupIsPending = useMemo(() => {
     if (!lineupRoundInfo) return false;
@@ -604,12 +612,18 @@ export default function RankingPage() {
     );
   };
 
-  const renderMarketPlayer = (player: PublicMarketPlayer) => {
+  const renderMarketPlayer = (
+    player: PublicMarketPlayer,
+    options: { showPoints?: boolean } = {}
+  ) => {
+    const showPoints = options.showPoints ?? true;
     const positionLabel = positionLabels[player.position] || player.position;
     return (
       <div
         key={`market-${player.player_id}`}
-        className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs"
+        className={`flex items-center rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs ${
+          showPoints ? "justify-between" : "justify-start"
+        }`}
       >
         <div className="flex items-center gap-2">
           <div className="relative h-9 w-9 overflow-hidden rounded-full bg-surface2/60 ring-1 ring-white/10">
@@ -636,10 +650,12 @@ export default function RankingPage() {
             <p className="text-[10px] text-muted">{positionLabel}</p>
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-[10px] text-muted">Pts totales</p>
-          <p className="text-sm font-semibold text-ink">{player.points_total.toFixed(1)}</p>
-        </div>
+        {showPoints ? (
+          <div className="text-right">
+            <p className="text-[10px] text-muted">Pts totales</p>
+            <p className="text-sm font-semibold text-ink">{player.points_total.toFixed(1)}</p>
+          </div>
+        ) : null}
       </div>
     );
   };
@@ -792,7 +808,9 @@ export default function RankingPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6">
           <div className="glass max-h-[85vh] w-full max-w-xl space-y-4 overflow-y-auto rounded-2xl p-4">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-lg font-semibold text-ink">XI titular</h3>
+              <h3 className="text-lg font-semibold text-ink">
+                {isMarketOnlyError ? "Mercado" : "XI titular"}
+              </h3>
               <button
                 onClick={() => setLineupOpen(false)}
                 className="rounded-full border border-white/10 px-3 py-1 text-xs text-ink"
@@ -833,17 +851,29 @@ export default function RankingPage() {
             ) : null}
 
             {lineupLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
-            {lineupError ? (
+            {lineupError && isMissingLineupError ? (
+              <div className="rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">
+                <p className="font-semibold">
+                  {lineupErrorCode === "lineup_not_found"
+                    ? "Sin equipo guardado para esta ronda."
+                    : "Mercado completo, sin equipo guardado."}
+                </p>
+                <p className="mt-1 text-[11px]">
+                  {lineupErrorCode === "lineup_not_found"
+                    ? "No hay XI disponible para mostrar en esta ronda."
+                    : "Este equipo solo puede mostrar mercado para esta ronda."}
+                </p>
+              </div>
+            ) : null}
+            {lineupError && !isMissingLineupError ? (
               <p className="text-xs text-warning">
                 {lineupErrorCode === "lineup_not_found"
                   ? "Este equipo aun no guardo su XI."
-                  : lineupErrorCode === "market_complete_without_lineup"
-                    ? "Mercado completo, sin equipo guardado"
                   : toFriendlyError(lineupError)}
               </p>
             ) : null}
 
-            {!lineupLoading && lineupData ? (
+            {!lineupLoading && lineupData && !isMarketOnlyError ? (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-muted">
@@ -859,6 +889,24 @@ export default function RankingPage() {
                   </div>
                   <div className="space-y-2">{bench.map(renderSlot)}</div>
                 </div>
+              </div>
+            ) : null}
+
+            {!lineupLoading && isMarketOnlyError ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted">
+                  <span>Mercado</span>
+                  <span>{marketData?.players.length ?? 0} jugadores</span>
+                </div>
+                {marketData?.players.length ? (
+                  <div className="space-y-2">
+                    {marketData.players.map((player) =>
+                      renderMarketPlayer(player, { showPoints: false })
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted">No hay jugadores de mercado para mostrar.</p>
+                )}
               </div>
             ) : null}
           </div>

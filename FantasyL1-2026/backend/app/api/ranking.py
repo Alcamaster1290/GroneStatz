@@ -192,13 +192,12 @@ def get_team_lineup(
         )
         .all()
     )
-    assigned_ids = [slot.player_id for slot, _ in slots_rows if slot.player_id is not None]
     assigned_starters = [
         slot.player_id
         for slot, _ in slots_rows
         if slot.is_starter and slot.player_id is not None
     ]
-    if requested_round_number is not None and (len(assigned_ids) < 15 or len(assigned_starters) < 11):
+    if requested_round_number is not None and len(assigned_starters) < 11:
         market_count = int(
             db.execute(
                 select(func.count())
@@ -212,6 +211,7 @@ def get_team_lineup(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="market_complete_without_lineup",
             )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="lineup_not_found")
     player_ids = {slot.player_id for slot, _ in slots_rows if slot.player_id}
     points_map: dict[int, float] = {}
     if player_ids:

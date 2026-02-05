@@ -29,6 +29,7 @@ class FantasyTeamPlayerOut(BaseModel):
     saves_round: Optional[int] = None
     points_round: Optional[float] = None
     points_total: Optional[float] = None
+    price_delta: Optional[float] = None
     clean_sheets: Optional[int] = None
     goals_conceded: Optional[int] = None
 
@@ -41,6 +42,9 @@ class FantasyTeamOut(BaseModel):
     budget_used: float
     budget_left: float
     club_counts: Dict[int, int]
+    market_price_delta: Optional[float] = None
+    market_price_delta_from_round: Optional[int] = None
+    market_price_delta_to_round: Optional[int] = None
     squad: List[FantasyTeamPlayerOut]
 
 

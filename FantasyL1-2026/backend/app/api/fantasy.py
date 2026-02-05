@@ -15,6 +15,7 @@ from app.models import (
     FantasyTeamPlayer,
     FantasyTransfer,
     PlayerCatalog,
+    PriceMovement,
     PlayerRoundStat,
     PointsRound,
     Round,
@@ -54,6 +55,11 @@ def _build_team_response(
     db: Session, fantasy_team_id: int, round_number: Optional[int] = None
 ) -> FantasyTeamOut:
     team = db.execute(select(FantasyTeam).where(FantasyTeam.id == fantasy_team_id)).scalar_one()
+    round_obj = (
+        get_round_by_number(db, team.season_id, round_number)
+        if round_number
+        else get_current_round(db, team.season_id)
+    )
 
     rows = (
         db.execute(
@@ -67,6 +73,10 @@ def _build_team_response(
     total_points_map = {}
     totals_stats_map = {}
     round_stats_map = {}
+    price_delta_map: dict[int, float] = {}
+    market_price_delta_total: float | None = None
+    market_price_delta_from_round: int | None = None
+    market_price_delta_to_round: int | None = None
     if rows:
         player_ids = [player.player_id for player, _ in rows]
         total_points_rows = db.execute(
@@ -97,11 +107,6 @@ def _build_team_response(
             }
             for player_id, clean_sheets, goals_conceded in totals_stats_rows
         }
-        round_obj = (
-            get_round_by_number(db, team.season_id, round_number)
-            if round_number
-            else get_current_round(db, team.season_id)
-        )
         if round_obj:
             points_rows = db.execute(
                 select(PointsRound.player_id, PointsRound.points).where(
@@ -135,6 +140,43 @@ def _build_team_response(
                 for player_id, goals, assists, saves in round_stats_rows
             }
 
+            if not round_obj.is_closed:
+                prev_closed_round = (
+                    db.execute(
+                        select(Round)
+                        .where(
+                            Round.season_id == team.season_id,
+                            Round.is_closed.is_(True),
+                            Round.round_number < round_obj.round_number,
+                        )
+                        .order_by(Round.round_number.desc())
+                        .limit(1)
+                    )
+                    .scalars()
+                    .first()
+                )
+                if prev_closed_round:
+                    movement_rows = db.execute(
+                        select(PriceMovement.player_id, PriceMovement.delta).where(
+                            PriceMovement.season_id == team.season_id,
+                            PriceMovement.round_id == prev_closed_round.id,
+                            PriceMovement.player_id.in_(player_ids),
+                        )
+                    ).all()
+                    price_delta_map = {
+                        player_id: float(delta or 0)
+                        for player_id, delta in movement_rows
+                    }
+                    total_delta = sum(price_delta_map.values())
+                    market_price_delta_total = float(
+                        Decimal(str(total_delta)).quantize(
+                            Decimal("0.1"),
+                            rounding=ROUND_HALF_UP,
+                        )
+                    )
+                    market_price_delta_from_round = prev_closed_round.round_number
+                    market_price_delta_to_round = round_obj.round_number
+
     squad = []
     for player, team_player in rows:
         totals = totals_stats_map.get(player.player_id)
@@ -157,6 +199,9 @@ def _build_team_response(
                 saves_round=round_stats["saves"] if round_stats else None,
                 points_round=points_map.get(player.player_id),
                 points_total=total_points_map.get(player.player_id, 0.0),
+                price_delta=price_delta_map.get(player.player_id)
+                if market_price_delta_total is not None
+                else None,
                 clean_sheets=totals["clean_sheets"] if totals else 0,
                 goals_conceded=totals["goals_conceded"] if totals else 0,
             )
@@ -174,6 +219,9 @@ def _build_team_response(
         budget_used=budget_used,
         budget_left=budget_left,
         club_counts=club_counts,
+        market_price_delta=market_price_delta_total,
+        market_price_delta_from_round=market_price_delta_from_round,
+        market_price_delta_to_round=market_price_delta_to_round,
         squad=squad,
     )
 
@@ -429,6 +477,15 @@ def transfer_player(
     )
     transfer_fee = 0.0 if existing_count == 0 else 0.5
 
+    out_team_player = db.execute(
+        select(FantasyTeamPlayer).where(
+            FantasyTeamPlayer.fantasy_team_id == team.id,
+            FantasyTeamPlayer.player_id == payload.out_player_id,
+        )
+    ).scalar_one_or_none()
+    if out_team_player is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="out_player_not_in_squad")
+
     out_player = db.get(PlayerCatalog, payload.out_player_id)
     in_player = db.get(PlayerCatalog, payload.in_player_id)
     if not out_player or not in_player:
@@ -458,8 +515,12 @@ def transfer_player(
         in_price=float(in_player.price_current),
     )
     db.add(transfer)
-    if transfer_fee > 0:
-        new_cap = Decimal(str(team.budget_cap)) - Decimal(str(transfer_fee))
+    realized_gain = Decimal(str(out_player.price_current)) - Decimal(
+        str(out_team_player.bought_price)
+    )
+    cap_delta = realized_gain - Decimal(str(transfer_fee))
+    if cap_delta != 0:
+        new_cap = Decimal(str(team.budget_cap)) + cap_delta
         team.budget_cap = new_cap.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
     db.commit()
     db.refresh(transfer)

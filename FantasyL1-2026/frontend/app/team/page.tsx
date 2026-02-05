@@ -514,6 +514,9 @@ export default function TeamPage() {
   const [teamNameError, setTeamNameError] = useState<string | null>(null);
   const [favoriteError, setFavoriteError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [marketPriceDelta, setMarketPriceDelta] = useState<number | null>(null);
+  const [marketPriceDeltaFromRound, setMarketPriceDeltaFromRound] = useState<number | null>(null);
+  const [marketPriceDeltaToRound, setMarketPriceDeltaToRound] = useState<number | null>(null);
   const router = useRouter();
 
   const formatError = (code: string) => {
@@ -810,6 +813,17 @@ export default function TeamPage() {
     }
     return Math.round(total * 10) / 10;
   }, [captainId, viceCaptainId, currentRound, lineupSlots, squad]);
+  const teamRoundPointsDisplay = teamRoundPoints === null ? "--" : String(Math.round(teamRoundPoints));
+  const marketDeltaWindowLabel =
+    marketPriceDeltaFromRound && marketPriceDeltaToRound
+      ? `R${marketPriceDeltaFromRound} -> R${marketPriceDeltaToRound}`
+      : null;
+  const marketPriceDeltaDisplay =
+    marketPriceDelta === null
+      ? "--"
+      : `${marketPriceDelta > 0 ? "+" : marketPriceDelta < 0 ? "-" : ""}${Math.abs(
+          marketPriceDelta
+        ).toFixed(1)}`;
 
   const selectedPlayer =
     (selectedSlot?.player_id ? squadMap.get(selectedSlot.player_id) : undefined) ||
@@ -856,6 +870,19 @@ export default function TeamPage() {
       try {
         const team = await getTeam(token);
         setSquad(team.squad || []);
+        setMarketPriceDelta(
+          typeof team.market_price_delta === "number" ? team.market_price_delta : null
+        );
+        setMarketPriceDeltaFromRound(
+          typeof team.market_price_delta_from_round === "number"
+            ? team.market_price_delta_from_round
+            : null
+        );
+        setMarketPriceDeltaToRound(
+          typeof team.market_price_delta_to_round === "number"
+            ? team.market_price_delta_to_round
+            : null
+        );
         const savedName = team.name || "";
         setTeamName(savedName);
         setNeedsTeamName(!savedName.trim());
@@ -953,17 +980,26 @@ export default function TeamPage() {
                 setFixtures(allFixtures.filter((fixture) => fixture.round_number === nextRound));
                 setRoundMissing(false);
                 setRoundStatus(null);
+                setMarketPriceDelta(null);
+                setMarketPriceDeltaFromRound(null);
+                setMarketPriceDeltaToRound(null);
               } else {
                 setRoundMissing(true);
                 setCurrentRound(null);
                 setFixtures([]);
                 setRoundStatus(null);
+                setMarketPriceDelta(null);
+                setMarketPriceDeltaFromRound(null);
+                setMarketPriceDeltaToRound(null);
               }
             } else {
               setRoundMissing(true);
               setCurrentRound(null);
               setFixtures([]);
               setRoundStatus(null);
+              setMarketPriceDelta(null);
+              setMarketPriceDeltaFromRound(null);
+              setMarketPriceDeltaToRound(null);
             }
             setLineupSlots(buildDefaultSlots());
           } else {
@@ -1314,6 +1350,19 @@ export default function TeamPage() {
         getLineup(token, roundNumber)
       ]);
       setSquad(team.squad || []);
+      setMarketPriceDelta(
+        typeof team.market_price_delta === "number" ? team.market_price_delta : null
+      );
+      setMarketPriceDeltaFromRound(
+        typeof team.market_price_delta_from_round === "number"
+          ? team.market_price_delta_from_round
+          : null
+      );
+      setMarketPriceDeltaToRound(
+        typeof team.market_price_delta_to_round === "number"
+          ? team.market_price_delta_to_round
+          : null
+      );
       setCurrentRound(roundNumber);
       const lineupCaptainId = lineup.captain_player_id ?? null;
       const lineupViceCaptainId = lineup.vice_captain_player_id ?? null;
@@ -1430,7 +1479,17 @@ export default function TeamPage() {
         <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
           Puntos equipo:{" "}
           <span className="font-semibold text-ink">
-            {teamRoundPoints === null ? "--" : teamRoundPoints.toFixed(1)}
+            {teamRoundPointsDisplay}
+          </span>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
+          Delta precio{" "}
+          <span className="font-semibold text-ink">
+            {marketDeltaWindowLabel ? `(${marketDeltaWindowLabel})` : ""}
+          </span>
+          :{" "}
+          <span className="font-semibold text-accent">
+            {marketPriceDeltaDisplay}
           </span>
         </div>
       </div>

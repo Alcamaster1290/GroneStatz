@@ -204,6 +204,9 @@ export type FantasyTeam = {
   budget_left: number;
   club_counts: Record<number, number>
   favorite_team_id?: number | null;
+  market_price_delta?: number | null;
+  market_price_delta_from_round?: number | null;
+  market_price_delta_to_round?: number | null;
   squad: Player[];
 };
 
