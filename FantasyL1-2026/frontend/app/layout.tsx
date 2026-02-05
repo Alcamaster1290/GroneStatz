@@ -4,6 +4,7 @@ import "./globals.css";
 import BottomNav from "@/components/BottomNav";
 import AppHeader from "@/components/AppHeader";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import MobileBootstrap from "@/components/MobileBootstrap";
 
 export const metadata: Metadata = {
   title: "Fantasy Liga 1 2026",
@@ -38,6 +39,7 @@ export default function RootLayout({
           </main>
         </div>
         <ServiceWorkerRegister />
+        <MobileBootstrap />
         <BottomNav />
       </body>
     </html>

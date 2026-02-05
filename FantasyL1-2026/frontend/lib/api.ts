@@ -2,7 +2,10 @@ import {
   AdminFixture,
   AdminActionLog,
   AdminLeague,
+  AdminRoundLineupRecoveryResult,
   AdminRound,
+  AdminRoundReminderRunResult,
+  AdminRoundWindowUpdate,
   AdminPriceMovement,
   AdminRoundTopPlayer,
   AdminTeam,
@@ -16,15 +19,24 @@ import {
   LineupOut,
   League,
   Player,
+  PlayerPriceHistoryPoint,
   PlayerStatsEntry,
   PublicLineup,
   PublicMarket,
   RankingResponse,
   RoundInfo,
   MatchPlayerStat,
+  NotificationDevice,
+  NotificationDevicePlatform,
   PlayerMatch,
   TransferCount
 } from "./types";
+import {
+  getOfflineSnapshot,
+  isCacheableGetPath,
+  isOnline,
+  setOfflineSnapshot
+} from "./offline/cache";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
@@ -73,6 +85,14 @@ async function apiFetch<T>(
   options: RequestInit = {},
   token?: string
 ): Promise<T> {
+  const method = (options.method || "GET").toUpperCase();
+  const isGet = method === "GET";
+  const cacheableGet = isGet && isCacheableGetPath(path);
+  const cacheIdentity = token ? `auth:${token.slice(-24)}` : "public";
+  if (!isGet && !isOnline()) {
+    throw new Error("offline_write_blocked");
+  }
+
   const headers = new Headers(options.headers || {});
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
@@ -92,6 +112,27 @@ async function apiFetch<T>(
   if (hostnameFallback) fallbackBases.push(hostnameFallback);
   if (API_URL !== "/api") fallbackBases.push("/api");
 
+  const cacheBases = [API_URL, ...fallbackBases];
+  const readCachedData = (allowStale: boolean): T | null => {
+    if (!cacheableGet) return null;
+    for (const base of cacheBases) {
+      const scopedCached = getOfflineSnapshot(`${base}${path}`, {
+        allowStale,
+        identity: cacheIdentity
+      });
+      if (scopedCached !== null) {
+        return scopedCached as T;
+      }
+      const cached = getOfflineSnapshot(`${base}${path}`, {
+        allowStale
+      });
+      if (cached !== null) {
+        return cached as T;
+      }
+    }
+    return null;
+  };
+
   let res: Response | undefined;
   try {
     res = await attemptFetch(API_URL);
@@ -107,14 +148,34 @@ async function apiFetch<T>(
       }
     }
     if (lastError || !res) {
+      const cached = readCachedData(!isOnline());
+      if (cached) {
+        return cached;
+      }
+      if (!isGet && !isOnline()) {
+        throw new Error("offline_write_blocked");
+      }
       throw new Error("network_error");
     }
   }
   if (!res) {
+    const cached = readCachedData(!isOnline());
+    if (cached) {
+      return cached;
+    }
     throw new Error("network_error");
   }
 
   if (!res.ok) {
+    if (
+      cacheableGet &&
+      (res.status === 502 || res.status === 503 || res.status === 504)
+    ) {
+      const cached = readCachedData(!isOnline());
+      if (cached) {
+        return cached;
+      }
+    }
     const detail = await res.json().catch(() => ({}));
     if (res.status === 422 && Array.isArray(detail.detail)) {
       throw new Error(formatValidationErrors(detail.detail).join("|"));
@@ -150,7 +211,18 @@ async function apiFetch<T>(
     }
     throw new Error("api_error");
   }
-  return res.json() as Promise<T>;
+  const data = (await res.json()) as T;
+  if (cacheableGet) {
+    for (const base of cacheBases) {
+      setOfflineSnapshot(`${base}${path}`, data);
+      setOfflineSnapshot(`${base}${path}`, data, cacheIdentity);
+    }
+    if (res.url) {
+      setOfflineSnapshot(res.url, data);
+      setOfflineSnapshot(res.url, data, cacheIdentity);
+    }
+  }
+  return data;
 }
 
 export async function register(email: string, password: string) {
@@ -298,6 +370,10 @@ export async function getCatalogPlayers(params: {
   });
   const query = search.toString();
   return apiFetch(`/catalog/players${query ? `?${query}` : ""}`);
+}
+
+export async function getPlayerPriceHistory(playerId: number): Promise<PlayerPriceHistoryPoint[]> {
+  return apiFetch(`/catalog/players/${playerId}/price-history`);
 }
 
 export async function getTeams(): Promise<
@@ -491,6 +567,56 @@ export async function updateAdminRoundStatus(
   });
 }
 
+export async function updateAdminRoundWindow(
+  adminToken: string,
+  roundNumber: number,
+  payload: AdminRoundWindowUpdate
+): Promise<{ ok: boolean; round_number: number; starts_at?: string | null; ends_at?: string | null }> {
+  return apiFetch(
+    `/admin/rounds/${roundNumber}/window`,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+      headers: { "X-Admin-Token": adminToken }
+    },
+    undefined
+  );
+}
+
+export async function runAdminRoundReminders(
+  adminToken: string,
+  dryRun = true
+): Promise<AdminRoundReminderRunResult> {
+  return apiFetch(
+    `/admin/notifications/round-reminders/run?dry_run=${String(dryRun)}`,
+    {
+      method: "POST",
+      headers: { "X-Admin-Token": adminToken }
+    },
+    undefined
+  );
+}
+
+export async function runAdminRoundLineupRecovery(
+  adminToken: string,
+  roundNumber: number,
+  dryRun = true,
+  recalcPlayerPoints = true
+): Promise<AdminRoundLineupRecoveryResult> {
+  const query = new URLSearchParams({
+    dry_run: String(dryRun),
+    recalc_player_points: String(recalcPlayerPoints)
+  });
+  return apiFetch(
+    `/admin/rounds/${roundNumber}/recover-lineups?${query.toString()}`,
+    {
+      method: "POST",
+      headers: { "X-Admin-Token": adminToken }
+    },
+    undefined
+  );
+}
+
 export async function getAdminLeagues(adminToken: string): Promise<AdminLeague[]> {
   return apiFetch("/admin/leagues", { headers: { "X-Admin-Token": adminToken } });
 }
@@ -663,6 +789,44 @@ export async function getAdminPlayers(
 
 export async function getHealth(): Promise<{ ok: boolean; env?: string }> {
   return apiFetch("/health");
+}
+
+export async function registerNotificationDevice(
+  token: string,
+  payload: {
+    token: string;
+    platform: NotificationDevicePlatform;
+    device_id: string;
+    timezone?: string;
+    app_channel: string;
+    app_version?: string;
+  }
+): Promise<{ ok: boolean; device: NotificationDevice }> {
+  return apiFetch(
+    "/notifications/devices/register",
+    {
+      method: "POST",
+      body: JSON.stringify(payload)
+    },
+    token
+  );
+}
+
+export async function unregisterNotificationDevice(
+  token: string,
+  deviceId: string
+): Promise<{ ok: boolean; device_id: string }> {
+  return apiFetch(
+    `/notifications/devices/${encodeURIComponent(deviceId)}`,
+    {
+      method: "DELETE"
+    },
+    token
+  );
+}
+
+export async function getNotificationDevices(token: string): Promise<NotificationDevice[]> {
+  return apiFetch("/notifications/devices", {}, token);
 }
 
 export async function createLeague(token: string, name: string): Promise<League> {

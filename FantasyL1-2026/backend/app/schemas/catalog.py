@@ -37,6 +37,11 @@ class PlayerRoundPointsOut(BaseModel):
     points: float
 
 
+class PlayerPriceHistoryPointOut(BaseModel):
+    round_number: int
+    price: float
+
+
 class PlayerStatsOut(BaseModel):
     player_id: int
     name: str

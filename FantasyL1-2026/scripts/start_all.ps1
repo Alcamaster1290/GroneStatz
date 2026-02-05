@@ -1,6 +1,6 @@
 param(
   [switch]$SkipWatch,
-  [ValidateSet("local","test","prod")]
+  [ValidateSet("local","test","qa","prod")]
   [string]$Env = "local",
   [switch]$NoBrowser,
   [switch]$Rebuild

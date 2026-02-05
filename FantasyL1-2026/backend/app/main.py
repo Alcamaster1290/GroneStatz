@@ -17,6 +17,11 @@ allowed_origins = [
     for origin in settings.CORS_ORIGINS.split(",")
     if origin.strip()
 ]
+mobile_allowed_origins = [
+    origin.strip()
+    for origin in settings.MOBILE_CORS_ORIGINS.split(",")
+    if origin.strip()
+]
 if settings.APP_ENV.lower() == "prod":
     for origin in (
         "https://fantasyliga1peru.com",
@@ -24,6 +29,9 @@ if settings.APP_ENV.lower() == "prod":
     ):
         if origin not in allowed_origins:
             allowed_origins.append(origin)
+for origin in mobile_allowed_origins:
+    if origin not in allowed_origins:
+        allowed_origins.append(origin)
 
 app = FastAPI(title="Fantasy Liga 1 2026", version="1.0")
 

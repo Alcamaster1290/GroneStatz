@@ -74,6 +74,7 @@ def get_team_lineup(
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ) -> PublicLineupOut:
+    requested_round_number = round_number
     season = get_or_create_season(db)
     team = (
         db.execute(
@@ -129,6 +130,21 @@ def get_team_lineup(
         .first()
     )
     if not lineup:
+        if requested_round_number is not None:
+            market_count = int(
+                db.execute(
+                    select(func.count())
+                    .select_from(FantasyTeamPlayer)
+                    .where(FantasyTeamPlayer.fantasy_team_id == fantasy_team_id)
+                ).scalar()
+                or 0
+            )
+            if market_count >= 15:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="market_complete_without_lineup",
+                )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="lineup_not_found")
         fallback = (
             db.execute(
                 select(FantasyLineup, Round)
@@ -176,6 +192,26 @@ def get_team_lineup(
         )
         .all()
     )
+    assigned_ids = [slot.player_id for slot, _ in slots_rows if slot.player_id is not None]
+    assigned_starters = [
+        slot.player_id
+        for slot, _ in slots_rows
+        if slot.is_starter and slot.player_id is not None
+    ]
+    if requested_round_number is not None and (len(assigned_ids) < 15 or len(assigned_starters) < 11):
+        market_count = int(
+            db.execute(
+                select(func.count())
+                .select_from(FantasyTeamPlayer)
+                .where(FantasyTeamPlayer.fantasy_team_id == fantasy_team_id)
+            ).scalar()
+            or 0
+        )
+        if market_count >= 15:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="market_complete_without_lineup",
+            )
     player_ids = {slot.player_id for slot, _ in slots_rows if slot.player_id}
     points_map: dict[int, float] = {}
     if player_ids:

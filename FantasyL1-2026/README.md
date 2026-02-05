@@ -8,7 +8,7 @@ Flujo: Parquets → DuckDB → Postgres → API → PWA.
 - Python 3.11+
 - Node 18+
 
-## Setup rápido (local/test)
+## Setup rápido (local/test/qa)
 1) Entra al proyecto:
 ```
 cd FantasyL1-2026
@@ -16,7 +16,7 @@ cd FantasyL1-2026
 Si tu ruta tiene espacios, usa comillas en PowerShell.
 
 2) Variables de entorno:
-- Edita `.env`, `.env.test`, `.env.prod` según el entorno.
+- Edita `.env`, `.env.test`, `.env.qa`, `.env.prod` según el entorno.
 - Frontend: parte de `frontend/.env.local.example` y crea `frontend/.env.local`.
 
 3) Levanta todo (local):
@@ -27,6 +27,10 @@ Test:
 ```
 .\scripts\start_all.ps1 -Env test -SkipWatch
 ```
+QA:
+```
+.\scripts\start_all.ps1 -Env qa -SkipWatch
+```
 Rebuild completo (parquets + imágenes + caches):
 ```
 .\scripts\start_all.ps1 -Env test -SkipWatch -Rebuild
@@ -34,8 +38,13 @@ Rebuild completo (parquets + imágenes + caches):
 
 ## Entornos
 - `local`: usa `.env` y `frontend/.env.local`.
-- `test`: usa `.env.test` (ngrok / QA).
-- `prod`: usa `.env.prod` (base dedicada).
+- `test`: entorno legado de pruebas.
+- `qa`: entorno QA formal (`.env.qa`) con base separada.
+- `prod`: producción.
+
+Arquitectura objetivo:
+- `prod-web` y `prod-mobile` comparten API y DB de producción.
+- `qa-web` (y opcional `qa-mobile`) usan API + DB QA separadas.
 
 El backend lee `APP_ENV` o `ENV_FILE`.
 Migraciones por entorno:
@@ -67,6 +76,29 @@ Parquets usados:
 - `scripts/watch_parquets.py`: watcher para re-sync automático.
 - `scripts/recalc_round.py`: recalcula puntos y precios.
 - `scripts/convert_images_to_png.py`: convierte a PNG con fondo transparente.
+- `scripts/start_qa.ps1`: arranca stack QA.
+- `scripts/activate_qa.ps1`: migra + inicia QA.
+
+## App móvil (Capacitor)
+Base móvil en `frontend` con Capacitor (Android/iOS).
+
+Comandos:
+```
+cd frontend
+npm install
+npm run cap:add:android
+npm run cap:add:ios
+npm run cap:sync
+```
+
+Variables frontend relevantes:
+- `NEXT_PUBLIC_APP_CHANNEL=mobile`
+- `NEXT_PUBLIC_MOBILE_WEB_URL=https://fantasyliga1peru.com` (prod)
+- `NEXT_PUBLIC_MOBILE_WEB_URL=https://qa.fantasyliga1peru.com` (qa)
+
+Push móvil:
+- Backend: `PUSH_ENABLED`, `PUSH_REMINDER_HOURS_BEFORE`, `FCM_PROJECT_ID`, `FCM_SERVICE_ACCOUNT_JSON` (o `GOOGLE_APPLICATION_CREDENTIALS`).
+- Frontend: activar/desactivar desde `Ajustes`.
 
 ## Admin API
 Header requerido: `X-Admin-Token: <ADMIN_TOKEN>`
@@ -77,6 +109,13 @@ Endpoints comunes:
 - `PUT /admin/fixtures/{id}`
 - `POST /admin/player-stats`
 - `POST /admin/recalc_round?round_number=1`
+- `PUT /admin/rounds/{round_number}/window` (configura `starts_at`/`ends_at`)
+- `POST /admin/notifications/round-reminders/run?dry_run=true|false`
+
+Notificaciones autenticadas (usuario):
+- `POST /notifications/devices/register`
+- `GET /notifications/devices`
+- `DELETE /notifications/devices/{device_id}`
 
 ## Login / Reset password
 En prod el reset está deshabilitado por defecto.
@@ -88,11 +127,16 @@ NEXT_PUBLIC_ENABLE_PASSWORD_RESET=true
 ## Deploy PROD (VPS)
 Usa el compose raíz y Traefik (TLS):
 - `../docker-compose.prod.yml`
+- `../docker-compose.qa.yml` (QA)
 - `DEPLOYMENT_PROD.md`
 
 Comando:
 ```
 docker compose -f ../docker-compose.prod.yml --env-file ../.env.prod up -d --build
+```
+QA:
+```
+docker compose -f ../docker-compose.qa.yml --env-file ../.env.qa up -d --build
 ```
 
 ## Troubleshooting rápido

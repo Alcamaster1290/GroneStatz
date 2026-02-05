@@ -137,8 +137,8 @@ def main() -> None:
     reset_resp = reset_request(email_reset)
     code = reset_resp.get("reset_code")
     if not code:
-        if settings.APP_ENV == "test":
-            raise SystemExit("reset_code missing in test env")
+        if settings.APP_ENV in {"test", "qa"}:
+            raise SystemExit("reset_code missing in non-prod env")
         print("reset_code omitted (prod expected)")
     else:
         reset_confirm(email_reset, code, "NewPass123!")

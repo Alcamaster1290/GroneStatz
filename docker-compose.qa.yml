@@ -1,0 +1,104 @@
+version: "3.9"
+
+services:
+  traefik-qa:
+    image: traefik:v2.11
+    container_name: fantasy_l1_traefik_qa
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:8080
+      - --entrypoints.websecure.address=:4443
+      - --certificatesresolvers.le.acme.httpchallenge=true
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme-qa.json
+    ports:
+      - "8080:8080"
+      - "4443:4443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt_qa:/letsencrypt
+    networks:
+      - edge
+
+  postgres-qa:
+    image: postgres:15
+    container_name: fantasy_l1_postgres_qa
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-fantasy_qa}
+      POSTGRES_USER: ${POSTGRES_USER:-fantasy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fantasy}
+    volumes:
+      - fantasy_pg_data_qa:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fantasy} -d ${POSTGRES_DB:-fantasy_qa}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+  api-qa:
+    build:
+      context: ./FantasyL1-2026/backend
+    container_name: fantasy_l1_api_qa
+    environment:
+      APP_ENV: qa
+      CORS_ORIGINS: https://qa.fantasyliga1peru.com,https://www.qa.fantasyliga1peru.com
+      MOBILE_CORS_ORIGINS: capacitor://localhost,http://localhost
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fantasy}:${POSTGRES_PASSWORD:-fantasy}@postgres-qa:5432/${POSTGRES_DB:-fantasy_qa}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+      PUSH_ENABLED: ${PUSH_ENABLED:-false}
+      PUSH_REMINDER_HOURS_BEFORE: ${PUSH_REMINDER_HOURS_BEFORE:-24}
+      FCM_PROJECT_ID: ${FCM_PROJECT_ID:-}
+      FCM_SERVICE_ACCOUNT_JSON: ${FCM_SERVICE_ACCOUNT_JSON:-}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
+    depends_on:
+      postgres-qa:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.api-qa.rule=Host(`api-qa.fantasyliga1peru.com`)
+      - traefik.http.routers.api-qa.entrypoints=websecure
+      - traefik.http.routers.api-qa.tls.certresolver=le
+      - traefik.docker.network=gronestatz_edge
+      - traefik.http.services.api-qa.loadbalancer.server.port=8000
+    networks:
+      - edge
+      - internal
+
+  web-qa:
+    build:
+      context: ./FantasyL1-2026/frontend
+      args:
+        NEXT_PUBLIC_API_URL: https://api-qa.fantasyliga1peru.com
+        NEXT_PUBLIC_ENABLE_PASSWORD_RESET: "true"
+        NEXT_PUBLIC_APP_CHANNEL: "mobile"
+    container_name: fantasy_l1_web_qa
+    environment:
+      NEXT_PUBLIC_API_URL: https://api-qa.fantasyliga1peru.com
+      NEXT_PUBLIC_ENABLE_PASSWORD_RESET: "true"
+      NEXT_PUBLIC_APP_CHANNEL: "mobile"
+      NODE_ENV: production
+    depends_on:
+      - api-qa
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.web-qa.rule=Host(`qa.fantasyliga1peru.com`,`www.qa.fantasyliga1peru.com`)
+      - traefik.http.routers.web-qa.entrypoints=websecure
+      - traefik.http.routers.web-qa.tls.certresolver=le
+      - traefik.docker.network=gronestatz_edge
+      - traefik.http.services.web-qa.loadbalancer.server.port=3000
+    networks:
+      - edge
+
+networks:
+  edge:
+  internal:
+    internal: true
+
+volumes:
+  fantasy_pg_data_qa:
+  letsencrypt_qa:

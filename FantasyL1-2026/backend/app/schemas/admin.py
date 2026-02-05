@@ -211,6 +211,11 @@ class AdminRoundOut(BaseModel):
     ends_at: Optional[datetime] = None
 
 
+class AdminRoundWindowUpdateIn(BaseModel):
+    starts_at: Optional[datetime] = None
+    ends_at: Optional[datetime] = None
+
+
 class AdminLeagueMemberOut(BaseModel):
     fantasy_team_id: int
     team_name: Optional[str] = None

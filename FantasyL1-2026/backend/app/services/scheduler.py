@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timezone
+import logging
 
 from sqlalchemy import select
 
@@ -10,7 +11,10 @@ from app.db.session import SessionLocal
 from app.models import Fixture, Round
 from app.services.action_log import log_action
 from app.services.fantasy import get_or_create_season
+from app.services.push_notifications import run_round_deadline_reminders
 from app.services.scoring import recalc_round_points
+
+logger = logging.getLogger(__name__)
 
 
 async def _scheduler_loop(interval_seconds: int) -> None:
@@ -18,6 +22,7 @@ async def _scheduler_loop(interval_seconds: int) -> None:
         await asyncio.sleep(interval_seconds)
         try:
             with SessionLocal() as db:
+                run_round_deadline_reminders(db, dry_run=False)
                 season = get_or_create_season(db)
                 rounds = (
                     db.execute(
@@ -56,6 +61,7 @@ async def _scheduler_loop(interval_seconds: int) -> None:
                         details={"round_number": round_obj.round_number},
                     )
         except Exception:
+            logger.exception("scheduler_loop_error")
             # keep scheduler alive
             continue
 

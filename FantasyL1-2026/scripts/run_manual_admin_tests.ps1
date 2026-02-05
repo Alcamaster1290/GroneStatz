@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("test","prod")]
+  [ValidateSet("test","qa","prod")]
   [string]$Env = "prod"
 )
 

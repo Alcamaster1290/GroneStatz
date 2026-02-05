@@ -43,11 +43,13 @@ function PlayerFace({ playerId, sizeClass }: { playerId: number; sizeClass: stri
 export default function PlayerCard({
   player,
   onClick,
+  onPriceDeltaClick,
   compact = false,
   showPoints = false
 }: {
   player: Player;
   onClick?: () => void;
+  onPriceDeltaClick?: (player: Player) => void;
   compact?: boolean;
   showPoints?: boolean;
 }) {
@@ -68,10 +70,11 @@ export default function PlayerCard({
           ? "text-emerald-300"
           : "text-red-300";
   const deltaSymbol =
-    priceDelta === null ? "" : priceDelta === 0 ? "-" : priceDelta > 0 ? "▲" : "▼";
+    priceDelta === null ? "" : priceDelta === 0 ? "-" : priceDelta > 0 ? "\u25B2" : "\u25BC";
   const isGoalkeeper = player.position === "G";
   const isDefender = player.position === "D";
   const isInjured = Boolean(player.is_injured);
+  const isDeltaInteractive = Boolean(onPriceDeltaClick);
 
   return (
     <div
@@ -129,9 +132,26 @@ export default function PlayerCard({
       <div className="text-right">
         <p className="text-sm font-semibold text-accent">{player.price_current.toFixed(1)}</p>
         {priceDelta !== null ? (
-          <p className={clsx("text-[10px]", deltaTone)}>
-            {deltaSymbol} {priceDelta === 0 ? "-" : priceDelta.toFixed(1)}
-          </p>
+          isDeltaInteractive ? (
+            <button
+              type="button"
+              className={clsx(
+                "text-[10px] underline-offset-2 transition hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent",
+                deltaTone
+              )}
+              onClick={(event) => {
+                event.stopPropagation();
+                onPriceDeltaClick?.(player);
+              }}
+              aria-label={`Ver evolucion de precio de ${player.name}`}
+            >
+              {deltaSymbol} {priceDelta === 0 ? "-" : priceDelta.toFixed(1)}
+            </button>
+          ) : (
+            <p className={clsx("text-[10px]", deltaTone)}>
+              {deltaSymbol} {priceDelta === 0 ? "-" : priceDelta.toFixed(1)}
+            </p>
+          )
         ) : null}
       </div>
     </div>

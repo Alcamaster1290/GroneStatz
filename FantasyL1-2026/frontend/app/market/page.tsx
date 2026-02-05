@@ -8,11 +8,13 @@ import AuthPanel from "@/components/AuthPanel";
 import BottomSheet from "@/components/BottomSheet";
 import MarketFilters from "@/components/MarketFilters";
 import PlayerCard from "@/components/PlayerCard";
+import PriceHistoryLineChart from "@/components/PriceHistoryLineChart";
 import {
   createTeam,
   getCatalogPlayers,
   getFixtures,
   getLineup,
+  getPlayerPriceHistory,
   getTeam,
   getTeams,
   getTransferCount,
@@ -20,7 +22,7 @@ import {
   updateSquad
 } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
-import { Fixture, Player, TransferCount } from "@/lib/types";
+import { Fixture, Player, PlayerPriceHistoryPoint, TransferCount } from "@/lib/types";
 import { validateSquad } from "@/lib/validation";
 
 function PlayerFace({ playerId }: { playerId: number }) {
@@ -398,8 +400,14 @@ export default function MarketPage() {
   const [playersAll, setPlayersAll] = useState<Player[] | null>(null);
   const [budgetCap, setBudgetCap] = useState(100);
   const [currentRoundNumber, setCurrentRoundNumber] = useState<number | null>(null);
+  const [priceHistoryOpen, setPriceHistoryOpen] = useState(false);
+  const [priceHistoryLoading, setPriceHistoryLoading] = useState(false);
+  const [priceHistoryError, setPriceHistoryError] = useState<string | null>(null);
+  const [priceHistoryPlayer, setPriceHistoryPlayer] = useState<Player | null>(null);
+  const [priceHistoryPoints, setPriceHistoryPoints] = useState<PlayerPriceHistoryPoint[]>([]);
   const lastPositionsKey = useRef<string>("");
   const lastTeamKey = useRef<string>("");
+  const priceHistoryRequestId = useRef(0);
   const router = useRouter();
 
   const parseMaybeNumber = (value: string) => {
@@ -810,6 +818,11 @@ export default function MarketPage() {
         detail: "No se puede conectar con el backend. Verifica el servidor.",
         tone: "danger"
       },
+      offline_write_blocked: {
+        title: "Sin conexion",
+        detail: "No puedes guardar cambios sin internet. Modo solo lectura.",
+        tone: "warning"
+      },
       service_unavailable: {
         title: "Servicio no disponible",
         detail: "El backend esta caido o no responde.",
@@ -842,6 +855,31 @@ export default function MarketPage() {
         tone: "danger"
       }
     );
+  };
+
+  const handleOpenPriceHistory = async (player: Player) => {
+    setPriceHistoryPlayer(player);
+    setPriceHistoryOpen(true);
+    setPriceHistoryLoading(true);
+    setPriceHistoryError(null);
+    setPriceHistoryPoints([]);
+
+    const requestId = priceHistoryRequestId.current + 1;
+    priceHistoryRequestId.current = requestId;
+
+    try {
+      const points = await getPlayerPriceHistory(player.player_id);
+      if (priceHistoryRequestId.current !== requestId) return;
+      setPriceHistoryPoints(points);
+    } catch (err) {
+      if (priceHistoryRequestId.current !== requestId) return;
+      const codes = splitErrorCodes(err);
+      setPriceHistoryError(codes[0] || "api_error");
+    } finally {
+      if (priceHistoryRequestId.current === requestId) {
+        setPriceHistoryLoading(false);
+      }
+    }
   };
 
   const handleConfirmPlayer = async () => {
@@ -1301,6 +1339,7 @@ export default function MarketPage() {
                     player={player}
                     compact
                     showPoints
+                    onPriceDeltaClick={handleOpenPriceHistory}
                     onClick={() => {
                       setInPlayerId(player.player_id);
                       setSheetOpen(true);
@@ -1365,6 +1404,39 @@ export default function MarketPage() {
           >
             Confirmar en equipo
           </button>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet
+        open={priceHistoryOpen}
+        onClose={() => setPriceHistoryOpen(false)}
+        title="Evolucion de precio"
+      >
+        <div className="max-h-[70vh] space-y-4 overflow-auto pr-1">
+          {priceHistoryPlayer ? (
+            <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2">
+              <p className="text-sm font-semibold text-ink">
+                {priceHistoryPlayer.short_name || priceHistoryPlayer.shortName || priceHistoryPlayer.name}
+              </p>
+              <p className="text-xs text-muted">
+                Precio actual {priceHistoryPlayer.price_current.toFixed(1)}
+              </p>
+            </div>
+          ) : null}
+          {priceHistoryLoading ? (
+            <p className="text-xs text-muted">Cargando evolucion...</p>
+          ) : null}
+          {!priceHistoryLoading && priceHistoryError ? (
+            <div className="rounded-xl border border-red-400/40 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+              {formatError(priceHistoryError).title}
+            </div>
+          ) : null}
+          {!priceHistoryLoading && !priceHistoryError && priceHistoryPoints.length === 0 ? (
+            <p className="text-xs text-muted">Sin historial de precios para este jugador.</p>
+          ) : null}
+          {!priceHistoryLoading && !priceHistoryError && priceHistoryPoints.length > 0 ? (
+            <PriceHistoryLineChart points={priceHistoryPoints} />
+          ) : null}
         </div>
       </BottomSheet>
 

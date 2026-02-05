@@ -136,6 +136,11 @@ export type PlayerStatsEntry = {
   rounds?: { round_number: number; points: number }[];
 };
 
+export type PlayerPriceHistoryPoint = {
+  round_number: number;
+  price: number;
+};
+
 export type AdminTeamPlayer = {
   player_id: number;
   name: string;
@@ -292,6 +297,45 @@ export type AdminRound = {
   ends_at?: string | null;
 };
 
+export type AdminRoundWindowUpdate = {
+  starts_at?: string | null;
+  ends_at?: string | null;
+};
+
+export type AdminRoundReminderRunResult = {
+  ok: boolean;
+  dry_run: boolean;
+  scanned_rounds: number;
+  eligible_rounds: number;
+  total_devices: number;
+  candidates: number;
+  sent: number;
+  skipped: number;
+  errors: number;
+  push_enabled: boolean;
+};
+
+export type AdminRoundLineupRecoveryResult = {
+  ok: boolean;
+  round_number: number;
+  apply: boolean;
+  teams_scanned: number;
+  already_complete: number;
+  recovered: number;
+  unresolved: number;
+  market_complete_without_lineup: number;
+  points_recalc?: Record<string, unknown> | null;
+  results: {
+    fantasy_team_id: number;
+    user_id: number;
+    team_name?: string | null;
+    status: string;
+    detail?: string | null;
+    recovered_from_round?: number | null;
+  }[];
+  executed_at: string;
+};
+
 export type AdminLeagueMember = {
   fantasy_team_id: number;
   team_name?: string | null;
@@ -405,4 +449,20 @@ export type TransferCount = {
   round_number: number;
   transfers_used: number;
   next_fee: number;
+};
+
+export type NotificationDevicePlatform = "android" | "ios";
+
+export type NotificationDevice = {
+  id: number;
+  user_id: number;
+  platform: NotificationDevicePlatform;
+  device_id: string;
+  token: string;
+  timezone?: string | null;
+  app_channel: string;
+  app_version?: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 };

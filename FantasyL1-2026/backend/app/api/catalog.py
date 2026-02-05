@@ -12,6 +12,7 @@ from app.models import (
     FantasyTeamPlayer,
     Fixture,
     PlayerCatalog,
+    PriceHistory,
     PlayerMatchStat,
     PlayerRoundStat,
     PointsRound,
@@ -23,6 +24,7 @@ from app.schemas.catalog import (
     FixtureOut,
     MatchPlayerStatOut,
     PlayerCatalogOut,
+    PlayerPriceHistoryPointOut,
     PlayerMatchOut,
     PlayerStatsOut,
     RoundOut,
@@ -182,6 +184,30 @@ def list_players(
 def list_teams(db: Session = Depends(get_db)) -> List[TeamOut]:
     teams = db.execute(select(Team).order_by(Team.name_short)).scalars().all()
     return [TeamOut(id=t.id, name_short=t.name_short, name_full=t.name_full) for t in teams]
+
+
+@router.get("/players/{player_id}/price-history", response_model=List[PlayerPriceHistoryPointOut])
+def list_player_price_history(
+    player_id: int,
+    db: Session = Depends(get_db),
+) -> List[PlayerPriceHistoryPointOut]:
+    season = get_or_create_season(db)
+    rows = (
+        db.execute(
+            select(Round.round_number, PriceHistory.price)
+            .join(Round, PriceHistory.round_id == Round.id)
+            .where(
+                PriceHistory.season_id == season.id,
+                PriceHistory.player_id == player_id,
+            )
+            .order_by(Round.round_number)
+        )
+        .all()
+    )
+    return [
+        PlayerPriceHistoryPointOut(round_number=int(round_number), price=float(price))
+        for round_number, price in rows
+    ]
 
 
 @router.get("/player-stats", response_model=List[PlayerStatsOut])

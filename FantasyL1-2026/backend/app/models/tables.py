@@ -258,3 +258,45 @@ class PasswordResetToken(Base):
     expires_at = Column(DateTime(timezone=True), nullable=False)
     used_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class PushDeviceToken(Base):
+    __tablename__ = "push_device_tokens"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    platform = Column(String(20), nullable=False)
+    device_id = Column(String(191), nullable=False)
+    token = Column(Text, nullable=False)
+    timezone = Column(String(64), nullable=True)
+    app_channel = Column(String(30), nullable=False, server_default="mobile")
+    app_version = Column(String(40), nullable=True)
+    is_active = Column(Boolean, nullable=False, server_default="true")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    __table_args__ = (UniqueConstraint("user_id", "device_id"),)
+
+
+class RoundPushNotification(Base):
+    __tablename__ = "round_push_notifications"
+
+    id = Column(Integer, primary_key=True)
+    round_id = Column(Integer, ForeignKey("rounds.id"), nullable=False, index=True)
+    device_token_id = Column(
+        Integer, ForeignKey("push_device_tokens.id"), nullable=False, index=True
+    )
+    notification_type = Column(String(40), nullable=False, server_default="round_deadline")
+    status = Column(String(20), nullable=False, server_default="pending")
+    error = Column(Text, nullable=True)
+    sent_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("round_id", "device_token_id", "notification_type"),
+    )

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 from decimal import Decimal, ROUND_HALF_UP
-from typing import Iterable, List
+from typing import Iterable, List, Mapping
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -18,7 +18,20 @@ class ValidationError(Exception):
         self.errors = errors
 
 
-def validate_squad(db: Session, player_ids: Iterable[int], budget_cap: float = 100.0) -> List[str]:
+def _round_price(value: float | Decimal) -> Decimal:
+    try:
+        raw = Decimal(str(value))
+    except Exception:
+        raw = Decimal("0")
+    return raw.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+
+
+def validate_squad(
+    db: Session,
+    player_ids: Iterable[int],
+    budget_cap: float = 100.0,
+    budget_prices: Mapping[int, float | Decimal] | None = None,
+) -> List[str]:
     ids = list(player_ids)
     errors: List[str] = []
 
@@ -60,14 +73,13 @@ def validate_squad(db: Session, player_ids: Iterable[int], budget_cap: float = 1
     if any(count > 3 for count in team_counts.values()):
         errors.append("max_3_players_per_team")
 
-    def _round_price(value: float | Decimal) -> Decimal:
-        try:
-            raw = Decimal(str(value))
-        except Exception:
-            raw = Decimal("0")
-        return raw.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
-
-    total_price = sum(_round_price(p.price_current) for p in players)
+    prices_by_id: dict[int, Decimal] = {}
+    for player in players:
+        if budget_prices and player.player_id in budget_prices:
+            prices_by_id[player.player_id] = _round_price(budget_prices[player.player_id])
+        else:
+            prices_by_id[player.player_id] = _round_price(player.price_current)
+    total_price = sum(prices_by_id.values(), start=Decimal("0.0"))
     cap_value = _round_price(budget_cap)
     if total_price - cap_value > Decimal("0.0001"):
         errors.append("budget_exceeded")
@@ -167,17 +179,17 @@ def validate_transfer(
         ).scalar()
         or 0
     )
-    total_fee = max(0, existing_count) * 0.5
+    next_transfer_fee = 0.0 if existing_count == 0 else 0.5
 
-    squad_ids = (
+    squad_rows = (
         db.execute(
-            select(FantasyTeamPlayer.player_id).where(
+            select(FantasyTeamPlayer.player_id, FantasyTeamPlayer.bought_price).where(
                 FantasyTeamPlayer.fantasy_team_id == fantasy_team_id
             )
         )
-        .scalars()
         .all()
     )
+    squad_ids = [row.player_id for row in squad_rows]
 
     if out_player_id not in squad_ids:
         errors.append("out_player_not_in_squad")
@@ -187,8 +199,33 @@ def validate_transfer(
     if errors:
         return errors
 
+    in_player = db.execute(
+        select(PlayerCatalog.player_id, PlayerCatalog.price_current).where(
+            PlayerCatalog.player_id == in_player_id
+        )
+    ).first()
+    if in_player is None:
+        errors.append(f"players_not_found: {in_player_id}")
+        return errors
+
     new_ids = [pid for pid in squad_ids if pid != out_player_id] + [in_player_id]
-    effective_cap = float(budget_cap) - float(total_fee)
-    errors.extend(validate_squad(db, new_ids, budget_cap=effective_cap))
+    effective_cap = _round_price(budget_cap) - _round_price(next_transfer_fee)
+
+    # Budget for transfer validation follows team accounting:
+    # keep existing bought prices, replace outgoing with incoming current price.
+    budget_prices = {
+        row.player_id: _round_price(row.bought_price)
+        for row in squad_rows
+        if row.player_id != out_player_id
+    }
+    budget_prices[in_player_id] = _round_price(in_player.price_current)
+    errors.extend(
+        validate_squad(
+            db,
+            new_ids,
+            budget_cap=float(effective_cap),
+            budget_prices=budget_prices,
+        )
+    )
 
     return errors

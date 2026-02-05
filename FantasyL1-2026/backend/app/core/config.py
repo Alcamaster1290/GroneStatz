@@ -12,6 +12,7 @@ DEFAULT_ENV = "local"
 ENV_FILE_MAP = {
     "local": ".env",
     "test": ".env.test",
+    "qa": ".env.qa",
     "prod": ".env.prod",
 }
 
@@ -49,9 +50,15 @@ class Settings(BaseSettings):
     SEASON_NAME: str = "2026 Apertura"
     CORS_ORIGINS: str = "http://localhost:3000"
     CORS_ORIGIN_REGEX: str = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
+    MOBILE_CORS_ORIGINS: str = "capacitor://localhost,http://localhost"
     SCHEDULER_ENABLED: bool = True
     SCHEDULER_INTERVAL_SECONDS: int = 300
     SYNC_SKIP_PRUNE_MISSING_PLAYERS: bool = False
+    PUSH_ENABLED: bool = False
+    PUSH_REMINDER_HOURS_BEFORE: int = 24
+    FCM_PROJECT_ID: str = ""
+    FCM_SERVICE_ACCOUNT_JSON: str = ""
+    GOOGLE_APPLICATION_CREDENTIALS: str = ""
 
     model_config = SettingsConfigDict(
         env_file=str(env_path),

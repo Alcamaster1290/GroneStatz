@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Fantasy Liga 1 2026</string>
+    <string name="title_activity_main">Fantasy Liga 1 2026</string>
+    <string name="package_name">com.gronestatz.fantasyliga1</string>
+    <string name="custom_url_scheme">com.gronestatz.fantasyliga1</string>
+</resources>

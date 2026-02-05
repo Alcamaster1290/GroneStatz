@@ -4,9 +4,8 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import delete, func, select, text, update
+from sqlalchemy import delete, func, insert, select, text, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy import insert, update
 from sqlalchemy.orm import Session, aliased
 
 from app.api.deps import require_admin
@@ -42,6 +41,7 @@ from app.schemas.admin import (
     AdminPlayerListItem,
     AdminPlayerListOut,
     AdminRoundOut,
+    AdminRoundWindowUpdateIn,
     AdminPlayerRoundStatsIn,
     AdminPlayerStatOut,
     AdminPlayerInjuryIn,
@@ -60,6 +60,8 @@ from app.schemas.admin import (
 from app.services.data_pipeline import ingest_parquets_to_duckdb, sync_duckdb_to_postgres
 from app.services.fantasy import ensure_round, get_or_create_season, get_round_by_number
 from app.services.action_log import log_action
+from app.services.push_notifications import run_round_deadline_reminders
+from app.services.round_recovery import recover_round_lineups_from_market
 from app.services.scoring import calc_match_points, recalc_round_points
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
@@ -1258,6 +1260,52 @@ def list_rounds(db: Session = Depends(get_db)) -> List[AdminRoundOut]:
     ]
 
 
+@router.put("/rounds/{round_number}/window")
+def update_round_window(
+    round_number: int,
+    payload: AdminRoundWindowUpdateIn,
+    db: Session = Depends(get_db),
+) -> dict:
+    season = get_or_create_season(db)
+    round_obj = get_round_by_number(db, season.id, round_number)
+    if not round_obj:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+
+    data = payload.model_dump(exclude_unset=True)
+    if not data:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="window_update_required")
+
+    starts_at = data.get("starts_at", round_obj.starts_at)
+    ends_at = data.get("ends_at", round_obj.ends_at)
+    if starts_at is not None and ends_at is not None and ends_at <= starts_at:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_round_window")
+
+    if "starts_at" in data:
+        round_obj.starts_at = data["starts_at"]
+    if "ends_at" in data:
+        round_obj.ends_at = data["ends_at"]
+
+    db.commit()
+    db.refresh(round_obj)
+
+    log_action(
+        db,
+        category="round",
+        action="window_update",
+        details={
+            "round_number": round_number,
+            "starts_at": round_obj.starts_at.isoformat() if round_obj.starts_at else None,
+            "ends_at": round_obj.ends_at.isoformat() if round_obj.ends_at else None,
+        },
+    )
+    return {
+        "ok": True,
+        "round_number": round_number,
+        "starts_at": round_obj.starts_at,
+        "ends_at": round_obj.ends_at,
+    }
+
+
 @router.post("/rounds/close")
 def close_round(
     round_number: int = Query(..., ge=1),
@@ -1278,6 +1326,59 @@ def close_round(
         details={"round_number": round_number},
     )
     return {"ok": True, "round_number": round_number}
+
+
+@router.post("/notifications/round-reminders/run")
+def run_round_reminders(
+    dry_run: bool = Query(default=True),
+    db: Session = Depends(get_db),
+) -> dict:
+    result = run_round_deadline_reminders(db, dry_run=dry_run)
+    log_action(
+        db,
+        category="notifications",
+        action="run_round_reminders",
+        details=result,
+    )
+    return {"ok": True, **result}
+
+
+@router.post("/rounds/{round_number}/recover-lineups")
+def recover_round_lineups(
+    round_number: int,
+    dry_run: bool = Query(default=True),
+    recalc_player_points: bool = Query(default=True),
+    db: Session = Depends(get_db),
+) -> dict:
+    try:
+        result = recover_round_lineups_from_market(
+            db,
+            round_number=round_number,
+            apply=not dry_run,
+            recalc_player_points=recalc_player_points,
+        )
+    except ValueError as exc:
+        if str(exc) == "round_not_found":
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found") from exc
+        raise
+    log_action(
+        db,
+        category="round_recovery",
+        action="recover_lineups",
+        details={
+            "round_number": round_number,
+            "dry_run": dry_run,
+            "recalc_player_points": recalc_player_points,
+            "summary": {
+                "teams_scanned": result.get("teams_scanned"),
+                "already_complete": result.get("already_complete"),
+                "recovered": result.get("recovered"),
+                "unresolved": result.get("unresolved"),
+                "market_complete_without_lineup": result.get("market_complete_without_lineup"),
+            },
+        },
+    )
+    return result
 
 
 @router.post("/rounds/open")

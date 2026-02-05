@@ -179,6 +179,21 @@ export default function RankingPage() {
   const [marketData, setMarketData] = useState<PublicMarket | null>(null);
   const [roundsInfo, setRoundsInfo] = useState<RoundInfo[]>([]);
 
+  const normalizeErrorCode = (value: string | null) =>
+    value ? value.replace(/^Error:\s*/i, "").trim() : "";
+
+  const toFriendlyError = (value: string | null) => {
+    const code = normalizeErrorCode(value);
+    if (!code) return null;
+    if (code.includes("offline_write_blocked")) {
+      return "Sin conexion, solo lectura.";
+    }
+    if (code === "market_complete_without_lineup") {
+      return "Mercado completo, sin equipo guardado";
+    }
+    return code;
+  };
+
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
     const storedEmail = localStorage.getItem("fantasy_email");
@@ -477,6 +492,7 @@ export default function RankingPage() {
     if (!lineupRoundNumber) return null;
     return roundInfoByNumber.get(lineupRoundNumber) ?? null;
   }, [lineupRoundNumber, roundInfoByNumber]);
+  const lineupErrorCode = normalizeErrorCode(lineupError);
 
   const lineupIsPending = useMemo(() => {
     if (!lineupRoundInfo) return false;
@@ -669,7 +685,7 @@ export default function RankingPage() {
         </div>
 
         {leagueLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
-        {leagueError ? <p className="text-xs text-warning">{leagueError}</p> : null}
+        {leagueError ? <p className="text-xs text-warning">{toFriendlyError(leagueError)}</p> : null}
 
         {league ? (
           <div className="space-y-3">
@@ -763,7 +779,7 @@ export default function RankingPage() {
       </div>
 
       {rankingError ? (
-        <div className="glass rounded-2xl p-3 text-xs text-warning">{rankingError}</div>
+        <div className="glass rounded-2xl p-3 text-xs text-warning">{toFriendlyError(rankingError)}</div>
       ) : null}
 
       <RankingTable
@@ -819,9 +835,11 @@ export default function RankingPage() {
             {lineupLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
             {lineupError ? (
               <p className="text-xs text-warning">
-                {lineupError === "lineup_not_found"
+                {lineupErrorCode === "lineup_not_found"
                   ? "Este equipo aun no guardo su XI."
-                  : lineupError}
+                  : lineupErrorCode === "market_complete_without_lineup"
+                    ? "Mercado completo, sin equipo guardado"
+                  : toFriendlyError(lineupError)}
               </p>
             ) : null}
 

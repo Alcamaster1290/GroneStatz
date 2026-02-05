@@ -662,6 +662,11 @@ export default function TeamPage() {
         title: "Ronda no encontrada",
         detail: "La ronda solicitada no existe.",
         tone: "warning"
+      },
+      offline_write_blocked: {
+        title: "Sin conexion",
+        detail: "No puedes guardar cambios sin internet. Modo solo lectura.",
+        tone: "warning"
       }
     };
 

@@ -6,7 +6,20 @@ import AuthPanel from "@/components/AuthPanel";
 import FavoriteTeamGate from "@/components/FavoriteTeamGate";
 import TeamNameGate from "@/components/TeamNameGate";
 import WelcomeSlideshow from "@/components/WelcomeSlideshow";
-import { createTeam, getTeam, getTeams, updateFavoriteTeam } from "@/lib/api";
+import {
+  createTeam,
+  getNotificationDevices,
+  getTeam,
+  getTeams,
+  registerNotificationDevice,
+  unregisterNotificationDevice,
+  updateFavoriteTeam
+} from "@/lib/api";
+import {
+  getNativeDeviceId,
+  isNativeMobilePlatform,
+  registerNativePush
+} from "@/lib/mobile/push";
 import { useFantasyStore } from "@/lib/store";
 
 export default function SettingsPage() {
@@ -30,6 +43,10 @@ export default function SettingsPage() {
   const [welcomeSeen, setWelcomeSeen] = useState(false);
   const [teamNameError, setTeamNameError] = useState<string | null>(null);
   const [favoriteError, setFavoriteError] = useState<string | null>(null);
+  const [pushLoading, setPushLoading] = useState(false);
+  const [pushMessage, setPushMessage] = useState<string | null>(null);
+  const [pushError, setPushError] = useState<string | null>(null);
+  const [pushEnabled, setPushEnabled] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
@@ -85,6 +102,8 @@ export default function SettingsPage() {
   }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeOpen, welcomeSeen]);
 
   const welcomeKey = `fantasy_welcome_seen_${userEmail && userEmail.trim() ? userEmail.trim() : "anon"}`;
+  const appChannel = process.env.NEXT_PUBLIC_APP_CHANNEL || "mobile";
+  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || "dev";
 
   useEffect(() => {
     if (!token) return;
@@ -104,6 +123,37 @@ export default function SettingsPage() {
     getTeams().then(setTeams).catch(() => undefined);
   }, []);
 
+  useEffect(() => {
+    if (!token || !isNativeMobilePlatform()) {
+      setPushEnabled(false);
+      return;
+    }
+    let cancelled = false;
+    const loadPushStatus = async () => {
+      try {
+        const [devices, deviceId] = await Promise.all([
+          getNotificationDevices(token),
+          getNativeDeviceId()
+        ]);
+        if (cancelled) return;
+        if (!deviceId) {
+          setPushEnabled(false);
+          return;
+        }
+        const current = devices.find((item) => item.device_id === deviceId);
+        setPushEnabled(Boolean(current?.is_active));
+      } catch {
+        if (!cancelled) {
+          setPushEnabled(false);
+        }
+      }
+    };
+    loadPushStatus().catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
   const teamMap = useMemo(() => {
     return new Map(
       teams.map((team) => [team.id, team.name_short || team.name_full || `Team ${team.id}`])
@@ -116,8 +166,64 @@ export default function SettingsPage() {
     try {
       await createTeam(token, teamName);
       setStatus("ok");
-    } catch {
-      setStatus("error");
+    } catch (err) {
+      if (String(err).includes("offline_write_blocked")) {
+        setStatus("offline");
+      } else {
+        setStatus("error");
+      }
+    }
+  };
+
+  const handleEnablePush = async () => {
+    if (!token) return;
+    if (!isNativeMobilePlatform()) {
+      setPushError("Disponible solo en app movil instalada.");
+      return;
+    }
+    setPushLoading(true);
+    setPushMessage(null);
+    setPushError(null);
+    try {
+      const native = await registerNativePush();
+      await registerNotificationDevice(token, {
+        token: native.token,
+        platform: native.platform,
+        device_id: native.device_id,
+        timezone: native.timezone,
+        app_channel: appChannel,
+        app_version: appVersion
+      });
+      setPushEnabled(true);
+      setPushMessage("Notificaciones activadas.");
+    } catch (err) {
+      setPushError(String(err));
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
+  const handleDisablePush = async () => {
+    if (!token) return;
+    if (!isNativeMobilePlatform()) {
+      setPushError("Disponible solo en app movil instalada.");
+      return;
+    }
+    setPushLoading(true);
+    setPushMessage(null);
+    setPushError(null);
+    try {
+      const deviceId = await getNativeDeviceId();
+      if (!deviceId) {
+        throw new Error("device_id_unavailable");
+      }
+      await unregisterNotificationDevice(token, deviceId);
+      setPushEnabled(false);
+      setPushMessage("Notificaciones desactivadas.");
+    } catch (err) {
+      setPushError(String(err));
+    } finally {
+      setPushLoading(false);
     }
   };
 
@@ -132,6 +238,7 @@ export default function SettingsPage() {
   };
 
   if (!token) return <AuthPanel />;
+  const nativePushAvailable = isNativeMobilePlatform();
 
   return (
     <div className="space-y-4">
@@ -160,6 +267,7 @@ export default function SettingsPage() {
         </button>
         {status === "ok" ? <p className="text-xs text-accent2">Guardado</p> : null}
         {status === "error" ? <p className="text-xs text-warning">Error</p> : null}
+        {status === "offline" ? <p className="text-xs text-warning">Sin conexion, solo lectura.</p> : null}
       </div>
 
       <div className="glass space-y-3 rounded-2xl p-4">
@@ -193,6 +301,31 @@ export default function SettingsPage() {
           Cambiar equipo favorito
         </button>
         {favoriteError ? <p className="text-xs text-warning">{favoriteError}</p> : null}
+      </div>
+
+      <div className="glass space-y-3 rounded-2xl p-4">
+        <p className="text-sm text-muted">Notificaciones moviles</p>
+        <p className="text-xs text-muted">
+          {nativePushAvailable
+            ? "Recibe alertas 24h antes de cerrar cada ronda."
+            : "Activalas desde la app movil instalada (Capacitor)."}
+        </p>
+        <button
+          onClick={pushEnabled ? handleDisablePush : handleEnablePush}
+          disabled={pushLoading || !nativePushAvailable}
+          className={
+            "w-full rounded-xl px-4 py-2 text-sm font-semibold " +
+            (pushEnabled ? "border border-white/10 text-ink" : "bg-accent text-black")
+          }
+        >
+          {pushLoading
+            ? "Procesando..."
+            : pushEnabled
+              ? "Desactivar notificaciones"
+              : "Activar notificaciones"}
+        </button>
+        {pushMessage ? <p className="text-xs text-accent2">{pushMessage}</p> : null}
+        {pushError ? <p className="text-xs text-warning">{pushError}</p> : null}
       </div>
 
       <button

@@ -46,9 +46,15 @@ services:
     environment:
       APP_ENV: prod
       CORS_ORIGINS: https://fantasyliga1peru.com,https://www.fantasyliga1peru.com
+      MOBILE_CORS_ORIGINS: capacitor://localhost,http://localhost
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fantasy}:${POSTGRES_PASSWORD:-fantasy}@postgres:5432/${POSTGRES_DB:-fantasy}
       JWT_SECRET: ${JWT_SECRET}
       ADMIN_TOKEN: ${ADMIN_TOKEN}
+      PUSH_ENABLED: ${PUSH_ENABLED:-true}
+      PUSH_REMINDER_HOURS_BEFORE: ${PUSH_REMINDER_HOURS_BEFORE:-24}
+      FCM_PROJECT_ID: ${FCM_PROJECT_ID:-}
+      FCM_SERVICE_ACCOUNT_JSON: ${FCM_SERVICE_ACCOUNT_JSON:-}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -77,10 +83,14 @@ services:
       args:
         NEXT_PUBLIC_API_URL: https://api.fantasyliga1peru.com
         NEXT_PUBLIC_ENABLE_PASSWORD_RESET: "false"
+        NEXT_PUBLIC_APP_CHANNEL: "mobile"
+        NEXT_PUBLIC_MOBILE_WEB_URL: "https://fantasyliga1peru.com"
     container_name: fantasy_l1_web
     environment:
       NEXT_PUBLIC_API_URL: https://api.fantasyliga1peru.com
       NEXT_PUBLIC_ENABLE_PASSWORD_RESET: "false"
+      NEXT_PUBLIC_APP_CHANNEL: "mobile"
+      NEXT_PUBLIC_MOBILE_WEB_URL: "https://fantasyliga1peru.com"
       NODE_ENV: production
     depends_on:
       - api

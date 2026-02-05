@@ -22,7 +22,10 @@ import {
   getAdminPlayers,
   recalcAdminMatch,
   recalcAdminRound,
+  runAdminRoundLineupRecovery,
+  runAdminRoundReminders,
   updateAdminFixture,
+  updateAdminRoundWindow,
   updateAdminRoundStatus,
   upsertAdminPlayerStats,
   updateAdminPlayerInjury
@@ -161,6 +164,13 @@ export default function AdminTeamsPage() {
     "Cerrada" | "Pendiente" | "Proximamente"
   >("Pendiente");
   const [roundActionMessage, setRoundActionMessage] = useState<string | null>(null);
+  const [roundWindowStartsAt, setRoundWindowStartsAt] = useState("");
+  const [roundWindowEndsAt, setRoundWindowEndsAt] = useState("");
+  const [roundWindowMessage, setRoundWindowMessage] = useState<string | null>(null);
+  const [reminderDryRun, setReminderDryRun] = useState(true);
+  const [reminderRunMessage, setReminderRunMessage] = useState<string | null>(null);
+  const [recoveryDryRun, setRecoveryDryRun] = useState(true);
+  const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
   const [leagues, setLeagues] = useState<AdminLeague[]>([]);
   const [leaguesLoading, setLeaguesLoading] = useState(false);
   const [leaguesError, setLeaguesError] = useState<string | null>(null);
@@ -181,6 +191,15 @@ export default function AdminTeamsPage() {
     handleLoad().catch(() => undefined);
     handleLoadRounds().catch(() => undefined);
   }, [adminToken]);
+
+  useEffect(() => {
+    const roundNumber = Number(roundStatusNumber);
+    if (!Number.isFinite(roundNumber) || roundNumber < 1) return;
+    const selectedRound = rounds.find((row) => row.round_number === roundNumber);
+    if (!selectedRound) return;
+    setRoundWindowStartsAt(toDateTimeLocal(selectedRound.starts_at));
+    setRoundWindowEndsAt(toDateTimeLocal(selectedRound.ends_at));
+  }, [roundStatusNumber, rounds]);
 
   useEffect(() => {
     if (!adminToken) return;
@@ -269,6 +288,14 @@ export default function AdminTeamsPage() {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
   };
+
+  function toDateTimeLocal(value?: string | null) {
+    if (!value) return "";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "";
+    const tzAdjusted = new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60000);
+    return tzAdjusted.toISOString().slice(0, 16);
+  }
 
   const handleLoadFixtures = async (roundOverride?: string) => {
     if (!adminToken) {
@@ -867,6 +894,91 @@ export default function AdminTeamsPage() {
     }
   };
 
+  const toIsoOrNull = (value: string): string | null => {
+    if (!value.trim()) return null;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new Error("invalid_datetime");
+    }
+    return parsed.toISOString();
+  };
+
+  const handleUpdateRoundWindow = async () => {
+    if (!adminToken) {
+      setRoundWindowMessage("admin_token_required");
+      return;
+    }
+    if (!roundStatusNumber.trim()) {
+      setRoundWindowMessage("round_required");
+      return;
+    }
+    const roundNumber = Number(roundStatusNumber);
+    if (!Number.isFinite(roundNumber) || roundNumber < 1) {
+      setRoundWindowMessage("round_invalid");
+      return;
+    }
+    setRoundWindowMessage(null);
+    try {
+      const startsAt = toIsoOrNull(roundWindowStartsAt);
+      const endsAt = toIsoOrNull(roundWindowEndsAt);
+      await updateAdminRoundWindow(adminToken, roundNumber, {
+        starts_at: startsAt,
+        ends_at: endsAt
+      });
+      await handleLoadRounds();
+      setRoundWindowMessage("round_window_updated");
+    } catch (err) {
+      setRoundWindowMessage(String(err));
+    }
+  };
+
+  const handleRunRoundReminders = async () => {
+    if (!adminToken) {
+      setReminderRunMessage("admin_token_required");
+      return;
+    }
+    setReminderRunMessage(null);
+    try {
+      const result = await runAdminRoundReminders(adminToken, reminderDryRun);
+      setReminderRunMessage(
+        `ok_candidates_${result.candidates}_sent_${result.sent}_errors_${result.errors}`
+      );
+    } catch (err) {
+      setReminderRunMessage(String(err));
+    }
+  };
+
+  const handleRecoverRoundLineups = async () => {
+    if (!adminToken) {
+      setRecoveryMessage("admin_token_required");
+      return;
+    }
+    if (!roundStatusNumber.trim()) {
+      setRecoveryMessage("round_required");
+      return;
+    }
+    const roundNumber = Number(roundStatusNumber);
+    if (!Number.isFinite(roundNumber) || roundNumber < 1) {
+      setRecoveryMessage("round_invalid");
+      return;
+    }
+
+    setRecoveryMessage(null);
+    try {
+      const result = await runAdminRoundLineupRecovery(
+        adminToken,
+        roundNumber,
+        recoveryDryRun,
+        true
+      );
+      setRecoveryMessage(
+        `ok_scanned_${result.teams_scanned}_recovered_${result.recovered}_unresolved_${result.unresolved}_market_missing_${result.market_complete_without_lineup}`
+      );
+    } catch (err) {
+      setRecoveryMessage(String(err));
+    }
+  };
+
   const handleLoadLeagues = async () => {
     if (!adminToken) {
       setLeaguesError("admin_token_required");
@@ -995,6 +1107,56 @@ export default function AdminTeamsPage() {
             >
               Actualizar estado
             </button>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <input
+                type="datetime-local"
+                value={roundWindowStartsAt}
+                onChange={(event) => setRoundWindowStartsAt(event.target.value)}
+                placeholder="Inicio de ronda"
+                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+              />
+              <input
+                type="datetime-local"
+                value={roundWindowEndsAt}
+                onChange={(event) => setRoundWindowEndsAt(event.target.value)}
+                placeholder="Cierre de ronda"
+                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+              />
+            </div>
+            <button
+              onClick={handleUpdateRoundWindow}
+              className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+            >
+              Guardar ventana (starts_at / ends_at)
+            </button>
+            <label className="flex items-center gap-2 text-xs text-muted">
+              <input
+                type="checkbox"
+                checked={reminderDryRun}
+                onChange={(event) => setReminderDryRun(event.target.checked)}
+              />
+              Ejecutar recordatorios en modo dry-run
+            </label>
+            <button
+              onClick={handleRunRoundReminders}
+              className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+            >
+              Ejecutar recordatorios 24h
+            </button>
+            <label className="flex items-center gap-2 text-xs text-muted">
+              <input
+                type="checkbox"
+                checked={recoveryDryRun}
+                onChange={(event) => setRecoveryDryRun(event.target.checked)}
+              />
+              Recuperar XI desde Mercado en modo dry-run
+            </label>
+            <button
+              onClick={handleRecoverRoundLineups}
+              className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+            >
+              Recuperar Mercado + XI de ronda
+            </button>
             <button
               onClick={handleLoadRounds}
               className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
@@ -1002,6 +1164,9 @@ export default function AdminTeamsPage() {
               Ver rondas
             </button>
             {roundActionMessage ? <p className="text-xs text-muted">{roundActionMessage}</p> : null}
+            {roundWindowMessage ? <p className="text-xs text-muted">{roundWindowMessage}</p> : null}
+            {reminderRunMessage ? <p className="text-xs text-muted">{reminderRunMessage}</p> : null}
+            {recoveryMessage ? <p className="text-xs text-muted">{recoveryMessage}</p> : null}
             {roundsError ? <p className="text-xs text-warning">{roundsError}</p> : null}
             {roundsLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
             {rounds.length > 0 ? (
@@ -1015,6 +1180,12 @@ export default function AdminTeamsPage() {
                       <p className="text-ink">Ronda {round.round_number}</p>
                       <p className="text-muted">
                         {round.status ? round.status : round.is_closed ? "Cerrada" : "Abierta"}
+                      </p>
+                      <p className="text-[11px] text-muted">
+                        {round.starts_at ? `Inicio: ${round.starts_at}` : "Inicio: --"}
+                      </p>
+                      <p className="text-[11px] text-muted">
+                        {round.ends_at ? `Cierre: ${round.ends_at}` : "Cierre: --"}
                       </p>
                     </div>
                     <span
