@@ -417,6 +417,14 @@ export default function MarketPage() {
     return Number.isFinite(parsed) ? parsed : null;
   };
   const roundToTenth = (value: number) => Math.round(value * 10) / 10;
+  const resolveBudgetCap = (team: { budget_cap?: number; market_price_delta?: number | null }) => {
+    const baseCap = Number.isFinite(team.budget_cap) ? Number(team.budget_cap) : 100;
+    const positiveDelta =
+      typeof team.market_price_delta === "number" && team.market_price_delta > 0
+        ? team.market_price_delta
+        : 0;
+    return roundToTenth(Math.max(baseCap, 100 + positiveDelta));
+  };
   const normalizeErrorCode = (raw: string) => raw.replace(/^Error:\s*/i, "").trim();
   const splitErrorCodes = (raw: unknown) => {
     const cleaned = normalizeErrorCode(String(raw || "") || "api_error");
@@ -461,7 +469,7 @@ export default function MarketPage() {
     const load = async () => {
       const team = await getTeam(token);
       setSquad(team.squad || []);
-      setBudgetCap(Number.isFinite(team.budget_cap) ? team.budget_cap : 100);
+      setBudgetCap(resolveBudgetCap(team));
       if (!draftLoaded) {
         if (draftSquad.length === 0) {
           setDraftSquad(team.squad || []);
@@ -904,7 +912,7 @@ export default function MarketPage() {
         const team = await getTeam(token);
         setSquad(team.squad || []);
         setDraftSquad(team.squad || []);
-        setBudgetCap(Number.isFinite(team.budget_cap) ? team.budget_cap : 100);
+        setBudgetCap(resolveBudgetCap(team));
         getTransferCount(token)
           .then(setTransferInfo)
           .catch(() => setTransferInfo(null));
@@ -1182,7 +1190,7 @@ export default function MarketPage() {
       <div>
         <h1 className="text-xl font-semibold">Mercado</h1>
         <p className="text-sm text-muted">
-          Elige 15 jugadores de la Liga 1 con un presupuesto de 100 M.
+          Elige 15 jugadores de la Liga 1 con un presupuesto de {budgetCap.toFixed(1)} M.
         </p>
         <p className="mt-1 text-xs text-muted">
           1 transferencia gratis por ronda; las adicionales cuestan 0.5.

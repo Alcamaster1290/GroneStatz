@@ -73,17 +73,18 @@ def _get_pending_round_market_delta_total(
     fantasy_team_id: int,
     round_obj: Round | None,
 ) -> float | None:
-    if not round_obj or round_obj.is_closed:
-        return None
+    prev_closed_stmt = select(Round).where(
+        Round.season_id == season_id,
+        Round.is_closed.is_(True),
+    )
+    if round_obj and not round_obj.is_closed:
+        prev_closed_stmt = prev_closed_stmt.where(
+            Round.round_number < round_obj.round_number
+        )
 
     prev_closed_round = (
         db.execute(
-            select(Round)
-            .where(
-                Round.season_id == season_id,
-                Round.is_closed.is_(True),
-                Round.round_number < round_obj.round_number,
-            )
+            prev_closed_stmt
             .order_by(Round.round_number.desc())
             .limit(1)
         )
@@ -274,10 +275,13 @@ def _build_team_response(
             )
         )
 
-    effective_budget_cap = _resolve_effective_budget_cap(
-        float(team.budget_cap),
-        market_price_delta_total,
+    cap_delta_total = _get_pending_round_market_delta_total(
+        db,
+        team.season_id,
+        fantasy_team_id,
+        round_obj,
     )
+    effective_budget_cap = _resolve_effective_budget_cap(float(team.budget_cap), cap_delta_total)
     budget_used = sum(float(team_player.bought_price) for _, team_player in rows)
     budget_left = effective_budget_cap - budget_used
     club_counts = get_club_counts(db, fantasy_team_id)
