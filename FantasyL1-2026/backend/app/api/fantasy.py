@@ -482,6 +482,11 @@ def update_squad(
     season = get_or_create_season(db)
     team = get_or_create_fantasy_team(db, user.id, season.id)
     current_round = get_current_round(db, season.id)
+    if current_round is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="rounds_not_configured")
+    if current_round.is_closed:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="round_closed")
+
     market_delta_total = _get_pending_round_market_delta_total(
         db, season.id, team.id, current_round
     )
@@ -494,7 +499,74 @@ def update_squad(
     if errors:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors)
 
-    round_id = current_round.id if current_round else None
+    round_id = current_round.id
+
+    # Si ya existe plantel y estamos en ronda >1, registrar transferencias y fees.
+    existing_squad = db.execute(
+        select(
+            FantasyTeamPlayer.player_id,
+            FantasyTeamPlayer.bought_price,
+        ).where(FantasyTeamPlayer.fantasy_team_id == team.id)
+    ).all()
+    existing_ids = [row.player_id for row in existing_squad]
+    new_ids = list(payload.player_ids)
+
+    if current_round.round_number > 1 and existing_ids:
+        removed = [pid for pid in existing_ids if pid not in new_ids]
+        added = [pid for pid in new_ids if pid not in existing_ids]
+        if len(removed) != len(added):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="squad_diff_mismatch",
+            )
+        # Mapear bought_price para los que salen
+        bought_map = {
+            pid: Decimal(str(bought_price))
+            for pid, bought_price in db.execute(
+                select(FantasyTeamPlayer.player_id, FantasyTeamPlayer.bought_price).where(
+                    FantasyTeamPlayer.fantasy_team_id == team.id,
+                    FantasyTeamPlayer.player_id.in_(removed),
+                )
+            )
+        }
+        existing_count = (
+            db.execute(
+                select(func.count())
+                .select_from(FantasyTransfer)
+                .where(
+                    FantasyTransfer.fantasy_team_id == team.id,
+                    FantasyTransfer.round_id == round_id,
+                )
+            ).scalar()
+            or 0
+        )
+        # Aplicar transfers pareados en orden.
+        for idx, (out_pid, in_pid) in enumerate(zip(removed, added)):
+            out_player = db.get(PlayerCatalog, out_pid)
+            in_player = db.get(PlayerCatalog, in_pid)
+            if not out_player or not in_player:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="player_not_found")
+            out_price_current = Decimal(str(out_player.price_current))
+            out_bought_price = bought_map.get(out_pid, Decimal("0.0"))
+            in_price_current = Decimal(str(in_player.price_current))
+            transfer_fee = Decimal("0.0") if (existing_count + idx) == 0 else Decimal("0.5")
+            realized_gain = out_price_current - out_bought_price
+            cap_delta = realized_gain - transfer_fee
+            cap_base = _round_price(team.budget_cap if team.budget_cap else effective_budget_cap)
+            new_cap = cap_base + cap_delta
+            team.budget_cap = new_cap.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+            effective_budget_cap = float(team.budget_cap)
+            db.add(
+                FantasyTransfer(
+                    fantasy_team_id=team.id,
+                    round_id=round_id,
+                    out_player_id=out_pid,
+                    in_player_id=in_pid,
+                    out_price=float(out_price_current),
+                    in_price=float(in_price_current),
+                )
+            )
+
     replace_squad(db, team.id, payload.player_ids, bought_round_id=round_id)
     return ValidationResult(ok=True, errors=[])
 

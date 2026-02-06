@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -43,11 +43,13 @@ const positionLabels: Record<string, string> = {
 function RankingTable({
   title,
   data,
-  onSelectTeam
+  onSelectTeam,
+  pendingRoundNumber
 }: {
   title: string;
   data: RankingResponse | null;
   onSelectTeam?: (fantasyTeamId: number, teamName: string) => void;
+  pendingRoundNumber: number | null;
 }) {
   if (!data || data.entries.length === 0) {
     return (
@@ -127,6 +129,7 @@ function RankingTable({
                     className="rounded-full border border-white/10 px-2 py-1"
                   >
                     R{round.round_number}: {Math.round(round.points)}
+                    {pendingRoundNumber === round.round_number && typeof round.price_delta === "number" ? ` · Δ ${round.price_delta > 0 ? "+" : ""}${round.price_delta.toFixed(1)}` : ""}
                   </span>
                 ))
               )}
@@ -178,7 +181,10 @@ export default function RankingPage() {
   const [lineupRoundNumber, setLineupRoundNumber] = useState<number | null>(null);
   const [marketData, setMarketData] = useState<PublicMarket | null>(null);
   const [roundsInfo, setRoundsInfo] = useState<RoundInfo[]>([]);
-
+  const pendingRoundNumber = useMemo(
+    () => roundsInfo.find((round) => !round.is_closed)?.round_number ?? null,
+    [roundsInfo]
+  );
   const normalizeErrorCode = (value: string | null) =>
     value ? value.replace(/^Error:\s*/i, "").trim() : "";
 
@@ -709,6 +715,7 @@ export default function RankingPage() {
               title={`Tabla ${league.name}`}
               data={leagueRanking}
               onSelectTeam={handleViewLineup}
+              pendingRoundNumber={pendingRoundNumber}
             />
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted">
@@ -802,6 +809,7 @@ export default function RankingPage() {
         title="Ranking general"
         data={generalRanking}
         onSelectTeam={handleViewLineup}
+        pendingRoundNumber={pendingRoundNumber}
       />
 
       {lineupOpen ? (
@@ -980,3 +988,6 @@ export default function RankingPage() {
     </div>
   );
 }
+
+
+
