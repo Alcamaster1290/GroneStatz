@@ -55,6 +55,52 @@ def _round_price(value: float | Decimal) -> Decimal:
     return Decimal(str(value)).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
 
 
+def _sort_key_by_bought_round(
+    bought_round_id: int | None,
+    player_id: int,
+) -> tuple[int, int, int]:
+    return (
+        1 if bought_round_id is None else 0,
+        -(bought_round_id or 0),
+        player_id,
+    )
+
+
+def _canonicalize_team_rows(
+    rows: list[tuple[PlayerCatalog, FantasyTeamPlayer]],
+) -> list[tuple[PlayerCatalog, FantasyTeamPlayer]]:
+    if len(rows) <= 15:
+        return rows
+    return sorted(
+        rows,
+        key=lambda row: _sort_key_by_bought_round(
+            row[1].bought_round_id,
+            row[1].player_id,
+        ),
+    )[:15]
+
+
+def _canonicalize_team_player_ids(
+    db: Session,
+    fantasy_team_id: int,
+) -> list[int]:
+    rows = (
+        db.execute(
+            select(FantasyTeamPlayer.player_id, FantasyTeamPlayer.bought_round_id).where(
+                FantasyTeamPlayer.fantasy_team_id == fantasy_team_id
+            )
+        )
+        .all()
+    )
+    if len(rows) <= 15:
+        return [player_id for player_id, _ in rows]
+    rows_sorted = sorted(
+        rows,
+        key=lambda row: _sort_key_by_bought_round(row.bought_round_id, row.player_id),
+    )
+    return [player_id for player_id, _ in rows_sorted[:15]]
+
+
 def _resolve_effective_budget_cap(
     base_budget_cap: float,
     market_price_delta: float | None,
@@ -94,15 +140,7 @@ def _get_pending_round_market_delta_total(
     if not prev_closed_round:
         return None
 
-    player_ids = (
-        db.execute(
-            select(FantasyTeamPlayer.player_id).where(
-                FantasyTeamPlayer.fantasy_team_id == fantasy_team_id
-            )
-        )
-        .scalars()
-        .all()
-    )
+    player_ids = _canonicalize_team_player_ids(db, fantasy_team_id)
     if not player_ids:
         return 0.0
 
@@ -137,6 +175,7 @@ def _build_team_response(
         )
         .all()
     )
+    rows = _canonicalize_team_rows(rows)
     points_map = {}
     total_points_map = {}
     totals_stats_map = {}

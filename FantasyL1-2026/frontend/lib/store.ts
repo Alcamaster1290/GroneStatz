@@ -38,6 +38,18 @@ const computeBudget = (squad: Player[]) => {
   return { budgetUsed, budgetLeft };
 };
 
+const normalizeSquad = (squad: Player[]) => {
+  const seen = new Set<number>();
+  const unique: Player[] = [];
+  for (const player of squad) {
+    if (seen.has(player.player_id)) continue;
+    seen.add(player.player_id);
+    unique.push(player);
+    if (unique.length >= 15) break;
+  }
+  return unique;
+};
+
 export const useFantasyStore = create<StoreState>((set) => ({
   token: null,
   userEmail: null,
@@ -62,8 +74,9 @@ export const useFantasyStore = create<StoreState>((set) => ({
   setToken: (token) => set({ token }),
   setUserEmail: (userEmail) => set({ userEmail }),
   setSquad: (squad) => {
-    const { budgetUsed, budgetLeft } = computeBudget(squad);
-    set({ squad, budgetUsed, budgetLeft });
+    const normalized = normalizeSquad(squad);
+    const { budgetUsed, budgetLeft } = computeBudget(normalized);
+    set({ squad: normalized, budgetUsed, budgetLeft });
   },
   setLineupSlots: (lineupSlots) =>
     set((state) => ({
@@ -76,10 +89,11 @@ export const useFantasyStore = create<StoreState>((set) => ({
   setMarketFilters: (marketFilters) => set({ marketFilters }),
   setMarketDraftSquad: (marketDraftSquad) =>
     set((state) => ({
-      marketDraftSquad:
+      marketDraftSquad: normalizeSquad(
         typeof marketDraftSquad === "function"
           ? marketDraftSquad(state.marketDraftSquad)
           : marketDraftSquad
+      )
     })),
   setMarketDraftBackup: (marketDraftBackup) => set({ marketDraftBackup }),
   setMarketDraftLoaded: (marketDraftLoaded) => set({ marketDraftLoaded })

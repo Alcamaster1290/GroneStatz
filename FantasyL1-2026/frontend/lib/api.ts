@@ -265,7 +265,17 @@ export async function login(email: string, password: string) {
 
 export async function getTeam(token: string, roundNumber?: number): Promise<FantasyTeam> {
   const query = roundNumber ? `?round_number=${roundNumber}` : "";
-  return apiFetch(`/fantasy/team${query}`, {}, token);
+  const team = await apiFetch<FantasyTeam>(`/fantasy/team${query}`, {}, token);
+  if (!Array.isArray(team.squad)) {
+    return { ...team, squad: [] };
+  }
+  const seen = new Set<number>();
+  const squad = team.squad.filter((player) => {
+    if (seen.has(player.player_id)) return false;
+    seen.add(player.player_id);
+    return true;
+  }).slice(0, 15);
+  return { ...team, squad };
 }
 
 export async function createTeam(token: string, name?: string) {

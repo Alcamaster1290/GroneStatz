@@ -26,6 +26,26 @@ def _round_price(value: float | Decimal) -> Decimal:
     return raw.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
 
 
+def _sort_key_by_bought_round(
+    bought_round_id: int | None,
+    player_id: int,
+) -> tuple[int, int, int]:
+    return (
+        1 if bought_round_id is None else 0,
+        -(bought_round_id or 0),
+        player_id,
+    )
+
+
+def _canonicalize_transfer_rows(rows: list) -> list:
+    if len(rows) <= 15:
+        return rows
+    return sorted(
+        rows,
+        key=lambda row: _sort_key_by_bought_round(row.bought_round_id, row.player_id),
+    )[:15]
+
+
 def validate_squad(
     db: Session,
     player_ids: Iterable[int],
@@ -186,6 +206,7 @@ def validate_transfer(
             select(
                 FantasyTeamPlayer.player_id,
                 FantasyTeamPlayer.bought_price,
+                FantasyTeamPlayer.bought_round_id,
                 PlayerCatalog.price_current,
             )
             .join(
@@ -198,6 +219,7 @@ def validate_transfer(
         )
         .all()
     )
+    squad_rows = _canonicalize_transfer_rows(squad_rows)
     squad_ids = [row.player_id for row in squad_rows]
 
     if out_player_id not in squad_ids:
