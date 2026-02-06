@@ -102,9 +102,9 @@ export default function SettingsPage() {
   }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeOpen, welcomeSeen]);
 
   const welcomeKey = `fantasy_welcome_seen_${userEmail && userEmail.trim() ? userEmail.trim() : "anon"}`;
-  const appChannel = process.env.NEXT_PUBLIC_APP_CHANNEL || "mobile";
+  const appChannel = process.env.NEXT_PUBLIC_APP_CHANNEL || "web";
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || "dev";
-  const pushSectionVisible = appChannel !== "web";
+  const pushSectionVisible = isNativeMobilePlatform() && appChannel !== "web";
 
   useEffect(() => {
     if (!token) return;
