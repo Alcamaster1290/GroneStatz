@@ -2024,7 +2024,7 @@ export default function TeamPage() {
         title={selectedPlayer ? selectedPlayer.name : "Slot"}
       >
         {selectedSlot ? (
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold text-ink">
                 {selectedSlot.is_starter ? "Seleccion de titular" : "Seleccion de suplente"}
