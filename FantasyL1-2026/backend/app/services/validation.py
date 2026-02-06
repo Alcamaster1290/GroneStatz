@@ -185,21 +185,25 @@ def validate_transfer(
     out_player_id: int,
     in_player_id: int,
     budget_cap: float = 100.0,
+    transfer_fee_override: float | None = None,
 ) -> List[str]:
     errors: List[str] = []
 
-    existing_count = (
-        db.execute(
-            select(func.count())
-            .select_from(FantasyTransfer)
-            .where(
-                FantasyTransfer.fantasy_team_id == fantasy_team_id,
-                FantasyTransfer.round_id == round_id,
-            )
-        ).scalar()
-        or 0
-    )
-    next_transfer_fee = 0.0 if existing_count == 0 else 0.5
+    if transfer_fee_override is None:
+        existing_count = (
+            db.execute(
+                select(func.count())
+                .select_from(FantasyTransfer)
+                .where(
+                    FantasyTransfer.fantasy_team_id == fantasy_team_id,
+                    FantasyTransfer.round_id == round_id,
+                )
+            ).scalar()
+            or 0
+        )
+        next_transfer_fee = 0.0 if existing_count == 0 else 0.5
+    else:
+        next_transfer_fee = max(0.0, float(transfer_fee_override))
 
     squad_rows = (
         db.execute(

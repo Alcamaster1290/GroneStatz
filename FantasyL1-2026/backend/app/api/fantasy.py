@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -10,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models import (
+    FantasyLineup,
     FantasyLineupSlot,
     FantasyTeam,
     FantasyTeamPlayer,
@@ -155,6 +157,75 @@ def _get_pending_round_market_delta_total(
         or 0
     )
     return float(_round_price(delta_total))
+
+
+def _get_previous_closed_round(
+    db: Session,
+    season_id: int,
+    pending_round_number: int,
+) -> Round | None:
+    return (
+        db.execute(
+            select(Round)
+            .where(
+                Round.season_id == season_id,
+                Round.is_closed.is_(True),
+                Round.round_number < pending_round_number,
+            )
+            .order_by(Round.round_number.desc())
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+
+
+def _get_round_lineup_player_ids(
+    db: Session,
+    fantasy_team_id: int,
+    round_id: int,
+) -> set[int]:
+    lineup = db.execute(
+        select(FantasyLineup.id).where(
+            FantasyLineup.fantasy_team_id == fantasy_team_id,
+            FantasyLineup.round_id == round_id,
+        )
+    ).scalar_one_or_none()
+    if lineup is None:
+        return set()
+    player_ids = (
+        db.execute(
+            select(FantasyLineupSlot.player_id).where(
+                FantasyLineupSlot.lineup_id == lineup,
+                FantasyLineupSlot.player_id.is_not(None),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return {int(player_id) for player_id in player_ids if player_id is not None}
+
+
+def _find_transfer_that_removed_player(
+    db: Session,
+    fantasy_team_id: int,
+    round_id: int,
+    player_id: int,
+) -> FantasyTransfer | None:
+    return (
+        db.execute(
+            select(FantasyTransfer)
+            .where(
+                FantasyTransfer.fantasy_team_id == fantasy_team_id,
+                FantasyTransfer.round_id == round_id,
+                FantasyTransfer.out_player_id == player_id,
+            )
+            .order_by(FantasyTransfer.created_at, FantasyTransfer.id)
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
 
 
 def _build_team_response(
@@ -582,16 +653,26 @@ def transfer_player(
         market_delta_total,
     )
 
-    errors = validate_transfer(
-        db,
-        team.id,
-        round_obj.id,
-        payload.out_player_id,
-        payload.in_player_id,
-        budget_cap=effective_budget_cap,
-    )
-    if errors:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors)
+    restored_transfer: FantasyTransfer | None = None
+    if not round_obj.is_closed:
+        previous_closed_round = _get_previous_closed_round(
+            db,
+            season.id,
+            round_obj.round_number,
+        )
+        if previous_closed_round is not None:
+            previous_lineup_ids = _get_round_lineup_player_ids(
+                db,
+                team.id,
+                previous_closed_round.id,
+            )
+            if payload.in_player_id in previous_lineup_ids:
+                restored_transfer = _find_transfer_that_removed_player(
+                    db,
+                    team.id,
+                    round_obj.id,
+                    payload.in_player_id,
+                )
 
     existing_count = (
         db.execute(
@@ -605,6 +686,20 @@ def transfer_player(
         or 0
     )
     transfer_fee = 0.0 if existing_count == 0 else 0.5
+    if restored_transfer is not None:
+        transfer_fee = 0.0
+
+    errors = validate_transfer(
+        db,
+        team.id,
+        round_obj.id,
+        payload.out_player_id,
+        payload.in_player_id,
+        budget_cap=effective_budget_cap,
+        transfer_fee_override=transfer_fee,
+    )
+    if errors:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors)
 
     out_team_player = db.execute(
         select(FantasyTeamPlayer).where(
@@ -635,15 +730,20 @@ def transfer_player(
             is_active=True,
         )
     )
-    transfer = FantasyTransfer(
-        fantasy_team_id=team.id,
-        round_id=round_obj.id,
-        out_player_id=payload.out_player_id,
-        in_player_id=payload.in_player_id,
-        out_price=float(out_player.price_current),
-        in_price=float(in_player.price_current),
-    )
-    db.add(transfer)
+    transfer: FantasyTransfer | None = None
+    if restored_transfer is None:
+        transfer = FantasyTransfer(
+            fantasy_team_id=team.id,
+            round_id=round_obj.id,
+            out_player_id=payload.out_player_id,
+            in_player_id=payload.in_player_id,
+            out_price=float(out_player.price_current),
+            in_price=float(in_player.price_current),
+        )
+        db.add(transfer)
+    else:
+        db.delete(restored_transfer)
+
     realized_gain = Decimal(str(out_player.price_current)) - Decimal(
         str(out_team_player.bought_price)
     )
@@ -653,6 +753,19 @@ def transfer_player(
         new_cap = cap_base + cap_delta
         team.budget_cap = new_cap.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
     db.commit()
+
+    if transfer is None:
+        return TransferOut(
+            id=0,
+            fantasy_team_id=team.id,
+            round_id=round_obj.id,
+            out_player_id=payload.out_player_id,
+            in_player_id=payload.in_player_id,
+            out_price=float(out_player.price_current),
+            in_price=float(in_player.price_current),
+            created_at=datetime.now(timezone.utc),
+        )
+
     db.refresh(transfer)
 
     return TransferOut(
