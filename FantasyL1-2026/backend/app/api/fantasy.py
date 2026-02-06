@@ -106,13 +106,19 @@ def _canonicalize_team_player_ids(
 def _resolve_effective_budget_cap(
     base_budget_cap: float,
     market_price_delta: float | None,
+    round_obj: Round | None,
 ) -> float:
-    base_cap = _round_price(base_budget_cap)
-    if market_price_delta is None or market_price_delta <= 0:
-        return float(base_cap)
+    if round_obj and round_obj.round_number <= 1:
+        return 100.0
 
-    boosted_cap = _round_price(Decimal("100.0") + Decimal(str(market_price_delta)))
-    return float(boosted_cap if boosted_cap > base_cap else base_cap)
+    # Pending rounds use market value from the immediately previous closed round.
+    if round_obj and not round_obj.is_closed:
+        if market_price_delta is None:
+            return 100.0
+        return float(_round_price(Decimal("100.0") + Decimal(str(market_price_delta))))
+
+    base_cap = _round_price(base_budget_cap)
+    return float(base_cap)
 
 
 def _get_pending_round_market_delta_total(
@@ -391,11 +397,17 @@ def _build_team_response(
         fantasy_team_id,
         round_obj,
     )
-    effective_budget_cap = _resolve_effective_budget_cap(float(team.budget_cap), cap_delta_total)
+    effective_budget_cap = _resolve_effective_budget_cap(
+        float(team.budget_cap),
+        cap_delta_total,
+        round_obj,
+    )
     budget_used_dec = sum(
         (Decimal(str(team_player.bought_price)) for _, team_player in rows),
         start=Decimal("0.0"),
     ).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+    if round_obj and round_obj.round_number <= 1 and budget_used_dec > Decimal("100.0"):
+        budget_used_dec = Decimal("100.0")
     budget_left_dec = (
         Decimal(str(effective_budget_cap)) - budget_used_dec
     ).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
@@ -455,6 +467,7 @@ def update_squad(
     effective_budget_cap = _resolve_effective_budget_cap(
         float(team.budget_cap),
         market_delta_total,
+        current_round,
     )
     errors = validate_squad(db, payload.player_ids, budget_cap=effective_budget_cap)
     if errors:
@@ -658,6 +671,7 @@ def transfer_player(
     effective_budget_cap = _resolve_effective_budget_cap(
         float(team.budget_cap),
         market_delta_total,
+        round_obj,
     )
 
     restored_transfer: FantasyTransfer | None = None
@@ -755,7 +769,7 @@ def transfer_player(
         str(out_team_player.bought_price)
     )
     cap_delta = realized_gain - Decimal(str(transfer_fee))
-    cap_base = _round_price(max(float(team.budget_cap), effective_budget_cap))
+    cap_base = _round_price(effective_budget_cap)
     if cap_delta != 0 or cap_base != _round_price(team.budget_cap):
         new_cap = cap_base + cap_delta
         team.budget_cap = new_cap.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
