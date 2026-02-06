@@ -37,7 +37,7 @@ import {
 } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
 import { Fixture, LineupSlot, Player, PlayerMatch, RoundInfo } from "@/lib/types";
-import { validateLineup, validateSquad } from "@/lib/validation";
+import { validateLineup } from "@/lib/validation";
 
 const DEFAULT_SLOTS: LineupSlot[] = [
   { slot_index: 0, is_starter: true, role: "G", player_id: null },
@@ -1315,9 +1315,7 @@ export default function TeamPage() {
     if (!token) return;
     setSaveErrors(null);
     setSaveMessage(null);
-    const localErrors = [
-      ...new Set([...validateSquad(squad), ...validateLineup(lineupSlots, squad)])
-    ];
+    const localErrors = [...new Set(validateLineup(lineupSlots, squad))];
     if (localErrors.length > 0) {
       setSaveErrors(localErrors);
       return;

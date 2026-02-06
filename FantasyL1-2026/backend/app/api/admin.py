@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -1161,6 +1162,101 @@ def list_transfers(
         )
         budget_offset[team.id] = budget_offset.get(team.id, 0.0) + fee
     return results
+
+
+@router.post("/transfers/restore")
+def restore_transfers_for_round(
+    round_number: Optional[int] = Query(default=None, ge=1),
+    reimburse_fees: bool = Query(default=True),
+    db: Session = Depends(get_db),
+) -> dict:
+    season = get_or_create_season(db)
+    round_obj = (
+        get_round_by_number(db, season.id, round_number)
+        if round_number is not None
+        else (
+            db.execute(
+                select(Round)
+                .where(Round.season_id == season.id, Round.is_closed.is_(False))
+                .order_by(Round.round_number)
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
+    )
+    if round_obj is None and round_number is None:
+        round_obj = (
+            db.execute(
+                select(Round)
+                .where(Round.season_id == season.id)
+                .order_by(Round.round_number.desc())
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
+    if not round_obj:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
+
+    transfer_rows = db.execute(
+        select(FantasyTransfer.id, FantasyTransfer.fantasy_team_id).where(
+            FantasyTransfer.round_id == round_obj.id
+        )
+    ).all()
+    if not transfer_rows:
+        return {
+            "ok": True,
+            "round_number": round_obj.round_number,
+            "transfers_deleted": 0,
+            "teams_affected": 0,
+            "fees_reimbursed_total": 0.0,
+            "teams_reimbursed": 0,
+            "note": "no_transfers_found",
+        }
+
+    transfers_by_team: Dict[int, int] = {}
+    for _, fantasy_team_id in transfer_rows:
+        transfers_by_team[fantasy_team_id] = transfers_by_team.get(fantasy_team_id, 0) + 1
+
+    fees_reimbursed_total = Decimal("0.0")
+    teams_reimbursed = 0
+    if reimburse_fees:
+        team_ids = list(transfers_by_team.keys())
+        teams = (
+            db.execute(select(FantasyTeam).where(FantasyTeam.id.in_(team_ids)))
+            .scalars()
+            .all()
+        )
+        teams_by_id = {team.id: team for team in teams}
+        for team_id, transfer_count in transfers_by_team.items():
+            reimbursed = max(0, transfer_count - 1) * Decimal("0.5")
+            if reimbursed <= 0:
+                continue
+            team = teams_by_id.get(team_id)
+            if not team:
+                continue
+            new_budget = (
+                Decimal(str(team.budget_cap)) + reimbursed
+            ).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+            team.budget_cap = new_budget
+            fees_reimbursed_total += reimbursed
+            teams_reimbursed += 1
+
+    transfer_ids = [transfer_id for transfer_id, _ in transfer_rows]
+    db.execute(delete(FantasyTransfer).where(FantasyTransfer.id.in_(transfer_ids)))
+    db.commit()
+
+    return {
+        "ok": True,
+        "round_number": round_obj.round_number,
+        "transfers_deleted": len(transfer_ids),
+        "teams_affected": len(transfers_by_team),
+        "fees_reimbursed_total": float(
+            fees_reimbursed_total.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+        ),
+        "teams_reimbursed": teams_reimbursed,
+    }
 
 
 @router.put("/fixtures/{fixture_id}", response_model=AdminFixtureOut)
