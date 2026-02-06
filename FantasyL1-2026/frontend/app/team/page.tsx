@@ -1109,22 +1109,23 @@ export default function TeamPage() {
       return;
     }
     if (!welcomeSeen && (needsTeamName || needsFavoriteTeam)) {
-      if (needsFavoriteTeam) {
-        setFavoriteGateOpen(!welcomeOpen);
-        setNameGateOpen(false);
-      } else {
-        setNameGateOpen(!welcomeOpen);
-        setFavoriteGateOpen(false);
-      }
+      setNameGateOpen(false);
+      setFavoriteGateOpen(false);
       return;
     }
-    setFavoriteGateOpen(false);
     if (needsTeamName) {
       setNameGateOpen(true);
-    } else {
-      setNameGateOpen(false);
+      setFavoriteGateOpen(false);
+      return;
     }
-  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeOpen, welcomeSeen]);
+    if (needsFavoriteTeam) {
+      setFavoriteGateOpen(true);
+      setNameGateOpen(false);
+      return;
+    }
+    setNameGateOpen(false);
+    setFavoriteGateOpen(false);
+  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeSeen]);
 
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
@@ -1790,10 +1791,10 @@ export default function TeamPage() {
           setWelcomeSeen(true);
           setWelcomeOpen(false);
           setPostWelcomeRedirect(true);
-          if (needsFavoriteTeam) {
-            setFavoriteGateOpen(true);
-          } else {
+          if (needsTeamName) {
             setNameGateOpen(true);
+          } else if (needsFavoriteTeam) {
+            setFavoriteGateOpen(true);
           }
         }}
       />
@@ -1815,8 +1816,9 @@ export default function TeamPage() {
             await updateFavoriteTeam(token, favoriteTeamId);
             setNeedsFavoriteTeam(false);
             setFavoriteGateOpen(false);
-            if (needsTeamName) {
-              setNameGateOpen(true);
+            if (postWelcomeRedirect) {
+              setPostWelcomeRedirect(false);
+              router.push("/market");
             }
           } catch {
             setFavoriteError("No se pudo guardar el equipo favorito.");
@@ -1842,7 +1844,7 @@ export default function TeamPage() {
             setTeamName(trimmedName);
             setNeedsTeamName(false);
             setNameGateOpen(false);
-            if (postWelcomeRedirect) {
+            if (postWelcomeRedirect && !needsFavoriteTeam) {
               setPostWelcomeRedirect(false);
               router.push("/market");
             }

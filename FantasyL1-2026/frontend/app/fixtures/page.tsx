@@ -152,22 +152,23 @@ export default function FixturesPage() {
       return;
     }
     if (!welcomeSeen && (needsTeamName || needsFavoriteTeam)) {
-      if (needsFavoriteTeam) {
-        setFavoriteGateOpen(!welcomeOpen);
-        setNameGateOpen(false);
-      } else {
-        setNameGateOpen(!welcomeOpen);
-        setFavoriteGateOpen(false);
-      }
+      setNameGateOpen(false);
+      setFavoriteGateOpen(false);
       return;
     }
-    setFavoriteGateOpen(false);
     if (needsTeamName) {
       setNameGateOpen(true);
-    } else {
-      setNameGateOpen(false);
+      setFavoriteGateOpen(false);
+      return;
     }
-  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeOpen, welcomeSeen]);
+    if (needsFavoriteTeam) {
+      setFavoriteGateOpen(true);
+      setNameGateOpen(false);
+      return;
+    }
+    setNameGateOpen(false);
+    setFavoriteGateOpen(false);
+  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeSeen]);
 
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
@@ -499,10 +500,10 @@ export default function FixturesPage() {
           localStorage.setItem(welcomeKey, "1");
           setWelcomeSeen(true);
           setWelcomeOpen(false);
-          if (needsFavoriteTeam) {
-            setFavoriteGateOpen(true);
-          } else {
+          if (needsTeamName) {
             setNameGateOpen(true);
+          } else if (needsFavoriteTeam) {
+            setFavoriteGateOpen(true);
           }
         }}
       />
@@ -524,9 +525,6 @@ export default function FixturesPage() {
             await updateFavoriteTeam(token, favoriteTeamId);
             setNeedsFavoriteTeam(false);
             setFavoriteGateOpen(false);
-            if (needsTeamName) {
-              setNameGateOpen(true);
-            }
           } catch {
             setFavoriteError("No se pudo guardar el equipo favorito.");
           }
