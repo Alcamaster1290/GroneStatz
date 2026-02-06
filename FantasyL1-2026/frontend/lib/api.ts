@@ -13,6 +13,8 @@ import {
   AdminPlayerInjury,
   AdminMatchPlayer,
   AdminTransfer,
+  AdminTransferRestoreResult,
+  AdminTransferRevertResult,
   FantasyTeam,
   Fixture,
   LineupSlot,
@@ -492,6 +494,42 @@ export async function getAdminTransfers(
 ): Promise<AdminTransfer[]> {
   const query = roundNumber ? `?round_number=${roundNumber}` : "";
   return apiFetch(`/admin/transfers${query}`, {
+    headers: { "X-Admin-Token": adminToken }
+  });
+}
+
+export async function restoreAdminTransfers(
+  adminToken: string,
+  roundNumber?: number,
+  revertSquad = true,
+  reimburseFees = true,
+  strict = true
+): Promise<AdminTransferRestoreResult> {
+  const search = new URLSearchParams();
+  if (typeof roundNumber === "number" && Number.isFinite(roundNumber)) {
+    search.append("round_number", String(roundNumber));
+  }
+  search.append("revert_squad", String(revertSquad));
+  search.append("reimburse_fees", String(reimburseFees));
+  search.append("strict", String(strict));
+  return apiFetch(`/admin/transfers/restore?${search.toString()}`, {
+    method: "POST",
+    headers: { "X-Admin-Token": adminToken }
+  });
+}
+
+export async function revertAdminTransfer(
+  adminToken: string,
+  transferId: number,
+  strict = true,
+  reimburseFees = true
+): Promise<AdminTransferRevertResult> {
+  const search = new URLSearchParams({
+    strict: String(strict),
+    reimburse_fees: String(reimburseFees)
+  });
+  return apiFetch(`/admin/transfers/${transferId}/revert?${search.toString()}`, {
+    method: "POST",
     headers: { "X-Admin-Token": adminToken }
   });
 }

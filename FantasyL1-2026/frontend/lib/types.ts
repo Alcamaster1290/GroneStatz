@@ -291,6 +291,37 @@ export type AdminTransfer = {
   budget_after: number;
 };
 
+export type AdminTransferRestoreResult = {
+  ok: boolean;
+  round_number: number;
+  transfers_deleted: number;
+  teams_affected: number;
+  swaps_reverted: number;
+  logs_deleted: number;
+  skipped: number;
+  skipped_details?: {
+    transfer_id: number;
+    fantasy_team_id: number;
+    reason: string;
+  }[];
+  revert_squad?: boolean;
+  strict?: boolean;
+  fees_reimbursed_total: number;
+  teams_reimbursed: number;
+  teams_recomputed: number;
+  note?: string;
+};
+
+export type AdminTransferRevertResult = {
+  ok: boolean;
+  transfer_id: number;
+  round_number?: number;
+  fantasy_team_id?: number;
+  status?: string;
+  reason?: string;
+  fees_reimbursed_total?: number;
+};
+
 export type AdminRound = {
   id: number;
   round_number: number;

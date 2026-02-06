@@ -55,7 +55,7 @@ const SLIDES: Slide[] = [
     bullets: [
       "El valor de los jugadores sube o baja segun su rendimiento.",
       "Aprovecha los cambios de precio cada ronda.",
-      "Planifica tus transferencias: la 1ra es gratis, las demas cuestan 0.5."
+      "Planifica tus transferencias: son ilimitadas y sin costo."
     ],
     icon: "📈"
   }

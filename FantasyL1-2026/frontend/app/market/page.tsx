@@ -738,19 +738,11 @@ export default function MarketPage() {
     const incoming = draftSquad.filter((player) => !squadIds.has(player.player_id));
     const transferCount = Math.min(outgoing.length, incoming.length);
     const transfersUsed = transferInfo?.transfers_used ?? 0;
-    const freeTransferAvailable = transfersUsed === 0 ? 1 : 0;
-    const chargeableTransfers = Math.max(0, transferCount - freeTransferAvailable);
-    const additionalFeePerTransfer = 0.5;
-    const estimatedAdditionalFee = roundToTenth(chargeableTransfers * additionalFeePerTransfer);
     return {
       outgoing,
       incoming,
       transferCount,
-      transfersUsed,
-      freeTransferAvailable,
-      chargeableTransfers,
-      additionalFeePerTransfer,
-      estimatedAdditionalFee
+      transfersUsed
     };
   }, [draftSquad, squad, transferInfo]);
 
@@ -1233,7 +1225,7 @@ export default function MarketPage() {
           Elige 15 jugadores de la Liga 1 con un presupuesto de {budgetCap.toFixed(1)} M.
         </p>
         <p className="mt-1 text-xs text-muted">
-          1 transferencia gratis por ronda; las adicionales cuestan 0.5.
+          Transferencias ilimitadas sin costo por ronda.
         </p>
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
           <span
@@ -1247,18 +1239,9 @@ export default function MarketPage() {
             Max 3 jugadores del mismo club
           </span>
           <span
-            className={
-              "rounded-full border px-3 py-1 " +
-              (transferInfo && transferInfo.transfers_used === 0
-                ? "border-emerald-400/40 text-emerald-200"
-                : "border-amber-400/40 text-amber-200")
-            }
+            className="rounded-full border border-emerald-400/40 px-3 py-1 text-emerald-200"
           >
-            {transferInfo
-              ? transferInfo.transfers_used === 0
-                ? "Transferencia libre disponible"
-                : "Transferencia libre usada"
-              : "Transferencia libre"}
+            Transferencias ilimitadas
           </span>
         </div>
       </div>
@@ -1426,14 +1409,8 @@ export default function MarketPage() {
           {transferInfo ? (
             <div className="rounded-2xl border border-white/10 bg-black/20 p-3 text-xs text-muted">
               <p>
-                Transferencias usadas en la ronda:{" "}
+                Transferencias realizadas en la ronda:{" "}
                 <span className="font-semibold text-ink">{transferInfo.transfers_used}</span>
-              </p>
-              <p>
-                Costo por esta transferencia:{" "}
-                <span className="font-semibold text-ink">
-                  {transferInfo.next_fee.toFixed(1)}
-                </span>
               </p>
             </div>
           ) : null}
@@ -1553,28 +1530,6 @@ export default function MarketPage() {
               <p>
                 Transferencias ya usadas en la ronda:{" "}
                 <span className="font-semibold text-ink">{transferPreview.transfersUsed}</span>
-              </p>
-              <p>
-                Transferencia libre disponible:{" "}
-                <span className="font-semibold text-ink">
-                  {transferPreview.freeTransferAvailable ? "Si" : "No"}
-                </span>
-              </p>
-              <p>
-                Cargo adicional por transferencia:{" "}
-                <span className="font-semibold text-ink">
-                  {transferPreview.additionalFeePerTransfer.toFixed(1)}
-                </span>
-              </p>
-              <p>
-                Transferencias con cargo:{" "}
-                <span className="font-semibold text-ink">{transferPreview.chargeableTransfers}</span>
-              </p>
-              <p>
-                Cargo adicional total estimado:{" "}
-                <span className="font-semibold text-ink">
-                  {transferPreview.estimatedAdditionalFee.toFixed(1)}
-                </span>
               </p>
               {transferPreview.transferCount > 0 ? (
                 <div className="mt-2 space-y-1 rounded-xl border border-white/10 bg-black/20 p-2 text-[11px]">

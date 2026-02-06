@@ -284,7 +284,7 @@ function PlayerFantasyDetails({
                   <div className="flex flex-col items-end gap-1 text-right text-[10px] text-muted">
                     <p>{formatKickoff(fixture.kickoff_at)}</p>
                     <p className="text-ink">Pts {pointsLabel}</p>
-                    <p className="text-[9px] text-muted">{statLine.join(" · ")}</p>
+                    <p className="text-[9px] text-muted">{statLine.join(" \u00B7 ")}</p>
                   </div>
                 </div>
               );
@@ -776,12 +776,23 @@ export default function TeamPage() {
   }, [fixtures]);
 
   const availableRounds = useMemo(() => {
-    const rounds = Array.from(new Set(allFixtures.map((fixture) => fixture.round_number)))
+    const configuredRounds = Array.from(
+      new Set(
+        roundsInfo
+          .map((round) => round.round_number)
+          .filter((round) => Number.isFinite(round))
+      )
+    ).sort((a, b) => a - b);
+    if (configuredRounds.length) {
+      return configuredRounds;
+    }
+
+    const fixtureRounds = Array.from(new Set(allFixtures.map((fixture) => fixture.round_number)))
       .filter((round) => Number.isFinite(round))
       .sort((a, b) => a - b);
-    if (!rounds.length && currentRound) return [currentRound];
-    return rounds;
-  }, [allFixtures, currentRound]);
+    if (!fixtureRounds.length && currentRound) return [currentRound];
+    return fixtureRounds;
+  }, [roundsInfo, allFixtures, currentRound]);
 
   const roundIndex = useMemo(() => {
     if (!currentRound) return -1;
@@ -824,6 +835,20 @@ export default function TeamPage() {
       : `${marketPriceDelta > 0 ? "+" : marketPriceDelta < 0 ? "-" : ""}${Math.abs(
           marketPriceDelta
         ).toFixed(1)}`;
+  const marketPriceDeltaArrow =
+    marketPriceDelta === null
+      ? "\u2022"
+      : marketPriceDelta > 0
+        ? "\u25B2"
+        : marketPriceDelta < 0
+          ? "\u25BC"
+          : "\u2022";
+  const marketPriceDeltaToneClass =
+    marketPriceDelta === null || marketPriceDelta === 0
+      ? "border-white/10 bg-white/5 text-muted"
+      : marketPriceDelta > 0
+        ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-200"
+        : "border-red-400/40 bg-red-500/10 text-red-200";
 
   const selectedPlayer =
     (selectedSlot?.player_id ? squadMap.get(selectedSlot.player_id) : undefined) ||
@@ -1357,6 +1382,7 @@ export default function TeamPage() {
 
   const handleRoundSelect = async (roundNumber: number) => {
     if (!token || roundNumber === currentRound) return;
+    if (!availableRounds.includes(roundNumber)) return;
     setLoading(true);
     setSaveErrors(null);
     try {
@@ -1383,7 +1409,11 @@ export default function TeamPage() {
           ? team.market_price_delta_to_round
           : null
       );
-      setCurrentRound(roundNumber);
+      const resolvedRoundNumber =
+        typeof lineup.round_number === "number" && lineup.round_number > 0
+          ? lineup.round_number
+          : roundNumber;
+      setCurrentRound(resolvedRoundNumber);
       const lineupCaptainId = lineup.captain_player_id ?? null;
       const lineupViceCaptainId = lineup.vice_captain_player_id ?? null;
       const squadById = new Map(
@@ -1398,11 +1428,11 @@ export default function TeamPage() {
       setCaptainId(lineupCaptainId);
       setViceCaptainId(lineupViceCaptainId);
       setRoundMissing(false);
-      const info = roundsInfo.find((round) => round.round_number === lineup.round_number);
+      const info = roundsInfo.find((round) => round.round_number === resolvedRoundNumber);
       setRoundStatus(
         info?.status ? info.status : lineup.is_closed ? "Cerrada" : "Pendiente"
       );
-      setFixtures(allFixtures.filter((fixture) => fixture.round_number === roundNumber));
+      setFixtures(allFixtures.filter((fixture) => fixture.round_number === resolvedRoundNumber));
     } catch (err) {
       setSaveErrors([String(err)]);
     } finally {
@@ -1471,7 +1501,7 @@ export default function TeamPage() {
             disabled={!canPrevRound}
             className="rounded-lg border border-white/10 px-2 py-1 text-ink disabled:opacity-40"
           >
-            ‹
+            {"<"}
           </button>
           <span className="text-muted">Ronda {currentRound ?? "-"}</span>
           <button
@@ -1484,7 +1514,7 @@ export default function TeamPage() {
             disabled={!canNextRound}
             className="rounded-lg border border-white/10 px-2 py-1 text-ink disabled:opacity-40"
           >
-            ›
+            {">"}
           </button>
         </div>
         <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
@@ -1493,14 +1523,16 @@ export default function TeamPage() {
             {teamRoundPointsDisplay}
           </span>
         </div>
-        <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
-          Delta precio{" "}
-          <span className="font-semibold text-ink">
-            {marketDeltaWindowLabel ? `(${marketDeltaWindowLabel})` : ""}
-          </span>
-          :{" "}
-          <span className="font-semibold text-accent">
-            {marketPriceDeltaDisplay}
+        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
+          <span className="font-semibold text-ink">{"\u0394"}</span>
+          {marketDeltaWindowLabel ? (
+            <span className="text-muted">({marketDeltaWindowLabel})</span>
+          ) : null}
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold ${marketPriceDeltaToneClass}`}
+          >
+            <span>{marketPriceDeltaArrow}</span>
+            <span>{marketPriceDeltaDisplay}</span>
           </span>
         </div>
       </div>
@@ -1662,7 +1694,7 @@ export default function TeamPage() {
       {resetConfirmOpen ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
           <div className="glass w-full max-w-sm rounded-2xl border border-white/10 p-4">
-            <p className="text-sm font-semibold text-ink">¿Estás seguro?</p>
+            <p className="text-sm font-semibold text-ink">{"\u00BFEst\u00E1s seguro?"}</p>
             <div className="mt-4 grid grid-cols-2 gap-3">
               <button
                 onClick={() => {
@@ -2128,3 +2160,4 @@ export default function TeamPage() {
     </div>
   );
 }
+

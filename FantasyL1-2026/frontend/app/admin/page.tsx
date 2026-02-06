@@ -10,6 +10,8 @@ import {
   getAdminLogs,
   getAdminPriceMovements,
   getAdminTransfers,
+  restoreAdminTransfers,
+  revertAdminTransfer,
   getAdminRounds,
   getAdminFixtures,
   getAdminMatchStats,
@@ -156,6 +158,8 @@ export default function AdminTeamsPage() {
   const [transferLogs, setTransferLogs] = useState<AdminTransfer[]>([]);
   const [transferLoading, setTransferLoading] = useState(false);
   const [transferError, setTransferError] = useState<string | null>(null);
+  const [transferActionLoading, setTransferActionLoading] = useState(false);
+  const [transferActionMessage, setTransferActionMessage] = useState<string | null>(null);
   const [rounds, setRounds] = useState<AdminRound[]>([]);
   const [roundsLoading, setRoundsLoading] = useState(false);
   const [roundsError, setRoundsError] = useState<string | null>(null);
@@ -814,6 +818,75 @@ export default function AdminTeamsPage() {
       setTransferError(String(err));
     } finally {
       setTransferLoading(false);
+    }
+  };
+
+  const handleRestoreTransfersRound = async () => {
+    if (!adminToken) {
+      setTransferActionMessage("admin_token_required");
+      return;
+    }
+    const roundValue = Number(transferRound);
+    if (!Number.isFinite(roundValue) || roundValue < 1) {
+      setTransferActionMessage("round_required");
+      return;
+    }
+    if (
+      !confirm(
+        `Se anularan y revertiran las transferencias de la ronda ${roundValue}. Esta accion recalcula presupuesto del mercado. Continuar?`
+      )
+    ) {
+      return;
+    }
+
+    setTransferActionLoading(true);
+    setTransferActionMessage(null);
+    setTransferError(null);
+    try {
+      const result = await restoreAdminTransfers(
+        adminToken,
+        roundValue,
+        true,
+        true,
+        true
+      );
+      setTransferActionMessage(
+        `OK | borradas=${result.transfers_deleted} revertidas=${result.swaps_reverted} logs=${result.logs_deleted} omitidas=${result.skipped}`
+      );
+      await handleLoadTransfers();
+      await handleLoad();
+    } catch (err) {
+      setTransferActionMessage(String(err));
+    } finally {
+      setTransferActionLoading(false);
+    }
+  };
+
+  const handleRevertSingleTransfer = async (transferId: number) => {
+    if (!adminToken) {
+      setTransferActionMessage("admin_token_required");
+      return;
+    }
+    if (!confirm(`Anular transferencia #${transferId}?`)) {
+      return;
+    }
+
+    setTransferActionLoading(true);
+    setTransferActionMessage(null);
+    setTransferError(null);
+    try {
+      const result = await revertAdminTransfer(adminToken, transferId, true, true);
+      setTransferActionMessage(
+        result.ok
+          ? `OK | transferencia #${transferId} anulada`
+          : `No anulada | ${result.reason || "unknown"}`
+      );
+      await handleLoadTransfers();
+      await handleLoad();
+    } catch (err) {
+      setTransferActionMessage(String(err));
+    } finally {
+      setTransferActionLoading(false);
     }
   };
 
@@ -2290,8 +2363,18 @@ export default function AdminTeamsPage() {
           >
             Cargar transferencias
           </button>
+          <button
+            onClick={handleRestoreTransfersRound}
+            disabled={transferActionLoading}
+            className="rounded-xl border border-red-400/40 px-4 py-2 text-sm text-red-200 disabled:opacity-50"
+          >
+            Anular ronda
+          </button>
         </div>
         {transferError ? <p className="text-xs text-warning">{transferError}</p> : null}
+        {transferActionMessage ? (
+          <p className="text-xs text-muted">{transferActionMessage}</p>
+        ) : null}
         {transferLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
         {!transferLoading && transferLogs.length === 0 ? (
           <p className="text-xs text-muted">Sin transferencias registradas.</p>
@@ -2326,9 +2409,18 @@ export default function AdminTeamsPage() {
                       {transfer.in_price.toFixed(1)} M - actual {transfer.in_price_current.toFixed(1)} M
                     </p>
                     <p className="text-[11px] text-muted">
-                      Fee {transfer.transfer_fee.toFixed(1)} M - Presupuesto {transfer.budget_after.toFixed(1)} M
+                      Presupuesto {transfer.budget_after.toFixed(1)} M
                     </p>
                   </div>
+                </div>
+                <div className="mt-2 flex justify-end">
+                  <button
+                    onClick={() => handleRevertSingleTransfer(transfer.id)}
+                    disabled={transferActionLoading}
+                    className="rounded-lg border border-red-400/40 px-3 py-1 text-[11px] text-red-200 disabled:opacity-50"
+                  >
+                    Anular
+                  </button>
                 </div>
               </div>
             ))}

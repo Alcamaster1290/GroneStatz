@@ -4,10 +4,10 @@ from collections import Counter
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Iterable, List, Mapping
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import FantasyTeamPlayer, FantasyTransfer, PlayerCatalog
+from app.models import FantasyTeamPlayer, PlayerCatalog
 
 POSITIONS = {"G", "D", "M", "F"}
 
@@ -188,22 +188,9 @@ def validate_transfer(
     transfer_fee_override: float | None = None,
 ) -> List[str]:
     errors: List[str] = []
-
-    if transfer_fee_override is None:
-        existing_count = (
-            db.execute(
-                select(func.count())
-                .select_from(FantasyTransfer)
-                .where(
-                    FantasyTransfer.fantasy_team_id == fantasy_team_id,
-                    FantasyTransfer.round_id == round_id,
-                )
-            ).scalar()
-            or 0
-        )
-        next_transfer_fee = 0.0 if existing_count == 0 else 0.5
-    else:
-        next_transfer_fee = max(0.0, float(transfer_fee_override))
+    # Transferencias sin costo: no se aplica fee por cantidad.
+    _ = transfer_fee_override
+    next_transfer_fee = 0.0
 
     squad_rows = (
         db.execute(
@@ -249,18 +236,14 @@ def validate_transfer(
         return errors
 
     new_ids = [pid for pid in squad_ids if pid != out_player_id] + [in_player_id]
-    out_bought_price = _round_price(out_row.bought_price)
-    out_current_price = _round_price(out_row.price_current)
-    realized_gain = out_current_price - out_bought_price
     effective_cap = (
         _round_price(budget_cap)
-        + realized_gain
         - _round_price(next_transfer_fee)
     ).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
 
     # Budget for transfer validation follows team accounting:
     # keep existing bought prices, replace outgoing with incoming current price.
-    # Realize outgoing player gain/loss so transfers can use market appreciation.
+    # Transfer fees are applied outside this map via effective_cap.
     budget_prices = {
         row.player_id: _round_price(row.bought_price)
         for row in squad_rows

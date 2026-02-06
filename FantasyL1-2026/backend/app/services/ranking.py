@@ -208,7 +208,12 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
                     FantasyTeamPlayer.fantasy_team_id,
                     FantasyTeamPlayer.player_id,
                     FantasyTeamPlayer.bought_round_id,
-                ).where(FantasyTeamPlayer.fantasy_team_id.in_(team_ids))
+                )
+                .join(
+                    PlayerCatalog,
+                    PlayerCatalog.player_id == FantasyTeamPlayer.player_id,
+                )
+                .where(FantasyTeamPlayer.fantasy_team_id.in_(team_ids))
             ).all()
             players_by_team: Dict[int, list[tuple[int, int | None]]] = {}
             for team_id_row, player_id, bought_round_id in team_player_rows:
@@ -241,9 +246,12 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
                 }
 
             for team_id in team_ids:
+                # Keep pending-round delta aligned with Team tab behavior:
+                # sum movement once per player id in the canonical 15-player squad.
+                unique_player_ids = set(canonical_player_ids_by_team.get(team_id, []))
                 total_delta = sum(
                     movement_map.get(player_id, 0.0)
-                    for player_id in canonical_player_ids_by_team.get(team_id, [])
+                    for player_id in unique_player_ids
                 )
                 pending_delta_map[team_id] = _round_tenth(total_delta)
 

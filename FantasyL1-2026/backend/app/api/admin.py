@@ -68,6 +68,233 @@ from app.services.scoring import calc_match_points, recalc_round_points
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
 
+def _round_price(value: float | Decimal) -> Decimal:
+    return Decimal(str(value)).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+
+
+def _sort_key_by_bought_round(
+    bought_round_id: int | None,
+    player_id: int,
+) -> tuple[int, int, int]:
+    return (
+        1 if bought_round_id is None else 0,
+        -(bought_round_id or 0),
+        player_id,
+    )
+
+
+def _resolve_round_for_transfer_admin(
+    db: Session,
+    season_id: int,
+    round_number: int | None,
+) -> Round | None:
+    round_obj = (
+        get_round_by_number(db, season_id, round_number)
+        if round_number is not None
+        else (
+            db.execute(
+                select(Round)
+                .where(Round.season_id == season_id, Round.is_closed.is_(False))
+                .order_by(Round.round_number)
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
+    )
+    if round_obj is None and round_number is None:
+        round_obj = (
+            db.execute(
+                select(Round)
+                .where(Round.season_id == season_id)
+                .order_by(Round.round_number.desc())
+                .limit(1)
+            )
+            .scalars()
+            .first()
+        )
+    return round_obj
+
+
+def _get_team_player_ids(db: Session, fantasy_team_id: int) -> set[int]:
+    return set(
+        db.execute(
+            select(FantasyTeamPlayer.player_id).where(
+                FantasyTeamPlayer.fantasy_team_id == fantasy_team_id
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+
+def _get_team_player_ids_for_delta(db: Session, fantasy_team_id: int) -> list[int]:
+    rows = (
+        db.execute(
+            select(FantasyTeamPlayer.player_id, FantasyTeamPlayer.bought_round_id)
+            .join(
+                PlayerCatalog,
+                PlayerCatalog.player_id == FantasyTeamPlayer.player_id,
+            )
+            .where(FantasyTeamPlayer.fantasy_team_id == fantasy_team_id)
+        )
+        .all()
+    )
+    if len(rows) <= 15:
+        return [player_id for player_id, _ in rows]
+    rows_sorted = sorted(
+        rows,
+        key=lambda row: _sort_key_by_bought_round(row.bought_round_id, row.player_id),
+    )
+    return [player_id for player_id, _ in rows_sorted[:15]]
+
+
+def _get_transfer_count_for_round(db: Session, fantasy_team_id: int, round_id: int) -> int:
+    return int(
+        db.execute(
+            select(func.count())
+            .select_from(FantasyTransfer)
+            .where(
+                FantasyTransfer.fantasy_team_id == fantasy_team_id,
+                FantasyTransfer.round_id == round_id,
+            )
+        ).scalar()
+        or 0
+    )
+
+
+def _get_transfer_fee_total_for_count(transfer_count: int) -> Decimal:
+    _ = transfer_count
+    return Decimal("0.0")
+
+
+def _ensure_squad_integrity(db: Session, fantasy_team_id: int, strict: bool) -> None:
+    if not strict:
+        return
+    squad_count = int(
+        db.execute(
+            select(func.count())
+            .select_from(FantasyTeamPlayer)
+            .where(FantasyTeamPlayer.fantasy_team_id == fantasy_team_id)
+        ).scalar()
+        or 0
+    )
+    if squad_count != 15:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"transfer_revert_invalid_squad_size:team={fantasy_team_id}:count={squad_count}",
+        )
+
+
+def _recompute_team_budget_cap_for_round(
+    db: Session,
+    season_id: int,
+    round_obj: Round,
+    team: FantasyTeam,
+) -> Decimal:
+    if round_obj.round_number <= 1:
+        team.budget_cap = _round_price(Decimal("100.0"))
+        return team.budget_cap
+
+    if round_obj.is_closed:
+        return _round_price(team.budget_cap)
+
+    prev_closed_round = (
+        db.execute(
+            select(Round)
+            .where(
+                Round.season_id == season_id,
+                Round.is_closed.is_(True),
+                Round.round_number < round_obj.round_number,
+            )
+            .order_by(Round.round_number.desc())
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+
+    market_delta_total = Decimal("0.0")
+    if prev_closed_round is not None:
+        player_ids = _get_team_player_ids_for_delta(db, team.id)
+        if player_ids:
+            delta_total = (
+                db.execute(
+                    select(func.coalesce(func.sum(PriceMovement.delta), 0)).where(
+                        PriceMovement.season_id == season_id,
+                        PriceMovement.round_id == prev_closed_round.id,
+                        PriceMovement.player_id.in_(player_ids),
+                    )
+                ).scalar()
+                or 0
+            )
+            market_delta_total = _round_price(delta_total)
+
+    transfer_count = _get_transfer_count_for_round(db, team.id, round_obj.id)
+    fee_total = _get_transfer_fee_total_for_count(transfer_count)
+    effective_cap = _round_price(Decimal("100.0") + market_delta_total - fee_total)
+    team.budget_cap = effective_cap
+    return effective_cap
+
+
+def _revert_transfer_row(
+    db: Session,
+    transfer: FantasyTransfer,
+    round_obj: Round,
+    strict: bool,
+) -> tuple[str, str | None]:
+    team_player_ids = _get_team_player_ids(db, transfer.fantasy_team_id)
+    has_in = transfer.in_player_id in team_player_ids
+    has_out = transfer.out_player_id in team_player_ids
+
+    if has_in and not has_out:
+        out_player = db.get(PlayerCatalog, transfer.out_player_id)
+        if out_player is None:
+            reason = f"out_player_not_found:{transfer.out_player_id}"
+            if strict:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"transfer_revert_conflict:transfer_id={transfer.id}:{reason}",
+                )
+            return "skipped", reason
+
+        db.execute(
+            delete(FantasyTeamPlayer).where(
+                FantasyTeamPlayer.fantasy_team_id == transfer.fantasy_team_id,
+                FantasyTeamPlayer.player_id == transfer.in_player_id,
+            )
+        )
+        db.add(
+            FantasyTeamPlayer(
+                fantasy_team_id=transfer.fantasy_team_id,
+                player_id=transfer.out_player_id,
+                bought_price=float(out_player.price_current),
+                bought_round_id=round_obj.id,
+                is_active=True,
+            )
+        )
+        db.flush()
+        db.delete(transfer)
+        return "reverted", None
+
+    if (not has_in) and has_out:
+        # The squad was already restored manually; drop stale transfer log.
+        db.delete(transfer)
+        return "log_deleted", None
+
+    reason = (
+        "both_players_present"
+        if has_in and has_out
+        else "both_players_missing"
+    )
+    if strict:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"transfer_revert_conflict:transfer_id={transfer.id}:{reason}",
+        )
+    return "skipped", reason
+
+
 def _ensure_fixture_teams(
     db: Session,
     home_team_id: Optional[int],
@@ -1105,23 +1332,12 @@ def list_transfers(
         for _, team, _, _, _, _ in rows
     }
 
-    fee_by_transfer_id: Dict[int, float] = {}
-    grouped: Dict[tuple[int, int], List[FantasyTransfer]] = {}
-    for transfer, team, _, _, _, _ in rows:
-        grouped.setdefault((team.id, transfer.round_id), []).append(transfer)
-
-    for transfers in grouped.values():
-        sorted_transfers = sorted(transfers, key=lambda t: (t.created_at, t.id))
-        for index, transfer in enumerate(sorted_transfers):
-            fee_by_transfer_id[transfer.id] = 0.0 if index == 0 else 0.5
-
     sorted_by_time = sorted(rows, key=lambda row: row[0].created_at, reverse=True)
-    budget_offset: Dict[int, float] = {team_id: 0.0 for team_id in current_budget_map}
 
     results: List[AdminTransferOut] = []
     for transfer, team, user, round_no, out_p, in_p in sorted_by_time:
-        fee = fee_by_transfer_id.get(transfer.id, 0.0)
-        budget_after = current_budget_map.get(team.id, 0.0) + budget_offset.get(team.id, 0.0)
+        fee = 0.0
+        budget_after = current_budget_map.get(team.id, 0.0)
         results.append(
             AdminTransferOut(
                 id=transfer.id,
@@ -1160,7 +1376,6 @@ def list_transfers(
                 budget_after=budget_after,
             )
         )
-        budget_offset[team.id] = budget_offset.get(team.id, 0.0) + fee
     return results
 
 
@@ -1168,94 +1383,220 @@ def list_transfers(
 def restore_transfers_for_round(
     round_number: Optional[int] = Query(default=None, ge=1),
     reimburse_fees: bool = Query(default=True),
+    revert_squad: bool = Query(default=True),
+    strict: bool = Query(default=True),
     db: Session = Depends(get_db),
 ) -> dict:
     season = get_or_create_season(db)
-    round_obj = (
-        get_round_by_number(db, season.id, round_number)
-        if round_number is not None
-        else (
-            db.execute(
-                select(Round)
-                .where(Round.season_id == season.id, Round.is_closed.is_(False))
-                .order_by(Round.round_number)
-                .limit(1)
-            )
-            .scalars()
-            .first()
-        )
-    )
-    if round_obj is None and round_number is None:
-        round_obj = (
-            db.execute(
-                select(Round)
-                .where(Round.season_id == season.id)
-                .order_by(Round.round_number.desc())
-                .limit(1)
-            )
-            .scalars()
-            .first()
-        )
+    round_obj = _resolve_round_for_transfer_admin(db, season.id, round_number)
     if not round_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
 
-    transfer_rows = db.execute(
-        select(FantasyTransfer.id, FantasyTransfer.fantasy_team_id).where(
-            FantasyTransfer.round_id == round_obj.id
+    transfers = (
+        db.execute(
+            select(FantasyTransfer)
+            .where(FantasyTransfer.round_id == round_obj.id)
+            .order_by(FantasyTransfer.created_at.desc(), FantasyTransfer.id.desc())
         )
-    ).all()
-    if not transfer_rows:
+        .scalars()
+        .all()
+    )
+    if not transfers:
         return {
             "ok": True,
             "round_number": round_obj.round_number,
             "transfers_deleted": 0,
             "teams_affected": 0,
+            "swaps_reverted": 0,
+            "logs_deleted": 0,
+            "skipped": 0,
             "fees_reimbursed_total": 0.0,
             "teams_reimbursed": 0,
+            "teams_recomputed": 0,
             "note": "no_transfers_found",
         }
 
-    transfers_by_team: Dict[int, int] = {}
-    for _, fantasy_team_id in transfer_rows:
-        transfers_by_team[fantasy_team_id] = transfers_by_team.get(fantasy_team_id, 0) + 1
+    original_count_by_team: Dict[int, int] = {}
+    for transfer in transfers:
+        original_count_by_team[transfer.fantasy_team_id] = (
+            original_count_by_team.get(transfer.fantasy_team_id, 0) + 1
+        )
 
+    deleted_count_by_team: Dict[int, int] = {}
+    affected_team_ids: set[int] = set()
+    swaps_reverted = 0
+    logs_deleted = 0
+    skipped = 0
+    skipped_details: List[dict] = []
+
+    if revert_squad:
+        for transfer in transfers:
+            affected_team_ids.add(transfer.fantasy_team_id)
+            status_label, reason = _revert_transfer_row(
+                db,
+                transfer,
+                round_obj,
+                strict=strict,
+            )
+            if status_label == "reverted":
+                swaps_reverted += 1
+                deleted_count_by_team[transfer.fantasy_team_id] = (
+                    deleted_count_by_team.get(transfer.fantasy_team_id, 0) + 1
+                )
+            elif status_label == "log_deleted":
+                logs_deleted += 1
+                deleted_count_by_team[transfer.fantasy_team_id] = (
+                    deleted_count_by_team.get(transfer.fantasy_team_id, 0) + 1
+                )
+            else:
+                skipped += 1
+                skipped_details.append(
+                    {
+                        "transfer_id": transfer.id,
+                        "fantasy_team_id": transfer.fantasy_team_id,
+                        "reason": reason or "unknown",
+                    }
+                )
+    else:
+        transfer_ids = [transfer.id for transfer in transfers]
+        db.execute(delete(FantasyTransfer).where(FantasyTransfer.id.in_(transfer_ids)))
+        for transfer in transfers:
+            affected_team_ids.add(transfer.fantasy_team_id)
+            deleted_count_by_team[transfer.fantasy_team_id] = (
+                deleted_count_by_team.get(transfer.fantasy_team_id, 0) + 1
+            )
+        logs_deleted = len(transfer_ids)
+
+    teams_recomputed = 0
     fees_reimbursed_total = Decimal("0.0")
     teams_reimbursed = 0
-    if reimburse_fees:
-        team_ids = list(transfers_by_team.keys())
-        teams = (
-            db.execute(select(FantasyTeam).where(FantasyTeam.id.in_(team_ids)))
-            .scalars()
-            .all()
-        )
-        teams_by_id = {team.id: team for team in teams}
-        for team_id, transfer_count in transfers_by_team.items():
-            reimbursed = max(0, transfer_count - 1) * Decimal("0.5")
+
+    team_ids_to_update = sorted(affected_team_ids)
+    teams = (
+        db.execute(select(FantasyTeam).where(FantasyTeam.id.in_(team_ids_to_update)))
+        .scalars()
+        .all()
+        if team_ids_to_update
+        else []
+    )
+    teams_by_id = {team.id: team for team in teams}
+
+    for team_id in team_ids_to_update:
+        _ensure_squad_integrity(db, team_id, strict=strict)
+
+    if not round_obj.is_closed:
+        for team_id in team_ids_to_update:
+            team = teams_by_id.get(team_id)
+            if not team:
+                continue
+            _recompute_team_budget_cap_for_round(db, season.id, round_obj, team)
+            teams_recomputed += 1
+    elif reimburse_fees:
+        for team_id, before_count in original_count_by_team.items():
+            deleted_count = deleted_count_by_team.get(team_id, 0)
+            if deleted_count <= 0:
+                continue
+            after_count = max(0, before_count - deleted_count)
+            fee_before = _get_transfer_fee_total_for_count(before_count)
+            fee_after = _get_transfer_fee_total_for_count(after_count)
+            reimbursed = fee_before - fee_after
             if reimbursed <= 0:
                 continue
             team = teams_by_id.get(team_id)
             if not team:
                 continue
-            new_budget = (
-                Decimal(str(team.budget_cap)) + reimbursed
-            ).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
-            team.budget_cap = new_budget
+            team.budget_cap = _round_price(Decimal(str(team.budget_cap)) + reimbursed)
             fees_reimbursed_total += reimbursed
             teams_reimbursed += 1
 
-    transfer_ids = [transfer_id for transfer_id, _ in transfer_rows]
-    db.execute(delete(FantasyTransfer).where(FantasyTransfer.id.in_(transfer_ids)))
     db.commit()
 
     return {
         "ok": True,
         "round_number": round_obj.round_number,
-        "transfers_deleted": len(transfer_ids),
-        "teams_affected": len(transfers_by_team),
-        "fees_reimbursed_total": float(
-            fees_reimbursed_total.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
-        ),
+        "transfers_deleted": int(sum(deleted_count_by_team.values())),
+        "teams_affected": len(team_ids_to_update),
+        "swaps_reverted": swaps_reverted,
+        "logs_deleted": logs_deleted,
+        "skipped": skipped,
+        "skipped_details": skipped_details,
+        "revert_squad": bool(revert_squad),
+        "strict": bool(strict),
+        "fees_reimbursed_total": float(_round_price(fees_reimbursed_total)),
         "teams_reimbursed": teams_reimbursed,
+        "teams_recomputed": teams_recomputed,
+    }
+
+
+@router.post("/transfers/{transfer_id}/revert")
+def revert_transfer_by_id(
+    transfer_id: int,
+    strict: bool = Query(default=True),
+    reimburse_fees: bool = Query(default=True),
+    db: Session = Depends(get_db),
+) -> dict:
+    season = get_or_create_season(db)
+    row = (
+        db.execute(
+            select(FantasyTransfer, Round)
+            .join(Round, Round.id == FantasyTransfer.round_id)
+            .join(FantasyTeam, FantasyTeam.id == FantasyTransfer.fantasy_team_id)
+            .where(
+                FantasyTransfer.id == transfer_id,
+                Round.season_id == season.id,
+                FantasyTeam.season_id == season.id,
+            )
+        )
+        .first()
+    )
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="transfer_not_found")
+
+    transfer, round_obj = row
+    team = db.get(FantasyTeam, transfer.fantasy_team_id)
+    if team is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="team_not_found")
+
+    before_count = _get_transfer_count_for_round(db, team.id, round_obj.id)
+    status_label, reason = _revert_transfer_row(
+        db,
+        transfer,
+        round_obj,
+        strict=strict,
+    )
+
+    if status_label == "skipped":
+        db.commit()
+        return {
+            "ok": False,
+            "transfer_id": transfer_id,
+            "status": "skipped",
+            "reason": reason or "unknown",
+        }
+
+    _ensure_squad_integrity(db, team.id, strict=strict)
+
+    fees_reimbursed_total = Decimal("0.0")
+    if not round_obj.is_closed:
+        _recompute_team_budget_cap_for_round(db, season.id, round_obj, team)
+    elif reimburse_fees:
+        after_count = max(0, before_count - 1)
+        fee_before = _get_transfer_fee_total_for_count(before_count)
+        fee_after = _get_transfer_fee_total_for_count(after_count)
+        reimbursed = fee_before - fee_after
+        if reimbursed > 0:
+            team.budget_cap = _round_price(Decimal(str(team.budget_cap)) + reimbursed)
+            fees_reimbursed_total = reimbursed
+
+    db.commit()
+
+    return {
+        "ok": True,
+        "transfer_id": transfer_id,
+        "round_number": round_obj.round_number,
+        "fantasy_team_id": team.id,
+        "status": status_label,
+        "fees_reimbursed_total": float(_round_price(fees_reimbursed_total)),
     }
 
 
