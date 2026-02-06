@@ -104,6 +104,7 @@ export default function SettingsPage() {
   const welcomeKey = `fantasy_welcome_seen_${userEmail && userEmail.trim() ? userEmail.trim() : "anon"}`;
   const appChannel = process.env.NEXT_PUBLIC_APP_CHANNEL || "mobile";
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || "dev";
+  const pushSectionVisible = appChannel !== "web";
 
   useEffect(() => {
     if (!token) return;
@@ -303,30 +304,32 @@ export default function SettingsPage() {
         {favoriteError ? <p className="text-xs text-warning">{favoriteError}</p> : null}
       </div>
 
-      <div className="glass space-y-3 rounded-2xl p-4">
-        <p className="text-sm text-muted">Notificaciones moviles</p>
-        <p className="text-xs text-muted">
-          {nativePushAvailable
-            ? "Recibe alertas 24h antes de cerrar cada ronda."
-            : "Activalas desde la app movil instalada (Capacitor)."}
-        </p>
-        <button
-          onClick={pushEnabled ? handleDisablePush : handleEnablePush}
-          disabled={pushLoading || !nativePushAvailable}
-          className={
-            "w-full rounded-xl px-4 py-2 text-sm font-semibold " +
-            (pushEnabled ? "border border-white/10 text-ink" : "bg-accent text-black")
-          }
-        >
-          {pushLoading
-            ? "Procesando..."
-            : pushEnabled
-              ? "Desactivar notificaciones"
-              : "Activar notificaciones"}
-        </button>
-        {pushMessage ? <p className="text-xs text-accent2">{pushMessage}</p> : null}
-        {pushError ? <p className="text-xs text-warning">{pushError}</p> : null}
-      </div>
+      {pushSectionVisible ? (
+        <div className="glass space-y-3 rounded-2xl p-4">
+          <p className="text-sm text-muted">Notificaciones moviles</p>
+          <p className="text-xs text-muted">
+            {nativePushAvailable
+              ? "Recibe alertas 24h antes de cerrar cada ronda."
+              : "Activalas desde la app movil instalada (Capacitor)."}
+          </p>
+          <button
+            onClick={pushEnabled ? handleDisablePush : handleEnablePush}
+            disabled={pushLoading || !nativePushAvailable}
+            className={
+              "w-full rounded-xl px-4 py-2 text-sm font-semibold " +
+              (pushEnabled ? "border border-white/10 text-ink" : "bg-accent text-black")
+            }
+          >
+            {pushLoading
+              ? "Procesando..."
+              : pushEnabled
+                ? "Desactivar notificaciones"
+                : "Activar notificaciones"}
+          </button>
+          {pushMessage ? <p className="text-xs text-accent2">{pushMessage}</p> : null}
+          {pushError ? <p className="text-xs text-warning">{pushError}</p> : null}
+        </div>
+      ) : null}
 
       <button
         onClick={handleLogout}
