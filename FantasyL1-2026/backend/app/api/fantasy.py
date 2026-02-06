@@ -51,6 +51,73 @@ from app.services.validation import validate_lineup, validate_squad, validate_tr
 router = APIRouter(prefix="/fantasy", tags=["fantasy"])
 
 
+def _round_price(value: float | Decimal) -> Decimal:
+    return Decimal(str(value)).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+
+
+def _resolve_effective_budget_cap(
+    base_budget_cap: float,
+    market_price_delta: float | None,
+) -> float:
+    base_cap = _round_price(base_budget_cap)
+    if market_price_delta is None or market_price_delta <= 0:
+        return float(base_cap)
+
+    boosted_cap = _round_price(Decimal("100.0") + Decimal(str(market_price_delta)))
+    return float(boosted_cap if boosted_cap > base_cap else base_cap)
+
+
+def _get_pending_round_market_delta_total(
+    db: Session,
+    season_id: int,
+    fantasy_team_id: int,
+    round_obj: Round | None,
+) -> float | None:
+    if not round_obj or round_obj.is_closed:
+        return None
+
+    prev_closed_round = (
+        db.execute(
+            select(Round)
+            .where(
+                Round.season_id == season_id,
+                Round.is_closed.is_(True),
+                Round.round_number < round_obj.round_number,
+            )
+            .order_by(Round.round_number.desc())
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+    if not prev_closed_round:
+        return None
+
+    player_ids = (
+        db.execute(
+            select(FantasyTeamPlayer.player_id).where(
+                FantasyTeamPlayer.fantasy_team_id == fantasy_team_id
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if not player_ids:
+        return 0.0
+
+    delta_total = (
+        db.execute(
+            select(func.coalesce(func.sum(PriceMovement.delta), 0)).where(
+                PriceMovement.season_id == season_id,
+                PriceMovement.round_id == prev_closed_round.id,
+                PriceMovement.player_id.in_(player_ids),
+            )
+        ).scalar()
+        or 0
+    )
+    return float(_round_price(delta_total))
+
+
 def _build_team_response(
     db: Session, fantasy_team_id: int, round_number: Optional[int] = None
 ) -> FantasyTeamOut:
@@ -207,15 +274,19 @@ def _build_team_response(
             )
         )
 
+    effective_budget_cap = _resolve_effective_budget_cap(
+        float(team.budget_cap),
+        market_price_delta_total,
+    )
     budget_used = sum(float(team_player.bought_price) for _, team_player in rows)
-    budget_left = float(team.budget_cap) - budget_used
+    budget_left = effective_budget_cap - budget_used
     club_counts = get_club_counts(db, fantasy_team_id)
 
     return FantasyTeamOut(
         id=team.id,
         name=team.name,
         favorite_team_id=team.favorite_team_id,
-        budget_cap=float(team.budget_cap),
+        budget_cap=effective_budget_cap,
         budget_used=budget_used,
         budget_left=budget_left,
         club_counts=club_counts,
@@ -256,11 +327,18 @@ def update_squad(
 ) -> ValidationResult:
     season = get_or_create_season(db)
     team = get_or_create_fantasy_team(db, user.id, season.id)
-    errors = validate_squad(db, payload.player_ids, budget_cap=float(team.budget_cap))
+    current_round = get_current_round(db, season.id)
+    market_delta_total = _get_pending_round_market_delta_total(
+        db, season.id, team.id, current_round
+    )
+    effective_budget_cap = _resolve_effective_budget_cap(
+        float(team.budget_cap),
+        market_delta_total,
+    )
+    errors = validate_squad(db, payload.player_ids, budget_cap=effective_budget_cap)
     if errors:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors)
 
-    current_round = get_current_round(db, season.id)
     round_id = current_round.id if current_round else None
     replace_squad(db, team.id, payload.player_ids, bought_round_id=round_id)
     return ValidationResult(ok=True, errors=[])
@@ -453,13 +531,21 @@ def transfer_player(
     if not round_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
 
+    market_delta_total = _get_pending_round_market_delta_total(
+        db, season.id, team.id, round_obj
+    )
+    effective_budget_cap = _resolve_effective_budget_cap(
+        float(team.budget_cap),
+        market_delta_total,
+    )
+
     errors = validate_transfer(
         db,
         team.id,
         round_obj.id,
         payload.out_player_id,
         payload.in_player_id,
-        budget_cap=float(team.budget_cap),
+        budget_cap=effective_budget_cap,
     )
     if errors:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors)
@@ -519,8 +605,9 @@ def transfer_player(
         str(out_team_player.bought_price)
     )
     cap_delta = realized_gain - Decimal(str(transfer_fee))
-    if cap_delta != 0:
-        new_cap = Decimal(str(team.budget_cap)) + cap_delta
+    cap_base = _round_price(max(float(team.budget_cap), effective_budget_cap))
+    if cap_delta != 0 or cap_base != _round_price(team.budget_cap):
+        new_cap = cap_base + cap_delta
         team.budget_cap = new_cap.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
     db.commit()
     db.refresh(transfer)
