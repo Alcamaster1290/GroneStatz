@@ -1160,24 +1160,11 @@ export default function MarketPage() {
     setSaveMessage(null);
   };
 
-  const handleSaveTeam = () => {
-    if (!token) return;
-    setErrorPopup(null);
-    setSaveMessage(null);
-    setPostSavePromptOpen(false);
-    setPostSaveLaterOpen(false);
-    getTransferCount(token)
-      .then(setTransferInfo)
-      .catch(() => setTransferInfo(null));
-    setConfirmOpen(true);
-  };
-
-  const handleConfirmSaveTeam = async () => {
+  const handleSaveTeam = async () => {
     if (!token) return;
     setErrorPopup(null);
     setSaveMessage(null);
     setSaving(true);
-    setConfirmOpen(false);
     const validationErrors = validateSquad(draftSquad, budgetCap);
     if (validationErrors.length > 0) {
       setErrorPopup(validationErrors);
@@ -1502,70 +1489,6 @@ export default function MarketPage() {
             >
               Entendido
             </button>
-          </div>
-        </div>
-      ) : null}
-
-      {confirmOpen ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
-          <div className="glass w-full max-w-sm space-y-4 rounded-2xl border border-white/10 p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-ink">Confirmar guardado</p>
-              <button
-                onClick={() => setConfirmOpen(false)}
-                className="text-xs text-muted"
-                aria-label="Cerrar"
-              >
-                X
-              </button>
-            </div>
-            <p className="text-xs text-muted">
-              Estas seguro que quieres guardar este equipo?
-            </p>
-            <div className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs text-muted">
-              <p>
-                Transferencias detectadas:{" "}
-                <span className="font-semibold text-ink">{transferPreview.transferCount}</span>
-              </p>
-              <p>
-                Transferencias ya usadas en la ronda:{" "}
-                <span className="font-semibold text-ink">{transferPreview.transfersUsed}</span>
-              </p>
-              {transferPreview.transferCount > 0 ? (
-                <div className="mt-2 space-y-1 rounded-xl border border-white/10 bg-black/20 p-2 text-[11px]">
-                  <p className="font-semibold text-ink">Preboleta de cambios</p>
-                  {Array.from({ length: transferPreview.transferCount }).map((_, index) => {
-                    const out = transferPreview.outgoing[index];
-                    const incoming = transferPreview.incoming[index];
-                    return (
-                      <p key={`${out?.player_id ?? "out"}-${incoming?.player_id ?? "in"}-${index}`}>
-                        {out?.short_name || out?.name || "?"} {"->"} {incoming?.short_name || incoming?.name || "?"}
-                      </p>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="mt-2 text-[11px]">No hay transferencias pendientes en este guardado.</p>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setConfirmOpen(false)}
-                className="flex-1 rounded-xl border border-white/20 px-4 py-2 text-sm text-ink"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleConfirmSaveTeam}
-                disabled={saving}
-                className={
-                  "flex-1 rounded-xl px-4 py-2 text-sm font-semibold " +
-                  (!saving ? "bg-accent text-black" : "border border-white/10 text-muted")
-                }
-              >
-                Guardar
-              </button>
-            </div>
           </div>
         </div>
       ) : null}

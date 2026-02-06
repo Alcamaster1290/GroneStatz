@@ -528,6 +528,7 @@ export default function TeamPage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [marketPriceDelta, setMarketPriceDelta] = useState<number | null>(null);
   const router = useRouter();
+  const [deltaOpen, setDeltaOpen] = useState(false);
 
   const formatError = (code: string) => {
     const positionCounts = squad.reduce(
@@ -1505,7 +1506,14 @@ export default function TeamPage() {
           </span>
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
-          <span className="font-semibold text-ink">{"\u25B3"} precio:</span>
+          <button
+            type="button"
+            onClick={() => setDeltaOpen(true)}
+            className="inline-flex items-center gap-2 font-semibold text-ink"
+            aria-label="Ver detalle delta"
+          >
+            {"\u25B3"} precio:
+          </button>
           <span
             className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold ${marketPriceDeltaToneClass}`}
           >
@@ -1693,6 +1701,59 @@ export default function TeamPage() {
           </div>
         </div>
       ) : null}
+
+      <BottomSheet
+        open={deltaOpen}
+        onClose={() => setDeltaOpen(false)}
+        title="Detalle de delta de precio"
+      >
+        <div className="max-h-[70vh] space-y-3 overflow-auto pr-1 text-xs text-muted">
+          {squad.length === 0 ? (
+            <p>Sin jugadores para mostrar.</p>
+          ) : (
+            squad
+              .slice(0, 15)
+              .sort((a, b) => (a.position || "").localeCompare(b.position || "") || a.player_id - b.player_id)
+              .map((player) => (
+                <div
+                  key={player.player_id}
+                  className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <PlayerFace playerId={player.player_id} sizeClass="h-9 w-9" />
+                    <div>
+                      <p className="text-sm font-semibold text-ink">
+                        {player.short_name || player.shortName || player.name}
+                      </p>
+                      <p className="text-[10px] uppercase text-muted">{player.position}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-muted">Δ</p>
+                    <p
+                      className={
+                        "text-sm font-semibold " +
+                        (typeof player.price_delta === "number"
+                          ? player.price_delta > 0
+                            ? "text-emerald-200"
+                            : player.price_delta < 0
+                              ? "text-red-200"
+                              : "text-ink"
+                          : "text-muted")
+                      }
+                    >
+                      {typeof player.price_delta === "number"
+                        ? `${player.price_delta > 0 ? "+" : player.price_delta < 0 ? "-" : ""}${Math.abs(
+                            player.price_delta
+                          ).toFixed(1)}`
+                        : "--"}
+                    </p>
+                  </div>
+                </div>
+              ))
+          )}
+        </div>
+      </BottomSheet>
 
       <FabMenu onSave={handleSave} />
 
