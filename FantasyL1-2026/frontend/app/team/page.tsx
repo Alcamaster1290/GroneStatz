@@ -833,6 +833,25 @@ export default function TeamPage() {
     ? opponentByTeamId.get(selectedPlayer.team_id)
     : undefined;
 
+  const normalizeLineupSlots = (
+    slots: LineupSlot[],
+    squadById: Map<number, Player>,
+    isClosedRound: boolean
+  ) =>
+    slots.map((slot) => {
+      if (!slot.player_id) {
+        return { ...slot, player: null };
+      }
+      const squadPlayer = squadById.get(slot.player_id);
+      if (squadPlayer) {
+        return { ...slot, role: squadPlayer.position, player: null };
+      }
+      if (isClosedRound && slot.player) {
+        return { ...slot, role: slot.player.position, player: slot.player };
+      }
+      return { ...slot, player_id: null, player: null };
+    });
+
   useEffect(() => {
     if (!selectedPlayer) {
       setPlayerMatches([]);
@@ -869,7 +888,7 @@ export default function TeamPage() {
       setLoading(true);
       try {
         const team = await getTeam(token);
-        setSquad(team.squad || []);
+        setSquad(team.squad || [], team.budget_cap);
         setMarketPriceDelta(
           typeof team.market_price_delta === "number" ? team.market_price_delta : null
         );
@@ -904,20 +923,11 @@ export default function TeamPage() {
           const squadById = new Map(
             (team.squad || []).map((player) => [player.player_id, player])
           );
-          const normalizedSlots = (lineup.slots || []).map((slot) => {
-            if (slot.player_id) {
-              const player = squadById.get(slot.player_id);
-              const fallbackPlayer = slot.player ?? null;
-              if (player) {
-                return { ...slot, role: player.position, player: fallbackPlayer };
-              }
-              if (fallbackPlayer) {
-                return { ...slot, role: fallbackPlayer.position, player: fallbackPlayer };
-              }
-              return { ...slot, player: fallbackPlayer };
-            }
-            return { ...slot, player: slot.player ?? null };
-          });
+          const normalizedSlots = normalizeLineupSlots(
+            lineup.slots || [],
+            squadById,
+            Boolean(lineup.is_closed)
+          );
             const draftKeyForRound = `fantasy_lineup_draft_${(userEmail || "anon").trim() || "anon"}_${lineup.round_number}`;
             const storedDraft = localStorage.getItem(draftKeyForRound);
             if (storedDraft) {
@@ -1151,10 +1161,12 @@ export default function TeamPage() {
 
   const applyPlayerToSlot = (slot: LineupSlot, playerId: number | null) => {
     if (!playerId) {
-      return { ...slot, player_id: null };
+      return { ...slot, player_id: null, player: null };
     }
     const role = resolveRoleForPlayer(playerId);
-    return role ? { ...slot, player_id: playerId, role } : { ...slot, player_id: playerId };
+    return role
+      ? { ...slot, player_id: playerId, role, player: null }
+      : { ...slot, player_id: playerId, player: null };
   };
 
   const handleDragEnd = (event: any) => {
@@ -1173,7 +1185,7 @@ export default function TeamPage() {
       setLineupSlots((prevSlots) =>
         prevSlots.map((slot) => {
           if (slot.player_id === playerId) {
-            return { ...slot, player_id: null };
+            return applyPlayerToSlot(slot, null);
           }
           if (slot.slot_index === toIndex) {
             return applyPlayerToSlot(slot, playerId);
@@ -1226,10 +1238,10 @@ export default function TeamPage() {
     if (!selectedSlot) return;
     setLineupSlots(
       lineupSlots.map((slot) =>
-        slot.slot_index === selectedSlot.slot_index ? { ...slot, player_id: null } : slot
+        slot.slot_index === selectedSlot.slot_index ? applyPlayerToSlot(slot, null) : slot
       )
     );
-    setSelectedSlot({ ...selectedSlot, player_id: null });
+    setSelectedSlot(applyPlayerToSlot(selectedSlot, null));
     if (sheetOpen) {
       setSheetOpen(false);
     }
@@ -1288,7 +1300,7 @@ export default function TeamPage() {
           return applyPlayerToSlot(slot, outgoingId);
         }
         if (sourceSlotIndex === undefined && slot.player_id === playerId) {
-          return { ...slot, player_id: null };
+          return applyPlayerToSlot(slot, null);
         }
         return slot;
       });
@@ -1347,7 +1359,7 @@ export default function TeamPage() {
         getTeam(token, roundNumber),
         getLineup(token, roundNumber)
       ]);
-      setSquad(team.squad || []);
+      setSquad(team.squad || [], team.budget_cap);
       setMarketPriceDelta(
         typeof team.market_price_delta === "number" ? team.market_price_delta : null
       );
@@ -1367,20 +1379,11 @@ export default function TeamPage() {
       const squadById = new Map(
         (team.squad || []).map((player) => [player.player_id, player])
       );
-      const normalizedSlots = (lineup.slots || []).map((slot) => {
-        if (slot.player_id) {
-          const player = squadById.get(slot.player_id);
-          const fallbackPlayer = slot.player ?? null;
-          if (player) {
-            return { ...slot, role: player.position, player: fallbackPlayer };
-          }
-          if (fallbackPlayer) {
-            return { ...slot, role: fallbackPlayer.position, player: fallbackPlayer };
-          }
-          return { ...slot, player: fallbackPlayer };
-        }
-        return { ...slot, player: slot.player ?? null };
-      });
+      const normalizedSlots = normalizeLineupSlots(
+        lineup.slots || [],
+        squadById,
+        Boolean(lineup.is_closed)
+      );
       setLineupSlots(normalizedSlots);
       setCaptainId(lineupCaptainId);
       setViceCaptainId(lineupViceCaptainId);

@@ -468,7 +468,7 @@ export default function MarketPage() {
     if (!token) return;
     const load = async () => {
       const team = await getTeam(token);
-      setSquad(team.squad || []);
+      setSquad(team.squad || [], team.budget_cap);
       setBudgetCap(resolveBudgetCap(team));
       if (!draftLoaded) {
         if (draftSquad.length === 0) {
@@ -910,7 +910,7 @@ export default function MarketPage() {
       try {
         await transferPlayer(token, outPlayerId, incoming.player_id, currentRoundNumber || undefined);
         const team = await getTeam(token);
-        setSquad(team.squad || []);
+        setSquad(team.squad || [], team.budget_cap);
         setDraftSquad(team.squad || []);
         setBudgetCap(resolveBudgetCap(team));
         getTransferCount(token)
@@ -1170,7 +1170,7 @@ export default function MarketPage() {
         .then(setTransferInfo)
         .catch(() => setTransferInfo(null));
       const team = await getTeam(token);
-      setSquad(team.squad || []);
+      setSquad(team.squad || [], team.budget_cap);
       setDraftSquad(team.squad || []);
       setTeamName(team.name || trimmedName);
       setSaveMessage("Equipo guardado");

@@ -392,8 +392,15 @@ def _build_team_response(
         round_obj,
     )
     effective_budget_cap = _resolve_effective_budget_cap(float(team.budget_cap), cap_delta_total)
-    budget_used = sum(float(team_player.bought_price) for _, team_player in rows)
-    budget_left = effective_budget_cap - budget_used
+    budget_used_dec = sum(
+        (Decimal(str(team_player.bought_price)) for _, team_player in rows),
+        start=Decimal("0.0"),
+    ).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+    budget_left_dec = (
+        Decimal(str(effective_budget_cap)) - budget_used_dec
+    ).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+    budget_used = float(budget_used_dec)
+    budget_left = float(budget_left_dec)
     club_counts = get_club_counts(db, fantasy_team_id)
 
     return FantasyTeamOut(

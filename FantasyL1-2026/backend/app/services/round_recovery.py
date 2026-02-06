@@ -214,6 +214,7 @@ def recover_round_lineups_from_market(
     unresolved_count = 0
     market_complete_without_lineup = 0
     already_complete = 0
+    lineup_market_mismatch = 0
 
     for team in teams:
         round_lineup = (
@@ -227,7 +228,24 @@ def recover_round_lineups_from_market(
             .first()
         )
         existing_slots = _load_slots(db, round_lineup.id) if round_lineup else []
-        if round_lineup and _is_complete_lineup(existing_slots):
+
+        market_ids = _round_market_player_ids(
+            db, fantasy_team_id=team.id, target_round_number=round_number
+        )
+
+        lineup_player_ids = {
+            int(slot.player_id)
+            for slot in existing_slots
+            if slot.player_id is not None
+        }
+        lineup_is_complete = bool(round_lineup and _is_complete_lineup(existing_slots))
+        lineup_matches_market = (
+            lineup_is_complete
+            and len(market_ids) == 15
+            and lineup_player_ids == market_ids
+        )
+
+        if lineup_matches_market:
             already_complete += 1
             results.append(
                 RecoveryTeamResult(
@@ -240,9 +258,9 @@ def recover_round_lineups_from_market(
             )
             continue
 
-        market_ids = _round_market_player_ids(
-            db, fantasy_team_id=team.id, target_round_number=round_number
-        )
+        if lineup_is_complete and lineup_player_ids != market_ids:
+            lineup_market_mismatch += 1
+
         if len(market_ids) < 15:
             unresolved_count += 1
             results.append(
@@ -471,6 +489,7 @@ def recover_round_lineups_from_market(
         "recovered": recovered_count,
         "unresolved": unresolved_count,
         "market_complete_without_lineup": market_complete_without_lineup,
+        "lineup_market_mismatch": lineup_market_mismatch,
         "points_recalc": points_recalc,
         "results": [item.as_dict() for item in results],
         "executed_at": datetime.utcnow().isoformat() + "Z",

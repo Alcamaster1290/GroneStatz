@@ -9,6 +9,7 @@ type StoreState = {
   lineupSlots: LineupSlot[];
   currentRound: number | null;
   validationErrors: string[];
+  budgetCap: number;
   budgetUsed: number;
   budgetLeft: number;
   captainId: number | null;
@@ -19,7 +20,7 @@ type StoreState = {
   marketDraftLoaded: boolean;
   setToken: (token: string | null) => void;
   setUserEmail: (email: string | null) => void;
-  setSquad: (squad: Player[]) => void;
+  setSquad: (squad: Player[], budgetCap?: number) => void;
   setLineupSlots: (slots: LineupSlot[] | ((prev: LineupSlot[]) => LineupSlot[])) => void;
   setCurrentRound: (round: number | null) => void;
   setValidationErrors: (errors: string[]) => void;
@@ -31,10 +32,16 @@ type StoreState = {
   setMarketDraftLoaded: (loaded: boolean) => void;
 };
 
-const computeBudget = (squad: Player[]) => {
-  const budgetUsed = squad.reduce((sum, player) => sum + (player.bought_price ?? player.price_current), 0);
-  const rawLeft = 100 - budgetUsed;
-  const budgetLeft = Math.abs(rawLeft) < 1e-6 ? 0 : rawLeft;
+const roundToTenth = (value: number) => Math.round(value * 10) / 10;
+
+const computeBudget = (squad: Player[], budgetCap: number) => {
+  const budgetUsedRaw = squad.reduce(
+    (sum, player) => sum + (player.bought_price ?? player.price_current),
+    0
+  );
+  const budgetUsed = roundToTenth(budgetUsedRaw);
+  const rawLeft = roundToTenth(budgetCap - budgetUsed);
+  const budgetLeft = Math.abs(rawLeft) < 0.05 ? 0 : rawLeft;
   return { budgetUsed, budgetLeft };
 };
 
@@ -57,6 +64,7 @@ export const useFantasyStore = create<StoreState>((set) => ({
   lineupSlots: [],
   currentRound: null,
   validationErrors: [],
+  budgetCap: 100,
   budgetUsed: 0,
   budgetLeft: 100,
   captainId: null,
@@ -73,11 +81,16 @@ export const useFantasyStore = create<StoreState>((set) => ({
   marketDraftLoaded: false,
   setToken: (token) => set({ token }),
   setUserEmail: (userEmail) => set({ userEmail }),
-  setSquad: (squad) => {
-    const normalized = normalizeSquad(squad);
-    const { budgetUsed, budgetLeft } = computeBudget(normalized);
-    set({ squad: normalized, budgetUsed, budgetLeft });
-  },
+  setSquad: (squad, budgetCap) =>
+    set((state) => {
+      const normalized = normalizeSquad(squad);
+      const nextCap =
+        typeof budgetCap === "number" && Number.isFinite(budgetCap)
+          ? roundToTenth(budgetCap)
+          : state.budgetCap;
+      const { budgetUsed, budgetLeft } = computeBudget(normalized, nextCap);
+      return { squad: normalized, budgetCap: nextCap, budgetUsed, budgetLeft };
+    }),
   setLineupSlots: (lineupSlots) =>
     set((state) => ({
       lineupSlots: typeof lineupSlots === "function" ? lineupSlots(state.lineupSlots) : lineupSlots
