@@ -203,31 +203,66 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
             )
         ).scalar_one_or_none()
         if previous_closed_round_id is not None:
-            team_player_rows = db.execute(
-                select(
-                    FantasyTeamPlayer.fantasy_team_id,
-                    FantasyTeamPlayer.player_id,
-                    FantasyTeamPlayer.bought_round_id,
+            # Prefer the previous closed lineup to freeze delta; fallback to squad.
+            lineup_rows = (
+                db.execute(
+                    select(FantasyLineup.id, FantasyLineup.fantasy_team_id)
+                    .where(
+                        FantasyLineup.fantasy_team_id.in_(team_ids),
+                        FantasyLineup.round_id == previous_closed_round_id,
+                    )
+                ).all()
+            )
+            lineup_ids = [row[0] for row in lineup_rows]
+            slots_map: Dict[int, List[int]] = {}
+            if lineup_ids:
+                slot_rows = (
+                    db.execute(
+                        select(FantasyLineupSlot.lineup_id, FantasyLineupSlot.player_id)
+                        .where(
+                            FantasyLineupSlot.lineup_id.in_(lineup_ids),
+                            FantasyLineupSlot.player_id.is_not(None),
+                        )
+                    ).all()
                 )
-                .join(
-                    PlayerCatalog,
-                    PlayerCatalog.player_id == FantasyTeamPlayer.player_id,
-                )
-                .where(FantasyTeamPlayer.fantasy_team_id.in_(team_ids))
-            ).all()
+                lineup_to_team = {lineup_id: team_id for lineup_id, team_id in lineup_rows}
+                for lineup_id, player_id in slot_rows:
+                    if player_id is None:
+                        continue
+                    team_id = lineup_to_team.get(lineup_id)
+                    if team_id is None:
+                        continue
+                    slots_map.setdefault(team_id, []).append(int(player_id))
+
             players_by_team: Dict[int, list[tuple[int, int | None]]] = {}
-            for team_id_row, player_id, bought_round_id in team_player_rows:
-                players_by_team.setdefault(team_id_row, []).append((player_id, bought_round_id))
+            if len(slots_map) < len(team_ids):
+                team_player_rows = db.execute(
+                    select(
+                        FantasyTeamPlayer.fantasy_team_id,
+                        FantasyTeamPlayer.player_id,
+                        FantasyTeamPlayer.bought_round_id,
+                    )
+                    .join(
+                        PlayerCatalog,
+                        PlayerCatalog.player_id == FantasyTeamPlayer.player_id,
+                    )
+                    .where(FantasyTeamPlayer.fantasy_team_id.in_(team_ids))
+                ).all()
+                for team_id_row, player_id, bought_round_id in team_player_rows:
+                    players_by_team.setdefault(team_id_row, []).append((player_id, bought_round_id))
 
             canonical_player_ids_by_team: Dict[int, List[int]] = {}
             all_player_ids: set[int] = set()
             for team_id in team_ids:
-                rows = players_by_team.get(team_id, [])
-                rows_sorted = sorted(
-                    rows,
-                    key=lambda row: _sort_key_by_bought_round(row[1], row[0]),
-                )[:15]
-                player_ids = [player_id for player_id, _ in rows_sorted]
+                if team_id in slots_map and slots_map[team_id]:
+                    player_ids = slots_map[team_id][:15]
+                else:
+                    rows = players_by_team.get(team_id, [])
+                    rows_sorted = sorted(
+                        rows,
+                        key=lambda row: _sort_key_by_bought_round(row[1], row[0]),
+                    )[:15]
+                    player_ids = [player_id for player_id, _ in rows_sorted]
                 canonical_player_ids_by_team[team_id] = player_ids
                 all_player_ids.update(player_ids)
 

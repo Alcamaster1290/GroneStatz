@@ -155,13 +155,15 @@ def _get_pending_round_market_delta_total(
     fantasy_team_id: int,
     round_obj: Round | None,
 ) -> float | None:
-    player_ids = _canonicalize_team_player_ids(db, fantasy_team_id)
-    return _get_pending_round_market_delta_for_player_ids(
+    player_ids = _get_previous_closed_lineup_player_ids(
         db,
+        fantasy_team_id,
         season_id,
-        round_obj,
-        player_ids,
+        round_obj.round_number if round_obj else None,
     )
+    if not player_ids:
+        player_ids = _canonicalize_team_player_ids(db, fantasy_team_id)
+    return _get_pending_round_market_delta_for_player_ids(db, season_id, round_obj, player_ids)
 
 
 def _get_pending_round_market_delta_for_player_ids(
@@ -194,6 +196,39 @@ def _get_pending_round_market_delta_for_player_ids(
         or 0
     )
     return float(_round_price(delta_total))
+
+
+def _get_previous_closed_lineup_player_ids(
+    db: Session,
+    fantasy_team_id: int,
+    season_id: int,
+    pending_round_number: int | None,
+) -> list[int]:
+    if pending_round_number is None:
+        return []
+    prev_closed_round = _get_previous_closed_round(db, season_id, pending_round_number)
+    if not prev_closed_round:
+        return []
+    lineup = (
+        db.execute(
+            select(FantasyLineup.id).where(
+                FantasyLineup.fantasy_team_id == fantasy_team_id,
+                FantasyLineup.round_id == prev_closed_round.id,
+            )
+        )
+        .scalar_one_or_none()
+    )
+    if lineup is None:
+        return []
+    player_ids = (
+        db.execute(
+            select(FantasyLineupSlot.player_id)
+            .where(FantasyLineupSlot.lineup_id == lineup, FantasyLineupSlot.player_id.is_not(None))
+        )
+        .scalars()
+        .all()
+    )
+    return [int(pid) for pid in player_ids if pid is not None]
 
 
 def _get_previous_closed_round(
