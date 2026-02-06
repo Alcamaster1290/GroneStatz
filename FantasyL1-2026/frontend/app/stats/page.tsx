@@ -58,6 +58,7 @@ export default function StatsPage() {
   const [needsTeamName, setNeedsTeamName] = useState(false);
   const [needsFavoriteTeam, setNeedsFavoriteTeam] = useState(false);
   const [teamLoaded, setTeamLoaded] = useState(false);
+  const [isNewTeam, setIsNewTeam] = useState(false);
   const [nameGateOpen, setNameGateOpen] = useState(false);
   const [favoriteGateOpen, setFavoriteGateOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
@@ -94,15 +95,21 @@ export default function StatsPage() {
     getTeam(token)
       .then((team) => {
         setTeamName(team.name || "");
-        setNeedsTeamName(!team.name?.trim());
+        const hasName = Boolean(team.name?.trim());
         const favoriteId =
           typeof team.favorite_team_id === "number" ? team.favorite_team_id : null;
         setFavoriteTeamId(favoriteId);
-        setNeedsFavoriteTeam(!favoriteId);
+        const hasFavorite = Boolean(favoriteId);
+        const hasTeamId = Boolean(team.id);
+        setNeedsTeamName(!hasName && !hasTeamId);
+        setNeedsFavoriteTeam(!hasFavorite && !hasTeamId);
+        setIsNewTeam(!hasTeamId || !hasName);
         setTeamLoaded(true);
       })
       .catch(() => {
         setNeedsTeamName(true);
+        setNeedsFavoriteTeam(true);
+        setIsNewTeam(true);
         setTeamLoaded(true);
       });
   }, [token]);
@@ -118,6 +125,11 @@ export default function StatsPage() {
 
   useEffect(() => {
     if (!teamLoaded) {
+      setNameGateOpen(false);
+      setFavoriteGateOpen(false);
+      return;
+    }
+    if (!isNewTeam) {
       setNameGateOpen(false);
       setFavoriteGateOpen(false);
       return;
@@ -139,7 +151,7 @@ export default function StatsPage() {
     }
     setNameGateOpen(false);
     setFavoriteGateOpen(false);
-  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeSeen]);
+  }, [teamLoaded, isNewTeam, needsTeamName, needsFavoriteTeam, welcomeSeen]);
 
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
@@ -153,12 +165,12 @@ export default function StatsPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (teamLoaded && (needsTeamName || needsFavoriteTeam) && !welcomeSeen) {
+    if (isNewTeam && teamLoaded && (needsTeamName || needsFavoriteTeam) && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
     }
-  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeSeen]);
+  }, [teamLoaded, isNewTeam, needsTeamName, needsFavoriteTeam, welcomeSeen]);
 
   const fetchAllStats = async (params: {
     q?: string;
@@ -441,6 +453,9 @@ export default function StatsPage() {
           localStorage.setItem(welcomeKey, "1");
           setWelcomeSeen(true);
           setWelcomeOpen(false);
+          if (!isNewTeam) {
+            return;
+          }
           if (needsTeamName) {
             setNameGateOpen(true);
           } else if (needsFavoriteTeam) {

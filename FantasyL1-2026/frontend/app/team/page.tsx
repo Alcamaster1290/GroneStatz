@@ -518,6 +518,7 @@ export default function TeamPage() {
   const [needsTeamName, setNeedsTeamName] = useState(false);
   const [needsFavoriteTeam, setNeedsFavoriteTeam] = useState(false);
   const [teamLoaded, setTeamLoaded] = useState(false);
+  const [isNewTeam, setIsNewTeam] = useState(false);
   const [nameGateOpen, setNameGateOpen] = useState(false);
   const [favoriteGateOpen, setFavoriteGateOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
@@ -926,11 +927,15 @@ export default function TeamPage() {
         );
         const savedName = team.name || "";
         setTeamName(savedName);
-        setNeedsTeamName(!savedName.trim());
+        const hasName = Boolean(savedName.trim());
         const favoriteId =
           typeof team.favorite_team_id === "number" ? team.favorite_team_id : null;
         setFavoriteTeamId(favoriteId);
-        setNeedsFavoriteTeam(!favoriteId);
+        const hasFavorite = Boolean(favoriteId);
+        const hasTeamId = Boolean(team.id);
+        setNeedsFavoriteTeam(!hasFavorite && !hasTeamId);
+        setNeedsTeamName(!hasName && !hasTeamId);
+        setIsNewTeam(!hasTeamId || !hasName);
         setTeamLoaded(true);
 
         try {
@@ -1038,6 +1043,9 @@ export default function TeamPage() {
     };
 
     load().catch(() => {
+      setNeedsTeamName(true);
+      setNeedsFavoriteTeam(true);
+      setIsNewTeam(true);
       setTeamLoaded(true);
     });
   }, [token, userEmail, setSquad, setLineupSlots, setCurrentRound, setCaptainId, setViceCaptainId]);
@@ -1108,6 +1116,11 @@ export default function TeamPage() {
       setFavoriteGateOpen(false);
       return;
     }
+    if (!isNewTeam) {
+      setNameGateOpen(false);
+      setFavoriteGateOpen(false);
+      return;
+    }
     if (!welcomeSeen && (needsTeamName || needsFavoriteTeam)) {
       setNameGateOpen(false);
       setFavoriteGateOpen(false);
@@ -1125,7 +1138,7 @@ export default function TeamPage() {
     }
     setNameGateOpen(false);
     setFavoriteGateOpen(false);
-  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeSeen]);
+  }, [teamLoaded, isNewTeam, needsTeamName, needsFavoriteTeam, welcomeSeen]);
 
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
@@ -1139,12 +1152,12 @@ export default function TeamPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (teamLoaded && (needsTeamName || needsFavoriteTeam) && !welcomeSeen) {
+    if (isNewTeam && teamLoaded && (needsTeamName || needsFavoriteTeam) && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
     }
-  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeSeen]);
+  }, [teamLoaded, isNewTeam, needsTeamName, needsFavoriteTeam, welcomeSeen]);
 
   useEffect(() => {
     if (!token || roundMissing || !currentRound) return;
@@ -1791,6 +1804,9 @@ export default function TeamPage() {
           setWelcomeSeen(true);
           setWelcomeOpen(false);
           setPostWelcomeRedirect(true);
+          if (!isNewTeam) {
+            return;
+          }
           if (needsTeamName) {
             setNameGateOpen(true);
           } else if (needsFavoriteTeam) {

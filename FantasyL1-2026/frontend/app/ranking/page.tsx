@@ -156,6 +156,7 @@ export default function RankingPage() {
   const [favoriteError, setFavoriteError] = useState<string | null>(null);
   const [teams, setTeams] = useState<{ id: number; name_short?: string; name_full?: string }[]>([]);
   const [teamLoaded, setTeamLoaded] = useState(false);
+  const [isNewTeam, setIsNewTeam] = useState(false);
   const [nameGateOpen, setNameGateOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [welcomeSeen, setWelcomeSeen] = useState(false);
@@ -218,13 +219,18 @@ export default function RankingPage() {
         setTeamName(team.name || "");
         setTeamId(team.id ?? null);
         setFavoriteTeamId(team.favorite_team_id ?? null);
-        setNeedsFavoriteTeam(!team.favorite_team_id);
-        setNeedsTeamName(!team.name?.trim());
+        const hasName = Boolean(team.name?.trim());
+        const hasFavorite = Boolean(team.favorite_team_id);
+        const hasTeamId = Boolean(team.id);
+        setNeedsFavoriteTeam(!hasFavorite && !hasTeamId);
+        setNeedsTeamName(!hasName && !hasTeamId);
+        setIsNewTeam(!hasTeamId || !hasName);
         setTeamLoaded(true);
       })
       .catch(() => {
         setNeedsTeamName(true);
         setNeedsFavoriteTeam(true);
+        setIsNewTeam(true);
         setTeamLoaded(true);
       });
   }, [token]);
@@ -235,6 +241,11 @@ export default function RankingPage() {
 
   useEffect(() => {
     if (!teamLoaded) {
+      setFavoriteGateOpen(false);
+      setNameGateOpen(false);
+      return;
+    }
+    if (!isNewTeam) {
       setFavoriteGateOpen(false);
       setNameGateOpen(false);
       return;
@@ -256,7 +267,7 @@ export default function RankingPage() {
     }
     setNameGateOpen(false);
     setFavoriteGateOpen(false);
-  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeSeen]);
+  }, [teamLoaded, isNewTeam, needsTeamName, needsFavoriteTeam, welcomeSeen]);
 
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
@@ -270,12 +281,12 @@ export default function RankingPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (teamLoaded && (needsTeamName || needsFavoriteTeam) && !welcomeSeen) {
+    if (isNewTeam && teamLoaded && (needsTeamName || needsFavoriteTeam) && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
     }
-  }, [teamLoaded, needsTeamName, needsFavoriteTeam, welcomeSeen]);
+  }, [teamLoaded, isNewTeam, needsTeamName, needsFavoriteTeam, welcomeSeen]);
 
   const loadLeague = async () => {
     if (!token) return;
@@ -928,6 +939,9 @@ export default function RankingPage() {
           localStorage.setItem(welcomeKey, "1");
           setWelcomeSeen(true);
           setWelcomeOpen(false);
+          if (!isNewTeam) {
+            return;
+          }
           if (needsTeamName) {
             setNameGateOpen(true);
           } else if (needsFavoriteTeam) {
