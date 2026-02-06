@@ -406,17 +406,26 @@ def _build_team_response(
                     .first()
                 )
                 if prev_closed_round:
+                    pending_player_ids = _get_previous_closed_lineup_player_ids(
+                        db,
+                        team.id,
+                        team.season_id,
+                        round_obj.round_number,
+                    )
+                    if not pending_player_ids:
+                        pending_player_ids = player_ids
                     movement_rows = db.execute(
                         select(PriceMovement.player_id, PriceMovement.delta).where(
                             PriceMovement.season_id == team.season_id,
                             PriceMovement.round_id == prev_closed_round.id,
-                            PriceMovement.player_id.in_(player_ids),
+                            PriceMovement.player_id.in_(pending_player_ids),
                         )
                     ).all()
                     price_delta_map = {
                         player_id: float(delta or 0)
                         for player_id, delta in movement_rows
                     }
+                    # Freeze delta to previous closed lineup; ignore current transfers.
                     total_delta = sum(price_delta_map.values())
                     market_price_delta_total = float(
                         Decimal(str(total_delta)).quantize(
