@@ -15,7 +15,7 @@ from app.models import (
     Round,
 )
 from app.schemas.ranking import RankingEntryOut, RankingOut, RankingRoundOut
-from app.services.fantasy import get_current_round, get_or_create_season
+from app.services.fantasy import get_or_create_season
 
 
 def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
@@ -171,8 +171,42 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
         for team_id, round_number, delta in delta_rows
     }
 
-    captain_map: Dict[int, int | None] = {}
+    # For pending round, budget delta must come from the immediately previous closed round.
+    pending_delta_map: Dict[int, float] = {}
     closed_rounds = [row[0] for row in round_rows if row[1]]
+    previous_closed_round = (
+        max((r for r in closed_rounds if pending_round is None or r < pending_round), default=None)
+        if pending_round is not None
+        else None
+    )
+    if pending_round is not None and previous_closed_round is not None:
+        pending_delta_rows = (
+            db.execute(
+                select(
+                    FantasyLineup.fantasy_team_id,
+                    func.coalesce(func.sum(PriceMovement.delta), 0).label("delta"),
+                )
+                .join(Round, Round.id == FantasyLineup.round_id)
+                .join(FantasyLineupSlot, FantasyLineupSlot.lineup_id == FantasyLineup.id)
+                .outerjoin(
+                    PriceMovement,
+                    (PriceMovement.round_id == FantasyLineup.round_id)
+                    & (PriceMovement.player_id == FantasyLineupSlot.player_id)
+                    & (PriceMovement.season_id == season.id),
+                )
+                .where(
+                    FantasyLineup.fantasy_team_id.in_(team_ids),
+                    Round.season_id == season.id,
+                    Round.round_number == previous_closed_round,
+                    FantasyLineupSlot.player_id.is_not(None),
+                )
+                .group_by(FantasyLineup.fantasy_team_id)
+            )
+            .all()
+        )
+        pending_delta_map = {team_id: float(delta) for team_id, delta in pending_delta_rows}
+
+    captain_map: Dict[int, int | None] = {}
     target_round = max(closed_rounds) if closed_rounds else pending_round
     if target_round is not None:
         lineup_rows = (
@@ -198,7 +232,10 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
         cumulative = 0.0
         for round_number in round_numbers:
             points = points_map.get((team_id, round_number), 0.0)
-            delta = delta_map.get((team_id, round_number), 0.0)
+            if pending_round is not None and round_number == pending_round:
+                delta = pending_delta_map.get(team_id, 0.0)
+            else:
+                delta = delta_map.get((team_id, round_number), 0.0)
             cumulative += points
             rounds.append(
                 RankingRoundOut(
