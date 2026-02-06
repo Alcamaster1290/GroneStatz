@@ -731,6 +731,28 @@ export default function MarketPage() {
   }, [draftSquad]);
   const budgetLeftRaw = roundToTenth(budgetCap - draftBudget);
   const budgetLeft = Math.abs(budgetLeftRaw) < 0.05 ? 0 : budgetLeftRaw;
+  const transferPreview = useMemo(() => {
+    const squadIds = new Set(squad.map((player) => player.player_id));
+    const draftIds = new Set(draftSquad.map((player) => player.player_id));
+    const outgoing = squad.filter((player) => !draftIds.has(player.player_id));
+    const incoming = draftSquad.filter((player) => !squadIds.has(player.player_id));
+    const transferCount = Math.min(outgoing.length, incoming.length);
+    const transfersUsed = transferInfo?.transfers_used ?? 0;
+    const freeTransferAvailable = transfersUsed === 0 ? 1 : 0;
+    const chargeableTransfers = Math.max(0, transferCount - freeTransferAvailable);
+    const additionalFeePerTransfer = 0.5;
+    const estimatedAdditionalFee = roundToTenth(chargeableTransfers * additionalFeePerTransfer);
+    return {
+      outgoing,
+      incoming,
+      transferCount,
+      transfersUsed,
+      freeTransferAvailable,
+      chargeableTransfers,
+      additionalFeePerTransfer,
+      estimatedAdditionalFee
+    };
+  }, [draftSquad, squad, transferInfo]);
 
   const formatError = (code: string) => {
     const safeCode = normalizeErrorCode(code);
@@ -816,6 +838,11 @@ export default function MarketPage() {
           detail: "El jugador elegido ya pertenece a tu equipo.",
           tone: "warning"
         },
+      squad_diff_mismatch: {
+        title: "Cambios inconsistentes",
+        detail: "Revisa el plantel antes de guardar e intenta nuevamente.",
+        tone: "danger"
+      },
       rounds_not_configured: {
         title: "Sin rondas activas",
         detail: "Carga rondas desde Admin para habilitar Mercado.",
@@ -1147,6 +1174,9 @@ export default function MarketPage() {
     setSaveMessage(null);
     setPostSavePromptOpen(false);
     setPostSaveLaterOpen(false);
+    getTransferCount(token)
+      .then(setTransferInfo)
+      .catch(() => setTransferInfo(null));
     setConfirmOpen(true);
   };
 
@@ -1515,6 +1545,54 @@ export default function MarketPage() {
             <p className="text-xs text-muted">
               Estas seguro que quieres guardar este equipo?
             </p>
+            <div className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs text-muted">
+              <p>
+                Transferencias detectadas:{" "}
+                <span className="font-semibold text-ink">{transferPreview.transferCount}</span>
+              </p>
+              <p>
+                Transferencias ya usadas en la ronda:{" "}
+                <span className="font-semibold text-ink">{transferPreview.transfersUsed}</span>
+              </p>
+              <p>
+                Transferencia libre disponible:{" "}
+                <span className="font-semibold text-ink">
+                  {transferPreview.freeTransferAvailable ? "Si" : "No"}
+                </span>
+              </p>
+              <p>
+                Cargo adicional por transferencia:{" "}
+                <span className="font-semibold text-ink">
+                  {transferPreview.additionalFeePerTransfer.toFixed(1)}
+                </span>
+              </p>
+              <p>
+                Transferencias con cargo:{" "}
+                <span className="font-semibold text-ink">{transferPreview.chargeableTransfers}</span>
+              </p>
+              <p>
+                Cargo adicional total estimado:{" "}
+                <span className="font-semibold text-ink">
+                  {transferPreview.estimatedAdditionalFee.toFixed(1)}
+                </span>
+              </p>
+              {transferPreview.transferCount > 0 ? (
+                <div className="mt-2 space-y-1 rounded-xl border border-white/10 bg-black/20 p-2 text-[11px]">
+                  <p className="font-semibold text-ink">Preboleta de cambios</p>
+                  {Array.from({ length: transferPreview.transferCount }).map((_, index) => {
+                    const out = transferPreview.outgoing[index];
+                    const incoming = transferPreview.incoming[index];
+                    return (
+                      <p key={`${out?.player_id ?? "out"}-${incoming?.player_id ?? "in"}-${index}`}>
+                        {out?.short_name || out?.name || "?"} {"->"} {incoming?.short_name || incoming?.name || "?"}
+                      </p>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="mt-2 text-[11px]">No hay transferencias pendientes en este guardado.</p>
+              )}
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmOpen(false)}
