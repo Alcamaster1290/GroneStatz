@@ -2025,14 +2025,14 @@ export default function TeamPage() {
       >
         {selectedSlot ? (
           <div className="space-y-4">
-            {!selectedSlot.is_starter ? (
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-ink">Seleccion de suplente</p>
-                <button onClick={closeSelection} className="text-xs text-muted" aria-label="Cerrar">
-                  X
-                </button>
-              </div>
-            ) : null}
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-ink">
+                {selectedSlot.is_starter ? "Seleccion de titular" : "Seleccion de suplente"}
+              </p>
+              <button onClick={closeSelection} className="text-xs text-muted" aria-label="Cerrar">
+                X
+              </button>
+            </div>
             {selectedPlayer ? (
               <div className="space-y-2">
                 <PlayerCard player={selectedPlayer} />
