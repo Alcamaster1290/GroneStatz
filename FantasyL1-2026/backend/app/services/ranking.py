@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Tuple
 
 from sqlalchemy import func, select
@@ -9,6 +10,7 @@ from app.models import (
     FantasyLineup,
     FantasyLineupSlot,
     FantasyTeam,
+    FantasyTeamPlayer,
     PlayerCatalog,
     PointsRound,
     PriceMovement,
@@ -171,40 +173,79 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
         for team_id, round_number, delta in delta_rows
     }
 
-    # For pending round, budget delta must come from the immediately previous closed round.
+    def _round_tenth(value: float | Decimal) -> float:
+        return float(Decimal(str(value)).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP))
+
+    def _sort_key_by_bought_round(
+        bought_round_id: int | None,
+        player_id: int,
+    ) -> tuple[int, int, int]:
+        return (
+            1 if bought_round_id is None else 0,
+            -(bought_round_id or 0),
+            player_id,
+        )
+
+    # For pending round, budget delta must match Team tab logic:
+    # previous closed round movements over current 15-player squad.
     pending_delta_map: Dict[int, float] = {}
     closed_rounds = [row[0] for row in round_rows if row[1]]
-    previous_closed_round = (
+    previous_closed_round_number = (
         max((r for r in closed_rounds if pending_round is None or r < pending_round), default=None)
         if pending_round is not None
         else None
     )
-    if pending_round is not None and previous_closed_round is not None:
-        pending_delta_rows = (
-            db.execute(
-                select(
-                    FantasyLineup.fantasy_team_id,
-                    func.coalesce(func.sum(PriceMovement.delta), 0).label("delta"),
-                )
-                .join(Round, Round.id == FantasyLineup.round_id)
-                .join(FantasyLineupSlot, FantasyLineupSlot.lineup_id == FantasyLineup.id)
-                .outerjoin(
-                    PriceMovement,
-                    (PriceMovement.round_id == FantasyLineup.round_id)
-                    & (PriceMovement.player_id == FantasyLineupSlot.player_id)
-                    & (PriceMovement.season_id == season.id),
-                )
-                .where(
-                    FantasyLineup.fantasy_team_id.in_(team_ids),
-                    Round.season_id == season.id,
-                    Round.round_number == previous_closed_round,
-                    FantasyLineupSlot.player_id.is_not(None),
-                )
-                .group_by(FantasyLineup.fantasy_team_id)
+    if pending_round is not None and previous_closed_round_number is not None:
+        previous_closed_round_id = db.execute(
+            select(Round.id).where(
+                Round.season_id == season.id,
+                Round.round_number == previous_closed_round_number,
             )
-            .all()
-        )
-        pending_delta_map = {team_id: float(delta) for team_id, delta in pending_delta_rows}
+        ).scalar_one_or_none()
+        if previous_closed_round_id is not None:
+            team_player_rows = db.execute(
+                select(
+                    FantasyTeamPlayer.fantasy_team_id,
+                    FantasyTeamPlayer.player_id,
+                    FantasyTeamPlayer.bought_round_id,
+                ).where(FantasyTeamPlayer.fantasy_team_id.in_(team_ids))
+            ).all()
+            players_by_team: Dict[int, list[tuple[int, int | None]]] = {}
+            for team_id_row, player_id, bought_round_id in team_player_rows:
+                players_by_team.setdefault(team_id_row, []).append((player_id, bought_round_id))
+
+            canonical_player_ids_by_team: Dict[int, List[int]] = {}
+            all_player_ids: set[int] = set()
+            for team_id in team_ids:
+                rows = players_by_team.get(team_id, [])
+                rows_sorted = sorted(
+                    rows,
+                    key=lambda row: _sort_key_by_bought_round(row[1], row[0]),
+                )[:15]
+                player_ids = [player_id for player_id, _ in rows_sorted]
+                canonical_player_ids_by_team[team_id] = player_ids
+                all_player_ids.update(player_ids)
+
+            movement_map: Dict[int, float] = {}
+            if all_player_ids:
+                movement_rows = db.execute(
+                    select(PriceMovement.player_id, PriceMovement.delta).where(
+                        PriceMovement.season_id == season.id,
+                        PriceMovement.round_id == previous_closed_round_id,
+                        PriceMovement.player_id.in_(all_player_ids),
+                    )
+                ).all()
+                movement_map = {
+                    player_id: float(delta or 0)
+                    for player_id, delta in movement_rows
+                }
+
+            for team_id in team_ids:
+                total_delta = sum(
+                    movement_map.get(player_id, 0.0)
+                    for player_id in canonical_player_ids_by_team.get(team_id, [])
+                )
+                pending_delta_map[team_id] = _round_tenth(total_delta)
 
     captain_map: Dict[int, int | None] = {}
     target_round = max(closed_rounds) if closed_rounds else pending_round
