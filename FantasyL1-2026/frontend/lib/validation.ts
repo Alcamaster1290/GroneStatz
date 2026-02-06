@@ -30,10 +30,7 @@ export function validateSquad(players: Player[], budgetCap: number = 100): strin
     errors.push("max_3_players_per_team");
   }
 
-  const budgetUsed = players.reduce(
-    (sum, p) => sum + (p.bought_price ?? p.price_current),
-    0
-  );
+  const budgetUsed = players.reduce((sum, p) => sum + p.price_current, 0);
   if (budgetUsed - budgetCap > 1e-6) errors.push("budget_exceeded");
 
   return errors;

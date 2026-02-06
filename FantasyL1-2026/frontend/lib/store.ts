@@ -20,7 +20,12 @@ type StoreState = {
   marketDraftLoaded: boolean;
   setToken: (token: string | null) => void;
   setUserEmail: (email: string | null) => void;
-  setSquad: (squad: Player[], budgetCap?: number) => void;
+  setSquad: (
+    squad: Player[],
+    budgetCap?: number,
+    budgetUsed?: number,
+    budgetLeft?: number
+  ) => void;
   setLineupSlots: (slots: LineupSlot[] | ((prev: LineupSlot[]) => LineupSlot[])) => void;
   setCurrentRound: (round: number | null) => void;
   setValidationErrors: (errors: string[]) => void;
@@ -81,15 +86,28 @@ export const useFantasyStore = create<StoreState>((set) => ({
   marketDraftLoaded: false,
   setToken: (token) => set({ token }),
   setUserEmail: (userEmail) => set({ userEmail }),
-  setSquad: (squad, budgetCap) =>
+  setSquad: (squad, budgetCap, budgetUsed, budgetLeft) =>
     set((state) => {
       const normalized = normalizeSquad(squad);
       const nextCap =
         typeof budgetCap === "number" && Number.isFinite(budgetCap)
           ? roundToTenth(budgetCap)
           : state.budgetCap;
-      const { budgetUsed, budgetLeft } = computeBudget(normalized, nextCap);
-      return { squad: normalized, budgetCap: nextCap, budgetUsed, budgetLeft };
+      const computed = computeBudget(normalized, nextCap);
+      const nextUsed =
+        typeof budgetUsed === "number" && Number.isFinite(budgetUsed)
+          ? roundToTenth(budgetUsed)
+          : computed.budgetUsed;
+      const nextLeft =
+        typeof budgetLeft === "number" && Number.isFinite(budgetLeft)
+          ? roundToTenth(budgetLeft)
+          : computed.budgetLeft;
+      return {
+        squad: normalized,
+        budgetCap: nextCap,
+        budgetUsed: nextUsed,
+        budgetLeft: nextLeft
+      };
     }),
   setLineupSlots: (lineupSlots) =>
     set((state) => ({

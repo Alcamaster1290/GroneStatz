@@ -888,7 +888,12 @@ export default function TeamPage() {
       setLoading(true);
       try {
         const team = await getTeam(token);
-        setSquad(team.squad || [], team.budget_cap);
+        setSquad(
+          team.squad || [],
+          team.budget_cap,
+          team.budget_used,
+          team.budget_left
+        );
         setMarketPriceDelta(
           typeof team.market_price_delta === "number" ? team.market_price_delta : null
         );
@@ -1359,7 +1364,12 @@ export default function TeamPage() {
         getTeam(token, roundNumber),
         getLineup(token, roundNumber)
       ]);
-      setSquad(team.squad || [], team.budget_cap);
+      setSquad(
+        team.squad || [],
+        team.budget_cap,
+        team.budget_used,
+        team.budget_left
+      );
       setMarketPriceDelta(
         typeof team.market_price_delta === "number" ? team.market_price_delta : null
       );
@@ -1939,11 +1949,19 @@ export default function TeamPage() {
 
       <BottomSheet
         open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
+        onClose={closeSelection}
         title={selectedPlayer ? selectedPlayer.name : "Slot"}
       >
         {selectedSlot ? (
           <div className="space-y-4">
+            {!selectedSlot.is_starter ? (
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-ink">Seleccion de suplente</p>
+                <button onClick={closeSelection} className="text-xs text-muted" aria-label="Cerrar">
+                  X
+                </button>
+              </div>
+            ) : null}
             {selectedPlayer ? (
               <div className="space-y-2">
                 <PlayerCard player={selectedPlayer} />
@@ -2089,7 +2107,7 @@ export default function TeamPage() {
               </div>
             ) : null}
             <button
-              onClick={() => setSheetOpen(false)}
+              onClick={closeSelection}
               className="w-full rounded-xl border border-white/20 px-4 py-2 text-sm text-ink"
             >
               Retornar
@@ -2099,7 +2117,7 @@ export default function TeamPage() {
           <div className="space-y-3">
             <p className="text-sm text-muted">Selecciona un slot</p>
             <button
-              onClick={() => setSheetOpen(false)}
+              onClick={closeSelection}
               className="w-full rounded-xl border border-white/20 px-4 py-2 text-sm text-ink"
             >
               Retornar

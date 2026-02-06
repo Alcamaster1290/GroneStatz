@@ -391,22 +391,43 @@ def _build_team_response(
             )
         )
 
+    requested_round_number = round_number if round_number and round_number > 0 else None
+    effective_round_number = (
+        round_obj.round_number
+        if round_obj is not None
+        else requested_round_number
+    )
+
     cap_delta_total = _get_pending_round_market_delta_total(
         db,
         team.season_id,
         fantasy_team_id,
         round_obj,
     )
-    effective_budget_cap = _resolve_effective_budget_cap(
-        float(team.budget_cap),
-        cap_delta_total,
-        round_obj,
-    )
-    budget_used_dec = sum(
-        (Decimal(str(team_player.bought_price)) for _, team_player in rows),
-        start=Decimal("0.0"),
-    ).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
-    if round_obj and round_obj.round_number <= 1 and budget_used_dec > Decimal("100.0"):
+    if effective_round_number is not None and effective_round_number <= 1:
+        effective_budget_cap = 100.0
+    else:
+        effective_budget_cap = _resolve_effective_budget_cap(
+            float(team.budget_cap),
+            cap_delta_total,
+            round_obj,
+        )
+    if round_obj and not round_obj.is_closed:
+        # Pending rounds should reflect current market value for budget tracking.
+        budget_used_dec = sum(
+            (Decimal(str(player.price_current)) for player, _ in rows),
+            start=Decimal("0.0"),
+        ).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+    else:
+        budget_used_dec = sum(
+            (Decimal(str(team_player.bought_price)) for _, team_player in rows),
+            start=Decimal("0.0"),
+        ).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+    if (
+        effective_round_number is not None
+        and effective_round_number <= 1
+        and budget_used_dec > Decimal("100.0")
+    ):
         budget_used_dec = Decimal("100.0")
     budget_left_dec = (
         Decimal(str(effective_budget_cap)) - budget_used_dec
