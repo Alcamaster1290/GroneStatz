@@ -59,6 +59,18 @@ const DEFAULT_SLOTS: LineupSlot[] = [
 
 const buildDefaultSlots = () => DEFAULT_SLOTS.map((slot) => ({ ...slot }));
 
+const safeSaveDraft = (key: string, payload: unknown) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(payload));
+  } catch {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // ignore
+    }
+  }
+};
+
 function PlayerFace({ playerId, sizeClass }: { playerId: number; sizeClass: string }) {
   const sources = [
     `/images/players/${playerId}.png`
@@ -1134,13 +1146,19 @@ export default function TeamPage() {
 
   useEffect(() => {
     if (!token || roundMissing || !currentRound) return;
+    const sanitizedSlots = lineupSlots.map((slot) => ({
+      slot_index: slot.slot_index,
+      is_starter: slot.is_starter,
+      role: slot.role,
+      player_id: slot.player_id
+    }));
     const payload = {
       roundNumber: currentRound,
-      slots: lineupSlots,
+      slots: sanitizedSlots,
       captainId,
       viceCaptainId
     };
-    localStorage.setItem(draftKey, JSON.stringify(payload));
+    safeSaveDraft(draftKey, payload);
   }, [token, roundMissing, currentRound, lineupSlots, captainId, viceCaptainId, draftKey]);
 
   useEffect(() => {
