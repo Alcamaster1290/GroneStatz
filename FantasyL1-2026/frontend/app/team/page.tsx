@@ -515,8 +515,6 @@ export default function TeamPage() {
   const [favoriteError, setFavoriteError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [marketPriceDelta, setMarketPriceDelta] = useState<number | null>(null);
-  const [marketPriceDeltaFromRound, setMarketPriceDeltaFromRound] = useState<number | null>(null);
-  const [marketPriceDeltaToRound, setMarketPriceDeltaToRound] = useState<number | null>(null);
   const router = useRouter();
 
   const formatError = (code: string) => {
@@ -801,34 +799,20 @@ export default function TeamPage() {
 
   const teamRoundPoints = useMemo(() => {
     if (!currentRound) return null;
-    const pointsById = new Map(
-      squad.map((player) => [player.player_id, typeof player.points_round === "number" ? player.points_round : 0])
-    );
-    const injuredById = new Map(
-      squad.map((player) => [player.player_id, Boolean(player.is_injured)])
-    );
     let total = 0;
     lineupSlots.forEach((slot) => {
-      if (slot.is_starter && slot.player_id) {
-        total += pointsById.get(slot.player_id) ?? 0;
+      if (!slot.is_starter) return;
+      if (typeof slot.points_with_bonus === "number") {
+        total += slot.points_with_bonus;
+        return;
+      }
+      if (typeof slot.points_round === "number") {
+        total += slot.points_round;
       }
     });
-    const captainPoints = captainId ? pointsById.get(captainId) ?? 0 : 0;
-    const captainInjured = captainId ? injuredById.get(captainId) ?? false : false;
-    const vicePoints = viceCaptainId ? pointsById.get(viceCaptainId) ?? 0 : 0;
-    const viceInjured = viceCaptainId ? injuredById.get(viceCaptainId) ?? false : false;
-    if (captainId && captainPoints !== 0 && !captainInjured) {
-      total += 2 * captainPoints;
-    } else if (viceCaptainId && vicePoints !== 0 && !viceInjured) {
-      total += 2 * vicePoints;
-    }
     return Math.round(total * 10) / 10;
-  }, [captainId, viceCaptainId, currentRound, lineupSlots, squad]);
+  }, [currentRound, lineupSlots]);
   const teamRoundPointsDisplay = teamRoundPoints === null ? "--" : String(Math.round(teamRoundPoints));
-  const marketDeltaWindowLabel =
-    marketPriceDeltaFromRound && marketPriceDeltaToRound
-      ? `R${marketPriceDeltaFromRound} -> R${marketPriceDeltaToRound}`
-      : null;
   const marketPriceDeltaDisplay =
     marketPriceDelta === null
       ? "--"
@@ -868,11 +852,16 @@ export default function TeamPage() {
         return { ...slot, player: null };
       }
       const squadPlayer = squadById.get(slot.player_id);
+      if (isClosedRound) {
+        const resolvedPlayer = squadPlayer || slot.player || null;
+        return {
+          ...slot,
+          role: resolvedPlayer?.position || slot.role,
+          player: resolvedPlayer
+        };
+      }
       if (squadPlayer) {
         return { ...slot, role: squadPlayer.position, player: null };
-      }
-      if (isClosedRound && slot.player) {
-        return { ...slot, role: slot.player.position, player: slot.player };
       }
       return { ...slot, player_id: null, player: null };
     });
@@ -921,16 +910,6 @@ export default function TeamPage() {
         );
         setMarketPriceDelta(
           typeof team.market_price_delta === "number" ? team.market_price_delta : null
-        );
-        setMarketPriceDeltaFromRound(
-          typeof team.market_price_delta_from_round === "number"
-            ? team.market_price_delta_from_round
-            : null
-        );
-        setMarketPriceDeltaToRound(
-          typeof team.market_price_delta_to_round === "number"
-            ? team.market_price_delta_to_round
-            : null
         );
         const savedName = team.name || "";
         setTeamName(savedName);
@@ -1021,16 +1000,12 @@ export default function TeamPage() {
                 setRoundMissing(false);
                 setRoundStatus(null);
                 setMarketPriceDelta(null);
-                setMarketPriceDeltaFromRound(null);
-                setMarketPriceDeltaToRound(null);
               } else {
                 setRoundMissing(true);
                 setCurrentRound(null);
                 setFixtures([]);
                 setRoundStatus(null);
                 setMarketPriceDelta(null);
-                setMarketPriceDeltaFromRound(null);
-                setMarketPriceDeltaToRound(null);
               }
             } else {
               setRoundMissing(true);
@@ -1038,8 +1013,6 @@ export default function TeamPage() {
               setFixtures([]);
               setRoundStatus(null);
               setMarketPriceDelta(null);
-              setMarketPriceDeltaFromRound(null);
-              setMarketPriceDeltaToRound(null);
             }
             setLineupSlots(buildDefaultSlots());
           } else {
@@ -1399,16 +1372,6 @@ export default function TeamPage() {
       setMarketPriceDelta(
         typeof team.market_price_delta === "number" ? team.market_price_delta : null
       );
-      setMarketPriceDeltaFromRound(
-        typeof team.market_price_delta_from_round === "number"
-          ? team.market_price_delta_from_round
-          : null
-      );
-      setMarketPriceDeltaToRound(
-        typeof team.market_price_delta_to_round === "number"
-          ? team.market_price_delta_to_round
-          : null
-      );
       const resolvedRoundNumber =
         typeof lineup.round_number === "number" && lineup.round_number > 0
           ? lineup.round_number
@@ -1524,10 +1487,7 @@ export default function TeamPage() {
           </span>
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
-          <span className="font-semibold text-ink">{"\u0394"}</span>
-          {marketDeltaWindowLabel ? (
-            <span className="text-muted">({marketDeltaWindowLabel})</span>
-          ) : null}
+          <span className="font-semibold text-ink">{"\u25B3"} precio:</span>
           <span
             className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold ${marketPriceDeltaToneClass}`}
           >
