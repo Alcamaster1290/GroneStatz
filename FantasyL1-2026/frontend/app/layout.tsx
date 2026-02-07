@@ -6,13 +6,65 @@ import AppHeader from "@/components/AppHeader";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import MobileBootstrap from "@/components/MobileBootstrap";
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.NEXT_PUBLIC_MOBILE_WEB_URL ||
+  "https://fantasyliga1peru.com";
+const siteTitle = "Fantasy Liga 1 Peru 2026 | Fantasy Oficial";
+const siteDescription =
+  "Arma tu equipo, juega en ligas y compite en el Fantasy Liga 1 Peru 2026. Mercado dinamico, estadisticas en vivo y rankings por jornada.";
+
 export const metadata: Metadata = {
-  title: "Fantasy Liga 1 2026",
-  description: "Fantasy Liga 1 2026 v1.0",
+  metadataBase: new URL(siteUrl),
+  title: siteTitle,
+  description: siteDescription,
+  applicationName: "Fantasy Liga 1 Peru 2026",
   manifest: "/manifest.json",
+  keywords: [
+    "fantasy liga 1 peru",
+    "liga 1 peru fantasy",
+    "fantasy futbol peru",
+    "fantasy peru 2026"
+  ],
+  alternates: {
+    canonical: "/"
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1
+    }
+  },
   icons: {
     icon: "/favicon.png",
     apple: "/apple-touch-icon.png"
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    title: siteTitle,
+    description: siteDescription,
+    siteName: "Fantasy Liga 1 Peru",
+    locale: "es_PE",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Fantasy Liga 1 Peru"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+    images: ["/logo.png"]
   }
 };
 
