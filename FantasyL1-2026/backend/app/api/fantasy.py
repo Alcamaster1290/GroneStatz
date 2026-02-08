@@ -601,11 +601,13 @@ def update_squad(
 
     removed = [pid for pid in existing_ids if pid not in new_ids]
     added = [pid for pid in new_ids if pid not in existing_ids]
-    if len(removed) != len(added):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="squad_diff_mismatch",
-        )
+    # Solo exigimos simetría de cambios cuando ya había un plantel previo (len>0) y no es la primera ronda.
+    if len(existing_ids) > 0 and current_round.round_number > 1:
+        if len(removed) != len(added):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="squad_diff_mismatch",
+            )
 
     existing_transfer_count = _get_transfer_count_for_round(db, team.id, round_id)
     new_transfer_count = (
