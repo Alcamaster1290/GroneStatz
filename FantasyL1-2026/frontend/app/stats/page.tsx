@@ -100,16 +100,15 @@ export default function StatsPage() {
           typeof team.favorite_team_id === "number" ? team.favorite_team_id : null;
         setFavoriteTeamId(favoriteId);
         const hasFavorite = Boolean(favoriteId);
-        const hasTeamId = Boolean(team.id);
-        setNeedsTeamName(!hasName && !hasTeamId);
-        setNeedsFavoriteTeam(!hasFavorite && !hasTeamId);
-        setIsNewTeam(!hasTeamId || !hasName);
+        setNeedsTeamName(!hasName);
+        setNeedsFavoriteTeam(hasName && !hasFavorite);
+        setIsNewTeam(!hasName);
         setTeamLoaded(true);
       })
       .catch(() => {
-        setNeedsTeamName(true);
-        setNeedsFavoriteTeam(true);
-        setIsNewTeam(true);
+        setNeedsTeamName(false);
+        setNeedsFavoriteTeam(false);
+        setIsNewTeam(false);
         setTeamLoaded(true);
       });
   }, [token]);
@@ -129,12 +128,7 @@ export default function StatsPage() {
       setFavoriteGateOpen(false);
       return;
     }
-    if (!isNewTeam) {
-      setNameGateOpen(false);
-      setFavoriteGateOpen(false);
-      return;
-    }
-    if (!welcomeSeen && (needsTeamName || needsFavoriteTeam)) {
+    if (!welcomeSeen && isNewTeam && needsTeamName) {
       setNameGateOpen(false);
       setFavoriteGateOpen(false);
       return;
@@ -165,7 +159,7 @@ export default function StatsPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (isNewTeam && teamLoaded && (needsTeamName || needsFavoriteTeam) && !welcomeSeen) {
+    if (isNewTeam && teamLoaded && needsTeamName && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
@@ -453,13 +447,8 @@ export default function StatsPage() {
           localStorage.setItem(welcomeKey, "1");
           setWelcomeSeen(true);
           setWelcomeOpen(false);
-          if (!isNewTeam) {
-            return;
-          }
           if (needsTeamName) {
             setNameGateOpen(true);
-          } else if (needsFavoriteTeam) {
-            setFavoriteGateOpen(true);
           }
         }}
       />
@@ -504,6 +493,7 @@ export default function StatsPage() {
             await createTeam(token, trimmedName);
             setTeamName(trimmedName);
             setNeedsTeamName(false);
+            setIsNewTeam(false);
             setNameGateOpen(false);
           } catch {
             setTeamNameError("No se pudo guardar el nombre.");

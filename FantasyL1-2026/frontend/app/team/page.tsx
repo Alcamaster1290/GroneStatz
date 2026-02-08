@@ -932,10 +932,9 @@ export default function TeamPage() {
           typeof team.favorite_team_id === "number" ? team.favorite_team_id : null;
         setFavoriteTeamId(favoriteId);
         const hasFavorite = Boolean(favoriteId);
-        const hasTeamId = Boolean(team.id);
-        setNeedsFavoriteTeam(!hasFavorite && !hasTeamId);
-        setNeedsTeamName(!hasName && !hasTeamId);
-        setIsNewTeam(!hasTeamId || !hasName);
+        setNeedsTeamName(!hasName);
+        setNeedsFavoriteTeam(hasName && !hasFavorite);
+        setIsNewTeam(!hasName);
         setTeamLoaded(true);
 
         try {
@@ -1043,9 +1042,9 @@ export default function TeamPage() {
     };
 
     load().catch(() => {
-      setNeedsTeamName(true);
-      setNeedsFavoriteTeam(true);
-      setIsNewTeam(true);
+      setNeedsTeamName(false);
+      setNeedsFavoriteTeam(false);
+      setIsNewTeam(false);
       setTeamLoaded(true);
     });
   }, [token, userEmail, setSquad, setLineupSlots, setCurrentRound, setCaptainId, setViceCaptainId]);
@@ -1116,12 +1115,7 @@ export default function TeamPage() {
       setFavoriteGateOpen(false);
       return;
     }
-    if (!isNewTeam) {
-      setNameGateOpen(false);
-      setFavoriteGateOpen(false);
-      return;
-    }
-    if (!welcomeSeen && (needsTeamName || needsFavoriteTeam)) {
+    if (!welcomeSeen && isNewTeam && needsTeamName) {
       setNameGateOpen(false);
       setFavoriteGateOpen(false);
       return;
@@ -1152,7 +1146,7 @@ export default function TeamPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (isNewTeam && teamLoaded && (needsTeamName || needsFavoriteTeam) && !welcomeSeen) {
+    if (isNewTeam && teamLoaded && needsTeamName && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
@@ -1804,13 +1798,8 @@ export default function TeamPage() {
           setWelcomeSeen(true);
           setWelcomeOpen(false);
           setPostWelcomeRedirect(true);
-          if (!isNewTeam) {
-            return;
-          }
           if (needsTeamName) {
             setNameGateOpen(true);
-          } else if (needsFavoriteTeam) {
-            setFavoriteGateOpen(true);
           }
         }}
       />
@@ -1859,8 +1848,9 @@ export default function TeamPage() {
             await createTeam(token, trimmedName);
             setTeamName(trimmedName);
             setNeedsTeamName(false);
+            setIsNewTeam(false);
             setNameGateOpen(false);
-            if (postWelcomeRedirect && !needsFavoriteTeam) {
+            if (postWelcomeRedirect) {
               setPostWelcomeRedirect(false);
               router.push("/market");
             }
