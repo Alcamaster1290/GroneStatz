@@ -481,6 +481,7 @@ export default function StatsPage() {
         teamName={teamName}
         onTeamNameChange={setTeamName}
         error={teamNameError}
+        onClose={() => setNameGateOpen(false)}
         onSave={async () => {
           if (!token) return;
           const trimmedName = teamName.trim();
