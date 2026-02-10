@@ -340,5 +340,14 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
             )
         )
 
-    entries.sort(key=lambda entry: entry.total_points, reverse=True)
+    def _sort_key(entry: RankingEntryOut):
+        valid_rounds = sum(1 for round_item in entry.rounds if round_item.points > 0)
+        latest_delta = entry.rounds[-1].price_delta if entry.rounds else 0.0
+        return (
+            -entry.total_points,
+            -valid_rounds,
+            -latest_delta,
+        )
+
+    entries.sort(key=_sort_key)
     return RankingOut(round_numbers=round_numbers, entries=entries)
