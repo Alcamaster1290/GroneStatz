@@ -1029,7 +1029,11 @@ export default function TeamPage() {
         const hasFavorite = Boolean(favoriteId);
         const deferredFavorite = localStorage.getItem(favoriteDeferredKey) === "1";
         if (hasFavorite) {
-          localStorage.removeItem(favoriteDeferredKey);
+          try {
+              localStorage.removeItem(favoriteDeferredKey);
+            } catch {
+              // ignore storage quota errors
+            }
         }
         setNeedsTeamName(!hasName);
         setNeedsFavoriteTeam(!hasFavorite && !deferredFavorite);
@@ -2002,7 +2006,11 @@ export default function TeamPage() {
       <WelcomeSlideshow
         open={welcomeOpen}
         onComplete={() => {
-          localStorage.setItem(welcomeKey, "1");
+          try {
+            localStorage.setItem(welcomeKey, "1");
+          } catch {
+            // ignore storage quota errors
+          }
           setWelcomeSeen(true);
           setWelcomeOpen(false);
           setPostWelcomeRedirect(true);
@@ -2023,7 +2031,11 @@ export default function TeamPage() {
           }
         }}
         onSkip={() => {
-          localStorage.setItem(favoriteDeferredKey, "1");
+          try {
+            localStorage.setItem(favoriteDeferredKey, "1");
+          } catch {
+            // ignore storage quota errors
+          }
           setFavoriteTeamId(null);
           setNeedsFavoriteTeam(false);
           setFavoriteGateOpen(false);
@@ -2033,7 +2045,11 @@ export default function TeamPage() {
           setFavoriteError(null);
           try {
             await updateFavoriteTeam(token, favoriteTeamId);
-            localStorage.removeItem(favoriteDeferredKey);
+            try {
+              localStorage.removeItem(favoriteDeferredKey);
+            } catch {
+              // ignore storage quota errors
+            }
             setNeedsFavoriteTeam(false);
             setFavoriteGateOpen(false);
             if (postWelcomeRedirect) {

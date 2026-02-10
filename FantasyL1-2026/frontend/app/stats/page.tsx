@@ -469,7 +469,11 @@ export default function StatsPage() {
       <WelcomeSlideshow
         open={welcomeOpen}
         onComplete={() => {
-          localStorage.setItem(welcomeKey, "1");
+          try {
+            localStorage.setItem(welcomeKey, "1");
+          } catch {
+            // ignore storage quota errors
+          }
           setWelcomeSeen(true);
           setWelcomeOpen(false);
           if (needsTeamName) {
@@ -489,7 +493,11 @@ export default function StatsPage() {
           }
         }}
         onSkip={() => {
-          localStorage.setItem(favoriteDeferredKey, "1");
+          try {
+            localStorage.setItem(favoriteDeferredKey, "1");
+          } catch {
+            // ignore storage quota errors
+          }
           setFavoriteTeamId(null);
           setNeedsFavoriteTeam(false);
           setFavoriteGateOpen(false);
@@ -499,7 +507,11 @@ export default function StatsPage() {
           setFavoriteError(null);
           try {
             await updateFavoriteTeam(token, favoriteTeamId);
-            localStorage.removeItem(favoriteDeferredKey);
+            try {
+              localStorage.removeItem(favoriteDeferredKey);
+            } catch {
+              // ignore storage quota errors
+            }
             setNeedsFavoriteTeam(false);
             setFavoriteGateOpen(false);
           } catch {

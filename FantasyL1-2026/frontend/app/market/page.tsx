@@ -572,7 +572,11 @@ export default function MarketPage() {
         const hasFavorite = Boolean(favoriteId);
         const deferredFavorite = localStorage.getItem(favoriteDeferredKey) === "1";
         if (hasFavorite) {
-          localStorage.removeItem(favoriteDeferredKey);
+          try {
+              localStorage.removeItem(favoriteDeferredKey);
+            } catch {
+              // ignore storage quota errors
+            }
         }
         setNeedsTeamName(!hasName);
         setNeedsFavoriteTeam(!hasFavorite && !deferredFavorite);
@@ -1656,7 +1660,11 @@ export default function MarketPage() {
       <WelcomeSlideshow
         open={welcomeOpen}
         onComplete={() => {
-          localStorage.setItem(welcomeKey, "1");
+          try {
+            localStorage.setItem(welcomeKey, "1");
+          } catch {
+            // ignore storage quota errors
+          }
           setWelcomeSeen(true);
           setWelcomeOpen(false);
           if (needsTeamName) {
@@ -1676,7 +1684,11 @@ export default function MarketPage() {
           }
         }}
         onSkip={() => {
-          localStorage.setItem(favoriteDeferredKey, "1");
+          try {
+            localStorage.setItem(favoriteDeferredKey, "1");
+          } catch {
+            // ignore storage quota errors
+          }
           setFavoriteTeamId(null);
           setNeedsFavoriteTeam(false);
           setFavoriteGateOpen(false);
@@ -1686,7 +1698,11 @@ export default function MarketPage() {
           setFavoriteError(null);
           try {
             await updateFavoriteTeam(token, favoriteTeamId);
-            localStorage.removeItem(favoriteDeferredKey);
+            try {
+              localStorage.removeItem(favoriteDeferredKey);
+            } catch {
+              // ignore storage quota errors
+            }
             setNeedsFavoriteTeam(false);
             setFavoriteGateOpen(false);
           } catch {
