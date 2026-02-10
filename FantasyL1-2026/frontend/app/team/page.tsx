@@ -1225,14 +1225,13 @@ export default function TeamPage() {
       setNameGateOpen(false);
       return;
     }
-    const hasFullSquad = squad.length >= 15;
-    const shouldAskName = needsTeamName && hasFullSquad;
-    if (!welcomeSeen && isNewTeam && shouldAskName) {
+    const shouldShowWelcome = isNewTeam && needsTeamName && !welcomeSeen;
+    if (shouldShowWelcome) {
       setNameGateOpen(false);
       setFavoriteGateOpen(false);
       return;
     }
-    if (shouldAskName) {
+    if (needsTeamName && welcomeSeen) {
       setNameGateOpen(true);
       setFavoriteGateOpen(false);
       return;
@@ -1968,13 +1967,12 @@ export default function TeamPage() {
         open={welcomeOpen}
         onComplete={() => {
           localStorage.setItem(welcomeKey, "1");
-      setWelcomeSeen(true);
-      setWelcomeOpen(false);
-      setPostWelcomeRedirect(true);
-      const hasFullSquad = squad.length >= 15;
-      if (needsTeamName && hasFullSquad) {
-        setNameGateOpen(true);
-      }
+          setWelcomeSeen(true);
+          setWelcomeOpen(false);
+          setPostWelcomeRedirect(true);
+          if (needsTeamName) {
+            setNameGateOpen(true);
+          }
         }}
       />
 
@@ -1987,6 +1985,11 @@ export default function TeamPage() {
           if (!needsFavoriteTeam) {
             setFavoriteGateOpen(false);
           }
+        }}
+        onSkip={() => {
+          setFavoriteTeamId(null);
+          setNeedsFavoriteTeam(false);
+          setFavoriteGateOpen(false);
         }}
         onSave={async () => {
           if (!token || !favoriteTeamId) return;

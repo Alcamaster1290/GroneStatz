@@ -14,6 +14,7 @@ type FavoriteTeamGateProps = {
   selectedTeamId: number | null;
   onSelect: (teamId: number) => void;
   onSave: () => void;
+  onSkip?: () => void;
   onClose?: () => void;
   error?: string | null;
 };
@@ -23,6 +24,7 @@ export default function FavoriteTeamGate({
   selectedTeamId,
   onSelect,
   onSave,
+  onSkip,
   onClose,
   error: externalError
 }: FavoriteTeamGateProps) {
@@ -149,13 +151,23 @@ export default function FavoriteTeamGate({
         {externalError ? <p className="text-xs text-warning">{externalError}</p> : null}
         {!externalError && error ? <p className="text-xs text-warning">{error}</p> : null}
 
-        <button
-          onClick={onSave}
-          disabled={!selectedTeamId}
-          className="w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black disabled:opacity-40"
-        >
-          Guardar equipo favorito
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              if (onSkip) onSkip();
+            }}
+            className="w-1/3 rounded-xl border border-white/15 px-3 py-2 text-sm text-ink"
+          >
+            Elegir luego
+          </button>
+          <button
+            onClick={onSave}
+            disabled={!selectedTeamId}
+            className="w-2/3 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black disabled:opacity-40"
+          >
+            Guardar equipo favorito
+          </button>
+        </div>
       </div>
     </div>
   );

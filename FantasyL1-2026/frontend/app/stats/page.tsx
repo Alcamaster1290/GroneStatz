@@ -133,12 +133,13 @@ export default function StatsPage() {
       setNameGateOpen(false);
       return;
     }
-    if (!welcomeSeen && isNewTeam && needsTeamName) {
+    const shouldShowWelcome = isNewTeam && needsTeamName && !welcomeSeen;
+    if (shouldShowWelcome) {
       setNameGateOpen(false);
       setFavoriteGateOpen(false);
       return;
     }
-    if (needsTeamName) {
+    if (needsTeamName && welcomeSeen) {
       setNameGateOpen(true);
       setFavoriteGateOpen(false);
       return;
@@ -477,6 +478,11 @@ export default function StatsPage() {
           if (!needsFavoriteTeam) {
             setFavoriteGateOpen(false);
           }
+        }}
+        onSkip={() => {
+          setFavoriteTeamId(null);
+          setNeedsFavoriteTeam(false);
+          setFavoriteGateOpen(false);
         }}
         onSave={async () => {
           if (!token || !favoriteTeamId) return;

@@ -94,12 +94,13 @@ export default function SettingsPage() {
       setNameGateOpen(false);
       return;
     }
-    if (!welcomeSeen && isNewTeam && needsTeamName) {
+    const shouldShowWelcome = isNewTeam && needsTeamName && !welcomeSeen;
+    if (shouldShowWelcome) {
       setNameGateOpen(false);
       setFavoriteGateOpen(false);
       return;
     }
-    if (needsTeamName) {
+    if (needsTeamName && welcomeSeen) {
       setNameGateOpen(true);
       setFavoriteGateOpen(false);
       return;
@@ -285,23 +286,19 @@ export default function SettingsPage() {
       <div className="glass space-y-3 rounded-2xl p-4">
         <p className="text-sm text-muted">Equipo favorito</p>
         <div className="flex items-center gap-3">
-          {favoriteTeamId ? (
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface2/60">
-              <img
-                src={`/images/teams/${favoriteTeamId}.png`}
-                alt=""
-                className="h-8 w-8 object-contain"
-                onError={(event) => {
-                  (event.currentTarget as HTMLImageElement).style.display = "none";
-                }}
-              />
-            </span>
-          ) : (
-            <span className="h-10 w-10 rounded-full bg-surface2/60" />
-          )}
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface2/60">
+            <img
+              src={favoriteTeamId ? `/images/teams/${favoriteTeamId}.png` : "/images/logo.png"}
+              alt=""
+              className="h-8 w-8 object-contain"
+              onError={(event) => {
+                (event.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
+          </span>
           <div>
             <p className="text-sm text-ink">
-              {favoriteTeamId ? teamMap.get(favoriteTeamId) || "Equipo" : "Sin equipo"}
+              {favoriteTeamId ? teamMap.get(favoriteTeamId) || "Equipo" : "Fantasy Liga 1"}
             </p>
             <p className="text-xs text-muted">Puedes cambiarlo cuando quieras.</p>
           </div>
@@ -370,6 +367,11 @@ export default function SettingsPage() {
           if (!needsFavoriteTeam) {
             setFavoriteGateOpen(false);
           }
+        }}
+        onSkip={() => {
+          setFavoriteTeamId(null);
+          setNeedsFavoriteTeam(false);
+          setFavoriteGateOpen(false);
         }}
         onSave={async () => {
           if (!token || !favoriteTeamId) return;

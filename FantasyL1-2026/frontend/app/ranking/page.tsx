@@ -328,19 +328,20 @@ export default function RankingPage() {
       setNameGateOpen(false);
       return;
     }
-    if (!welcomeSeen && isNewTeam && needsTeamName) {
-      setNameGateOpen(false);
-      setFavoriteGateOpen(false);
-      return;
-    }
-    if (needsTeamName) {
-      setNameGateOpen(true);
-      setFavoriteGateOpen(false);
-      return;
-    }
     if (needsFavoriteTeam) {
       setFavoriteGateOpen(true);
       setNameGateOpen(false);
+      return;
+    }
+    const shouldShowWelcome = isNewTeam && needsTeamName && !welcomeSeen;
+    if (shouldShowWelcome) {
+      setNameGateOpen(false);
+      setFavoriteGateOpen(false);
+      return;
+    }
+    if (needsTeamName && welcomeSeen) {
+      setNameGateOpen(true);
+      setFavoriteGateOpen(false);
       return;
     }
     setNameGateOpen(false);
@@ -1081,6 +1082,11 @@ export default function RankingPage() {
           } catch (err) {
             setFavoriteError(String(err));
           }
+        }}
+        onSkip={() => {
+          setFavoriteTeamId(null);
+          setNeedsFavoriteTeam(false);
+          setFavoriteGateOpen(false);
         }}
         onClose={() => {
           if (!needsFavoriteTeam) {
