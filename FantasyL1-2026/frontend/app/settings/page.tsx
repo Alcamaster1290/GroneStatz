@@ -71,7 +71,7 @@ export default function SettingsPage() {
         setFavoriteTeamId(favoriteId);
         const hasFavorite = Boolean(favoriteId);
         setNeedsTeamName(!hasName);
-        setNeedsFavoriteTeam(hasName && !hasFavorite);
+        setNeedsFavoriteTeam(!hasFavorite);
         setIsNewTeam(!hasName);
         setTeamLoaded(true);
       })
@@ -89,6 +89,11 @@ export default function SettingsPage() {
       setFavoriteGateOpen(false);
       return;
     }
+    if (needsFavoriteTeam) {
+      setFavoriteGateOpen(true);
+      setNameGateOpen(false);
+      return;
+    }
     if (!welcomeSeen && isNewTeam && needsTeamName) {
       setNameGateOpen(false);
       setFavoriteGateOpen(false);
@@ -97,11 +102,6 @@ export default function SettingsPage() {
     if (needsTeamName) {
       setNameGateOpen(true);
       setFavoriteGateOpen(false);
-      return;
-    }
-    if (needsFavoriteTeam) {
-      setFavoriteGateOpen(true);
-      setNameGateOpen(false);
       return;
     }
     setNameGateOpen(false);
@@ -120,6 +120,10 @@ export default function SettingsPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
+    if (needsFavoriteTeam) {
+      setWelcomeOpen(false);
+      return;
+    }
     if (isNewTeam && teamLoaded && needsTeamName && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {

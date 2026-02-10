@@ -101,7 +101,7 @@ export default function StatsPage() {
         setFavoriteTeamId(favoriteId);
         const hasFavorite = Boolean(favoriteId);
         setNeedsTeamName(!hasName);
-        setNeedsFavoriteTeam(hasName && !hasFavorite);
+        setNeedsFavoriteTeam(!hasFavorite);
         setIsNewTeam(!hasName);
         setTeamLoaded(true);
       })
@@ -128,6 +128,11 @@ export default function StatsPage() {
       setFavoriteGateOpen(false);
       return;
     }
+    if (needsFavoriteTeam) {
+      setFavoriteGateOpen(true);
+      setNameGateOpen(false);
+      return;
+    }
     if (!welcomeSeen && isNewTeam && needsTeamName) {
       setNameGateOpen(false);
       setFavoriteGateOpen(false);
@@ -136,11 +141,6 @@ export default function StatsPage() {
     if (needsTeamName) {
       setNameGateOpen(true);
       setFavoriteGateOpen(false);
-      return;
-    }
-    if (needsFavoriteTeam) {
-      setFavoriteGateOpen(true);
-      setNameGateOpen(false);
       return;
     }
     setNameGateOpen(false);
@@ -159,6 +159,10 @@ export default function StatsPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
+    if (needsFavoriteTeam) {
+      setWelcomeOpen(false);
+      return;
+    }
     if (isNewTeam && teamLoaded && needsTeamName && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {

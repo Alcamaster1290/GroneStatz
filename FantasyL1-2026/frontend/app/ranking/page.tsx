@@ -306,7 +306,7 @@ export default function RankingPage() {
         const hasName = Boolean(team.name?.trim());
         const hasFavorite = Boolean(team.favorite_team_id);
         setNeedsTeamName(!hasName);
-        setNeedsFavoriteTeam(hasName && !hasFavorite);
+        setNeedsFavoriteTeam(!hasFavorite);
         setIsNewTeam(!hasName);
         setTeamLoaded(true);
       })
@@ -359,6 +359,10 @@ export default function RankingPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
+    if (needsFavoriteTeam) {
+      setWelcomeOpen(false);
+      return;
+    }
     if (isNewTeam && teamLoaded && needsTeamName && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
