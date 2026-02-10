@@ -62,6 +62,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!token) return;
+    const deferredKey = `fantasy_favorite_deferred_${userEmail && userEmail.trim() ? userEmail.trim() : "anon"}`;
     getTeam(token)
       .then((team) => {
         setTeamName(team.name || "");
@@ -70,8 +71,12 @@ export default function SettingsPage() {
           typeof team.favorite_team_id === "number" ? team.favorite_team_id : null;
         setFavoriteTeamId(favoriteId);
         const hasFavorite = Boolean(favoriteId);
+        const deferredFavorite = localStorage.getItem(deferredKey) === "1";
+        if (hasFavorite) {
+          localStorage.removeItem(deferredKey);
+        }
         setNeedsTeamName(!hasName);
-        setNeedsFavoriteTeam(!hasFavorite);
+        setNeedsFavoriteTeam(!hasFavorite && !deferredFavorite);
         setIsNewTeam(!hasName);
         setTeamLoaded(true);
       })
@@ -81,7 +86,7 @@ export default function SettingsPage() {
         setIsNewTeam(false);
         setTeamLoaded(true);
       });
-  }, [token]);
+  }, [token, userEmail]);
 
   useEffect(() => {
     if (!teamLoaded) {
@@ -110,6 +115,7 @@ export default function SettingsPage() {
   }, [teamLoaded, isNewTeam, needsTeamName, needsFavoriteTeam, welcomeSeen]);
 
   const welcomeKey = `fantasy_welcome_seen_${userEmail && userEmail.trim() ? userEmail.trim() : "anon"}`;
+  const favoriteDeferredKey = `fantasy_favorite_deferred_${userEmail && userEmail.trim() ? userEmail.trim() : "anon"}`;
   const appChannel = process.env.NEXT_PUBLIC_APP_CHANNEL || "web";
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || "dev";
   const pushSectionVisible = isNativeMobilePlatform() && appChannel !== "web";
@@ -369,6 +375,7 @@ export default function SettingsPage() {
           }
         }}
         onSkip={() => {
+          localStorage.setItem(favoriteDeferredKey, "1");
           setFavoriteTeamId(null);
           setNeedsFavoriteTeam(false);
           setFavoriteGateOpen(false);
@@ -378,6 +385,7 @@ export default function SettingsPage() {
           setFavoriteError(null);
           try {
             await updateFavoriteTeam(token, favoriteTeamId);
+            localStorage.removeItem(favoriteDeferredKey);
             setNeedsFavoriteTeam(false);
             setFavoriteGateOpen(false);
           } catch {

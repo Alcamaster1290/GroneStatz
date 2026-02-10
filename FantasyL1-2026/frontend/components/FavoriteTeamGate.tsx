@@ -92,7 +92,7 @@ export default function FavoriteTeamGate({
       <div className="glass w-full max-w-md space-y-4 rounded-3xl border border-white/10 p-5">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-ink">Elige tu equipo favorito</h2>
+            <h2 className="text-lg font-semibold text-ink">Cual es tu equipo favorito de la Liga 1?</h2>
             <p className="text-xs text-muted">
               Selecciona el club que quieres seguir en la Liga 1 2026.
             </p>

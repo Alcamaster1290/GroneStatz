@@ -1027,8 +1027,12 @@ export default function TeamPage() {
           typeof team.favorite_team_id === "number" ? team.favorite_team_id : null;
         setFavoriteTeamId(favoriteId);
         const hasFavorite = Boolean(favoriteId);
+        const deferredFavorite = localStorage.getItem(favoriteDeferredKey) === "1";
+        if (hasFavorite) {
+          localStorage.removeItem(favoriteDeferredKey);
+        }
         setNeedsTeamName(!hasName);
-        setNeedsFavoriteTeam(!hasFavorite);
+        setNeedsFavoriteTeam(!hasFavorite && !deferredFavorite);
         setIsNewTeam(!hasName);
         setTeamLoaded(true);
 
@@ -1243,6 +1247,10 @@ export default function TeamPage() {
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
     return `fantasy_welcome_seen_${safeEmail}`;
+  }, [userEmail]);
+  const favoriteDeferredKey = useMemo(() => {
+    const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
+    return `fantasy_favorite_deferred_${safeEmail}`;
   }, [userEmail]);
 
   useEffect(() => {
@@ -1639,8 +1647,36 @@ export default function TeamPage() {
               })()}
             </span>
           </div>
-          <span className="rounded-full bg-accent px-3 py-1 text-[10px] font-semibold text-black">
-            {nextFixture.home_team_id ?? ""} vs {nextFixture.away_team_id ?? ""}
+          <span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-[10px] font-semibold text-black">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black/10">
+              {nextFixture.home_team_id ? (
+                <img
+                  src={`/images/teams/${nextFixture.home_team_id}.png`}
+                  alt=""
+                  className="h-4 w-4 object-contain"
+                  onError={(event) => {
+                    (event.currentTarget as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              ) : (
+                <span className="text-[9px]">-</span>
+              )}
+            </span>
+            <span>vs</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black/10">
+              {nextFixture.away_team_id ? (
+                <img
+                  src={`/images/teams/${nextFixture.away_team_id}.png`}
+                  alt=""
+                  className="h-4 w-4 object-contain"
+                  onError={(event) => {
+                    (event.currentTarget as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              ) : (
+                <span className="text-[9px]">-</span>
+              )}
+            </span>
           </span>
         </div>
       ) : null}
@@ -1987,6 +2023,7 @@ export default function TeamPage() {
           }
         }}
         onSkip={() => {
+          localStorage.setItem(favoriteDeferredKey, "1");
           setFavoriteTeamId(null);
           setNeedsFavoriteTeam(false);
           setFavoriteGateOpen(false);
@@ -1996,6 +2033,7 @@ export default function TeamPage() {
           setFavoriteError(null);
           try {
             await updateFavoriteTeam(token, favoriteTeamId);
+            localStorage.removeItem(favoriteDeferredKey);
             setNeedsFavoriteTeam(false);
             setFavoriteGateOpen(false);
             if (postWelcomeRedirect) {

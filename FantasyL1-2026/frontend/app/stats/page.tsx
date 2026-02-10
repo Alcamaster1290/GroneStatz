@@ -92,6 +92,7 @@ export default function StatsPage() {
 
   useEffect(() => {
     if (!token) return;
+    const deferredKey = `fantasy_favorite_deferred_${userEmail && userEmail.trim() ? userEmail.trim() : "anon"}`;
     getTeam(token)
       .then((team) => {
         setTeamName(team.name || "");
@@ -100,8 +101,12 @@ export default function StatsPage() {
           typeof team.favorite_team_id === "number" ? team.favorite_team_id : null;
         setFavoriteTeamId(favoriteId);
         const hasFavorite = Boolean(favoriteId);
+        const deferredFavorite = localStorage.getItem(deferredKey) === "1";
+        if (hasFavorite) {
+          localStorage.removeItem(deferredKey);
+        }
         setNeedsTeamName(!hasName);
-        setNeedsFavoriteTeam(!hasFavorite);
+        setNeedsFavoriteTeam(!hasFavorite && !deferredFavorite);
         setIsNewTeam(!hasName);
         setTeamLoaded(true);
       })
@@ -111,7 +116,7 @@ export default function StatsPage() {
         setIsNewTeam(false);
         setTeamLoaded(true);
       });
-  }, [token]);
+  }, [token, userEmail]);
 
   useEffect(() => {
     getTeams().then(setTeams).catch(() => undefined);
@@ -151,6 +156,10 @@ export default function StatsPage() {
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
     return `fantasy_welcome_seen_${safeEmail}`;
+  }, [userEmail]);
+  const favoriteDeferredKey = useMemo(() => {
+    const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
+    return `fantasy_favorite_deferred_${safeEmail}`;
   }, [userEmail]);
 
   useEffect(() => {
@@ -480,6 +489,7 @@ export default function StatsPage() {
           }
         }}
         onSkip={() => {
+          localStorage.setItem(favoriteDeferredKey, "1");
           setFavoriteTeamId(null);
           setNeedsFavoriteTeam(false);
           setFavoriteGateOpen(false);
@@ -489,6 +499,7 @@ export default function StatsPage() {
           setFavoriteError(null);
           try {
             await updateFavoriteTeam(token, favoriteTeamId);
+            localStorage.removeItem(favoriteDeferredKey);
             setNeedsFavoriteTeam(false);
             setFavoriteGateOpen(false);
           } catch {

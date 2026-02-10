@@ -298,6 +298,7 @@ export default function RankingPage() {
 
   useEffect(() => {
     if (!token) return;
+    const deferredKey = `fantasy_favorite_deferred_${userEmail && userEmail.trim() ? userEmail.trim() : "anon"}`;
     getTeam(token)
       .then((team) => {
         setTeamName(team.name || "");
@@ -305,8 +306,12 @@ export default function RankingPage() {
         setFavoriteTeamId(team.favorite_team_id ?? null);
         const hasName = Boolean(team.name?.trim());
         const hasFavorite = Boolean(team.favorite_team_id);
+        const deferredFavorite = localStorage.getItem(deferredKey) === "1";
+        if (hasFavorite) {
+          localStorage.removeItem(deferredKey);
+        }
         setNeedsTeamName(!hasName);
-        setNeedsFavoriteTeam(!hasFavorite);
+        setNeedsFavoriteTeam(!hasFavorite && !deferredFavorite);
         setIsNewTeam(!hasName);
         setTeamLoaded(true);
       })
@@ -316,7 +321,7 @@ export default function RankingPage() {
         setIsNewTeam(false);
         setTeamLoaded(true);
       });
-  }, [token]);
+  }, [token, userEmail]);
 
   useEffect(() => {
     getRounds().then(setRoundsInfo).catch(() => undefined);
@@ -351,6 +356,10 @@ export default function RankingPage() {
   const welcomeKey = useMemo(() => {
     const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
     return `fantasy_welcome_seen_${safeEmail}`;
+  }, [userEmail]);
+  const favoriteDeferredKey = useMemo(() => {
+    const safeEmail = userEmail && userEmail.trim() ? userEmail.trim() : "anon";
+    return `fantasy_favorite_deferred_${safeEmail}`;
   }, [userEmail]);
 
   useEffect(() => {
@@ -1077,6 +1086,7 @@ export default function RankingPage() {
           setFavoriteError(null);
           try {
             await updateFavoriteTeam(token, favoriteTeamId);
+            localStorage.removeItem(favoriteDeferredKey);
             setNeedsFavoriteTeam(false);
             setFavoriteGateOpen(false);
           } catch (err) {
@@ -1084,6 +1094,7 @@ export default function RankingPage() {
           }
         }}
         onSkip={() => {
+          localStorage.setItem(favoriteDeferredKey, "1");
           setFavoriteTeamId(null);
           setNeedsFavoriteTeam(false);
           setFavoriteGateOpen(false);
