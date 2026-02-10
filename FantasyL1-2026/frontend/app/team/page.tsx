@@ -835,6 +835,14 @@ export default function TeamPage() {
     };
   }, [fixtures]);
 
+  const nextFixture = useMemo(() => {
+    const withKickoff = fixtures
+      .filter((fixture) => fixture.kickoff_at)
+      .slice()
+      .sort((a, b) => String(a.kickoff_at).localeCompare(String(b.kickoff_at)));
+    return withKickoff[0] ?? null;
+  }, [fixtures]);
+
   const availableRounds = useMemo(() => {
     const configuredRounds = Array.from(
       new Set(
@@ -1212,12 +1220,14 @@ export default function TeamPage() {
       setFavoriteGateOpen(false);
       return;
     }
-    if (!welcomeSeen && isNewTeam && needsTeamName) {
+    const hasFullSquad = squad.length >= 15;
+    const shouldAskName = needsTeamName && hasFullSquad;
+    if (!welcomeSeen && isNewTeam && shouldAskName) {
       setNameGateOpen(false);
       setFavoriteGateOpen(false);
       return;
     }
-    if (needsTeamName) {
+    if (shouldAskName) {
       setNameGateOpen(true);
       setFavoriteGateOpen(false);
       return;
@@ -1608,6 +1618,29 @@ export default function TeamPage() {
           </p>
         </div>
       </div>
+      {roundStatus === "Pendiente" && nextFixture ? (
+        <div className="flex items-center justify-between rounded-2xl border border-accent/40 bg-accent/10 px-3 py-2 text-xs">
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-[0.15em] text-muted">Haz tu XI inicial</span>
+            <span className="text-sm font-semibold text-ink">
+              Próximo partido:{" "}
+              {(() => {
+                const raw = nextFixture.kickoff_at ? String(nextFixture.kickoff_at).trim() : "";
+                if (!raw) return `Ronda ${currentRound ?? ""}`;
+                const normalized = raw.replace("T", " ").trim();
+                const [datePart, timePart] = normalized.split(" ");
+                const [year, month, day] = (datePart || "").split("-");
+                const time = timePart ? timePart.slice(0, 5) : "";
+                if (!year || !month || !day) return normalized;
+                return `${day}/${month}/${year.slice(2)}${time ? `, ${time}` : ""}`;
+              })()}
+            </span>
+          </div>
+          <span className="rounded-full bg-accent px-3 py-1 text-[10px] font-semibold text-black">
+            {nextFixture.home_team_id ?? ""} vs {nextFixture.away_team_id ?? ""}
+          </span>
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs">
           <button
@@ -1931,12 +1964,13 @@ export default function TeamPage() {
         open={welcomeOpen}
         onComplete={() => {
           localStorage.setItem(welcomeKey, "1");
-          setWelcomeSeen(true);
-          setWelcomeOpen(false);
-          setPostWelcomeRedirect(true);
-          if (needsTeamName) {
-            setNameGateOpen(true);
-          }
+      setWelcomeSeen(true);
+      setWelcomeOpen(false);
+      setPostWelcomeRedirect(true);
+      const hasFullSquad = squad.length >= 15;
+      if (needsTeamName && hasFullSquad) {
+        setNameGateOpen(true);
+      }
         }}
       />
 
