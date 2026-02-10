@@ -9,34 +9,54 @@ type FabMenuProps = {
   onRevert: () => void;
   isLineupSaved: boolean;
   canRevert: boolean;
+  indicatorLabel: string;
+  indicatorTone: "green" | "yellow" | "red";
+  saveEnabled?: boolean;
 };
 
-export default function FabMenu({ onSave, onRevert, isLineupSaved, canRevert }: FabMenuProps) {
+export default function FabMenu({
+  onSave,
+  onRevert,
+  isLineupSaved,
+  canRevert,
+  indicatorLabel,
+  indicatorTone,
+  saveEnabled = true
+}: FabMenuProps) {
   const [open, setOpen] = useState(false);
+  const toneClass =
+    indicatorTone === "green"
+      ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-200"
+      : indicatorTone === "yellow"
+        ? "border-amber-400/40 bg-amber-500/10 text-amber-200"
+        : "border-red-400/40 bg-red-500/10 text-red-200";
+  const dotClass =
+    indicatorTone === "green"
+      ? "bg-emerald-300"
+      : indicatorTone === "yellow"
+        ? "bg-amber-300"
+        : "bg-red-300";
 
   return (
     <div className="fixed bottom-24 right-6 z-40 flex flex-col items-end gap-3">
       <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={onSave}
+          onClick={() => {
+            if (!saveEnabled) return;
+            onSave();
+          }}
+          disabled={!saveEnabled}
           className={
-            "glass inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition " +
-            (isLineupSaved
-              ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-200"
-              : "border-amber-400/40 bg-amber-500/10 text-amber-200")
+            "glass inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-90 " +
+            toneClass
           }
-          aria-label="Guardar XI"
+          aria-label="Estado del XI"
         >
-          <span
-            className={
-              "inline-block h-2.5 w-2.5 rounded-full " +
-              (isLineupSaved ? "bg-emerald-300" : "bg-amber-300")
-            }
-          />
-          {isLineupSaved ? "XI GUARDADO" : "XI PENDIENTE"}
+          <span className={"inline-block h-2.5 w-2.5 rounded-full " + dotClass} />
+          {indicatorLabel}
         </button>
-        {!isLineupSaved && canRevert ? (
+        {!isLineupSaved && canRevert && saveEnabled ? (
           <button
             type="button"
             onClick={onRevert}
@@ -51,11 +71,15 @@ export default function FabMenu({ onSave, onRevert, isLineupSaved, canRevert }: 
       {open ? (
         <div className="flex flex-col items-end gap-2">
           <button
-            onClick={onSave}
-            className="glass flex items-center gap-2 rounded-full px-4 py-2 text-sm text-ink"
+            onClick={() => {
+              if (!saveEnabled) return;
+              onSave();
+            }}
+            disabled={!saveEnabled}
+            className="glass flex items-center gap-2 rounded-full px-4 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Save size={16} />
-            {isLineupSaved ? "XI guardado" : "Guardar XI"}
+            {saveEnabled ? (isLineupSaved ? "XI guardado" : "Guardar XI") : "Ronda cerrada"}
           </button>
           <Link
             href="/market"

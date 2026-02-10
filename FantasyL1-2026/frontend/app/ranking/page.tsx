@@ -40,6 +40,49 @@ const positionLabels: Record<string, string> = {
   F: "Delantero"
 };
 
+type TopRankStyle = {
+  medal: string;
+  color: string;
+  borderClass: string;
+  backgroundClass: string;
+};
+
+const TOP_RANK_STYLES: Record<number, TopRankStyle> = {
+  1: {
+    medal: "Oro",
+    color: "#F6C453",
+    borderClass: "border-[#F6C453]/45",
+    backgroundClass: "bg-gradient-to-r from-[#3A2A08]/45 via-[#5B3E0E]/30 to-transparent"
+  },
+  2: {
+    medal: "Plata",
+    color: "#D5DBE4",
+    borderClass: "border-[#D5DBE4]/45",
+    backgroundClass: "bg-gradient-to-r from-[#2B323C]/45 via-[#485360]/30 to-transparent"
+  },
+  3: {
+    medal: "Bronce",
+    color: "#CD7F32",
+    borderClass: "border-[#CD7F32]/45",
+    backgroundClass: "bg-gradient-to-r from-[#3A2110]/45 via-[#5A3520]/30 to-transparent"
+  },
+  4: {
+    medal: "Cobre",
+    color: "#B87333",
+    borderClass: "border-[#B87333]/40",
+    backgroundClass: "bg-gradient-to-r from-[#3A1E11]/40 via-[#4A2C1E]/28 to-transparent"
+  },
+  5: {
+    medal: "Estano",
+    color: "#A8B1B9",
+    borderClass: "border-[#A8B1B9]/35",
+    backgroundClass: "bg-gradient-to-r from-[#2D3338]/40 via-[#414B54]/25 to-transparent"
+  }
+};
+
+const RELIEF_TEXT_SHADOW =
+  "0 1px 0 rgba(255,255,255,0.35), 0 2px 0 rgba(0,0,0,0.5), 0 6px 10px rgba(0,0,0,0.35)";
+
 function RankingTable({
   title,
   data,
@@ -63,14 +106,47 @@ function RankingTable({
     <div className="glass space-y-3 rounded-2xl p-4">
       <h3 className="text-sm font-semibold text-ink">{title}</h3>
       <div className="space-y-3">
-        {data.entries.map((entry, index) => (
-          <div
-            key={entry.fantasy_team_id}
-            className="flex flex-col gap-2 rounded-2xl border border-white/10 px-3 py-2"
-          >
+        {data.entries.map((entry, index) => {
+          const rank = index + 1;
+          const topStyle = TOP_RANK_STYLES[rank];
+          const isTopFive = Boolean(topStyle);
+          return (
+            <div
+              key={entry.fantasy_team_id}
+              className={
+                "flex flex-col gap-2 rounded-2xl border px-3 py-2 transition " +
+                (isTopFive
+                  ? `${topStyle.backgroundClass} ${topStyle.borderClass} shadow-[inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(0,0,0,0.35),0_10px_22px_rgba(0,0,0,0.28)]`
+                  : "border-white/10")
+              }
+            >
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted">#{index + 1}</span>
+                <span
+                  className={"text-xs font-bold " + (isTopFive ? "" : "text-muted")}
+                  style={
+                    isTopFive
+                      ? {
+                          color: topStyle.color,
+                          textShadow: RELIEF_TEXT_SHADOW
+                        }
+                      : undefined
+                  }
+                >
+                  #{rank}
+                </span>
+                {isTopFive ? (
+                  <span
+                    className="rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide"
+                    style={{
+                      color: topStyle.color,
+                      borderColor: `${topStyle.color}66`,
+                      textShadow: RELIEF_TEXT_SHADOW
+                    }}
+                  >
+                    {topStyle.medal}
+                  </span>
+                ) : null}
                 {entry.captain_player_id ? (
                   <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-surface2/60">
                     <img
@@ -107,12 +183,30 @@ function RankingTable({
                   type="button"
                   onClick={() => onSelectTeam?.(entry.fantasy_team_id, entry.team_name)}
                   className="text-left font-semibold text-ink transition hover:text-accent"
+                  style={
+                    isTopFive
+                      ? {
+                          color: topStyle.color,
+                          textShadow: RELIEF_TEXT_SHADOW
+                        }
+                      : undefined
+                  }
                 >
                   {entry.team_name}
                 </button>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-accent">
+                <span
+                  className={"text-sm font-semibold " + (isTopFive ? "" : "text-accent")}
+                  style={
+                    isTopFive
+                      ? {
+                          color: topStyle.color,
+                          textShadow: RELIEF_TEXT_SHADOW
+                        }
+                      : undefined
+                  }
+                >
                   {Math.round(entry.total_points)}
                 </span>
               </div>
@@ -135,7 +229,8 @@ function RankingTable({
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

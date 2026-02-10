@@ -914,6 +914,26 @@ export default function TeamPage() {
     !isLineupSaved &&
     Boolean(savedLineupSnapshot) &&
     savedLineupSnapshot?.roundNumber === (currentRound ?? null);
+  const hasSavedLineupForCurrentRound = useMemo(() => {
+    if (!savedLineupSnapshot) return false;
+    if (savedLineupSnapshot.roundNumber !== (currentRound ?? null)) return false;
+    return savedLineupSnapshot.slots.some((slot) => slot.player_id !== null);
+  }, [savedLineupSnapshot, currentRound]);
+  const lineupIndicatorTone: "green" | "yellow" | "red" =
+    roundStatus === "Cerrada"
+      ? "red"
+      : isLineupSaved
+        ? "green"
+        : "yellow";
+  const lineupIndicatorLabel =
+    roundStatus === "Cerrada"
+      ? hasSavedLineupForCurrentRound
+        ? "XI GUARDADO"
+        : "SIN XI PARA ESTA RONDA"
+      : isLineupSaved
+        ? "XI GUARDADO"
+        : "XI PENDIENTE";
+  const lineupSaveEnabled = roundStatus === "Pendiente";
 
   const selectedPlayer =
     (selectedSlot?.player_id ? squadMap.get(selectedSlot.player_id) : undefined) ||
@@ -1709,24 +1729,23 @@ export default function TeamPage() {
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Suplentes</h2>
           <div className="grid grid-cols-4 gap-2">
-            {bench.map((slot) => (
-              <LineupSlotCard
-                key={slot.slot_index}
-                slot={slot}
-                player={slot.player_id ? squadMap.get(slot.player_id) : undefined}
-                isCaptain={Boolean(slot.player_id && captainId === slot.player_id)}
-                isViceCaptain={Boolean(slot.player_id && viceCaptainId === slot.player_id)}
-                opponent={
-                  slot.player_id && squadMap.get(slot.player_id)
-                    ? opponentByTeamId.get(
-                        (squadMap.get(slot.player_id) as Player).team_id
-                      )
-                    : undefined
-                }
-                onClick={() => handleSlotClick(slot)}
-                compact
-              />
-            ))}
+            {bench.map((slot) => {
+              const player =
+                (slot.player_id ? squadMap.get(slot.player_id) : undefined) ||
+                (slot.player ?? undefined);
+              return (
+                <LineupSlotCard
+                  key={slot.slot_index}
+                  slot={slot}
+                  player={player}
+                  isCaptain={Boolean(player && captainId === player.player_id)}
+                  isViceCaptain={Boolean(player && viceCaptainId === player.player_id)}
+                  opponent={player ? opponentByTeamId.get(player.team_id) : undefined}
+                  onClick={() => handleSlotClick(slot)}
+                  compact
+                />
+              );
+            })}
           </div>
         </section>
 
@@ -1877,6 +1896,9 @@ export default function TeamPage() {
         onRevert={handleRevertLineupChanges}
         isLineupSaved={isLineupSaved}
         canRevert={canRevertLineup}
+        indicatorLabel={lineupIndicatorLabel}
+        indicatorTone={lineupIndicatorTone}
+        saveEnabled={lineupSaveEnabled}
       />
 
       {saveMessage ? (
