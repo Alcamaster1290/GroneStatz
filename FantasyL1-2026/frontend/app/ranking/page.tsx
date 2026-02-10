@@ -135,18 +135,6 @@ function RankingTable({
                 >
                   #{rank}
                 </span>
-                {isTopFive ? (
-                  <span
-                    className="rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide"
-                    style={{
-                      color: topStyle.color,
-                      borderColor: `${topStyle.color}66`,
-                      textShadow: RELIEF_TEXT_SHADOW
-                    }}
-                  >
-                    {topStyle.medal}
-                  </span>
-                ) : null}
                 {entry.captain_player_id ? (
                   <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-surface2/60">
                     <img
