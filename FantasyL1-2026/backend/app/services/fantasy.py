@@ -117,15 +117,28 @@ def get_or_create_fantasy_team(
     season_id: int,
     name: Optional[str] = None,
 ) -> FantasyTeam:
-    team = db.execute(
-        select(FantasyTeam).where(FantasyTeam.user_id == user_id, FantasyTeam.season_id == season_id)
-    ).scalar_one_or_none()
+    """Return the user's fantasy team, aligning it with the active season.
+
+    The database enforces a unique constraint on user_id only. If a team exists for another
+    season we reuse it (optionally updating name) instead of inserting a duplicate, avoiding
+    db_integrity_error:fantasy_teams_user_id_key on first visit to ranking/leagues.
+    """
+
+    team = db.execute(select(FantasyTeam).where(FantasyTeam.user_id == user_id)).scalar_one_or_none()
+
     if team:
+        changed = False
+        if team.season_id != season_id:
+            team.season_id = season_id
+            changed = True
         if name and team.name != name:
             team.name = name
+            changed = True
+        if changed:
             db.commit()
             db.refresh(team)
         return team
+
     team = FantasyTeam(user_id=user_id, season_id=season_id, name=name)
     db.add(team)
     db.commit()
