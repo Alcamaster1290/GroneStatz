@@ -76,7 +76,7 @@ export default function StatsPage() {
   const [position, setPosition] = useState<Position | "">("");
   const [teamId, setTeamId] = useState("");
   const [sortKey, setSortKey] = useState<
-    "points" | "goals" | "assists" | "price" | "selected"
+    "points" | "goals" | "assists" | "price" | "price_delta" | "selected"
   >("selected");
 
   useEffect(() => {
@@ -229,6 +229,8 @@ export default function StatsPage() {
           return (b.assists || 0) - (a.assists || 0);
         case "price":
           return (b.price_current || 0) - (a.price_current || 0);
+        case "price_delta":
+          return (b.price_delta || 0) - (a.price_delta || 0);
         case "selected":
         default:
           return (b.selected_count || 0) - (a.selected_count || 0);
@@ -293,15 +295,24 @@ export default function StatsPage() {
             <select
               value={sortKey}
               onChange={(event) =>
-                setSortKey(event.target.value as "points" | "goals" | "assists" | "price" | "selected")
+                setSortKey(
+                  event.target.value as
+                    | "points"
+                    | "goals"
+                    | "assists"
+                    | "price"
+                    | "price_delta"
+                    | "selected"
+                )
               }
               className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
             >
-              <option value="selected">Veces elegido</option>
+              <option value="selected">Cantidad de veces elegido</option>
               <option value="points">Puntos</option>
               <option value="goals">Goles</option>
               <option value="assists">Asistencias</option>
               <option value="price">Precio</option>
+              <option value="price_delta">Variacion de precio</option>
             </select>
           </div>
         </div>

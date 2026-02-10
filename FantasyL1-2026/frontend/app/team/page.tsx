@@ -71,6 +71,53 @@ const safeSaveDraft = (key: string, payload: unknown) => {
   }
 };
 
+type LineupSnapshot = {
+  roundNumber: number | null;
+  slots: Array<Pick<LineupSlot, "slot_index" | "is_starter" | "role" | "player_id">>;
+  captainId: number | null;
+  viceCaptainId: number | null;
+};
+
+const sanitizeLineupSlots = (slots: LineupSlot[]) =>
+  slots
+    .map((slot) => ({
+      slot_index: slot.slot_index,
+      is_starter: slot.is_starter,
+      role: slot.role,
+      player_id: slot.player_id ?? null
+    }))
+    .sort((a, b) => a.slot_index - b.slot_index);
+
+const buildLineupSnapshot = (
+  roundNumber: number | null,
+  slots: LineupSlot[],
+  captainId: number | null,
+  viceCaptainId: number | null
+): LineupSnapshot => ({
+  roundNumber,
+  slots: sanitizeLineupSlots(slots),
+  captainId: captainId ?? null,
+  viceCaptainId: viceCaptainId ?? null
+});
+
+const lineupSnapshotsEqual = (a: LineupSnapshot | null, b: LineupSnapshot): boolean => {
+  if (!a) return false;
+  if (a.roundNumber !== b.roundNumber) return false;
+  if ((a.captainId ?? null) !== (b.captainId ?? null)) return false;
+  if ((a.viceCaptainId ?? null) !== (b.viceCaptainId ?? null)) return false;
+  if (a.slots.length !== b.slots.length) return false;
+  for (let index = 0; index < a.slots.length; index += 1) {
+    const left = a.slots[index];
+    const right = b.slots[index];
+    if (!right) return false;
+    if (left.slot_index !== right.slot_index) return false;
+    if (left.is_starter !== right.is_starter) return false;
+    if (left.role !== right.role) return false;
+    if ((left.player_id ?? null) !== (right.player_id ?? null)) return false;
+  }
+  return true;
+};
+
 function PlayerFace({ playerId, sizeClass }: { playerId: number; sizeClass: string }) {
   const sources = [
     `/images/players/${playerId}.png`
@@ -528,6 +575,7 @@ export default function TeamPage() {
   const [favoriteError, setFavoriteError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [marketPriceDelta, setMarketPriceDelta] = useState<number | null>(null);
+  const [savedLineupSnapshot, setSavedLineupSnapshot] = useState<LineupSnapshot | null>(null);
   const router = useRouter();
   const [deltaOpen, setDeltaOpen] = useState(false);
 
@@ -847,6 +895,25 @@ export default function TeamPage() {
       : marketPriceDelta > 0
         ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-200"
         : "border-red-400/40 bg-red-500/10 text-red-200";
+  const currentLineupSnapshot = useMemo(
+    () =>
+      buildLineupSnapshot(
+        currentRound ?? null,
+        lineupSlots,
+        captainId ?? null,
+        viceCaptainId ?? null
+      ),
+    [currentRound, lineupSlots, captainId, viceCaptainId]
+  );
+  const isLineupSaved = useMemo(
+    () => lineupSnapshotsEqual(savedLineupSnapshot, currentLineupSnapshot),
+    [savedLineupSnapshot, currentLineupSnapshot]
+  );
+  const canRevertLineup =
+    roundStatus === "Pendiente" &&
+    !isLineupSaved &&
+    Boolean(savedLineupSnapshot) &&
+    savedLineupSnapshot?.roundNumber === (currentRound ?? null);
 
   const selectedPlayer =
     (selectedSlot?.player_id ? squadMap.get(selectedSlot.player_id) : undefined) ||
@@ -991,6 +1058,14 @@ export default function TeamPage() {
               setCaptainId(lineupCaptainId);
               setViceCaptainId(lineupViceCaptainId);
             }
+          setSavedLineupSnapshot(
+            buildLineupSnapshot(
+              lineup.round_number ?? null,
+              normalizedSlots,
+              lineupCaptainId,
+              lineupViceCaptainId
+            )
+          );
           setRoundMissing(false);
           getFixtures()
             .then((allFixtures) => {
@@ -1032,6 +1107,7 @@ export default function TeamPage() {
               setMarketPriceDelta(null);
             }
             setLineupSlots(buildDefaultSlots());
+            setSavedLineupSnapshot(null);
           } else {
             throw err;
           }
@@ -1046,6 +1122,7 @@ export default function TeamPage() {
       setNeedsFavoriteTeam(false);
       setIsNewTeam(false);
       setTeamLoaded(true);
+      setSavedLineupSnapshot(null);
     });
   }, [token, userEmail, setSquad, setLineupSlots, setCurrentRound, setCaptainId, setViceCaptainId]);
 
@@ -1155,12 +1232,7 @@ export default function TeamPage() {
 
   useEffect(() => {
     if (!token || roundMissing || !currentRound) return;
-    const sanitizedSlots = lineupSlots.map((slot) => ({
-      slot_index: slot.slot_index,
-      is_starter: slot.is_starter,
-      role: slot.role,
-      player_id: slot.player_id
-    }));
+    const sanitizedSlots = sanitizeLineupSlots(lineupSlots);
     const payload = {
       roundNumber: currentRound,
       slots: sanitizedSlots,
@@ -1344,6 +1416,27 @@ export default function TeamPage() {
     }
   };
 
+  const handleRevertLineupChanges = () => {
+    if (!canRevertLineup || !savedLineupSnapshot) return;
+    const revertedSlots: LineupSlot[] = savedLineupSnapshot.slots.map((slot) => ({
+      ...slot,
+      player: null
+    }));
+    setLineupSlots(revertedSlots);
+    setCaptainId(savedLineupSnapshot.captainId ?? null);
+    setViceCaptainId(savedLineupSnapshot.viceCaptainId ?? null);
+    setSaveErrors(null);
+    setSaveMessage("Cambios descartados");
+    if (savedLineupSnapshot.roundNumber) {
+      safeSaveDraft(draftKey, {
+        roundNumber: savedLineupSnapshot.roundNumber,
+        slots: revertedSlots,
+        captainId: savedLineupSnapshot.captainId ?? null,
+        viceCaptainId: savedLineupSnapshot.viceCaptainId ?? null
+      });
+    }
+  };
+
   const handleSave = async () => {
     if (nameGateOpen) return;
     if (roundMissing) {
@@ -1375,6 +1468,14 @@ export default function TeamPage() {
       } else {
         setSaveMessage("XI guardado correctamente");
       }
+      setSavedLineupSnapshot(
+        buildLineupSnapshot(
+          currentRound ?? null,
+          lineupSlots,
+          captainId ?? null,
+          viceCaptainId ?? null
+        )
+      );
     } catch (err) {
       setSaveErrors([String(err)]);
     }
@@ -1417,6 +1518,14 @@ export default function TeamPage() {
       setLineupSlots(normalizedSlots);
       setCaptainId(lineupCaptainId);
       setViceCaptainId(lineupViceCaptainId);
+      setSavedLineupSnapshot(
+        buildLineupSnapshot(
+          resolvedRoundNumber,
+          normalizedSlots,
+          lineupCaptainId,
+          lineupViceCaptainId
+        )
+      );
       setRoundMissing(false);
       const info = roundsInfo.find((round) => round.round_number === resolvedRoundNumber);
       setRoundStatus(
@@ -1763,7 +1872,12 @@ export default function TeamPage() {
         </div>
       </BottomSheet>
 
-      <FabMenu onSave={handleSave} />
+      <FabMenu
+        onSave={handleSave}
+        onRevert={handleRevertLineupChanges}
+        isLineupSaved={isLineupSaved}
+        canRevert={canRevertLineup}
+      />
 
       {saveMessage ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">

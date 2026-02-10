@@ -14,6 +14,7 @@ import {
   getCatalogPlayers,
   getFixtures,
   getLineup,
+  getPlayerMatches,
   getPlayerPriceHistory,
   getTeam,
   getTeams,
@@ -181,42 +182,74 @@ function kickoffToDateKey(value: string | null | undefined): string {
   return raw.split("T")[0].split(" ")[0] || "TBD";
 }
 
-function MarketPlayerDetails({ player, fixtures }: { player: Player; fixtures: Fixture[] }) {
+function renderPointsSparkline(values: number[]) {
+  if (!values.length) return null;
+  const width = 120;
+  const height = 34;
+  const min = Math.min(...values, 0);
+  const max = Math.max(...values, 0);
+  const range = max - min || 1;
+  const points = values
+    .map((value, index) => {
+      const x = (index / Math.max(values.length - 1, 1)) * width;
+      const y = height - ((value - min) / range) * height;
+      return `${x},${y}`;
+    })
+    .join(" ");
+  const trend = values[values.length - 1] - values[0];
+  const stroke = trend >= 0 ? "#34d399" : "#f87171";
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <polyline
+        fill="none"
+        stroke={stroke}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points}
+      />
+    </svg>
+  );
+}
+
+function MarketPlayerDetails({
+  player,
+  fixtures,
+  pointsTrend
+}: {
+  player: Player;
+  fixtures: Fixture[];
+  pointsTrend: number[];
+}) {
   const displayName = player.short_name || player.shortName || player.name;
   const isKeeper = player.position === "G";
   const pointsValue =
     typeof player.points_total === "number" ? Math.trunc(player.points_total) : 0;
-  const stats: { label: string; value: number | string; accent?: boolean }[] = [
-    { label: "Puntos", value: pointsValue }
-  ];
   const priceDelta =
     "price_delta" in player ? (player as { price_delta?: number }).price_delta : undefined;
-  if (typeof priceDelta === "number") {
-    const deltaSymbol = priceDelta === 0 ? "-" : priceDelta > 0 ? "▲" : "▼";
-    const deltaValue = priceDelta === 0 ? "-" : priceDelta.toFixed(1);
-    stats.push({
-      label: "Variacion",
-      value: `${deltaSymbol} ${deltaValue}`
-    });
-  }
-  if (isKeeper) {
-    stats.push(
-      { label: "Atajadas", value: player.saves ?? 0 },
-      { label: "Goles", value: player.goals ?? 0 },
-      { label: "Goles recibidos", value: player.goals_conceded ?? 0 }
-    );
-  } else if (player.position === "D") {
-    stats.push(
-      { label: "Goles", value: player.goals ?? 0 },
-      { label: "Goles recibidos", value: player.goals_conceded ?? 0 }
-    );
-  } else {
-    stats.push(
-      { label: "Goles", value: player.goals ?? 0 },
-      { label: "Asistencias", value: player.assists ?? 0 }
-    );
-  }
-  stats.push({ label: "Precio", value: player.price_current.toFixed(1), accent: true });
+  const priceDeltaSymbol = priceDelta === 0 ? "-" : (priceDelta || 0) > 0 ? "\u25B2" : "\u25BC";
+  const priceDeltaValue =
+    priceDelta === 0 ? "-" : typeof priceDelta === "number" ? priceDelta.toFixed(1) : "--";
+  const priceDeltaTone =
+    typeof priceDelta === "number"
+      ? priceDelta > 0
+        ? "text-emerald-300"
+        : priceDelta < 0
+          ? "text-red-300"
+          : "text-muted"
+      : "text-muted";
+  const primaryStatLabel = isKeeper ? "Atajadas" : "Goles";
+  const primaryStatValue = isKeeper ? player.saves ?? 0 : player.goals ?? 0;
+  const secondaryStatLabel = isKeeper
+    ? "Goles recibidos"
+    : player.position === "D"
+      ? "Goles recibidos"
+      : "Asistencias";
+  const secondaryStatValue = isKeeper
+    ? player.goals_conceded ?? 0
+    : player.position === "D"
+      ? player.goals_conceded ?? 0
+      : player.assists ?? 0;
 
   const formatKickoff = (kickoff: string | null) => {
     if (!kickoff) return "Por confirmar";
@@ -267,18 +300,35 @@ function MarketPlayerDetails({ player, fixtures }: { player: Player; fixtures: F
         </div>
       ) : null}
       <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/10 bg-black/20 p-3 text-xs">
-        {stats.map((stat) => (
-          <div key={stat.label} className="space-y-1">
-            <p className="text-[10px] uppercase text-muted">{stat.label}</p>
-            <p
-              className={
-                "text-sm font-semibold " + (stat.accent ? "text-accent" : "text-ink")
-              }
-            >
-              {stat.value}
-            </p>
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase text-muted">Puntos</p>
+          <p className="text-sm font-semibold text-ink">{pointsValue}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase text-muted">Tendencia puntos</p>
+          <div className="min-h-[34px]">
+            {pointsTrend.length ? (
+              renderPointsSparkline(pointsTrend)
+            ) : (
+              <p className="text-sm font-semibold text-muted">--</p>
+            )}
           </div>
-        ))}
+        </div>
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase text-muted">{primaryStatLabel}</p>
+          <p className="text-sm font-semibold text-ink">{primaryStatValue}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase text-muted">{secondaryStatLabel}</p>
+          <p className="text-sm font-semibold text-ink">{secondaryStatValue}</p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[10px] uppercase text-muted">Precio</p>
+          <p className="text-sm font-semibold text-accent">{player.price_current.toFixed(1)}</p>
+          <p className={`text-[11px] font-semibold ${priceDeltaTone}`}>
+            {priceDeltaSymbol} {priceDeltaValue}
+          </p>
+        </div>
       </div>
       <div className="space-y-2">
         <p className="text-xs font-semibold text-ink">Partidos</p>
@@ -287,6 +337,9 @@ function MarketPlayerDetails({ player, fixtures }: { player: Player; fixtures: F
             {teamFixtures.map((fixture) => {
               const homeId = fixture.home_team_id;
               const awayId = fixture.away_team_id;
+              const isFinished = fixture.status === "Finalizado";
+              const hasScore =
+                typeof fixture.home_score === "number" && typeof fixture.away_score === "number";
               return (
                 <div
                   key={fixture.id}
@@ -312,6 +365,14 @@ function MarketPlayerDetails({ player, fixtures }: { player: Player; fixtures: F
                         />
                       ) : null}
                     </span>
+                    <div className="ml-1 flex flex-col leading-tight">
+                      <p className="text-[10px] text-muted">{fixture.status}</p>
+                      {isFinished && hasScore ? (
+                        <p className="text-[11px] font-semibold text-ink">
+                          {fixture.home_score} - {fixture.away_score}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
                   <div className="text-right text-[10px] text-muted">
                     <p>{formatKickoff(fixture.kickoff_at)}</p>
@@ -405,6 +466,7 @@ export default function MarketPage() {
   const [priceHistoryError, setPriceHistoryError] = useState<string | null>(null);
   const [priceHistoryPlayer, setPriceHistoryPlayer] = useState<Player | null>(null);
   const [priceHistoryPoints, setPriceHistoryPoints] = useState<PlayerPriceHistoryPoint[]>([]);
+  const [pointsTrendByPlayer, setPointsTrendByPlayer] = useState<Record<number, number[]>>({});
   const lastPositionsKey = useRef<string>("");
   const lastTeamKey = useRef<string>("");
   const priceHistoryRequestId = useRef(0);
@@ -518,6 +580,44 @@ export default function MarketPage() {
       .then(setTransferInfo)
       .catch(() => setTransferInfo(null));
   }, [token, sheetOpen]);
+
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const targetIds = [outPlayerId, inPlayerId].filter(
+      (id): id is number => typeof id === "number"
+    );
+    const missingIds = targetIds.filter((playerId) => !(playerId in pointsTrendByPlayer));
+    if (!missingIds.length) return;
+
+    let cancelled = false;
+    Promise.all(
+      missingIds.map(async (playerId) => {
+        try {
+          const matches = await getPlayerMatches(playerId);
+          const byRound = new Map<number, number>();
+          matches.forEach((match) => {
+            if (typeof match.round_number !== "number") return;
+            const points = typeof match.points === "number" ? match.points : 0;
+            byRound.set(match.round_number, (byRound.get(match.round_number) ?? 0) + points);
+          });
+          const trend = Array.from(byRound.entries())
+            .sort((a, b) => a[0] - b[0])
+            .map((entry) => Math.round(entry[1] * 10) / 10);
+          if (!cancelled) {
+            setPointsTrendByPlayer((prev) => ({ ...prev, [playerId]: trend }));
+          }
+        } catch {
+          if (!cancelled) {
+            setPointsTrendByPlayer((prev) => ({ ...prev, [playerId]: [] }));
+          }
+        }
+      })
+    ).catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sheetOpen, outPlayerId, inPlayerId, pointsTrendByPlayer]);
 
   const positionsKey = useMemo(
     () => (Array.isArray(filters.positions) ? filters.positions.join("|") : ""),
@@ -1376,7 +1476,11 @@ export default function MarketPage() {
             {outPlayer ? (
               <div className="space-y-2">
                 <PlayerCard player={outPlayer} compact showPoints />
-                <MarketPlayerDetails player={outPlayer} fixtures={fixtures} />
+                <MarketPlayerDetails
+                  player={outPlayer}
+                  fixtures={fixtures}
+                  pointsTrend={pointsTrendByPlayer[outPlayer.player_id] ?? []}
+                />
               </div>
             ) : (
               <p className="text-xs text-muted">Sin reemplazo</p>
@@ -1387,7 +1491,11 @@ export default function MarketPage() {
             {inPlayer ? (
               <div className="space-y-2">
                 <PlayerCard player={inPlayer} compact showPoints />
-                <MarketPlayerDetails player={inPlayer} fixtures={fixtures} />
+                <MarketPlayerDetails
+                  player={inPlayer}
+                  fixtures={fixtures}
+                  pointsTrend={pointsTrendByPlayer[inPlayer.player_id] ?? []}
+                />
               </div>
             ) : (
               <p className="text-xs text-muted">Selecciona en mercado</p>
