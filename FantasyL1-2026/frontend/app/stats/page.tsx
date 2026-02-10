@@ -307,7 +307,7 @@ export default function StatsPage() {
               }
               className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
             >
-              <option value="selected">Cantidad de veces elegido</option>
+              <option value="selected">Veces elegido</option>
               <option value="points">Puntos</option>
               <option value="goals">Goles</option>
               <option value="assists">Asistencias</option>

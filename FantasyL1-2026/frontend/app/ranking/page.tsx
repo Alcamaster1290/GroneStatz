@@ -168,6 +168,7 @@ export default function RankingPage() {
 
   const [leagueRanking, setLeagueRanking] = useState<RankingResponse | null>(null);
   const [generalRanking, setGeneralRanking] = useState<RankingResponse | null>(null);
+  const [showAllGeneral, setShowAllGeneral] = useState(false);
   const [rankingError, setRankingError] = useState<string | null>(null);
 
   const [createName, setCreateName] = useState("");
@@ -468,7 +469,29 @@ export default function RankingPage() {
     return "Crea o unete con un codigo.";
   }, [league]);
 
+  const generalVisibleEntries = useMemo(() => {
+    if (!generalRanking?.entries?.length) return [];
+    return showAllGeneral ? generalRanking.entries : generalRanking.entries.slice(0, 30);
+  }, [generalRanking, showAllGeneral]);
+
+  const generalHiddenCount = useMemo(() => {
+    if (!generalRanking?.entries?.length) return 0;
+    return Math.max(generalRanking.entries.length - generalVisibleEntries.length, 0);
+  }, [generalRanking, generalVisibleEntries.length]);
+
+  const generalRankingVisible = useMemo(() => {
+    if (!generalRanking) return null;
+    return {
+      ...generalRanking,
+      entries: generalVisibleEntries
+    };
+  }, [generalRanking, generalVisibleEntries]);
+
   const isAdmin = league?.is_admin ?? false;
+
+  useEffect(() => {
+    setShowAllGeneral(false);
+  }, [generalRanking?.entries?.length]);
 
   const starters = useMemo(() => {
     return lineupData?.slots.filter((slot) => slot.is_starter) ?? [];
@@ -704,6 +727,35 @@ export default function RankingPage() {
         </div>
       </div>
 
+      {rankingError ? (
+        <div className="glass rounded-2xl p-3 text-xs text-warning">{toFriendlyError(rankingError)}</div>
+      ) : null}
+
+      <RankingTable
+        title="Ranking general"
+        data={generalRankingVisible}
+        onSelectTeam={handleViewLineup}
+        pendingRoundNumber={pendingRoundNumber}
+      />
+
+      {generalHiddenCount > 0 && !showAllGeneral ? (
+        <div className="relative py-1">
+          <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/10" />
+          <div className="relative mx-auto flex w-fit items-center gap-3 rounded-full border border-white/15 bg-black/45 px-3 py-1.5">
+            <span className="text-[11px] text-muted">
+              {generalHiddenCount} equipos ocultos
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowAllGeneral(true)}
+              className="rounded-full bg-accent px-3 py-1 text-[11px] font-semibold text-black"
+            >
+              Mostrar más
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <div className="glass space-y-3 rounded-2xl p-4">
         <div className="flex items-start justify-between">
           <div>
@@ -806,17 +858,6 @@ export default function RankingPage() {
           </div>
         )}
       </div>
-
-      {rankingError ? (
-        <div className="glass rounded-2xl p-3 text-xs text-warning">{toFriendlyError(rankingError)}</div>
-      ) : null}
-
-      <RankingTable
-        title="Ranking general"
-        data={generalRanking}
-        onSelectTeam={handleViewLineup}
-        pendingRoundNumber={pendingRoundNumber}
-      />
 
       {lineupOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6">
