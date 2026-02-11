@@ -40,7 +40,7 @@ export default function TeamNameGate({
           ) : null}
         </div>
         <div className="space-y-2">
-          <label className="text-xs text-muted">Nombre oficial</label>
+          <label className="text-xs text-muted">Nombre del equipo</label>
           <input
             value={teamName}
             onChange={(event) => onTeamNameChange(event.target.value)}

@@ -10,7 +10,7 @@ const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   process.env.NEXT_PUBLIC_MOBILE_WEB_URL ||
   "https://fantasyliga1peru.com";
-const siteTitle = "Fantasy Liga 1 Peru 2026 | Fantasy Oficial";
+const siteTitle = "Fantasy Liga 1 Peru 2026 | El unico Fantasy Manager del futbol peruano";
 const siteDescription =
   "Arma tu equipo, juega en ligas y compite en el Fantasy Liga 1 Peru 2026. Mercado dinamico, estadisticas en vivo y rankings por jornada.";
 

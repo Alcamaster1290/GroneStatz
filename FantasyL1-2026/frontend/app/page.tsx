@@ -100,7 +100,7 @@ export default function Home() {
 
       <section className="glass rounded-3xl border border-white/10 p-5">
         <p className="text-xs uppercase tracking-[0.2em] text-muted">
-          Juego oficial 2026
+          El unico Fantasy Manager del futbol peruano
         </p>
         <h1 className="mt-2 text-2xl font-semibold leading-tight text-ink">
           Fantasy Liga 1 Peru: arma tu equipo y compite cada jornada
