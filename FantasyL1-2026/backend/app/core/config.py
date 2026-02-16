@@ -31,11 +31,11 @@ if not env_path.exists():
 
 class Settings(BaseSettings):
     APP_ENV: str = app_env
-    DATABASE_URL: str = "postgresql+psycopg://fantasy:fantasy@localhost:5432/fantasy"
-    JWT_SECRET: str = "change-me"
+    DATABASE_URL: str
+    JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
-    ADMIN_TOKEN: str = "dev-admin"
+    ADMIN_TOKEN: str
     DUCKDB_PATH: str = str(BASE_DIR / "data" / "fantasy.duckdb")
     PARQUET_DIR: str = str(
         REPO_ROOT
