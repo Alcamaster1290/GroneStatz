@@ -645,11 +645,23 @@ def update_squad(
     if errors:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors)
 
-    if current_round.round_number > 1 and existing_ids:
+    if current_round.round_number > 1 and existing_ids and removed:
         # Registrar transferencias pareadas. El fee se deduce via cap efectivo.
+        all_transfer_player_ids = set(removed + added)
+        players_involved = (
+            db.execute(
+                select(PlayerCatalog).where(
+                    PlayerCatalog.player_id.in_(all_transfer_player_ids)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        players_map = {p.player_id: p for p in players_involved}
+
         for out_pid, in_pid in zip(removed, added):
-            out_player = db.get(PlayerCatalog, out_pid)
-            in_player = db.get(PlayerCatalog, in_pid)
+            out_player = players_map.get(out_pid)
+            in_player = players_map.get(in_pid)
             if not out_player or not in_player:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="player_not_found")
             out_price_current = Decimal(str(out_player.price_current))
