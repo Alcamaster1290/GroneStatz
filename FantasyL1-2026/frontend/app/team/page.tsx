@@ -1584,8 +1584,14 @@ export default function TeamPage() {
     }
   };
 
+  useEffect(() => {
+    if (!token) {
+      router.replace("/ranking");
+    }
+  }, [token, router]);
+
   if (!token) {
-    return <AuthPanel />;
+    return null;
   }
 
   if (loading && lineupSlots.length === 0) {
