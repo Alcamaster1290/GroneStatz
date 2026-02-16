@@ -47,6 +47,29 @@ docker compose -f docker-compose.qa.yml ps
 curl https://api-qa.fantasyliga1peru.com/health
 ```
 
+## Incidente `db_unavailable`
+Diagnostico rapido en VPS:
+```
+cd /opt/GroneStatz
+docker compose -f docker-compose.prod.yml --env-file .env.prod ps
+docker compose -f docker-compose.prod.yml --env-file .env.prod logs api --tail=200
+docker compose -f docker-compose.prod.yml --env-file .env.prod logs postgres --tail=200
+docker compose -f docker-compose.prod.yml --env-file .env.prod exec postgres pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+```
+
+Si Postgres no esta healthy:
+```
+docker compose -f docker-compose.prod.yml --env-file .env.prod restart postgres
+sleep 8
+docker compose -f docker-compose.prod.yml --env-file .env.prod restart api
+```
+
+Verificacion de salud:
+```
+curl -i https://api.fantasyliga1peru.com/health
+curl -i https://api.fantasyliga1peru.com/health/db
+```
+
 ## Firewall
 - 80
 - 443

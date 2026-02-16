@@ -94,7 +94,10 @@ function RankingTable({
   onSelectTeam?: (fantasyTeamId: number, teamName: string) => void;
   pendingRoundNumber: number | null;
 }) {
-  if (!data || data.entries.length === 0) {
+  if (!data) {
+    return null;
+  }
+  if (data.entries.length === 0) {
     return (
       <div className="glass rounded-2xl p-4 text-xs text-muted">
         {title}: Sin equipos registrados.
@@ -252,6 +255,7 @@ export default function RankingPage() {
   const [leagueRanking, setLeagueRanking] = useState<RankingResponse | null>(null);
   const [generalRanking, setGeneralRanking] = useState<RankingResponse | null>(null);
   const [showAllGeneral, setShowAllGeneral] = useState(false);
+  const [generalRankingLoading, setGeneralRankingLoading] = useState(false);
   const [rankingError, setRankingError] = useState<string | null>(null);
 
   const [createName, setCreateName] = useState("");
@@ -276,13 +280,33 @@ export default function RankingPage() {
   const toFriendlyError = (value: string | null) => {
     const code = normalizeErrorCode(value);
     if (!code) return null;
+    const errorMap: Record<string, string> = {
+      db_unavailable: "No se puede conectar a la base de datos. Intenta nuevamente en unos minutos.",
+      network_error: "No se pudo conectar con el backend. Revisa la conexion.",
+      service_unavailable: "Servicio no disponible temporalmente.",
+      endpoint_not_found: "Endpoint no encontrado en el backend.",
+      server_error: "Error interno del servidor.",
+      unauthorized: "Sesion no autorizada. Inicia sesion nuevamente.",
+      forbidden: "No tienes permisos para esta accion.",
+      rate_limited: "Demasiados intentos. Espera un momento e intenta otra vez.",
+      offline_write_blocked: "Sin conexion, solo lectura."
+    };
     if (code.includes("offline_write_blocked")) {
-      return "Sin conexion, solo lectura.";
+      return errorMap.offline_write_blocked;
     }
     if (code === "market_complete_without_lineup") {
       return "Mercado completo, sin equipo guardado";
     }
-    return code;
+    return errorMap[code] || code;
+  };
+
+  const isInfrastructureError = (value: string | null) => {
+    const code = normalizeErrorCode(value);
+    return (
+      code === "db_unavailable" ||
+      code === "network_error" ||
+      code === "service_unavailable"
+    );
   };
 
   useEffect(() => {
@@ -401,6 +425,7 @@ export default function RankingPage() {
   const loadRankings = async () => {
     if (!token) return;
     setRankingError(null);
+    setGeneralRankingLoading(true);
     try {
       const [general, leagueData] = await Promise.all([
         getRankingGeneral(token),
@@ -409,16 +434,25 @@ export default function RankingPage() {
       setGeneralRanking(general);
       setLeagueRanking(leagueData);
     } catch (err) {
+      setGeneralRanking(null);
       setRankingError(String(err));
+    } finally {
+      setGeneralRankingLoading(false);
     }
   };
 
   useEffect(() => {
     if (!token) return;
     loadLeague().catch(() => undefined);
+    setGeneralRankingLoading(true);
+    setRankingError(null);
     getRankingGeneral(token)
       .then(setGeneralRanking)
-      .catch((err) => setRankingError(String(err)));
+      .catch((err) => {
+        setGeneralRanking(null);
+        setRankingError(String(err));
+      })
+      .finally(() => setGeneralRankingLoading(false));
     getTeams().then(setTeams).catch(() => setTeams([]));
   }, [token]);
 
@@ -585,6 +619,8 @@ export default function RankingPage() {
   }, [generalRanking, generalVisibleEntries]);
 
   const isAdmin = league?.is_admin ?? false;
+  const disableLeagueActions =
+    isInfrastructureError(leagueError) || isInfrastructureError(rankingError);
 
   useEffect(() => {
     setShowAllGeneral(false);
@@ -826,32 +862,36 @@ export default function RankingPage() {
 
       {rankingError ? (
         <div className="glass rounded-2xl p-3 text-xs text-warning">{toFriendlyError(rankingError)}</div>
-      ) : null}
-
-      <RankingTable
-        title="Ranking general"
-        data={generalRankingVisible}
-        onSelectTeam={handleViewLineup}
-        pendingRoundNumber={pendingRoundNumber}
-      />
-
-      {generalHiddenCount > 0 && !showAllGeneral ? (
-        <div className="relative py-1">
-          <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/10" />
-          <div className="relative mx-auto flex w-fit items-center gap-3 rounded-full border border-white/15 bg-black/45 px-3 py-1.5">
-            <span className="text-[11px] text-muted">
-              {generalHiddenCount} equipos ocultos
-            </span>
-            <button
-              type="button"
-              onClick={() => setShowAllGeneral(true)}
-              className="rounded-full bg-accent px-3 py-1 text-[11px] font-semibold text-black"
-            >
-              Mostrar más
-            </button>
-          </div>
-        </div>
-      ) : null}
+      ) : (
+        <>
+          {generalRankingLoading && !generalRanking ? (
+            <div className="glass rounded-2xl p-4 text-xs text-muted">Cargando ranking general...</div>
+          ) : null}
+          <RankingTable
+            title="Ranking general"
+            data={generalRankingVisible}
+            onSelectTeam={handleViewLineup}
+            pendingRoundNumber={pendingRoundNumber}
+          />
+          {generalHiddenCount > 0 && !showAllGeneral ? (
+            <div className="relative py-1">
+              <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/10" />
+              <div className="relative mx-auto flex w-fit items-center gap-3 rounded-full border border-white/15 bg-black/45 px-3 py-1.5">
+                <span className="text-[11px] text-muted">
+                  {generalHiddenCount} equipos ocultos
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowAllGeneral(true)}
+                  className="rounded-full bg-accent px-3 py-1 text-[11px] font-semibold text-black"
+                >
+                  Mostrar más
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </>
+      )}
 
       <div className="glass space-y-3 rounded-2xl p-4">
         <div className="flex items-start justify-between">
@@ -928,11 +968,13 @@ export default function RankingPage() {
                 value={createName}
                 onChange={(event) => setCreateName(event.target.value)}
                 placeholder="Nombre de la liga"
+                disabled={disableLeagueActions}
                 className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
               />
               <button
                 onClick={handleCreateLeague}
-                className="w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+                disabled={disableLeagueActions}
+                className="w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Crear liga
               </button>
@@ -943,11 +985,13 @@ export default function RankingPage() {
                 value={joinCode}
                 onChange={(event) => setJoinCode(event.target.value)}
                 placeholder="ABC123"
+                disabled={disableLeagueActions}
                 className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm uppercase"
               />
               <button
                 onClick={handleJoinLeague}
-                className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+                disabled={disableLeagueActions}
+                className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Unirse
               </button>
