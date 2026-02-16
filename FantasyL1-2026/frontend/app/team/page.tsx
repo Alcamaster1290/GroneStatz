@@ -1228,22 +1228,29 @@ export default function TeamPage() {
       setFavoriteGateOpen(false);
       return;
     }
-    if (needsFavoriteTeam) {
-      setFavoriteGateOpen(true);
-      setNameGateOpen(false);
-      return;
-    }
+
+    // 1. Welcome Slideshow (handled by its own effect, gates should be closed)
     const shouldShowWelcome = isNewTeam && needsTeamName && !welcomeSeen;
     if (shouldShowWelcome) {
       setNameGateOpen(false);
       setFavoriteGateOpen(false);
       return;
     }
+
+    // 2. Team Name Gate
     if (needsTeamName && welcomeSeen) {
       setNameGateOpen(true);
       setFavoriteGateOpen(false);
       return;
     }
+
+    // 3. Favorite Team Gate
+    if (needsFavoriteTeam) {
+      setFavoriteGateOpen(true);
+      setNameGateOpen(false);
+      return;
+    }
+
     setNameGateOpen(false);
     setFavoriteGateOpen(false);
   }, [teamLoaded, isNewTeam, needsTeamName, needsFavoriteTeam, welcomeSeen]);
@@ -1264,16 +1271,13 @@ export default function TeamPage() {
   }, [token, welcomeKey]);
 
   useEffect(() => {
-    if (needsFavoriteTeam) {
-      setWelcomeOpen(false);
-      return;
-    }
+    // If gates are needed, welcome shouldn't be open unless it's the very first step
     if (isNewTeam && teamLoaded && needsTeamName && !welcomeSeen) {
       setWelcomeOpen(true);
     } else {
       setWelcomeOpen(false);
     }
-  }, [teamLoaded, isNewTeam, needsTeamName, needsFavoriteTeam, welcomeSeen]);
+  }, [teamLoaded, isNewTeam, needsTeamName, welcomeSeen]);
 
   useEffect(() => {
     if (!token || roundMissing || !currentRound) return;
@@ -2084,7 +2088,10 @@ export default function TeamPage() {
             setNeedsTeamName(false);
             setIsNewTeam(false);
             setNameGateOpen(false);
-            if (postWelcomeRedirect) {
+
+            // If we still need to select a favorite team, don't redirect yet.
+            // The useEffect will trigger FavoriteTeamGate next.
+            if (postWelcomeRedirect && !needsFavoriteTeam) {
               setPostWelcomeRedirect(false);
               router.push("/market");
             }
