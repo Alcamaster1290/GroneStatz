@@ -235,7 +235,7 @@ export async function register(email: string, password: string) {
 }
 
 export async function requestPasswordReset(email: string) {
-  return apiFetch<{ ok: boolean; reset_code?: string | null }>(
+  return apiFetch<{ ok: boolean }>(
     "/auth/reset/request",
     {
       method: "POST",
