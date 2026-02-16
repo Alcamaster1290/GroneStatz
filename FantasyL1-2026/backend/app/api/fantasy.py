@@ -647,17 +647,16 @@ def update_squad(
 
     if current_round.round_number > 1 and existing_ids and removed:
         # Registrar transferencias pareadas. El fee se deduce via cap efectivo.
-        all_transfer_player_ids = set(removed + added)
-        players_involved = (
-            db.execute(
-                select(PlayerCatalog).where(
-                    PlayerCatalog.player_id.in_(all_transfer_player_ids)
-                )
+        # OPTIMIZATION: Bulk fetch all required players to avoid N+1 queries.
+        involved_pids = list(set(removed + added))
+        players_map = {}
+        if involved_pids:
+            players_list = (
+                db.execute(select(PlayerCatalog).where(PlayerCatalog.player_id.in_(involved_pids)))
+                .scalars()
+                .all()
             )
-            .scalars()
-            .all()
-        )
-        players_map = {p.player_id: p for p in players_involved}
+            players_map = {p.player_id: p for p in players_list}
 
         for out_pid, in_pid in zip(removed, added):
             out_player = players_map.get(out_pid)
