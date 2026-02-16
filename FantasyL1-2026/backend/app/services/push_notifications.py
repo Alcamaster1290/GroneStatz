@@ -261,6 +261,16 @@ def run_round_deadline_reminders(
     if not devices:
         return stats.as_dict()
 
+    # Pre-fetch existing notifications to avoid N+1 query in the loop
+    eligible_round_ids = [r.id for r in eligible_rounds]
+    existing_notifications = db.execute(
+        select(RoundPushNotification.round_id, RoundPushNotification.device_token_id).where(
+            RoundPushNotification.round_id.in_(eligible_round_ids),
+            RoundPushNotification.notification_type == REMINDER_TYPE,
+        )
+    ).all()
+    existing_set = {(row.round_id, row.device_token_id) for row in existing_notifications}
+
     fcm_client = None
     if settings.PUSH_ENABLED and not dry_run:
         fcm_client = _build_fcm_client(settings)
@@ -271,14 +281,8 @@ def run_round_deadline_reminders(
             if not dry_run and not settings.PUSH_ENABLED:
                 stats.skipped += 1
                 continue
-            existing = db.execute(
-                select(RoundPushNotification.id).where(
-                    RoundPushNotification.round_id == round_obj.id,
-                    RoundPushNotification.device_token_id == device.id,
-                    RoundPushNotification.notification_type == REMINDER_TYPE,
-                )
-            ).scalar_one_or_none()
-            if existing:
+
+            if (round_obj.id, device.id) in existing_set:
                 stats.skipped += 1
                 continue
 
