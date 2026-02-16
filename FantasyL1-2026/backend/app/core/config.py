@@ -60,6 +60,8 @@ class Settings(BaseSettings):
     FCM_SERVICE_ACCOUNT_JSON: str = ""
     GOOGLE_APPLICATION_CREDENTIALS: str = ""
 
+    ZEROCLAW_API_KEY: str = ""
+
     model_config = SettingsConfigDict(
         env_file=str(env_path),
         env_file_encoding="utf-8",
