@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "change-me"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
-    ADMIN_TOKEN: str = "dev-admin"
+    ADMIN_TOKEN: str
     DUCKDB_PATH: str = str(BASE_DIR / "data" / "fantasy.duckdb")
     PARQUET_DIR: str = str(
         REPO_ROOT
