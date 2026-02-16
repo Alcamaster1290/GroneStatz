@@ -31,11 +31,11 @@ if not env_path.exists():
 
 class Settings(BaseSettings):
     APP_ENV: str = app_env
-    DATABASE_URL: str = "postgresql+psycopg://fantasy:fantasy@localhost:5432/fantasy"
-    JWT_SECRET: str = "change-me"
+    DATABASE_URL: str
+    JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
-    ADMIN_TOKEN: str = "dev-admin"
+    ADMIN_TOKEN: str
     DUCKDB_PATH: str = str(BASE_DIR / "data" / "fantasy.duckdb")
     PARQUET_DIR: str = str(
         REPO_ROOT
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     SEASON_YEAR: int = 2026
     SEASON_NAME: str = "2026 Apertura"
     CORS_ORIGINS: str = "http://localhost:3000"
-    CORS_ORIGIN_REGEX: str = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
+    CORS_ORIGIN_REGEX: str = r"^http://(localhost|127\.0\.0\.1)(:3000)?$"
     MOBILE_CORS_ORIGINS: str = "capacitor://localhost,http://localhost"
     SCHEDULER_ENABLED: bool = True
     SCHEDULER_INTERVAL_SECONDS: int = 300
@@ -59,6 +59,8 @@ class Settings(BaseSettings):
     FCM_PROJECT_ID: str = ""
     FCM_SERVICE_ACCOUNT_JSON: str = ""
     GOOGLE_APPLICATION_CREDENTIALS: str = ""
+
+    ZEROCLAW_API_KEY: str = ""
 
     model_config = SettingsConfigDict(
         env_file=str(env_path),

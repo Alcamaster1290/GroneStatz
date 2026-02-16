@@ -88,6 +88,7 @@ def handle_integrity_error(request: Request, exc: IntegrityError) -> JSONRespons
 
 @app.exception_handler(Exception)
 def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
+    logger.exception("unexpected_error")
     return JSONResponse(status_code=500, content={"detail": "server_error"})
 
 
