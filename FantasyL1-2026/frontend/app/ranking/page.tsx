@@ -399,12 +399,11 @@ export default function RankingPage() {
   };
 
   const loadRankings = async () => {
-    if (!token) return;
     setRankingError(null);
     try {
       const [general, leagueData] = await Promise.all([
-        getRankingGeneral(token),
-        league ? getRankingLeague(token) : Promise.resolve(null)
+        getRankingGeneral(token || undefined),
+        token && league ? getRankingLeague(token) : Promise.resolve(null)
       ]);
       setGeneralRanking(general);
       setLeagueRanking(leagueData);
@@ -414,9 +413,12 @@ export default function RankingPage() {
   };
 
   useEffect(() => {
-    if (!token) return;
-    loadLeague().catch(() => undefined);
-    getRankingGeneral(token)
+    if (token) {
+      loadLeague().catch(() => undefined);
+    } else {
+      setLeague(null);
+    }
+    getRankingGeneral(token || undefined)
       .then(setGeneralRanking)
       .catch((err) => setRankingError(String(err)));
     getTeams().then(setTeams).catch(() => setTeams([]));
@@ -510,7 +512,6 @@ export default function RankingPage() {
     teamName: string,
     roundNumber?: number | null
   ) => {
-    if (!token) return;
     setLineupLoading(true);
     setLineupError(null);
     setLineupData(null);
@@ -519,7 +520,7 @@ export default function RankingPage() {
     }
     try {
       const data = await getRankingLineup(
-        token,
+        token || undefined,
         fantasyTeamId,
         roundNumber ?? undefined
       );
@@ -534,7 +535,6 @@ export default function RankingPage() {
   };
 
   const handleViewLineup = async (fantasyTeamId: number, teamName: string) => {
-    if (!token) return;
     setLineupTeamName(teamName);
     setLineupTeamId(fantasyTeamId);
     setLineupOpen(true);
@@ -551,9 +551,8 @@ export default function RankingPage() {
   };
 
   const loadMarket = async (fantasyTeamId: number, teamName: string) => {
-    if (!token) return;
     try {
-      const data = await getRankingMarket(token, fantasyTeamId);
+      const data = await getRankingMarket(token || undefined, fantasyTeamId);
       setMarketData(data);
       setLineupTeamName(data.team_name || teamName);
     } catch (err) {
@@ -792,36 +791,42 @@ export default function RankingPage() {
     );
   };
 
-  if (!token) return <AuthPanel />;
-
   return (
     <div className="space-y-5">
+      {!token ? (
+        <div className="mb-4 rounded-2xl bg-surface2/40 p-4">
+          <AuthPanel />
+        </div>
+      ) : null}
+
       <div>
         <h1 className="text-xl font-semibold">Ranking</h1>
         <p className="text-sm text-muted">Ligas privadas y ranking general.</p>
-        <div className="mt-3 flex items-center gap-2 text-xs text-muted">
-          <span>Equipo favorito:</span>
-          {favoriteTeamId ? (
-            <span className="flex items-center gap-2 rounded-full border border-white/10 px-2 py-1">
-              <img
-                src={`/images/teams/${favoriteTeamId}.png`}
-                alt=""
-                className="h-5 w-5 object-contain"
-              />
-              <span className="text-ink">
-                {teamNameById.get(favoriteTeamId) || `Equipo ${favoriteTeamId}`}
+        {token ? (
+          <div className="mt-3 flex items-center gap-2 text-xs text-muted">
+            <span>Equipo favorito:</span>
+            {favoriteTeamId ? (
+              <span className="flex items-center gap-2 rounded-full border border-white/10 px-2 py-1">
+                <img
+                  src={`/images/teams/${favoriteTeamId}.png`}
+                  alt=""
+                  className="h-5 w-5 object-contain"
+                />
+                <span className="text-ink">
+                  {teamNameById.get(favoriteTeamId) || `Equipo ${favoriteTeamId}`}
+                </span>
               </span>
-            </span>
-          ) : (
-            <button
-              onClick={() => setFavoriteGateOpen(true)}
-              className="flex items-center gap-2 rounded-full border border-white/10 px-2 py-1 text-xs text-ink"
-            >
-              <img src="/favicon.png" alt="" className="h-5 w-5 object-contain" />
-              <span>Sin equipo</span>
-            </button>
-          )}
-        </div>
+            ) : (
+              <button
+                onClick={() => setFavoriteGateOpen(true)}
+                className="flex items-center gap-2 rounded-full border border-white/10 px-2 py-1 text-xs text-ink"
+              >
+                <img src="/favicon.png" alt="" className="h-5 w-5 object-contain" />
+                <span>Sin equipo</span>
+              </button>
+            )}
+          </div>
+        ) : null}
       </div>
 
       {rankingError ? (
@@ -853,108 +858,110 @@ export default function RankingPage() {
         </div>
       ) : null}
 
-      <div className="glass space-y-3 rounded-2xl p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-semibold text-ink">Liga privada</p>
-            <p className="text-xs text-muted">{leagueSubtitle}</p>
+      {token ? (
+        <div className="glass space-y-3 rounded-2xl p-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-semibold text-ink">Liga privada</p>
+              <p className="text-xs text-muted">{leagueSubtitle}</p>
+            </div>
           </div>
-        </div>
 
-        {leagueLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
-        {leagueError ? <p className="text-xs text-warning">{toFriendlyError(leagueError)}</p> : null}
+          {leagueLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
+          {leagueError ? <p className="text-xs text-warning">{toFriendlyError(leagueError)}</p> : null}
 
-        {league ? (
-          <div className="space-y-3">
-            <RankingTable
-              title={`Tabla ${league.name}`}
-              data={leagueRanking}
-              onSelectTeam={handleViewLineup}
-              pendingRoundNumber={pendingRoundNumber}
-            />
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-muted">
-                <span>Miembros</span>
-                <button
-                  onClick={handleLeaveLeague}
-                  className="rounded-full border border-white/10 px-3 py-1 text-xs text-ink"
-                >
-                  Salir de la liga
-                </button>
-              </div>
-              {leagueRanking?.entries.map((entry) => {
-                const isOwner = entry.fantasy_team_id === league.owner_fantasy_team_id;
-                const canRemove =
-                  isAdmin && entry.fantasy_team_id !== teamId && teamId !== null;
-                return (
-                  <div
-                    key={`member-${entry.fantasy_team_id}`}
-                    className="flex items-center justify-between rounded-xl border border-white/10 px-3 py-2 text-xs"
+          {league ? (
+            <div className="space-y-3">
+              <RankingTable
+                title={`Tabla ${league.name}`}
+                data={leagueRanking}
+                onSelectTeam={handleViewLineup}
+                pendingRoundNumber={pendingRoundNumber}
+              />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted">
+                  <span>Miembros</span>
+                  <button
+                    onClick={handleLeaveLeague}
+                    className="rounded-full border border-white/10 px-3 py-1 text-xs text-ink"
                   >
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleViewLineup(entry.fantasy_team_id, entry.team_name)
-                        }
-                        className="font-semibold text-ink transition hover:text-accent"
-                      >
-                        {entry.team_name}
-                      </button>
-                      {isOwner ? (
-                        <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] text-accent">
-                          Admin
-                        </span>
+                    Salir de la liga
+                  </button>
+                </div>
+                {leagueRanking?.entries.map((entry) => {
+                  const isOwner = entry.fantasy_team_id === league.owner_fantasy_team_id;
+                  const canRemove =
+                    isAdmin && entry.fantasy_team_id !== teamId && teamId !== null;
+                  return (
+                    <div
+                      key={`member-${entry.fantasy_team_id}`}
+                      className="flex items-center justify-between rounded-xl border border-white/10 px-3 py-2 text-xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleViewLineup(entry.fantasy_team_id, entry.team_name)
+                          }
+                          className="font-semibold text-ink transition hover:text-accent"
+                        >
+                          {entry.team_name}
+                        </button>
+                        {isOwner ? (
+                          <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] text-accent">
+                            Admin
+                          </span>
+                        ) : null}
+                      </div>
+                      {canRemove ? (
+                        <button
+                          onClick={() => handleRemoveMember(entry.fantasy_team_id)}
+                          className="rounded-full border border-white/10 px-3 py-1 text-[10px] text-warning"
+                        >
+                          Quitar
+                        </button>
                       ) : null}
                     </div>
-                    {canRemove ? (
-                      <button
-                        onClick={() => handleRemoveMember(entry.fantasy_team_id)}
-                        className="rounded-full border border-white/10 px-3 py-1 text-[10px] text-warning"
-                      >
-                        Quitar
-                      </button>
-                    ) : null}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <p className="text-xs text-muted">Crear liga</p>
-              <input
-                value={createName}
-                onChange={(event) => setCreateName(event.target.value)}
-                placeholder="Nombre de la liga"
-                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
-              />
-              <button
-                onClick={handleCreateLeague}
-                className="w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
-              >
-                Crear liga
-              </button>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <p className="text-xs text-muted">Crear liga</p>
+                <input
+                  value={createName}
+                  onChange={(event) => setCreateName(event.target.value)}
+                  placeholder="Nombre de la liga"
+                  className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+                />
+                <button
+                  onClick={handleCreateLeague}
+                  className="w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+                >
+                  Crear liga
+                </button>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs text-muted">Unirse por codigo</p>
+                <input
+                  value={joinCode}
+                  onChange={(event) => setJoinCode(event.target.value)}
+                  placeholder="ABC123"
+                  className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm uppercase"
+                />
+                <button
+                  onClick={handleJoinLeague}
+                  className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+                >
+                  Unirse
+                </button>
+              </div>
             </div>
-            <div className="space-y-2">
-              <p className="text-xs text-muted">Unirse por codigo</p>
-              <input
-                value={joinCode}
-                onChange={(event) => setJoinCode(event.target.value)}
-                placeholder="ABC123"
-                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm uppercase"
-              />
-              <button
-                onClick={handleJoinLeague}
-                className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
-              >
-                Unirse
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      ) : null}
 
       {lineupOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-6">

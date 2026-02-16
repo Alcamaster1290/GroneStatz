@@ -27,7 +27,6 @@ router = APIRouter(prefix="/ranking", tags=["ranking"])
 @router.get("/general", response_model=RankingOut)
 def ranking_general(
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
 ) -> RankingOut:
     season = get_or_create_season(db)
     team_ids = (
@@ -72,7 +71,6 @@ def get_team_lineup(
     fantasy_team_id: int,
     round_number: int | None = Query(default=None, ge=1),
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
 ) -> PublicLineupOut:
     requested_round_number = round_number
     season = get_or_create_season(db)
@@ -262,7 +260,6 @@ def get_team_lineup(
 def get_team_market(
     fantasy_team_id: int,
     db: Session = Depends(get_db),
-    user=Depends(get_current_user),
 ) -> PublicMarketOut:
     season = get_or_create_season(db)
     team = (

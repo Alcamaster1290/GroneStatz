@@ -926,7 +926,7 @@ export async function removeLeagueMember(
   );
 }
 
-export async function getRankingGeneral(token: string): Promise<RankingResponse> {
+export async function getRankingGeneral(token?: string): Promise<RankingResponse> {
   return apiFetch("/ranking/general", {}, token);
 }
 
@@ -935,7 +935,7 @@ export async function getRankingLeague(token: string): Promise<RankingResponse> 
 }
 
 export async function getRankingLineup(
-  token: string,
+  token: string | undefined,
   fantasyTeamId: number,
   roundNumber?: number
 ): Promise<PublicLineup> {
@@ -944,7 +944,7 @@ export async function getRankingLineup(
 }
 
 export async function getRankingMarket(
-  token: string,
+  token: string | undefined,
   fantasyTeamId: number
 ): Promise<PublicMarket> {
   return apiFetch(`/ranking/team/${fantasyTeamId}/market`, {}, token);
