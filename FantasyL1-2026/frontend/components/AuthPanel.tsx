@@ -76,12 +76,8 @@ export default function AuthPanel() {
       return;
     }
     try {
-      const result = await requestPasswordReset(email.trim());
-      if (result.reset_code) {
-        setResetMessage(`Codigo: ${result.reset_code}`);
-      } else {
-        setResetMessage("Codigo enviado. Revisa tu correo.");
-      }
+      await requestPasswordReset(email.trim());
+      setResetMessage("Codigo enviado. Revisa tu correo.");
       setResetStep("confirm");
     } catch (err) {
       setErrors(mapAuthErrors(String(err)));

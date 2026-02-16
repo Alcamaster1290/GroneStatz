@@ -31,4 +31,3 @@ class PasswordResetConfirm(BaseModel):
 
 class PasswordResetOut(BaseModel):
     ok: bool
-    reset_code: str | None = None

@@ -645,7 +645,7 @@ def update_squad(
     if errors:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=errors)
 
-    if current_round.round_number > 1 and existing_ids:
+    if current_round.round_number > 1 and existing_ids and removed:
         # Registrar transferencias pareadas. El fee se deduce via cap efectivo.
         # OPTIMIZATION: Bulk fetch all required players to avoid N+1 queries.
         involved_pids = list(set(removed + added))
