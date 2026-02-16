@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 import hashlib
+import logging
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -98,8 +99,10 @@ def request_password_reset(
     db.commit()
 
     settings = get_settings()
-    reset_code = code if settings.APP_ENV != "prod" else None
-    return PasswordResetOut(ok=True, reset_code=reset_code)
+    if settings.APP_ENV != "prod":
+        logging.info(f"Password reset code for {user.email}: {code}")
+
+    return PasswordResetOut(ok=True)
 
 
 @router.post("/reset/confirm", response_model=PasswordResetOut)

@@ -167,19 +167,8 @@ def recalc_round_points(
         if not player:
             continue
 
-        minutes = int(row.minutesplayed or 0)
-        goals = int(row.goals or 0)
-        assists = int(row.assists or 0)
-        saves = int(row.saves or 0)
-        fouls = int(row.fouls or 0)
-        yellow_cards = int(getattr(row, "yellow_cards", 0) or 0)
-        red_cards = int(getattr(row, "red_cards", 0) or 0)
-        clean_sheet_flag = row.clean_sheet if hasattr(row, "clean_sheet") else None
-        goals_conceded_override = row.goals_conceded if hasattr(row, "goals_conceded") else None
-        clean_sheet_value = int(clean_sheet_flag) if clean_sheet_flag is not None else None
-        goals_conceded_value = (
-            int(goals_conceded_override) if goals_conceded_override is not None else None
-        )
+        fixture = fixture_map.get(row.match_id)
+        points, clean_sheet_value, conceded = calc_match_points(player, row, fixture)
 
         stats = stats_map.setdefault(
             row.player_id,
@@ -195,25 +184,15 @@ def recalc_round_points(
                 "goals_conceded": 0,
             },
         )
+        minutes = int(row.minutesplayed or 0)
         stats["minutesplayed"] += minutes
-        stats["goals"] += goals
-        stats["assists"] += assists
-        stats["saves"] += saves
-        stats["fouls"] += fouls
-        stats["yellow_cards"] += yellow_cards
-        stats["red_cards"] += red_cards
-        # Determine effective clean sheet / conceded for stats + scoring.
-        fixture = fixture_map.get(row.match_id)
-        clean_sheet_value, goals_conceded_value, conceded_from_fixture = _resolve_fixture_overrides(
-            player,
-            minutes,
-            fixture,
-            clean_sheet_value,
-            goals_conceded_value,
-        )
-        conceded: int | None = goals_conceded_value
-        if conceded is None and conceded_from_fixture is not None:
-            conceded = conceded_from_fixture
+        stats["goals"] += int(row.goals or 0)
+        stats["assists"] += int(row.assists or 0)
+        stats["saves"] += int(row.saves or 0)
+        stats["fouls"] += int(row.fouls or 0)
+        stats["yellow_cards"] += int(getattr(row, "yellow_cards", 0) or 0)
+        stats["red_cards"] += int(getattr(row, "red_cards", 0) or 0)
+
         if minutes > 0:
             if clean_sheet_value is not None:
                 if clean_sheet_value == 1:
@@ -222,32 +201,6 @@ def recalc_round_points(
                 stats["clean_sheets"] += 1
         if conceded is not None:
             stats["goals_conceded"] += conceded
-
-        points = 0.0
-        points += goals * 4
-        points += (goals // 3) * 3
-        points += assists * 3
-        points -= yellow_cards * 3
-        points -= red_cards * 5
-
-        if minutes >= 90:
-            points += 2
-        elif minutes > 0:
-            points += 1
-
-        points -= fouls // 5
-
-        position = (player.position or "").upper()
-        if position in {"G", "GK"} and saves > 0:
-            points += saves // 5
-        if position in {"G", "GK"} and minutes > 0 and conceded is not None:
-            points -= conceded
-        if position in {"G", "GK", "D", "M"} and minutes > 0:
-            if clean_sheet_value is not None:
-                if clean_sheet_value == 1:
-                    points += 3
-            elif conceded == 0:
-                points += 3
 
         points_map[row.player_id] = points_map.get(row.player_id, 0.0) + points
 
