@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     SEASON_YEAR: int = 2026
     SEASON_NAME: str = "2026 Apertura"
     CORS_ORIGINS: str = "http://localhost:3000"
-    CORS_ORIGIN_REGEX: str = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
+    CORS_ORIGIN_REGEX: str = r"^http://(localhost|127\.0\.0\.1)(:3000)?$"
     MOBILE_CORS_ORIGINS: str = "capacitor://localhost,http://localhost"
     SCHEDULER_ENABLED: bool = True
     SCHEDULER_INTERVAL_SECONDS: int = 300
