@@ -3,10 +3,12 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError, OperationalError
 
 from app.api.router import router
 from app.core.config import get_settings
+from app.db.session import SessionLocal
 from app.services.scheduler import start_scheduler
 
 logger = logging.getLogger(__name__)
@@ -65,6 +67,12 @@ async def _shutdown_scheduler() -> None:
 
 @app.exception_handler(OperationalError)
 def handle_db_unavailable(request: Request, exc: OperationalError) -> JSONResponse:
+    logger.warning(
+        "db_unavailable method=%s path=%s detail=%s",
+        request.method,
+        request.url.path,
+        str(exc),
+    )
     return JSONResponse(status_code=503, content={"detail": "db_unavailable"})
 
 
@@ -87,3 +95,22 @@ def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
 @app.get("/health")
 def health() -> dict:
     return {"ok": True, "env": settings.APP_ENV}
+
+
+@app.get("/health/db")
+def health_db():
+    try:
+        with SessionLocal() as db:
+            db.execute(text("SELECT 1"))
+        return {"ok": True, "env": settings.APP_ENV, "db": "up"}
+    except OperationalError as exc:
+        logger.warning("health_db_unavailable detail=%s", str(exc))
+        return JSONResponse(
+            status_code=503,
+            content={
+                "ok": False,
+                "env": settings.APP_ENV,
+                "db": "down",
+                "detail": "db_unavailable",
+            },
+        )
