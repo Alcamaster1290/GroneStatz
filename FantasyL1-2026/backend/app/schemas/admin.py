@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Dict, List, Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 FixtureStatus = Literal["Programado", "Postergado", "Finalizado"]
 
@@ -269,3 +269,41 @@ class AdminPlayerListOut(BaseModel):
     injured: int
     unselected: int
     items: List[AdminPlayerListItem]
+
+
+BadgeShape = Literal["circle", "rounded"]
+
+
+class AdminPremiumBadgeConfigOut(BaseModel):
+    enabled: bool = True
+    text: str = "P"
+    color: str = "#7C3AED"
+    shape: BadgeShape = "circle"
+
+
+class AdminPremiumBadgeConfigIn(BaseModel):
+    enabled: bool
+    text: str = Field(default="P", min_length=1, max_length=2)
+    color: str = Field(default="#7C3AED")
+    shape: BadgeShape = "circle"
+
+    @field_validator("color")
+    @classmethod
+    def validate_color(cls, value: str) -> str:
+        color = value.strip()
+        if len(color) != 7 or not color.startswith("#"):
+            raise ValueError("invalid_color_hex")
+        hex_part = color[1:]
+        try:
+            int(hex_part, 16)
+        except ValueError as exc:
+            raise ValueError("invalid_color_hex") from exc
+        return color.upper()
+
+    @field_validator("text")
+    @classmethod
+    def validate_text(cls, value: str) -> str:
+        text = value.strip()
+        if not text:
+            raise ValueError("badge_text_required")
+        return text[:2]

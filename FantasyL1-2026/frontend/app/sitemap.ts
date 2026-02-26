@@ -12,6 +12,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1
+    },
+    {
+      url: `${siteUrl}/login`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8
+    },
+    {
+      url: `${siteUrl}/app`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8
     }
   ];
 }

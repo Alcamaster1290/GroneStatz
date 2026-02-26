@@ -154,10 +154,10 @@ function formatRoundDateLabel(dateKey: string): string {
     "Domingo",
     "Lunes",
     "Martes",
-    "Miercoles",
+    "Miércoles",
     "Jueves",
     "Viernes",
-    "Sabado"
+    "Sábado"
   ];
   const months = [
     "Enero",
@@ -1009,21 +1009,21 @@ export default function MarketPage() {
       },
       no_valid_random_squad: {
         title: "No se pudo generar equipo",
-        detail: "Intenta de nuevo o ajusta el catalogo.",
+          detail: "Intenta de nuevo o ajusta el catálogo.",
         tone: "warning"
       },
         round_closed: {
           title: "Ronda cerrada",
-          detail: "La ronda esta cerrada. Guardaremos el equipo para la siguiente ronda.",
+          detail: "La ronda está cerrada. Guardaremos el equipo para la siguiente ronda.",
           tone: "danger"
         },
         out_player_not_in_squad: {
-          title: "Jugador no esta en tu plantel",
+          title: "Jugador no está en tu plantel",
           detail: "Selecciona un jugador que ya forme parte de tu equipo.",
           tone: "danger"
         },
         in_player_already_in_squad: {
-          title: "Jugador ya esta en tu plantel",
+          title: "Jugador ya está en tu plantel",
           detail: "El jugador elegido ya pertenece a tu equipo.",
           tone: "warning"
         },
@@ -1038,18 +1038,18 @@ export default function MarketPage() {
         tone: "warning"
       },
       network_error: {
-        title: "Sin conexion",
+        title: "Sin conexión",
         detail: "No se puede conectar con el backend. Verifica el servidor.",
         tone: "danger"
       },
       offline_write_blocked: {
-        title: "Sin conexion",
+        title: "Sin conexión",
         detail: "No puedes guardar cambios sin internet. Modo solo lectura.",
         tone: "warning"
       },
       service_unavailable: {
         title: "Servicio no disponible",
-        detail: "El backend esta caido o no responde.",
+        detail: "El backend está caído o no responde.",
         tone: "danger"
       },
       endpoint_not_found: {

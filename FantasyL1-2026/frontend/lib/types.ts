@@ -434,6 +434,79 @@ export type RankingResponse = {
   entries: RankingEntry[];
 };
 
+export type SubscriptionPlanCode = "FREE" | "PREMIUM_2R" | "PREMIUM_4R" | "PREMIUM_APERTURA";
+export type PaymentProviderCode = "yape" | "stripe" | "manual";
+export type PremiumBadgeShape = "circle" | "rounded";
+
+export type PremiumBadgeConfig = {
+  enabled: boolean;
+  text: string;
+  color: string;
+  shape: PremiumBadgeShape;
+};
+
+export type SubscriptionState = {
+  is_premium: boolean;
+  plan_code: SubscriptionPlanCode;
+  status: "active" | "expired" | "canceled";
+  season_year?: number | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  start_round_id?: number | null;
+  end_round_id?: number | null;
+  current_round_number?: number | null;
+  apertura_last_sell_round?: number;
+  apertura_total_rounds?: number;
+  can_buy_apertura?: boolean;
+  available_plans?: SubscriptionPlanCode[];
+};
+
+export type PremiumCheckoutIntent = {
+  payment_event_id: number;
+  user_id: number;
+  plan_code: SubscriptionPlanCode;
+  provider: PaymentProviderCode;
+  amount: number;
+  currency: string;
+  status: "pending" | "paid" | "failed" | "refunded";
+  instructions: string;
+};
+
+export type PublicLeaderboardEntry = {
+  rank: number;
+  fantasy_team_id: number;
+  team_name: string;
+  points_total: number;
+};
+
+export type PublicLeaderboard = {
+  season_year: number;
+  limit: number;
+  entries: PublicLeaderboardEntry[];
+};
+
+export type PublicPremiumPrices = {
+  PREMIUM_2R: number;
+  PREMIUM_4R: number;
+  PREMIUM_APERTURA: number;
+};
+
+export type PublicPremiumConfig = {
+  season_year: number;
+  current_round_number?: number | null;
+  apertura_last_sell_round: number;
+  apertura_total_rounds: number;
+  can_buy_apertura: boolean;
+  available_plans: SubscriptionPlanCode[];
+  prices: PublicPremiumPrices;
+};
+
+export type PublicAppConfig = {
+  premium_badge: PremiumBadgeConfig;
+};
+
+export type AdminPremiumBadgeConfig = PremiumBadgeConfig;
+
 export type PublicLineupPlayer = {
   player_id: number;
   name: string;

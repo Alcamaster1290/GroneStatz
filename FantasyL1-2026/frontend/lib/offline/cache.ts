@@ -12,6 +12,9 @@ const CACHEABLE_GET_PATTERNS = [
   /^\/catalog\/teams(?:\?|$)/,
   /^\/catalog\/players(?:\?|$)/,
   /^\/catalog\/player-stats(?:\?|$)/,
+  /^\/public\/leaderboard(?:\?|$)/,
+  /^\/public\/premium\/config(?:\?|$)/,
+  /^\/public\/app-config(?:\?|$)/,
   /^\/fantasy\/team(?:\?|$)/,
   /^\/fantasy\/lineup(?:\?|$)/,
   /^\/ranking\/.+/

@@ -1,4 +1,6 @@
 from app.models.tables import (
+    AppConfig,
+    PaymentEvent,
     FantasyLineup,
     FantasyLineupSlot,
     FantasyTeam,
@@ -9,6 +11,7 @@ from app.models.tables import (
     LeagueMember,
     ActionLog,
     PasswordResetToken,
+    Subscription,
     PlayerCatalog,
     PlayerMatchStat,
     PlayerRoundStat,
@@ -24,6 +27,8 @@ from app.models.tables import (
 )
 
 __all__ = [
+    "AppConfig",
+    "PaymentEvent",
     "FantasyLineup",
     "FantasyLineupSlot",
     "FantasyTeam",
@@ -34,6 +39,7 @@ __all__ = [
     "LeagueMember",
     "ActionLog",
     "PasswordResetToken",
+    "Subscription",
     "PlayerCatalog",
     "PlayerMatchStat",
     "PlayerRoundStat",

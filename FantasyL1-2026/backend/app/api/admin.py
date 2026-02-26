@@ -33,6 +33,8 @@ from app.models import (
     User,
 )
 from app.schemas.admin import (
+    AdminPremiumBadgeConfigIn,
+    AdminPremiumBadgeConfigOut,
     AdminFixtureCreate,
     AdminFixtureOut,
     AdminFixtureUpdate,
@@ -58,6 +60,7 @@ from app.schemas.admin import (
     AdminTransferOut,
     AdminTransferPlayerOut,
 )
+from app.services.app_config import get_premium_badge_config, update_premium_badge_config
 from app.services.data_pipeline import ingest_parquets_to_duckdb, sync_duckdb_to_postgres
 from app.services.fantasy import ensure_round, get_or_create_season, get_round_by_number
 from app.services.action_log import log_action
@@ -420,6 +423,32 @@ def _delete_user_data(db: Session, user: User) -> None:
         db.execute(delete(LeagueMember).where(LeagueMember.fantasy_team_id == team.id))
         db.execute(delete(FantasyTeam).where(FantasyTeam.id == team.id))
     db.execute(delete(User).where(User.id == user.id))
+
+
+@router.get("/app-config/premium-badge", response_model=AdminPremiumBadgeConfigOut)
+def get_admin_premium_badge_config(db: Session = Depends(get_db)) -> AdminPremiumBadgeConfigOut:
+    return AdminPremiumBadgeConfigOut(**get_premium_badge_config(db))
+
+
+@router.put("/app-config/premium-badge", response_model=AdminPremiumBadgeConfigOut)
+def set_admin_premium_badge_config(
+    payload: AdminPremiumBadgeConfigIn,
+    db: Session = Depends(get_db),
+) -> AdminPremiumBadgeConfigOut:
+    config = update_premium_badge_config(
+        db,
+        enabled=payload.enabled,
+        text=payload.text,
+        color=payload.color,
+        shape=payload.shape,
+    )
+    log_action(
+        db,
+        category="admin_config",
+        action="update_premium_badge",
+        details=config,
+    )
+    return AdminPremiumBadgeConfigOut(**config)
 
 
 @router.post("/rebuild_catalog")
@@ -1043,43 +1072,49 @@ def upsert_player_stats(
             if position in {"G", "GK", "D", "M"} and minutes > 0:
                 row["clean_sheet"] = 1 if conceded == 0 else 0
 
-    db.execute(
-        text(
-            """
-            INSERT INTO player_match_stats (
-                season_id, round_id, match_id, player_id, minutesplayed, goals, assists, saves, fouls,
-                yellow_cards, red_cards, clean_sheet, goals_conceded, updated_at
-            )
-            VALUES (
-                :season_id, :round_id, :match_id, :player_id, :minutesplayed, :goals, :assists, :saves, :fouls,
-                :yellow_cards, :red_cards, :clean_sheet, :goals_conceded, NOW()
-            )
-            ON CONFLICT (season_id, round_id, match_id, player_id)
-            DO UPDATE SET
-                minutesplayed = EXCLUDED.minutesplayed,
-                goals = EXCLUDED.goals,
-                assists = EXCLUDED.assists,
-                saves = EXCLUDED.saves,
-                fouls = EXCLUDED.fouls,
-                yellow_cards = EXCLUDED.yellow_cards,
-                red_cards = EXCLUDED.red_cards,
-                clean_sheet = EXCLUDED.clean_sheet,
-                goals_conceded = EXCLUDED.goals_conceded,
-                updated_at = NOW()
-            """
-        ),
-        rows,
-    )
-    db.commit()
+    if rows:
+        db.execute(
+            text(
+                """
+                INSERT INTO player_match_stats (
+                    season_id, round_id, match_id, player_id, minutesplayed, goals, assists, saves, fouls,
+                    yellow_cards, red_cards, clean_sheet, goals_conceded, updated_at
+                )
+                VALUES (
+                    :season_id, :round_id, :match_id, :player_id, :minutesplayed, :goals, :assists, :saves, :fouls,
+                    :yellow_cards, :red_cards, :clean_sheet, :goals_conceded, NOW()
+                )
+                ON CONFLICT (season_id, round_id, match_id, player_id)
+                DO UPDATE SET
+                    minutesplayed = EXCLUDED.minutesplayed,
+                    goals = EXCLUDED.goals,
+                    assists = EXCLUDED.assists,
+                    saves = EXCLUDED.saves,
+                    fouls = EXCLUDED.fouls,
+                    yellow_cards = EXCLUDED.yellow_cards,
+                    red_cards = EXCLUDED.red_cards,
+                    clean_sheet = EXCLUDED.clean_sheet,
+                    goals_conceded = EXCLUDED.goals_conceded,
+                    updated_at = NOW()
+                """
+            ),
+            rows,
+        )
+        db.commit()
     log_action(
         db,
         category="stats",
         action="upsert",
-        details={"round_number": payload.round_number, "count": len(rows)},
+        details={
+            "round_number": payload.round_number,
+            "count": len(rows),
+            "skipped_missing_players": len(missing_players),
+        },
     )
     response = {"ok": True, "count": len(rows)}
     if missing_players:
         response["skipped_missing_players"] = missing_players
+        response["missing_fantasy_player_ids"] = missing_players
     return response
 
 

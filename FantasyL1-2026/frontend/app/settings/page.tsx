@@ -286,7 +286,7 @@ export default function SettingsPage() {
         </button>
         {status === "ok" ? <p className="text-xs text-accent2">Guardado</p> : null}
         {status === "error" ? <p className="text-xs text-warning">Error</p> : null}
-        {status === "offline" ? <p className="text-xs text-warning">Sin conexion, solo lectura.</p> : null}
+        {status === "offline" ? <p className="text-xs text-warning">Sin conexión, solo lectura.</p> : null}
       </div>
 
       <div className="glass space-y-3 rounded-2xl p-4">

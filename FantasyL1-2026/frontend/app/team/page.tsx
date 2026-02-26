@@ -607,13 +607,13 @@ export default function TeamPage() {
         tone: "warning"
       },
       lineup_has_empty_slots: {
-        title: "Slots vacios",
+        title: "Slots vacíos",
         detail: "Completa todos los espacios antes de guardar.",
         tone: "warning"
       },
       lineup_has_duplicate_players: {
         title: "Jugadores repetidos",
-        detail: "Un jugador esta asignado mas de una vez.",
+        detail: "Un jugador está asignado más de una vez.",
         tone: "danger"
       },
       lineup_players_not_in_squad: {
@@ -648,37 +648,37 @@ export default function TeamPage() {
       },
       lineup_starters_max_4_forwards: {
         title: "Demasiados delanteros",
-        detail: "Maximo 4 delanteros en titulares.",
+        detail: "Máximo 4 delanteros en titulares.",
         tone: "warning"
       },
       captain_not_in_lineup: {
-        title: "Capitan invalido",
-        detail: "El capitan debe estar en el XI.",
+        title: "Capitán inválido",
+        detail: "El capitán debe estar en el XI.",
         tone: "warning"
       },
       captain_not_in_starting_xi: {
-        title: "Capitan en banca",
-        detail: "El capitan debe ser titular.",
+        title: "Capitán en banca",
+        detail: "El capitán debe ser titular.",
         tone: "warning"
       },
       vice_captain_not_in_lineup: {
-        title: "Vice invalido",
-        detail: "El vicecapitan debe estar en el XI.",
+        title: "Vice inválido",
+        detail: "El vicecapitán debe estar en el XI.",
         tone: "warning"
       },
       vice_captain_not_in_starting_xi: {
         title: "Vice en banca",
-        detail: "El vicecapitan debe ser titular.",
+        detail: "El vicecapitán debe ser titular.",
         tone: "warning"
       },
       captain_and_vice_same_player: {
-        title: "Capitan duplicado",
-        detail: "Capitan y vicecapitan no pueden ser el mismo jugador.",
+        title: "Capitán duplicado",
+        detail: "Capitán y vicecapitán no pueden ser el mismo jugador.",
         tone: "warning"
       },
       round_closed: {
         title: "Ronda cerrada",
-        detail: "La ronda esta cerrada. No puedes guardar cambios.",
+        detail: "La ronda está cerrada. No puedes guardar cambios.",
         tone: "danger"
       },
       rounds_not_configured: {
@@ -727,7 +727,7 @@ export default function TeamPage() {
         tone: "warning"
       },
       offline_write_blocked: {
-        title: "Sin conexion",
+        title: "Sin conexión",
         detail: "No puedes guardar cambios sin internet. Modo solo lectura.",
         tone: "warning"
       }
@@ -1874,14 +1874,14 @@ export default function TeamPage() {
         <p className="text-sm text-ink">
           {captainId && squadMap.get(captainId) ? squadMap.get(captainId)?.name : "No asignado"}
         </p>
-        <p className="mt-2 text-xs text-muted">Vicecapitan</p>
+        <p className="mt-2 text-xs text-muted">Vicecapitán</p>
         <p className="text-sm text-ink">
           {viceCaptainId && squadMap.get(viceCaptainId)
             ? squadMap.get(viceCaptainId)?.name
             : "No asignado"}
         </p>
         <p className="mt-3 text-[11px] text-muted">
-          El capitan triplica su puntaje; si no juega, el vicecapitan recibe el bonus.
+          El capitán triplica su puntaje; si no juega, el vicecapitán recibe el bonus.
         </p>
         {roundStatus === "Pendiente" ? (
           <div className="mt-4">

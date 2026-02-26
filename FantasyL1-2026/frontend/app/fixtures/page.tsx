@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import AuthPanel from "@/components/AuthPanel";
 import FavoriteTeamGate from "@/components/FavoriteTeamGate";
+import PublicPageNav from "@/components/PublicPageNav";
 import TeamNameGate from "@/components/TeamNameGate";
 import WelcomeSlideshow from "@/components/WelcomeSlideshow";
 import {
@@ -56,10 +56,10 @@ function formatDateLabel(dateKey: string): string {
     "Domingo",
     "Lunes",
     "Martes",
-    "Miercoles",
+    "Miércoles",
     "Jueves",
     "Viernes",
-    "Sabado"
+    "Sábado"
   ];
   const months = [
     "Enero",
@@ -256,9 +256,7 @@ export default function FixturesPage() {
   }, [fixtures, selectedRound]);
 
   const canShowMatchStats = (fixture: Fixture) => {
-    if (fixture.status !== "Finalizado") return false;
-    if (fixture.home_score == null || fixture.away_score == null) return false;
-    return fixture.home_score !== 0 || fixture.away_score !== 0;
+    return fixture.status === "Finalizado";
   };
 
   const handleMatchClick = async (fixture: Fixture) => {
@@ -269,10 +267,8 @@ export default function FixturesPage() {
     setMatchStatsError(null);
     try {
       const data = await getMatchStats(fixture.match_id);
-      const filtered = data
-        .filter((row) => row.points !== 0)
-        .sort((a, b) => (b.points || 0) - (a.points || 0));
-      setMatchStats(filtered);
+      const sorted = data.slice().sort((a, b) => (b.points || 0) - (a.points || 0));
+      setMatchStats(sorted);
     } catch (err) {
       setMatchStats([]);
       setMatchStatsError(String(err));
@@ -300,14 +296,14 @@ export default function FixturesPage() {
     return [...matchStats].sort((a, b) => (b.points || 0) - (a.points || 0));
   }, [matchStats]);
 
-  if (!token) return <AuthPanel />;
-
   const roundIndex = selectedRound ? roundNumbers.indexOf(selectedRound) : -1;
   const canPrevRound = roundIndex > 0;
   const canNextRound = roundIndex >= 0 && roundIndex < roundNumbers.length - 1;
 
   return (
     <div className="space-y-5">
+      <PublicPageNav />
+
       <div>
         <h1 className="text-xl font-semibold">Partidos</h1>
         <p className="text-sm text-muted">Calendario por rondas</p>

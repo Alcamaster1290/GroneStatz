@@ -15,16 +15,16 @@ type Slide = {
 
 const SLIDES: Slide[] = [
   {
-    title: "Bienvenido al Fantasy Liga 1 Peru 2026 🇵🇪",
+    title: "Bienvenido al Fantasy Liga 1 Perú 2026 🇵🇪",
     bullets: [
-      "Unete a la nueva forma de vivir la Liga 1 totalmente gratis.",
+      "Únete a la nueva forma de vivir la Liga 1 totalmente gratis.",
       "Participa por el premio mayor y compite cada jornada.",
       "Arma tu equipo con 100 M y empieza a jugar."
     ],
     icon: "⚽"
   },
   {
-    title: "Como se suman los puntos",
+    title: "Cómo se suman los puntos",
     bullets: [
       "Gol +4, asistencia +3.",
       "Minutos jugados: hasta +2 por partido.",
@@ -35,7 +35,7 @@ const SLIDES: Slide[] = [
   {
     title: "Torneo General",
     bullets: [
-      "Todos los usuarios compiten en una tabla unica.",
+      "Todos los usuarios compiten en una tabla única.",
       "Suma puntos jornada a jornada.",
       "Sube posiciones y gana reconocimiento."
     ],
@@ -45,15 +45,15 @@ const SLIDES: Slide[] = [
     title: "Torneos Privados",
     bullets: [
       "Crea ligas cerradas con amigos o comunidades.",
-      "Comparte un codigo privado para unirte.",
+      "Comparte un código privado para unirte.",
       "El admin puede gestionar miembros."
     ],
     icon: "👥"
   },
   {
-    title: "Mercado dinamico",
+    title: "Mercado dinámico",
     bullets: [
-      "El valor de los jugadores sube o baja segun su rendimiento.",
+      "El valor de los jugadores sube o baja según su rendimiento.",
       "Aprovecha los cambios de precio cada ronda.",
       "Planifica tus transferencias: son ilimitadas y sin costo."
     ],

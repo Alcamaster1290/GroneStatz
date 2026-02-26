@@ -8,6 +8,7 @@ import {
   AdminRoundWindowUpdate,
   AdminPriceMovement,
   AdminRoundTopPlayer,
+  AdminPremiumBadgeConfig,
   AdminTeam,
   AdminTeamLineup,
   AdminPlayerInjury,
@@ -30,7 +31,14 @@ import {
   MatchPlayerStat,
   NotificationDevice,
   NotificationDevicePlatform,
+  PaymentProviderCode,
   PlayerMatch,
+  PremiumCheckoutIntent,
+  PublicAppConfig,
+  PublicLeaderboard,
+  PublicPremiumConfig,
+  SubscriptionPlanCode,
+  SubscriptionState,
   TransferCount
 } from "./types";
 import {
@@ -41,6 +49,7 @@ import {
 } from "./offline/cache";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+const API_FETCH_TIMEOUT_MS = 12000;
 
 const getFallbackBase = (base: string) => {
   if (base.startsWith("/")) {
@@ -103,11 +112,33 @@ async function apiFetch<T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const attemptFetch = (base: string) =>
-    fetch(`${base}${path}`, {
-      ...options,
-      headers
-    });
+  const attemptFetch = async (base: string) => {
+    const controller = new AbortController();
+    const externalSignal = options.signal;
+    const onAbort = () => controller.abort();
+
+    if (externalSignal) {
+      if (externalSignal.aborted) {
+        controller.abort();
+      } else {
+        externalSignal.addEventListener("abort", onAbort, { once: true });
+      }
+    }
+
+    const timeoutId = setTimeout(() => controller.abort(), API_FETCH_TIMEOUT_MS);
+    try {
+      return await fetch(`${base}${path}`, {
+        ...options,
+        headers,
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timeoutId);
+      if (externalSignal) {
+        externalSignal.removeEventListener("abort", onAbort);
+      }
+    }
+  };
 
   const fallbackBases: string[] = [];
   const hostnameFallback = getFallbackBase(API_URL);
@@ -767,7 +798,12 @@ export async function upsertAdminPlayerStats(
       goals_conceded?: number;
     }[];
   }
-): Promise<{ ok: boolean; count: number }> {
+): Promise<{
+  ok: boolean;
+  count: number;
+  skipped_missing_players?: number[];
+  missing_fantasy_player_ids?: number[];
+}> {
   return apiFetch(
     "/admin/player-stats",
     {
@@ -829,6 +865,33 @@ export async function getAdminPlayers(
   return apiFetch(
     "/admin/players",
     {
+      headers: { "X-Admin-Token": adminToken }
+    },
+    undefined
+  );
+}
+
+export async function getAdminPremiumBadgeConfig(
+  adminToken: string
+): Promise<AdminPremiumBadgeConfig> {
+  return apiFetch(
+    "/admin/app-config/premium-badge",
+    {
+      headers: { "X-Admin-Token": adminToken }
+    },
+    undefined
+  );
+}
+
+export async function updateAdminPremiumBadgeConfig(
+  adminToken: string,
+  payload: AdminPremiumBadgeConfig
+): Promise<AdminPremiumBadgeConfig> {
+  return apiFetch(
+    "/admin/app-config/premium-badge",
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
       headers: { "X-Admin-Token": adminToken }
     },
     undefined
@@ -928,6 +991,71 @@ export async function removeLeagueMember(
 
 export async function getRankingGeneral(token?: string): Promise<RankingResponse> {
   return apiFetch("/ranking/general", {}, token);
+}
+
+export async function getPublicLeaderboard(
+  limit = 25,
+  seasonYear = 2026
+): Promise<PublicLeaderboard> {
+  return apiFetch(`/public/leaderboard?limit=${limit}&season_year=${seasonYear}`);
+}
+
+export async function getPublicPremiumConfig(
+  seasonYear = 2026
+): Promise<PublicPremiumConfig> {
+  return apiFetch(`/public/premium/config?season_year=${seasonYear}`);
+}
+
+export async function getPublicAppConfig(): Promise<PublicAppConfig> {
+  return apiFetch("/public/app-config");
+}
+
+export async function getMySubscription(
+  token: string,
+  seasonYear?: number
+): Promise<SubscriptionState> {
+  const query = seasonYear ? `?season_year=${seasonYear}` : "";
+  return apiFetch(`/me/subscription${query}`, {}, token);
+}
+
+export async function createPremiumCheckoutIntent(
+  token: string,
+  payload: { plan_code: SubscriptionPlanCode; provider: PaymentProviderCode }
+): Promise<PremiumCheckoutIntent> {
+  return apiFetch(
+    "/premium/checkout-intent",
+    {
+      method: "POST",
+      body: JSON.stringify(payload)
+    },
+    token
+  );
+}
+
+export async function activatePremiumManual(
+  token: string,
+  payload: { payment_event_id: number; provider_ref?: string | null },
+  adminToken?: string
+): Promise<{
+  ok: boolean;
+  payment_event_id: number;
+  subscription_id: number;
+  plan_code: SubscriptionPlanCode;
+  status: "active" | "expired" | "canceled";
+}> {
+  const headers: Record<string, string> = {};
+  if (adminToken) {
+    headers["X-Admin-Token"] = adminToken;
+  }
+  return apiFetch(
+    "/premium/activate-manual",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers
+    },
+    token
+  );
 }
 
 export async function getRankingLeague(token: string): Promise<RankingResponse> {

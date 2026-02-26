@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import PlayerCard from "@/components/PlayerCard";
+import PremiumBadge from "@/components/PremiumBadge";
 import {
   createAdminFixture,
   deleteAdminUser,
@@ -30,7 +31,9 @@ import {
   updateAdminRoundWindow,
   updateAdminRoundStatus,
   upsertAdminPlayerStats,
-  updateAdminPlayerInjury
+  updateAdminPlayerInjury,
+  getAdminPremiumBadgeConfig,
+  updateAdminPremiumBadgeConfig
 } from "@/lib/api";
 import {
   AdminActionLog,
@@ -43,11 +46,19 @@ import {
   AdminTransfer,
   AdminTeam,
   AdminTeamLineup,
+  AdminPremiumBadgeConfig,
   FixtureStatus
 } from "@/lib/types";
 import type { AdminPlayerListItem } from "@/lib/api";
 
 const ADMIN_TOKEN_KEY = "fantasy_admin_token";
+const INITIAL_VISIBLE_USERS = 5;
+const DEFAULT_PREMIUM_BADGE_CONFIG: AdminPremiumBadgeConfig = {
+  enabled: true,
+  text: "P",
+  color: "#7C3AED",
+  shape: "circle"
+};
 
 export default function AdminTeamsPage() {
   const [adminToken, setAdminToken] = useState("");
@@ -59,6 +70,7 @@ export default function AdminTeamsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null);
+  const [visibleUsersCount, setVisibleUsersCount] = useState(INITIAL_VISIBLE_USERS);
   const [fixtureRound, setFixtureRound] = useState("");
   const [fixtures, setFixtures] = useState<AdminFixture[]>([]);
   const [fixtureLoading, setFixtureLoading] = useState(false);
@@ -113,6 +125,7 @@ export default function AdminTeamsPage() {
   const [statsErrors, setStatsErrors] = useState<
     { line: number; reason: string; raw: string }[]
   >([]);
+  const [statsMissingFantasyPlayerIds, setStatsMissingFantasyPlayerIds] = useState<number[]>([]);
   const [roundTopPlayers, setRoundTopPlayers] = useState<AdminRoundTopPlayer[]>([]);
   const [roundTopLoading, setRoundTopLoading] = useState(false);
   const [roundTopError, setRoundTopError] = useState<string | null>(null);
@@ -182,6 +195,11 @@ export default function AdminTeamsPage() {
   const [logCategory, setLogCategory] = useState("league");
   const [logsLoading, setLogsLoading] = useState(false);
   const [logsError, setLogsError] = useState<string | null>(null);
+  const [premiumBadgeConfig, setPremiumBadgeConfig] = useState<AdminPremiumBadgeConfig>(
+    DEFAULT_PREMIUM_BADGE_CONFIG
+  );
+  const [premiumBadgeLoading, setPremiumBadgeLoading] = useState(false);
+  const [premiumBadgeMessage, setPremiumBadgeMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const storedAdmin = localStorage.getItem(ADMIN_TOKEN_KEY);
@@ -194,6 +212,7 @@ export default function AdminTeamsPage() {
     if (!adminToken) return;
     handleLoad().catch(() => undefined);
     handleLoadRounds().catch(() => undefined);
+    handleLoadPremiumBadgeConfig().catch(() => undefined);
   }, [adminToken]);
 
   useEffect(() => {
@@ -227,6 +246,18 @@ export default function AdminTeamsPage() {
   }, []);
 
   useEffect(() => {
+    setVisibleUsersCount((current) => {
+      if (teams.length <= INITIAL_VISIBLE_USERS) {
+        return INITIAL_VISIBLE_USERS;
+      }
+      return Math.min(current, teams.length);
+    });
+    if (expandedTeamId && !teams.some((team) => team.fantasy_team_id === expandedTeamId)) {
+      setExpandedTeamId(null);
+    }
+  }, [teams, expandedTeamId]);
+
+  useEffect(() => {
     if (!adminToken) return;
     const roundValue = Number(statsRound);
     if (!roundValue || Number.isNaN(roundValue)) {
@@ -251,6 +282,13 @@ export default function AdminTeamsPage() {
     );
   }, [teamsCatalog]);
 
+  const visibleTeams = useMemo(
+    () => teams.slice(0, visibleUsersCount),
+    [teams, visibleUsersCount]
+  );
+  const hasMoreUsers = teams.length > visibleUsersCount;
+  const remainingUsersCount = Math.max(teams.length - visibleUsersCount, 0);
+
   const handleLoad = async () => {
     if (!adminToken) {
       setError("admin_token_required");
@@ -264,6 +302,8 @@ export default function AdminTeamsPage() {
         seasonYear ? Number(seasonYear) : undefined
       );
       setTeams(data);
+      setVisibleUsersCount(INITIAL_VISIBLE_USERS);
+      setExpandedTeamId(null);
       localStorage.setItem(ADMIN_TOKEN_KEY, adminToken);
     } catch (err) {
       setError(String(err));
@@ -523,12 +563,20 @@ export default function AdminTeamsPage() {
   useEffect(() => {
     if (!statsInput.trim()) {
       setStatsRows([]);
+      setStatsMissingFantasyPlayerIds([]);
       return;
     }
     const parsed = parseStatsLines(statsInput);
     setStatsRows(parsed.rows);
     setStatsErrors(parsed.errors);
+    setStatsMissingFantasyPlayerIds([]);
   }, [statsInput]);
+
+  useEffect(() => {
+    if (statsMode !== "chunk") {
+      setStatsMissingFantasyPlayerIds([]);
+    }
+  }, [statsMode]);
 
   const handleUploadStats = async () => {
     if (!adminToken) {
@@ -559,17 +607,93 @@ export default function AdminTeamsPage() {
 
     setStatsLoading(true);
     setStatsMessage(null);
+    setStatsMissingFantasyPlayerIds([]);
     try {
       const result = await upsertAdminPlayerStats(adminToken, {
         round_number: roundNumber,
         items: rows
       });
-      await recalcAdminRound(adminToken, roundNumber, false, false);
-      setStatsMessage(`ok_${result.count}_recalc`);
+      const missingIdsRaw =
+        result.skipped_missing_players || result.missing_fantasy_player_ids || [];
+      const missingIds = Array.from(
+        new Set(
+          missingIdsRaw
+            .map((value) => Number(value))
+            .filter((value) => Number.isFinite(value))
+        )
+      ).sort((a, b) => a - b);
+      if ((result.count || 0) > 0) {
+        await recalcAdminRound(adminToken, roundNumber, false, false);
+      }
+      if (statsMode === "chunk" && missingIds.length) {
+        setStatsMissingFantasyPlayerIds(missingIds);
+        setStatsMessage(
+          (result.count || 0) > 0
+            ? `Stats cargados: ${result.count}. Omitidos fuera del catálogo fantasy: ${missingIds.length}.`
+            : `No se insertaron stats. Player ID fuera del catálogo fantasy: ${missingIds.length}.`
+        );
+      } else {
+        setStatsMessage(
+          (result.count || 0) > 0
+            ? `Stats cargados: ${result.count}. Recalculo de ronda ejecutado.`
+            : "No se insertaron stats."
+        );
+      }
     } catch (err) {
       setStatsMessage(String(err));
     } finally {
       setStatsLoading(false);
+    }
+  };
+
+  const normalizePremiumBadgeColor = (value: string) => {
+    const color = value.trim().toUpperCase();
+    return /^#[0-9A-F]{6}$/.test(color)
+      ? color
+      : DEFAULT_PREMIUM_BADGE_CONFIG.color;
+  };
+
+  const handleLoadPremiumBadgeConfig = async () => {
+    if (!adminToken) {
+      setPremiumBadgeMessage("admin_token_required");
+      return;
+    }
+    setPremiumBadgeLoading(true);
+    setPremiumBadgeMessage(null);
+    try {
+      const config = await getAdminPremiumBadgeConfig(adminToken);
+      setPremiumBadgeConfig(config);
+      localStorage.setItem(ADMIN_TOKEN_KEY, adminToken);
+    } catch (err) {
+      setPremiumBadgeMessage(String(err));
+    } finally {
+      setPremiumBadgeLoading(false);
+    }
+  };
+
+  const handleSavePremiumBadgeConfig = async () => {
+    if (!adminToken) {
+      setPremiumBadgeMessage("admin_token_required");
+      return;
+    }
+    const cleanText =
+      premiumBadgeConfig.text.trim().slice(0, 2) || DEFAULT_PREMIUM_BADGE_CONFIG.text;
+    const payload: AdminPremiumBadgeConfig = {
+      ...premiumBadgeConfig,
+      text: cleanText,
+      color: normalizePremiumBadgeColor(premiumBadgeConfig.color)
+    };
+    setPremiumBadgeLoading(true);
+    setPremiumBadgeMessage(null);
+    try {
+      const config = await updateAdminPremiumBadgeConfig(adminToken, payload);
+      setPremiumBadgeConfig(config);
+      setPremiumBadgeMessage("premium_badge_saved");
+      localStorage.setItem(ADMIN_TOKEN_KEY, adminToken);
+    } catch (err) {
+      setPremiumBadgeMessage(String(err));
+    } finally {
+      setPremiumBadgeLoading(false);
     }
   };
 
@@ -833,7 +957,7 @@ export default function AdminTeamsPage() {
     }
     if (
       !confirm(
-        `Se anularan y revertiran las transferencias de la ronda ${roundValue}. Esta accion recalcula presupuesto del mercado. Continuar?`
+        `Se anularán y revertirán las transferencias de la ronda ${roundValue}. Esta acción recalcula presupuesto del mercado. ¿Continuar?`
       )
     ) {
       return;
@@ -1145,6 +1269,114 @@ export default function AdminTeamsPage() {
             </button>
             {error ? <p className="text-xs text-warning">{error}</p> : null}
           </div>
+
+          <div className="glass space-y-3 rounded-2xl p-4">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold">Branding / Premium Badge</h2>
+              <p className="text-xs text-muted">
+                Configura el badge Premium visible en landing sin redeploy.
+              </p>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                checked={premiumBadgeConfig.enabled}
+                onChange={(event) =>
+                  setPremiumBadgeConfig((prev) => ({
+                    ...prev,
+                    enabled: event.target.checked
+                  }))
+                }
+                className="h-4 w-4 rounded border border-white/10 bg-black/40"
+              />
+              Badge habilitado
+            </label>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="space-y-1">
+                <label className="text-xs text-muted">Texto (1-2 chars)</label>
+                <input
+                  value={premiumBadgeConfig.text}
+                  maxLength={2}
+                  onChange={(event) =>
+                    setPremiumBadgeConfig((prev) => ({
+                      ...prev,
+                      text: event.target.value.toUpperCase()
+                    }))
+                  }
+                  className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted">Color (hex)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={normalizePremiumBadgeColor(premiumBadgeConfig.color)}
+                    onChange={(event) =>
+                      setPremiumBadgeConfig((prev) => ({
+                        ...prev,
+                        color: event.target.value.toUpperCase()
+                      }))
+                    }
+                    className="h-10 w-12 rounded-lg border border-white/10 bg-black/30 p-1"
+                  />
+                  <input
+                    value={premiumBadgeConfig.color}
+                    onChange={(event) =>
+                      setPremiumBadgeConfig((prev) => ({
+                        ...prev,
+                        color: event.target.value.toUpperCase()
+                      }))
+                    }
+                    placeholder="#7C3AED"
+                    className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted">Forma</label>
+              <select
+                value={premiumBadgeConfig.shape}
+                onChange={(event) =>
+                  setPremiumBadgeConfig((prev) => ({
+                    ...prev,
+                    shape: event.target.value as AdminPremiumBadgeConfig["shape"]
+                  }))
+                }
+                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+              >
+                <option value="circle">Circle</option>
+                <option value="rounded">Rounded</option>
+              </select>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+              <p className="text-[11px] text-muted">Preview</p>
+              <div className="mt-2 flex items-center gap-3">
+                <PremiumBadge config={premiumBadgeConfig} />
+                <span className="text-xs text-ink">Premium card badge</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleLoadPremiumBadgeConfig}
+                disabled={premiumBadgeLoading}
+                className="flex-1 rounded-xl border border-white/10 px-4 py-2 text-sm text-ink disabled:opacity-50"
+              >
+                Recargar config
+              </button>
+              <button
+                onClick={handleSavePremiumBadgeConfig}
+                disabled={premiumBadgeLoading}
+                className="flex-1 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
+              >
+                Guardar badge
+              </button>
+            </div>
+            {premiumBadgeMessage ? (
+              <p className="text-xs text-muted">{premiumBadgeMessage}</p>
+            ) : null}
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -1171,7 +1403,7 @@ export default function AdminTeamsPage() {
               className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
             >
               <option value="Pendiente">Pendiente</option>
-              <option value="Proximamente">Proximamente</option>
+              <option value="Proximamente">Próximamente</option>
               <option value="Cerrada">Cerrada</option>
             </select>
             <button
@@ -1471,7 +1703,7 @@ export default function AdminTeamsPage() {
 
       {loading ? <p className="text-xs text-muted">Cargando...</p> : null}
 
-      {teams.map((team) => {
+      {visibleTeams.map((team) => {
         const isOpen = expandedTeamId === team.fantasy_team_id;
         return (
           <div key={team.fantasy_team_id} className="glass space-y-3 rounded-2xl p-4">
@@ -1520,6 +1752,27 @@ export default function AdminTeamsPage() {
           </div>
         );
       })}
+      {teams.length > INITIAL_VISIBLE_USERS ? (
+        <div className="flex items-center justify-center">
+          {hasMoreUsers ? (
+            <button
+              type="button"
+              onClick={() => setVisibleUsersCount(teams.length)}
+              className="rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+            >
+              Mostrar mas ({remainingUsersCount})
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setVisibleUsersCount(INITIAL_VISIBLE_USERS)}
+              className="rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+            >
+              Mostrar menos
+            </button>
+          )}
+        </div>
+      ) : null}
 
       <div className="space-y-2 pt-2">
         <h2 className="text-lg font-semibold">Rondas y partidos</h2>
@@ -2128,6 +2381,17 @@ export default function AdminTeamsPage() {
           Aplicar variacion de precios (ronda)
         </button>
         {statsMessage ? <p className="text-xs text-muted">{statsMessage}</p> : null}
+        {statsMode === "chunk" && statsMissingFantasyPlayerIds.length ? (
+          <div className="space-y-2 rounded-xl border border-warning/40 bg-warning/10 p-3 text-[11px] text-warning">
+            <p className="font-semibold">
+              Player ID no contabilizados (fuera de jugadores fantasy):{" "}
+              {statsMissingFantasyPlayerIds.length}
+            </p>
+            <div className="max-h-28 overflow-auto text-[10px] text-warning/90">
+              {statsMissingFantasyPlayerIds.join(", ")}
+            </div>
+          </div>
+        ) : null}
         {statsErrors.length ? (
           <div className="space-y-1 rounded-xl border border-warning/40 bg-warning/10 p-3 text-[11px] text-warning">
             <p className="font-semibold">Filas descartadas por error ({statsErrors.length})</p>
@@ -2157,13 +2421,13 @@ export default function AdminTeamsPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2">
-          <span className="text-xs text-muted">Catalogo de jugadores</span>
+          <span className="text-xs text-muted">Catálogo de jugadores</span>
           <button
             onClick={handleRebuildCatalog}
             disabled={catalogLoading}
             className="rounded-xl border border-white/10 px-3 py-1 text-xs text-ink"
           >
-            {catalogLoading ? "Actualizando..." : "Actualizar catalogo"}
+            {catalogLoading ? "Actualizando..." : "Actualizar catálogo"}
           </button>
         </div>
         {catalogMessage ? <p className="text-xs text-muted">{catalogMessage}</p> : null}

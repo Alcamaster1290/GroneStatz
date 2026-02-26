@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Column,
     DateTime,
     ForeignKey,
@@ -11,7 +12,9 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text as sa_text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 
 from app.db.base import Base
 
@@ -258,6 +261,60 @@ class PasswordResetToken(Base):
     expires_at = Column(DateTime(timezone=True), nullable=False)
     used_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    season_id = Column(Integer, ForeignKey("seasons.id"), nullable=True)
+    status = Column(String(12), nullable=False, server_default="active")
+    plan_code = Column(String(24), nullable=False)
+    starts_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    ends_at = Column(DateTime(timezone=True), nullable=True)
+    start_round_id = Column(Integer, ForeignKey("rounds.id"), nullable=True)
+    end_round_id = Column(Integer, ForeignKey("rounds.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        CheckConstraint("status IN ('active','expired','canceled')"),
+        CheckConstraint(
+            "plan_code IN ('FREE','PREMIUM_2R','PREMIUM_4R','PREMIUM_APERTURA')"
+        ),
+    )
+
+
+class PaymentEvent(Base):
+    __tablename__ = "payment_events"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=True)
+    provider = Column(String(10), nullable=False)
+    amount = Column(Numeric(8, 2), nullable=False)
+    currency = Column(String(3), nullable=False, server_default="PEN")
+    status = Column(String(12), nullable=False)
+    provider_ref = Column(String(120), nullable=True)
+    meta = Column(
+        JSONB(astext_type=Text()),
+        nullable=False,
+        server_default=sa_text("'{}'::jsonb"),
+    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        CheckConstraint("provider IN ('yape','stripe','manual')"),
+        CheckConstraint("status IN ('pending','paid','failed','refunded')"),
+    )
+
+
+class AppConfig(Base):
+    __tablename__ = "app_config"
+
+    key = Column(String(64), primary_key=True)
+    value = Column(String(255), nullable=False)
 
 
 class PushDeviceToken(Base):

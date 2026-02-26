@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import AuthPanel from "@/components/AuthPanel";
 import FavoriteTeamGate from "@/components/FavoriteTeamGate";
+import PublicPageNav from "@/components/PublicPageNav";
 import TeamNameGate from "@/components/TeamNameGate";
 import WelcomeSlideshow from "@/components/WelcomeSlideshow";
 import {
@@ -282,14 +283,14 @@ export default function RankingPage() {
     if (!code) return null;
     const errorMap: Record<string, string> = {
       db_unavailable: "No se puede conectar a la base de datos. Intenta nuevamente en unos minutos.",
-      network_error: "No se pudo conectar con el backend. Revisa la conexion.",
+      network_error: "No se pudo conectar con el backend. Revisa la conexión.",
       service_unavailable: "Servicio no disponible temporalmente.",
       endpoint_not_found: "Endpoint no encontrado en el backend.",
       server_error: "Error interno del servidor.",
-      unauthorized: "Sesion no autorizada. Inicia sesion nuevamente.",
-      forbidden: "No tienes permisos para esta accion.",
+      unauthorized: "Sesión no autorizada. Inicia sesión nuevamente.",
+      forbidden: "No tienes permisos para esta acción.",
       rate_limited: "Demasiados intentos. Espera un momento e intenta otra vez.",
-      offline_write_blocked: "Sin conexion, solo lectura."
+      offline_write_blocked: "Sin conexión, solo lectura."
     };
     if (code.includes("offline_write_blocked")) {
       return errorMap.offline_write_blocked;
@@ -595,8 +596,8 @@ export default function RankingPage() {
   };
 
   const leagueSubtitle = useMemo(() => {
-    if (league) return `Codigo: ${league.code}`;
-    return "Crea o unete con un codigo.";
+    if (league) return `Código: ${league.code}`;
+    return "Crea o únete con un código.";
   }, [league]);
 
   const generalVisibleEntries = useMemo(() => {
@@ -829,6 +830,8 @@ export default function RankingPage() {
 
   return (
     <div className="space-y-5">
+      <PublicPageNav />
+
       {!token ? (
         <div className="mb-4 rounded-2xl bg-surface2/40 p-4">
           <AuthPanel />
@@ -986,7 +989,7 @@ export default function RankingPage() {
                 </button>
               </div>
               <div className="space-y-2">
-                <p className="text-xs text-muted">Unirse por codigo</p>
+                <p className="text-xs text-muted">Unirse por código</p>
                 <input
                   value={joinCode}
                   onChange={(event) => setJoinCode(event.target.value)}
@@ -1071,7 +1074,7 @@ export default function RankingPage() {
             {lineupError && !isMissingLineupError ? (
               <p className="text-xs text-warning">
                 {lineupErrorCode === "lineup_not_found"
-                  ? "Este equipo aun no guardo su XI."
+                  ? "Este equipo aún no guardó su XI."
                   : toFriendlyError(lineupError)}
               </p>
             ) : null}
@@ -1201,6 +1204,8 @@ export default function RankingPage() {
     </div>
   );
 }
+
+
 
 
 

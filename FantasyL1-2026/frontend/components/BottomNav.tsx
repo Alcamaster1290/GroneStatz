@@ -11,7 +11,7 @@ const items = [
   { href: "/market", label: "Mercado", icon: ShoppingBag, requiresAuth: true },
   { href: "/stats", label: "Estadisticas", icon: BarChart3, requiresAuth: true },
   { href: "/ranking", label: "Ranking", icon: Trophy, requiresAuth: false },
-  { href: "/fixtures", label: "Rondas", icon: Calendar, requiresAuth: true },
+  { href: "/fixtures", label: "Rondas", icon: Calendar, requiresAuth: false },
   { href: "/settings", label: "Ajustes", icon: Settings, requiresAuth: true }
 ];
 
@@ -19,6 +19,10 @@ export default function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const token = useFantasyStore((state) => state.token);
+
+  if (pathname === "/" || pathname.startsWith("/login")) {
+    return null;
+  }
 
   const handleClick = (e: React.MouseEvent, href: string, requiresAuth: boolean) => {
     if (requiresAuth && !token) {

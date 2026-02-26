@@ -53,6 +53,58 @@ $env:ENV_FILE=".env.test"
 python -m alembic -c backend\alembic.ini upgrade head
 ```
 
+## Premium + Landing + Top25 (TEST primero)
+Checklist de ejecucion en TEST antes de tocar PROD:
+
+1) Activar entorno test:
+```
+$env:APP_ENV="test"
+$env:ENV_FILE=".env.test"
+```
+
+2) Migrar SOLO test:
+```
+cd backend
+python -m alembic -c alembic.ini upgrade head
+```
+
+3) Seed minimo para 2026 + rondas 1..18:
+```
+cd ..
+python scripts/seed_test_minimum.py --season-year 2026 --season-name "2026 Apertura" --total-rounds 18
+```
+
+4) Validar endpoints nuevos:
+```
+curl http://localhost:8000/public/leaderboard?limit=25&season_year=2026
+curl http://localhost:8000/public/premium/config?season_year=2026
+curl http://localhost:8000/public/app-config
+curl -H "Authorization: Bearer <TOKEN>" http://localhost:8000/me/subscription
+curl -X POST -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" ^
+  -d "{\"plan_code\":\"PREMIUM_2R\",\"provider\":\"manual\"}" http://localhost:8000/premium/checkout-intent
+```
+
+5) Branding Premium Badge (admin):
+- Keys en `app_config`:
+  - `PREMIUM_BADGE_ENABLED` (`true`|`false`)
+  - `PREMIUM_BADGE_TEXT` (`P` por defecto)
+  - `PREMIUM_BADGE_COLOR` (`#7C3AED` por defecto)
+  - `PREMIUM_BADGE_SHAPE` (`circle`|`rounded`)
+- Lectura publica (whitelist): `GET /public/app-config`
+- Escritura admin:
+  - `GET /admin/app-config/premium-badge`
+  - `PUT /admin/app-config/premium-badge` (requiere `X-Admin-Token`)
+
+5) Flujo web:
+- `/` => landing con tabs (inicio, como-jugar, ranking top25, premium, fixtures, faq)
+- CTA principal => `/login?redirect=/app`
+- `/app` => entrada al juego (redirige a ruta actual `/team`)
+
+Notas:
+- `PREMIUM_APERTURA` se ofrece solo hasta ronda configurable (`APERTURA_PREMIUM_LAST_SELL_ROUND`, default `12`).
+- Backend rechaza activacion de `PREMIUM_APERTURA` fuera de ventana aunque frontend lo oculte.
+- No desplegar a PROD sin validar el checklist anterior.
+
 ## Parquets
 Ruta esperada (datos base):
 `gronestats/data/Liga 1 Peru/2025/parquets/normalized/`
