@@ -103,8 +103,13 @@ services:
       - traefik.http.routers.web.rule=Host(`fantasyliga1peru.com`,`www.fantasyliga1peru.com`)
       - traefik.http.routers.web.entrypoints=websecure
       - traefik.http.routers.web.tls.certresolver=le
-      - traefik.http.routers.web.middlewares=web-root-landing
-      - traefik.http.middlewares.web-root-landing.redirectregex.regex=^https?://(www\\.)?fantasyliga1peru\\.com/?$
+      - traefik.http.routers.web-root.rule=Host(`fantasyliga1peru.com`,`www.fantasyliga1peru.com`) && Path(`/`)
+      - traefik.http.routers.web-root.entrypoints=websecure
+      - traefik.http.routers.web-root.tls.certresolver=le
+      - traefik.http.routers.web-root.priority=200
+      - traefik.http.routers.web-root.middlewares=web-root-landing
+      - traefik.http.routers.web-root.service=web
+      - traefik.http.middlewares.web-root-landing.redirectregex.regex=^https?://(?:www\\.)?fantasyliga1peru\\.com/?$
       - traefik.http.middlewares.web-root-landing.redirectregex.replacement=https://www.fantasyliga1peru.com/landing
       - traefik.http.middlewares.web-root-landing.redirectregex.permanent=true
       - traefik.docker.network=gronestatz_edge
