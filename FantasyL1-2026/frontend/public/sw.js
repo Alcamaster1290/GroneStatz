@@ -1,5 +1,7 @@
-const STATIC_CACHE = "fantasy-static-v2";
-const RUNTIME_CACHE = "fantasy-runtime-v2";
+const STATIC_CACHE = "fantasy-static-v4";
+const RUNTIME_CACHE = "fantasy-runtime-v4";
+const IS_LOCALHOST =
+  self.location.hostname === "localhost" || self.location.hostname === "127.0.0.1";
 const PRE_CACHE_URLS = [
   "/",
   "/team",
@@ -14,6 +16,11 @@ const PRE_CACHE_URLS = [
 ];
 
 self.addEventListener("install", (event) => {
+  if (IS_LOCALHOST) {
+    self.skipWaiting();
+    return;
+  }
+
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
@@ -24,6 +31,17 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
+  if (IS_LOCALHOST) {
+    event.waitUntil(
+      caches
+        .keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .then(() => self.registration.unregister())
+        .then(() => self.clients.claim())
+    );
+    return;
+  }
+
   event.waitUntil(
     caches
       .keys()
@@ -51,6 +69,8 @@ function isStaticAsset(url) {
 }
 
 self.addEventListener("fetch", (event) => {
+  if (IS_LOCALHOST) return;
+
   const request = event.request;
   if (request.method !== "GET") return;
 
@@ -68,6 +88,8 @@ self.addEventListener("fetch", (event) => {
         .catch(async () => {
           const cached = await caches.match(request);
           if (cached) return cached;
+          const landing = await caches.match("/");
+          if (landing) return landing;
           return caches.match("/team");
         })
     );
