@@ -10,6 +10,8 @@ import { useFantasyStore } from "@/lib/store";
 const normalizeRedirect = (value: string | null) => {
   if (!value) return "/app";
   if (!value.startsWith("/") || value.startsWith("//")) return "/app";
+  if (value === "/landing" || value.startsWith("/landing?")) return "/app";
+  if (value === "/login" || value.startsWith("/login?")) return "/app";
   return value;
 };
 

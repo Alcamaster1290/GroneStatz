@@ -557,6 +557,7 @@ export default function TeamPage() {
   );
   const [roundsInfo, setRoundsInfo] = useState<RoundInfo[]>([]);
   const [roundStatus, setRoundStatus] = useState<string | null>(null);
+  const [authResolved, setAuthResolved] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [appEnv, setAppEnv] = useState<string>("local");
   const [roundMissing, setRoundMissing] = useState(false);
@@ -1002,6 +1003,7 @@ export default function TeamPage() {
     if (!userEmail && storedEmail) {
       setUserEmail(storedEmail);
     }
+    setAuthResolved(true);
   }, [token, setToken, userEmail, setUserEmail]);
 
   useEffect(() => {
@@ -1585,10 +1587,15 @@ export default function TeamPage() {
   };
 
   useEffect(() => {
+    if (!authResolved) return;
     if (!token) {
       router.replace("/landing");
     }
-  }, [token, router]);
+  }, [authResolved, token, router]);
+
+  if (!authResolved) {
+    return null;
+  }
 
   if (!token) {
     return null;
