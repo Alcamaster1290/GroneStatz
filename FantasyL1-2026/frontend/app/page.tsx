@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 
 import LandingTabs from "@/components/LandingTabs";
 
+// Keep "/" rendered from server on every request to avoid stale ISR cache
+// accidentally serving an old redirect response.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   process.env.NEXT_PUBLIC_MOBILE_WEB_URL ||
