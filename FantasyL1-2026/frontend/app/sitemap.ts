@@ -6,24 +6,25 @@ const siteUrl =
   "https://fantasyliga1peru.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const now = new Date();
   return [
     {
       url: `${siteUrl}/`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "daily",
       priority: 1
     },
     {
-      url: `${siteUrl}/login`,
-      lastModified: new Date(),
+      url: `${siteUrl}/landing`,
+      lastModified: now,
       changeFrequency: "daily",
-      priority: 0.8
+      priority: 0.9
     },
     {
-      url: `${siteUrl}/app`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.8
+      url: `${siteUrl}/login`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.6
     }
   ];
 }

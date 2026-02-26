@@ -10,21 +10,25 @@ const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   process.env.NEXT_PUBLIC_MOBILE_WEB_URL ||
   "https://fantasyliga1peru.com";
-const siteTitle = "Fantasy Liga 1 Perú 2026 | El único Fantasy Manager del fútbol peruano";
+const siteTitle = "Fantasy Liga 1 Peru 2026 | Fantasy oficial de la Liga 1 Peru";
 const siteDescription =
-  "Arma tu equipo, juega en ligas y compite en el Fantasy Liga 1 Perú 2026. Mercado dinámico, estadísticas en vivo y rankings por jornada.";
+  "Fantasy Liga 1 Peru 2026: arma tu equipo, juega ranking general y ligas privadas con datos reales de cada fecha del futbol peruano.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: siteTitle,
   description: siteDescription,
-  applicationName: "Fantasy Liga 1 Perú 2026",
+  applicationName: "Fantasy Liga 1 Peru 2026",
   manifest: "/manifest.json",
   keywords: [
-    "fantasy liga 1 perú",
-    "liga 1 perú fantasy",
-    "fantasy fútbol perú",
-    "fantasy perú 2026"
+    "liga 1 peru",
+    "liga 1 peru 2026",
+    "liga 1 peru fantasy",
+    "fantasy liga 1 peru",
+    "fantasy peru 2026",
+    "futbol peruano",
+    "ranking liga 1 peru",
+    "juego fantasy liga 1"
   ],
   alternates: {
     canonical: "/"
@@ -49,14 +53,14 @@ export const metadata: Metadata = {
     url: "/",
     title: siteTitle,
     description: siteDescription,
-    siteName: "Fantasy Liga 1 Perú",
+    siteName: "Fantasy Liga 1 Peru",
     locale: "es_PE",
     images: [
       {
         url: "/logo.png",
         width: 1200,
         height: 630,
-        alt: "Fantasy Liga 1 Perú"
+        alt: "Fantasy Liga 1 Peru"
       }
     ]
   },

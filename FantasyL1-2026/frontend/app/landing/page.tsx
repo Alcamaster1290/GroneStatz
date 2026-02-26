@@ -7,21 +7,30 @@ const siteUrl =
   process.env.NEXT_PUBLIC_MOBILE_WEB_URL ||
   "https://fantasyliga1peru.com";
 
-const title = "Fantasy Liga 1 Peru 2026 | Landing oficial";
+const title = "Fantasy Liga 1 Peru 2026 | Liga 1 Peru fantasy en vivo";
 const description =
-  "Juega Fantasy Liga 1 Peru 2026. Revisa el Top 10 publico, planes Premium por rondas y entra al juego en segundos.";
+  "Juega Fantasy Liga 1 Peru 2026. Sigue el top publico, arma tu equipo y compite en el juego fantasy oficial de la Liga 1 Peru.";
 
 export const metadata: Metadata = {
   title,
   description,
+  keywords: [
+    "liga 1 peru",
+    "liga 1 peru 2026",
+    "fantasy liga 1 peru",
+    "liga 1 peru fantasy",
+    "fantasy peru",
+    "ranking liga 1 peru"
+  ],
   alternates: {
-    canonical: "/landing"
+    canonical: "/"
   },
   openGraph: {
     type: "website",
-    url: "/landing",
+    url: "/",
     title,
-    description
+    description,
+    siteName: "Fantasy Liga 1 Peru"
   },
   twitter: {
     card: "summary_large_image",
@@ -35,8 +44,18 @@ export default function LandingPage() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Fantasy Liga 1 Peru",
+    alternateName: ["Liga 1 Peru Fantasy", "Liga 1 Peru 2026", "Fantasy Peru"],
     url: siteUrl,
-    inLanguage: "es-PE"
+    inLanguage: "es-PE",
+    keywords: "liga 1 peru, liga 1 peru 2026, fantasy liga 1 peru, liga 1 peru fantasy"
+  };
+
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Fantasy Liga 1 Peru",
+    url: siteUrl,
+    logo: `${siteUrl}/logo.png`
   };
 
   return (
@@ -49,6 +68,10 @@ export default function LandingPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
     </>
   );
