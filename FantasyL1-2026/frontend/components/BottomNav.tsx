@@ -20,7 +20,7 @@ export default function BottomNav() {
   const router = useRouter();
   const token = useFantasyStore((state) => state.token);
 
-  if (pathname === "/" || pathname.startsWith("/login")) {
+  if (pathname === "/" || pathname === "/landing" || pathname.startsWith("/login")) {
     return null;
   }
 

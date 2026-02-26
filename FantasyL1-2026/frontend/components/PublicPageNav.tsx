@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+
+import { useFantasyStore } from "@/lib/store";
 
 type PublicNavItem = {
   href: string;
@@ -9,20 +12,41 @@ type PublicNavItem = {
   label: string;
 };
 
-const PUBLIC_NAV_ITEMS: PublicNavItem[] = [
-  { href: "/", match: "/", label: "Landing" },
-  { href: "/login?redirect=/app", match: "/login", label: "Login" },
-  { href: "/ranking", match: "/ranking", label: "Ranking" },
-  { href: "/fixtures", match: "/fixtures", label: "Rondas" }
-];
-
 export default function PublicPageNav() {
   const pathname = usePathname() || "/";
+  const token = useFantasyStore((state) => state.token);
+  const setToken = useFantasyStore((state) => state.setToken);
+  const setUserEmail = useFantasyStore((state) => state.setUserEmail);
+
+  useEffect(() => {
+    if (token) return;
+    const storedToken = localStorage.getItem("fantasy_token");
+    const storedEmail = localStorage.getItem("fantasy_email");
+    if (storedToken) {
+      setToken(storedToken);
+      if (storedEmail) {
+        setUserEmail(storedEmail);
+      }
+    }
+  }, [token, setToken, setUserEmail]);
+
+  const playHref = token ? "/app" : "/login?redirect=/app";
+  const navItems: PublicNavItem[] = pathname.startsWith("/login")
+    ? [
+        { href: "/landing", match: "/landing", label: "Landing" },
+        { href: "/ranking", match: "/ranking", label: "Ranking" },
+        { href: "/fixtures", match: "/fixtures", label: "Rondas" }
+      ]
+    : [
+        { href: playHref, match: token ? "/app" : "/login", label: "JUGAR" },
+        { href: "/ranking", match: "/ranking", label: "Ranking" },
+        { href: "/fixtures", match: "/fixtures", label: "Rondas" }
+      ];
 
   return (
     <nav className="overflow-x-auto rounded-2xl border border-white/10 bg-black/25 p-2">
       <div className="flex min-w-max items-center gap-2">
-        {PUBLIC_NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const isActive = pathname === item.match;
           return (
             <Link

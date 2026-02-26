@@ -7,7 +7,7 @@ import AppHeader from "@/components/AppHeader";
 export default function RouteAwareHeader() {
   const pathname = usePathname();
 
-  if (pathname === "/") {
+  if (pathname === "/" || pathname === "/landing") {
     return null;
   }
 
