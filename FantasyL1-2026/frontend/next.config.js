@@ -12,6 +12,15 @@ const nextConfig = {
     config.resolve.alias["@"] = path.resolve(__dirname);
     return config;
   },
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/landing",
+        permanent: true
+      }
+    ];
+  },
   async rewrites() {
     return [
       {

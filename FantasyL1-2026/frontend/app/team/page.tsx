@@ -1586,7 +1586,7 @@ export default function TeamPage() {
 
   useEffect(() => {
     if (!token) {
-      router.replace("/ranking");
+      router.replace("/landing");
     }
   }, [token, router]);
 
