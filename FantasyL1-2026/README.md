@@ -122,6 +122,29 @@ Parquets usados:
 
 **Importante:** la app usa `players_fantasy.parquet` como catálogo. Fixtures 2026 se cargan desde Admin (no desde matches 2025).
 
+### Ingesta post-lanzamiento (sin alterar precios/puntos cargados)
+- Updater UI: `gronestats/processing/st_parquets_updater.py`
+- Modo recomendado en temporada: `Post-Lanzamiento` (default).
+- En ese modo:
+  - no se recalculan precios globales;
+  - se bloquean bajas;
+  - los nuevos jugadores usan template de precio por posicion.
+
+Flags backend recomendados en `test/prod`:
+- `SYNC_SKIP_PRUNE_MISSING_PLAYERS=true`
+- `SYNC_PRESERVE_EXISTING_PRICE_CURRENT=true`
+- `SYNC_PRESERVE_EXISTING_BASE_STATS=true`
+
+Con estos flags, el sync DuckDB -> Postgres mantiene para jugadores existentes:
+- `price_current`
+- `minutesplayed`, `matches_played`, `goals`, `assists`, `saves`, `fouls`
+
+Flujo operativo:
+1) actualizar parquets en Streamlit (modo Post-Lanzamiento),
+2) ejecutar ingest/sync en TEST,
+3) validar,
+4) repetir en PROD.
+
 ## Scripts clave
 - `scripts/ingest_to_duckdb.py`: carga parquets a DuckDB.
 - `scripts/sync_duckdb_to_postgres.py`: sincroniza a Postgres.

@@ -54,6 +54,8 @@ class Settings(BaseSettings):
     SCHEDULER_ENABLED: bool = True
     SCHEDULER_INTERVAL_SECONDS: int = 300
     SYNC_SKIP_PRUNE_MISSING_PLAYERS: bool = False
+    SYNC_PRESERVE_EXISTING_PRICE_CURRENT: bool = False
+    SYNC_PRESERVE_EXISTING_BASE_STATS: bool = False
     PUSH_ENABLED: bool = False
     PUSH_REMINDER_HOURS_BEFORE: int = 24
     FCM_PROJECT_ID: str = ""

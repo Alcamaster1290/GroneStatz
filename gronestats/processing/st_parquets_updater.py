@@ -78,6 +78,27 @@ POS_CANON_MAP = {
     "F": "F",
 }
 
+INGESTION_MODE_POST_LAUNCH = "Post-Lanzamiento"
+INGESTION_MODE_PRESEASON = "Pretemporada"
+INGESTION_MODE_OPTIONS = [INGESTION_MODE_POST_LAUNCH, INGESTION_MODE_PRESEASON]
+
+PRICE_TEMPLATE_DEFAULT = {
+    "G": 5.0,
+    "D": 5.5,
+    "M": 6.2,
+    "F": 7.0,
+}
+PRESERVED_EXISTING_COLS = [
+    "price",
+    "minutesplayed",
+    "matches_played",
+    "goals",
+    "assists",
+    "saves",
+    "fouls",
+]
+PLAYER_METADATA_COLS = ["name", "short_name", "position", "team_id"]
+
 
 # -------------------------
 # Helpers
@@ -561,6 +582,262 @@ def sync_players_price(players_df: pd.DataFrame, fantasy_df: pd.DataFrame) -> pd
     return merged[original_cols].copy()
 
 
+def _to_player_id_set(values) -> set[int]:
+    ids: set[int] = set()
+    if values is None:
+        return ids
+    for value in values:
+        try:
+            if pd.isna(value):
+                continue
+            ids.add(int(value))
+        except Exception:
+            continue
+    return ids
+
+
+def apply_price_template_for_new_players(
+    fantasy_df: pd.DataFrame,
+    new_player_ids: set[int],
+    template: dict[str, float] | None = None,
+    override_by_player: dict[int, float] | None = None,
+) -> pd.DataFrame:
+    if fantasy_df.empty or not new_player_ids:
+        return fantasy_df
+    work = normalize_player_columns(fantasy_df)
+    if "player_id" not in work.columns:
+        return work
+    if "price" not in work.columns:
+        work["price"] = pd.NA
+
+    template = template or PRICE_TEMPLATE_DEFAULT
+    override_by_player = override_by_player or {}
+
+    work["player_id"] = pd.to_numeric(work["player_id"], errors="coerce").astype("Int64")
+    if "position" in work.columns:
+        positions = (
+            work["position"]
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            .replace({"NAN": pd.NA})
+            .apply(normalize_pos)
+        )
+    else:
+        positions = pd.Series(pd.NA, index=work.index, dtype="object")
+
+    for pid in sorted(new_player_ids):
+        mask = work["player_id"] == pid
+        if not mask.any():
+            continue
+        override = override_by_player.get(pid)
+        if override is not None and pd.notna(override):
+            price_value = float(override)
+        else:
+            pos_value = None
+            pos_candidates = positions[mask].dropna().astype(str).tolist()
+            if pos_candidates:
+                pos_value = normalize_pos(pos_candidates[0])
+            price_value = float(template.get(pos_value or "", template["M"]))
+        work.loc[mask, "price"] = round(float(price_value), 1)
+    return work
+
+
+def build_change_report(
+    before_fantasy: pd.DataFrame,
+    after_fantasy: pd.DataFrame,
+) -> dict:
+    before = normalize_player_columns(before_fantasy)
+    after = normalize_player_columns(after_fantasy)
+    before_ids = _to_player_id_set(before.get("player_id", []))
+    after_ids = _to_player_id_set(after.get("player_id", []))
+    new_ids = sorted(after_ids - before_ids)
+    removed_ids = sorted(before_ids - after_ids)
+
+    changed_ids: set[int] = set()
+    common_ids = sorted(before_ids & after_ids)
+    if common_ids:
+        before_idx = (
+            before[before["player_id"].isin(common_ids)]
+            .drop_duplicates(subset=["player_id"])
+            .set_index("player_id")
+        )
+        after_idx = (
+            after[after["player_id"].isin(common_ids)]
+            .drop_duplicates(subset=["player_id"])
+            .set_index("player_id")
+        )
+        for pid in common_ids:
+            if pid not in before_idx.index or pid not in after_idx.index:
+                continue
+            left = before_idx.loc[pid]
+            right = after_idx.loc[pid]
+            for col in PLAYER_METADATA_COLS:
+                lval = left.get(col)
+                rval = right.get(col)
+                if pd.isna(lval) and pd.isna(rval):
+                    continue
+                if str(lval) != str(rval):
+                    changed_ids.add(pid)
+                    break
+
+    return {
+        "before_count": len(before_ids),
+        "after_count": len(after_ids),
+        "new_ids": new_ids,
+        "removed_ids": removed_ids,
+        "updated_ids": sorted(changed_ids),
+    }
+
+
+def validate_post_launch_changes(
+    before_fantasy: pd.DataFrame,
+    after_fantasy: pd.DataFrame,
+) -> dict:
+    before = normalize_player_columns(before_fantasy)
+    after = normalize_player_columns(after_fantasy)
+    before_ids = _to_player_id_set(before.get("player_id", []))
+    after_ids = _to_player_id_set(after.get("player_id", []))
+    existing_ids = sorted(before_ids & after_ids)
+
+    price_changed: list[int] = []
+    missing_required: list[str] = []
+    for req in ["player_id", "name", "position", "team_id", "price"]:
+        if req not in after.columns:
+            missing_required.append(req)
+
+    if existing_ids and "price" in before.columns and "price" in after.columns:
+        left = (
+            before[before["player_id"].isin(existing_ids)][["player_id", "price"]]
+            .drop_duplicates(subset=["player_id"])
+        )
+        right = (
+            after[after["player_id"].isin(existing_ids)][["player_id", "price"]]
+            .drop_duplicates(subset=["player_id"])
+        )
+        merged = left.merge(right, on="player_id", how="inner", suffixes=("_before", "_after"))
+        for _, row in merged.iterrows():
+            lb = pd.to_numeric(row["price_before"], errors="coerce")
+            rb = pd.to_numeric(row["price_after"], errors="coerce")
+            if pd.isna(lb) and pd.isna(rb):
+                continue
+            if round(float(lb), 1) != round(float(rb), 1):
+                price_changed.append(int(row["player_id"]))
+
+    return {
+        "ok": not missing_required and not price_changed,
+        "missing_required": missing_required,
+        "price_changed_existing_ids": sorted(price_changed),
+    }
+
+
+def apply_post_launch_player_updates(
+    base_fantasy_df: pd.DataFrame,
+    candidate_fantasy_df: pd.DataFrame,
+    updated_players_df: pd.DataFrame,
+    price_template: dict[str, float] | None = None,
+    new_player_price_overrides: dict[int, float] | None = None,
+) -> tuple[pd.DataFrame, dict, dict]:
+    base = normalize_player_columns(base_fantasy_df)
+    candidate = normalize_player_columns(candidate_fantasy_df)
+    updated_players = normalize_player_columns(updated_players_df)
+
+    recalculated = recalc_players_fantasy(candidate, updated_players)
+    if recalculated.empty:
+        report = build_change_report(base, recalculated)
+        validation = validate_post_launch_changes(base, recalculated)
+        return recalculated, report, validation
+
+    base_ids = _to_player_id_set(base.get("player_id", []))
+    recalculated_ids = _to_player_id_set(recalculated.get("player_id", []))
+    new_ids = recalculated_ids - base_ids
+
+    # Preserve existing production-sensitive fields for already loaded players.
+    if base_ids:
+        base_index = (
+            base[base["player_id"].isin(base_ids)]
+            .drop_duplicates(subset=["player_id"])
+            .set_index("player_id")
+        )
+        recalculated["player_id"] = pd.to_numeric(recalculated["player_id"], errors="coerce").astype("Int64")
+        for col in PRESERVED_EXISTING_COLS:
+            if col not in recalculated.columns or col not in base_index.columns:
+                continue
+            restore_map = base_index[col].to_dict()
+            existing_mask = recalculated["player_id"].isin(list(base_ids))
+            recalculated.loc[existing_mask, col] = recalculated.loc[existing_mask, "player_id"].map(restore_map)
+
+    recalculated = apply_price_template_for_new_players(
+        recalculated,
+        new_player_ids=new_ids,
+        template=price_template or PRICE_TEMPLATE_DEFAULT,
+        override_by_player=new_player_price_overrides,
+    )
+
+    if "price" in recalculated.columns:
+        recalculated["price"] = pd.to_numeric(recalculated["price"], errors="coerce").round(1)
+
+    report = build_change_report(base, recalculated)
+    validation = validate_post_launch_changes(base, recalculated)
+    return recalculated, report, validation
+
+
+def persist_player_updates(
+    base_players_df: pd.DataFrame,
+    base_fantasy_df: pd.DataFrame,
+    candidate_players_df: pd.DataFrame,
+    candidate_fantasy_df: pd.DataFrame,
+    ingestion_mode: str,
+    price_template: dict[str, float] | None = None,
+    new_player_price_overrides: dict[int, float] | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame, dict, dict]:
+    if ingestion_mode == INGESTION_MODE_PRESEASON:
+        final_fantasy = recalc_players_fantasy(candidate_fantasy_df, candidate_players_df)
+        final_players = sync_players_price(candidate_players_df, final_fantasy)
+        report = build_change_report(base_fantasy_df, final_fantasy)
+        validation = validate_post_launch_changes(base_fantasy_df, final_fantasy)
+        return final_players, final_fantasy, report, validation
+
+    final_fantasy, report, validation = apply_post_launch_player_updates(
+        base_fantasy_df=base_fantasy_df,
+        candidate_fantasy_df=candidate_fantasy_df,
+        updated_players_df=candidate_players_df,
+        price_template=price_template,
+        new_player_price_overrides=new_player_price_overrides,
+    )
+    new_ids = _to_player_id_set(report.get("new_ids", []))
+    if new_ids:
+        final_players = sync_players_price(candidate_players_df, final_fantasy)
+        final_players = normalize_player_columns(final_players)
+        if "player_id" in final_players.columns and "price" in base_players_df.columns:
+            base_players = normalize_player_columns(base_players_df)
+            base_price_map = (
+                base_players[["player_id", "price"]]
+                .dropna(subset=["player_id"])
+                .drop_duplicates(subset=["player_id"])
+                .set_index("player_id")["price"]
+                .to_dict()
+            )
+            existing_mask = final_players["player_id"].isin(list(_to_player_id_set(base_players.get("player_id", [])) - new_ids))
+            final_players.loc[existing_mask, "price"] = final_players.loc[existing_mask, "player_id"].map(base_price_map)
+    else:
+        final_players = normalize_player_columns(base_players_df)
+        if "price" in candidate_players_df.columns:
+            if "price" not in final_players.columns:
+                final_players["price"] = pd.NA
+            candidate_prices = (
+                normalize_player_columns(candidate_players_df)[["player_id", "price"]]
+                .dropna(subset=["player_id"])
+                .drop_duplicates(subset=["player_id"])
+                .set_index("player_id")["price"]
+                .to_dict()
+            )
+            final_players["player_id"] = pd.to_numeric(final_players["player_id"], errors="coerce").astype("Int64")
+            mask = final_players["player_id"].isin(list(new_ids))
+            final_players.loc[mask, "price"] = final_players.loc[mask, "player_id"].map(candidate_prices)
+    return final_players, final_fantasy, report, validation
+
+
 def remove_player_rows(
     players_fantasy_df: pd.DataFrame,
     player_id: int,
@@ -710,6 +987,38 @@ view = build_view(players_fantasy, players, teams)
 # -------------------------
 st.title("Fantasy - Actualizador de jugadores")
 st.caption("Usa filas de player_match para actualizar posicion y team_id.")
+
+ingestion_mode = st.radio(
+    "Modo de ingesta",
+    options=INGESTION_MODE_OPTIONS,
+    horizontal=True,
+    index=0,
+    help="Post-Lanzamiento (seguro) evita recalcular precios globales. Pretemporada mantiene el flujo anterior.",
+)
+is_post_launch_mode = ingestion_mode == INGESTION_MODE_POST_LAUNCH
+
+with st.expander("Guia de uso por modo", expanded=False):
+    st.markdown(
+        """
+        - **Post-Lanzamiento**: usar durante temporada activa para actualizar catalogo sin alterar precios historicos.
+        - **Pretemporada**: usar antes de iniciar el juego cuando se necesita recalcular precios globales.
+        - **Riesgo pretemporada en temporada**: puede reemplazar precios del catalogo y afectar mercado.
+        - **Politica de precio de nuevos jugadores (Post-Lanzamiento)**: template por posicion con valores editables.
+        """
+    )
+
+price_template = PRICE_TEMPLATE_DEFAULT.copy()
+if is_post_launch_mode:
+    st.info(
+        "Modo Post-Lanzamiento activo: se preservan precios de jugadores existentes y se bloquean bajas."
+    )
+    with st.expander("Template de precio para nuevos jugadores", expanded=False):
+        price_template["G"] = st.number_input("G (Arquero)", min_value=4.0, max_value=12.0, step=0.1, value=5.0)
+        price_template["D"] = st.number_input("D (Defensa)", min_value=4.0, max_value=12.0, step=0.1, value=5.5)
+        price_template["M"] = st.number_input("M (Mediocampo)", min_value=4.0, max_value=12.0, step=0.1, value=6.2)
+        price_template["F"] = st.number_input("F (Delantero)", min_value=4.0, max_value=12.0, step=0.1, value=7.0)
+else:
+    st.warning("Modo Pretemporada activo: puede recalcular precios de todo el catalogo.")
 
 c0, c1, c2 = st.columns([2, 2, 2])
 with c0:
@@ -862,11 +1171,21 @@ if batch_ids:
                 updated_players.loc[
                     updated_players["player_id"].isin(batch_ids), "team_id"
                 ] = new_team_id
-                updated_fantasy = recalc_players_fantasy(players_fantasy, updated_players)
-                updated_players = sync_players_price(updated_players, updated_fantasy)
-                save_parquet(updated_players, FILES["players"])
-                save_parquet(updated_fantasy, FILES["players_fantasy"])
-                st.success("Equipo actualizado para la lista.")
+                updated_players_saved, updated_fantasy_saved, report, validation = persist_player_updates(
+                    base_players_df=players,
+                    base_fantasy_df=players_fantasy,
+                    candidate_players_df=updated_players,
+                    candidate_fantasy_df=players_fantasy,
+                    ingestion_mode=ingestion_mode,
+                    price_template=price_template,
+                )
+                save_parquet(updated_players_saved, FILES["players"])
+                save_parquet(updated_fantasy_saved, FILES["players_fantasy"])
+                st.success(
+                    f"Equipo actualizado para la lista. altas={len(report['new_ids'])} actualizaciones={len(report['updated_ids'])}"
+                )
+                if validation["price_changed_existing_ids"]:
+                    st.warning("Se detectaron cambios de precio en jugadores existentes.")
                 st.cache_data.clear()
                 st.rerun()
 
@@ -888,32 +1207,53 @@ if batch_ids:
                 updated_players.loc[
                     updated_players["player_id"].isin(batch_ids), "position"
                 ] = new_pos
-                updated_fantasy = recalc_players_fantasy(players_fantasy, updated_players)
-                updated_players = sync_players_price(updated_players, updated_fantasy)
-                save_parquet(updated_players, FILES["players"])
-                save_parquet(updated_fantasy, FILES["players_fantasy"])
-                st.success("Posicion actualizada para la lista.")
+                updated_players_saved, updated_fantasy_saved, report, validation = persist_player_updates(
+                    base_players_df=players,
+                    base_fantasy_df=players_fantasy,
+                    candidate_players_df=updated_players,
+                    candidate_fantasy_df=players_fantasy,
+                    ingestion_mode=ingestion_mode,
+                    price_template=price_template,
+                )
+                save_parquet(updated_players_saved, FILES["players"])
+                save_parquet(updated_fantasy_saved, FILES["players_fantasy"])
+                st.success(
+                    f"Posicion actualizada para la lista. altas={len(report['new_ids'])} actualizaciones={len(report['updated_ids'])}"
+                )
+                if validation["price_changed_existing_ids"]:
+                    st.warning("Se detectaron cambios de precio en jugadores existentes.")
                 st.cache_data.clear()
                 st.rerun()
 
     st.subheader("Eliminar jugadores del fantasy (lista)")
-    delete_batch = st.checkbox("Eliminar jugadores del fantasy con estos IDs")
-    if st.button("Eliminar jugadores (lista)", type="primary"):
-        if not delete_batch:
-            st.warning("Confirma el checkbox para eliminar.")
-        else:
-            updated_fantasy = players_fantasy.copy()
-            if "player_id" not in updated_fantasy.columns:
-                st.warning("players_fantasy.parquet no tiene player_id.")
+    if is_post_launch_mode:
+        st.info("Bajas bloqueadas en modo Post-Lanzamiento para no afectar datos historicos.")
+    else:
+        delete_batch = st.checkbox("Eliminar jugadores del fantasy con estos IDs")
+        if st.button("Eliminar jugadores (lista)", type="primary"):
+            if not delete_batch:
+                st.warning("Confirma el checkbox para eliminar.")
             else:
-                updated_fantasy = updated_fantasy[~updated_fantasy["player_id"].isin(batch_ids)]
-                updated_fantasy = recalc_players_fantasy(updated_fantasy, players)
-                updated_players = sync_players_price(players, updated_fantasy)
-                save_parquet(updated_players, FILES["players"])
-                save_parquet(updated_fantasy, FILES["players_fantasy"])
-                st.success("Jugadores eliminados del fantasy.")
-                st.cache_data.clear()
-                st.rerun()
+                updated_fantasy = players_fantasy.copy()
+                if "player_id" not in updated_fantasy.columns:
+                    st.warning("players_fantasy.parquet no tiene player_id.")
+                else:
+                    updated_fantasy = updated_fantasy[~updated_fantasy["player_id"].isin(batch_ids)]
+                    updated_players_saved, updated_fantasy_saved, report, _ = persist_player_updates(
+                        base_players_df=players,
+                        base_fantasy_df=players_fantasy,
+                        candidate_players_df=players,
+                        candidate_fantasy_df=updated_fantasy,
+                        ingestion_mode=ingestion_mode,
+                        price_template=price_template,
+                    )
+                    save_parquet(updated_players_saved, FILES["players"])
+                    save_parquet(updated_fantasy_saved, FILES["players_fantasy"])
+                    st.success(
+                        f"Jugadores eliminados del fantasy. altas={len(report['new_ids'])} actualizaciones={len(report['updated_ids'])}"
+                    )
+                    st.cache_data.clear()
+                    st.rerun()
 
 # -------------------------
 # Detalle por jugador
@@ -961,30 +1301,51 @@ if st.button("Aplicar posicion", type="primary"):
         current_team_id,
         name_value if name_value else None,
     )
-    updated_fantasy = recalc_players_fantasy(players_fantasy, updated_players)
-    updated_players = sync_players_price(updated_players, updated_fantasy)
-    save_parquet(updated_players, FILES["players"])
-    save_parquet(updated_fantasy, FILES["players_fantasy"])
-    st.success("Posicion actualizada.")
+    updated_players_saved, updated_fantasy_saved, report, validation = persist_player_updates(
+        base_players_df=players,
+        base_fantasy_df=players_fantasy,
+        candidate_players_df=updated_players,
+        candidate_fantasy_df=players_fantasy,
+        ingestion_mode=ingestion_mode,
+        price_template=price_template,
+    )
+    save_parquet(updated_players_saved, FILES["players"])
+    save_parquet(updated_fantasy_saved, FILES["players_fantasy"])
+    st.success(
+        f"Posicion actualizada. altas={len(report['new_ids'])} actualizaciones={len(report['updated_ids'])}"
+    )
+    if validation["price_changed_existing_ids"]:
+        st.warning("Se detectaron cambios de precio en jugadores existentes.")
     st.cache_data.clear()
     st.rerun()
 
 st.subheader("Eliminar jugador del fantasy")
-delete_from_fantasy = st.checkbox("Eliminar este jugador de players_fantasy.parquet")
+if is_post_launch_mode:
+    st.info("Bajas bloqueadas en modo Post-Lanzamiento.")
+else:
+    delete_from_fantasy = st.checkbox("Eliminar este jugador de players_fantasy.parquet")
 
-if delete_from_fantasy:
-    if st.button("Eliminar jugador", type="primary"):
-        updated_fantasy = remove_player_rows(
-            players_fantasy,
-            sel,
-        )
-        updated_fantasy = recalc_players_fantasy(updated_fantasy, players)
-        updated_players = sync_players_price(players, updated_fantasy)
-        save_parquet(updated_players, FILES["players"])
-        save_parquet(updated_fantasy, FILES["players_fantasy"])
-        st.success("Jugador eliminado y precios recalculados.")
-        st.cache_data.clear()
-        st.rerun()
+    if delete_from_fantasy:
+        if st.button("Eliminar jugador", type="primary"):
+            updated_fantasy = remove_player_rows(
+                players_fantasy,
+                sel,
+            )
+            updated_players_saved, updated_fantasy_saved, report, _ = persist_player_updates(
+                base_players_df=players,
+                base_fantasy_df=players_fantasy,
+                candidate_players_df=players,
+                candidate_fantasy_df=updated_fantasy,
+                ingestion_mode=ingestion_mode,
+                price_template=price_template,
+            )
+            save_parquet(updated_players_saved, FILES["players"])
+            save_parquet(updated_fantasy_saved, FILES["players_fantasy"])
+            st.success(
+                f"Jugador eliminado. altas={len(report['new_ids'])} actualizaciones={len(report['updated_ids'])}"
+            )
+            st.cache_data.clear()
+            st.rerun()
 
 st.subheader("Transferencia manual de equipo")
 current_pos = normalize_pos(r.get("position_effective"))
@@ -1027,11 +1388,21 @@ if st.button("Aplicar transferencia de equipo", type="primary"):
             new_team_id,
             name_value if name_value else None,
         )
-        updated_fantasy = recalc_players_fantasy(players_fantasy, updated_players)
-        updated_players = sync_players_price(updated_players, updated_fantasy)
-        save_parquet(updated_players, FILES["players"])
-        save_parquet(updated_fantasy, FILES["players_fantasy"])
-        st.success("Equipo actualizado y precios recalculados.")
+        updated_players_saved, updated_fantasy_saved, report, validation = persist_player_updates(
+            base_players_df=players,
+            base_fantasy_df=players_fantasy,
+            candidate_players_df=updated_players,
+            candidate_fantasy_df=players_fantasy,
+            ingestion_mode=ingestion_mode,
+            price_template=price_template,
+        )
+        save_parquet(updated_players_saved, FILES["players"])
+        save_parquet(updated_fantasy_saved, FILES["players_fantasy"])
+        st.success(
+            f"Equipo actualizado. altas={len(report['new_ids'])} actualizaciones={len(report['updated_ids'])}"
+        )
+        if validation["price_changed_existing_ids"]:
+            st.warning("Se detectaron cambios de precio en jugadores existentes.")
         st.cache_data.clear()
         st.rerun()
 
@@ -1041,7 +1412,10 @@ tab_reload, tab1, tab2, tab3 = st.tabs(
 
 with tab_reload:
     st.subheader("Recargar players_fantasy desde players.parquet")
-    st.caption("Actualiza name/position/team_id y recalcula precios.")
+    if is_post_launch_mode:
+        st.caption("Actualiza name/position/team_id sin recalculo global de precios.")
+    else:
+        st.caption("Actualiza name/position/team_id y recalcula precios.")
 
     players_count = int(players["player_id"].dropna().nunique()) if "player_id" in players.columns else 0
     fantasy_count = (
@@ -1145,11 +1519,27 @@ with tab_reload:
             if updated_fantasy is players_fantasy:
                 st.warning("Jugador ya existe en players_fantasy.")
             else:
-                updated_fantasy = recalc_players_fantasy(updated_fantasy, updated_players)
-                updated_players = sync_players_price(updated_players, updated_fantasy)
-                save_parquet(updated_players, FILES["players"])
-                save_parquet(updated_fantasy, FILES["players_fantasy"])
-                st.success("Jugador agregado y precios recalculados.")
+                override = {
+                    int(new_player_id): float(
+                        price_template.get(new_pos or "M", PRICE_TEMPLATE_DEFAULT["M"])
+                    )
+                } if is_post_launch_mode else None
+                updated_players_saved, updated_fantasy_saved, report, validation = persist_player_updates(
+                    base_players_df=players,
+                    base_fantasy_df=players_fantasy,
+                    candidate_players_df=updated_players,
+                    candidate_fantasy_df=updated_fantasy,
+                    ingestion_mode=ingestion_mode,
+                    price_template=price_template,
+                    new_player_price_overrides=override,
+                )
+                save_parquet(updated_players_saved, FILES["players"])
+                save_parquet(updated_fantasy_saved, FILES["players_fantasy"])
+                st.success(
+                    f"Jugador agregado. altas={len(report['new_ids'])} actualizaciones={len(report['updated_ids'])}"
+                )
+                if validation["price_changed_existing_ids"]:
+                    st.warning("Se detectaron cambios de precio en jugadores existentes.")
                 st.cache_data.clear()
                 st.rerun()
 
@@ -1192,6 +1582,7 @@ with tab_reload:
                 updated_fantasy["player_id"].dropna().astype(int).tolist()
             ) if "player_id" in updated_fantasy.columns else set()
             added = 0
+            added_ids: list[int] = []
             skipped_existing = []
             for row in bulk_rows:
                 pid = row["player_id"]
@@ -1216,17 +1607,38 @@ with tab_reload:
                 existing_players.add(pid)
                 existing_fantasy.add(pid)
                 added += 1
+                added_ids.append(int(pid))
             if added == 0:
-                st.info("No se agregaron jugadores nuevos. Recalculando precios.")
-            updated_fantasy = recalc_players_fantasy(updated_fantasy, updated_players)
-            updated_players = sync_players_price(updated_players, updated_fantasy)
-            save_parquet(updated_players, FILES["players"])
-            save_parquet(updated_fantasy, FILES["players_fantasy"])
+                st.info("No se agregaron jugadores nuevos.")
+            overrides = None
+            if is_post_launch_mode:
+                overrides = {}
+                for row in bulk_rows:
+                    pid = int(row["player_id"])
+                    if pid not in added_ids:
+                        continue
+                    pos = normalize_pos(row.get("position"))
+                    overrides[pid] = float(
+                        price_template.get(pos or "M", PRICE_TEMPLATE_DEFAULT["M"])
+                    )
+            updated_players_saved, updated_fantasy_saved, report, validation = persist_player_updates(
+                base_players_df=players,
+                base_fantasy_df=players_fantasy,
+                candidate_players_df=updated_players,
+                candidate_fantasy_df=updated_fantasy,
+                ingestion_mode=ingestion_mode,
+                price_template=price_template,
+                new_player_price_overrides=overrides,
+            )
+            save_parquet(updated_players_saved, FILES["players"])
+            save_parquet(updated_fantasy_saved, FILES["players_fantasy"])
             st.success(f"Jugadores agregados: {added}.")
             if skipped_existing:
                 st.info(
                     f"IDs ya existentes en players_fantasy (omitidos): {', '.join(map(str, skipped_existing))}"
                 )
+            if validation["price_changed_existing_ids"]:
+                st.warning("Se detectaron cambios de precio en jugadores existentes.")
             st.cache_data.clear()
             st.rerun()
 
@@ -1235,11 +1647,21 @@ with tab_reload:
         updated_fantasy = players_fantasy
         if add_missing:
             updated_fantasy = append_missing_players_from_players(updated_fantasy, players)
-        updated_fantasy = recalc_players_fantasy(updated_fantasy, players)
-        updated_players = sync_players_price(players, updated_fantasy)
-        save_parquet(updated_players, FILES["players"])
-        save_parquet(updated_fantasy, FILES["players_fantasy"])
-        st.success("players_fantasy actualizado desde players.parquet.")
+        updated_players_saved, updated_fantasy_saved, report, validation = persist_player_updates(
+            base_players_df=players,
+            base_fantasy_df=players_fantasy,
+            candidate_players_df=players,
+            candidate_fantasy_df=updated_fantasy,
+            ingestion_mode=ingestion_mode,
+            price_template=price_template,
+        )
+        save_parquet(updated_players_saved, FILES["players"])
+        save_parquet(updated_fantasy_saved, FILES["players_fantasy"])
+        st.success(
+            f"players_fantasy actualizado desde players.parquet. altas={len(report['new_ids'])} actualizaciones={len(report['updated_ids'])}"
+        )
+        if validation["price_changed_existing_ids"]:
+            st.warning("Se detectaron cambios de precio en jugadores existentes.")
         st.cache_data.clear()
         st.rerun()
 
@@ -1303,11 +1725,21 @@ with tab2:
                     new_team,
                     name_value if name_value else None,
                 )
-                updated_fantasy = recalc_players_fantasy(players_fantasy, updated_players)
-                updated_players = sync_players_price(updated_players, updated_fantasy)
-                save_parquet(updated_players, FILES["players"])
-                save_parquet(updated_fantasy, FILES["players_fantasy"])
-                st.success("Parquets actualizados.")
+                updated_players_saved, updated_fantasy_saved, report, validation = persist_player_updates(
+                    base_players_df=players,
+                    base_fantasy_df=players_fantasy,
+                    candidate_players_df=updated_players,
+                    candidate_fantasy_df=players_fantasy,
+                    ingestion_mode=ingestion_mode,
+                    price_template=price_template,
+                )
+                save_parquet(updated_players_saved, FILES["players"])
+                save_parquet(updated_fantasy_saved, FILES["players_fantasy"])
+                st.success(
+                    f"Parquets actualizados. altas={len(report['new_ids'])} actualizaciones={len(report['updated_ids'])}"
+                )
+                if validation["price_changed_existing_ids"]:
+                    st.warning("Se detectaron cambios de precio en jugadores existentes.")
                 st.cache_data.clear()
                 st.rerun()
     else:

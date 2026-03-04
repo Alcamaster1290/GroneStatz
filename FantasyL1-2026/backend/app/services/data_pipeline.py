@@ -96,9 +96,22 @@ def _upsert_teams(db: Session, rows: List[dict]) -> None:
     )
 
 
-def _upsert_players(db: Session, rows: List[dict]) -> None:
+def _upsert_players(
+    db: Session,
+    rows: List[dict],
+    preserve_existing_price_current: bool = False,
+    preserve_existing_base_stats: bool = False,
+) -> None:
     if not rows:
         return
+    payload = [
+        {
+            **row,
+            "preserve_existing_price_current": preserve_existing_price_current,
+            "preserve_existing_base_stats": preserve_existing_base_stats,
+        }
+        for row in rows
+    ]
     db.execute(
         text(
             """
@@ -115,17 +128,38 @@ def _upsert_players(db: Session, rows: List[dict]) -> None:
                 short_name = EXCLUDED.short_name,
                 position = EXCLUDED.position,
                 team_id = EXCLUDED.team_id,
-                price_current = EXCLUDED.price_current,
-                minutesplayed = EXCLUDED.minutesplayed,
-                matches_played = EXCLUDED.matches_played,
-                goals = EXCLUDED.goals,
-                assists = EXCLUDED.assists,
-                saves = EXCLUDED.saves,
-                fouls = EXCLUDED.fouls,
+                price_current = CASE
+                    WHEN :preserve_existing_price_current THEN players_catalog.price_current
+                    ELSE EXCLUDED.price_current
+                END,
+                minutesplayed = CASE
+                    WHEN :preserve_existing_base_stats THEN players_catalog.minutesplayed
+                    ELSE EXCLUDED.minutesplayed
+                END,
+                matches_played = CASE
+                    WHEN :preserve_existing_base_stats THEN players_catalog.matches_played
+                    ELSE EXCLUDED.matches_played
+                END,
+                goals = CASE
+                    WHEN :preserve_existing_base_stats THEN players_catalog.goals
+                    ELSE EXCLUDED.goals
+                END,
+                assists = CASE
+                    WHEN :preserve_existing_base_stats THEN players_catalog.assists
+                    ELSE EXCLUDED.assists
+                END,
+                saves = CASE
+                    WHEN :preserve_existing_base_stats THEN players_catalog.saves
+                    ELSE EXCLUDED.saves
+                END,
+                fouls = CASE
+                    WHEN :preserve_existing_base_stats THEN players_catalog.fouls
+                    ELSE EXCLUDED.fouls
+                END,
                 updated_at = NOW()
             """
         ),
-        rows,
+        payload,
     )
 
 def _prune_missing_players(db: Session, player_ids: List[int]) -> None:
@@ -278,7 +312,24 @@ def sync_duckdb_to_postgres(settings: Settings | None = None) -> None:
             }
             for row in player_rows
         ]
-        _upsert_players(db, players_payload)
+        preserve_existing_price_current = bool(
+            getattr(settings, "SYNC_PRESERVE_EXISTING_PRICE_CURRENT", False)
+        )
+        preserve_existing_base_stats = bool(
+            getattr(settings, "SYNC_PRESERVE_EXISTING_BASE_STATS", False)
+        )
+        if preserve_existing_price_current or preserve_existing_base_stats:
+            logger.info(
+                "sync_preserve_existing_fields price=%s base_stats=%s",
+                preserve_existing_price_current,
+                preserve_existing_base_stats,
+            )
+        _upsert_players(
+            db,
+            players_payload,
+            preserve_existing_price_current=preserve_existing_price_current,
+            preserve_existing_base_stats=preserve_existing_base_stats,
+        )
         if settings.SYNC_SKIP_PRUNE_MISSING_PLAYERS:
             logger.info("skip_prune_missing_players enabled")
         else:
