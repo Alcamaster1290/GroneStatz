@@ -145,18 +145,21 @@ async function apiFetch<T>(
   if (hostnameFallback) fallbackBases.push(hostnameFallback);
   if (API_URL !== "/api") fallbackBases.push("/api");
 
-  const cacheBases = [API_URL, ...fallbackBases];
+  const cacheBaseCandidates = [API_URL, ...fallbackBases];
+  const cacheKeyCandidates = Array.from(
+    new Set([path, ...cacheBaseCandidates.map((base) => `${base}${path}`)])
+  );
   const readCachedData = (allowStale: boolean): T | null => {
     if (!cacheableGet) return null;
-    for (const base of cacheBases) {
-      const scopedCached = getOfflineSnapshot(`${base}${path}`, {
+    for (const keyCandidate of cacheKeyCandidates) {
+      const scopedCached = getOfflineSnapshot(keyCandidate, {
         allowStale,
         identity: cacheIdentity
       });
       if (scopedCached !== null) {
         return scopedCached as T;
       }
-      const cached = getOfflineSnapshot(`${base}${path}`, {
+      const cached = getOfflineSnapshot(keyCandidate, {
         allowStale
       });
       if (cached !== null) {
@@ -246,14 +249,9 @@ async function apiFetch<T>(
   }
   const data = (await res.json()) as T;
   if (cacheableGet) {
-    for (const base of cacheBases) {
-      setOfflineSnapshot(`${base}${path}`, data);
-      setOfflineSnapshot(`${base}${path}`, data, cacheIdentity);
-    }
-    if (res.url) {
-      setOfflineSnapshot(res.url, data);
-      setOfflineSnapshot(res.url, data, cacheIdentity);
-    }
+    // Use canonical key (path+query) to avoid duplicating same payload
+    // under several base URLs and exhausting localStorage quota.
+    setOfflineSnapshot(path, data, cacheIdentity);
   }
   return data;
 }
