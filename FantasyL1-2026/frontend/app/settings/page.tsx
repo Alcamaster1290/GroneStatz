@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import AuthPanel from "@/components/AuthPanel";
 import FavoriteTeamGate from "@/components/FavoriteTeamGate";
@@ -20,9 +21,11 @@ import {
   isNativeMobilePlatform,
   registerNativePush
 } from "@/lib/mobile/push";
+import { clearSession } from "@/lib/session";
 import { useFantasyStore } from "@/lib/store";
 
 export default function SettingsPage() {
+  const router = useRouter();
   const token = useFantasyStore((state) => state.token);
   const setToken = useFantasyStore((state) => state.setToken);
   const userEmail = useFantasyStore((state) => state.userEmail);
@@ -249,13 +252,11 @@ export default function SettingsPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("fantasy_token");
-    localStorage.removeItem("fantasy_email");
-    setToken(null);
-    setUserEmail(null);
+    clearSession();
     setMarketDraftSquad([]);
     setMarketDraftBackup([]);
     setMarketDraftLoaded(false);
+    router.replace("/login");
   };
 
   if (!token) return <AuthPanel />;

@@ -1,8 +1,8 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
-import AuthPanel from "@/components/AuthPanel";
 import FavoriteTeamGate from "@/components/FavoriteTeamGate";
 import PublicPageNav from "@/components/PublicPageNav";
 import TeamNameGate from "@/components/TeamNameGate";
@@ -833,8 +833,17 @@ export default function RankingPage() {
       <PublicPageNav />
 
       {!token ? (
-        <div className="mb-4 rounded-2xl bg-surface2/40 p-4">
-          <AuthPanel />
+        <div className="glass mb-4 rounded-2xl border border-white/10 p-4">
+          <p className="text-sm text-ink">Inicia sesion para competir en ligas privadas.</p>
+          <p className="mt-1 text-xs text-muted">
+            El ranking general y las rondas siguen disponibles en modo publico.
+          </p>
+          <Link
+            href="/login?redirect=/app"
+            className="mt-3 inline-flex rounded-xl bg-accent px-3 py-2 text-xs font-semibold text-black"
+          >
+            JUEGA YA
+          </Link>
         </div>
       ) : null}
 

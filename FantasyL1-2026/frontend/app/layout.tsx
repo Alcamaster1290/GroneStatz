@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import AuthSessionBootstrap from "@/components/AuthSessionBootstrap";
 import BottomNav from "@/components/BottomNav";
 import RouteAwareHeader from "@/components/RouteAwareHeader";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
@@ -89,6 +90,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="text-ink">
+        <AuthSessionBootstrap />
         <div className="relative min-h-screen pb-24">
           <div className="pointer-events-none absolute inset-0 opacity-30">
             <div className="absolute -top-24 left-4 h-48 w-48 rounded-full bg-accent opacity-20 blur-3xl" />

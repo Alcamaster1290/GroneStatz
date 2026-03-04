@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
+import { hydrateSessionFromStorage } from "@/lib/session";
 import { useFantasyStore } from "@/lib/store";
 
 type PublicNavItem = {
@@ -15,39 +16,39 @@ type PublicNavItem = {
 export default function PublicPageNav() {
   const pathname = usePathname() || "/";
   const token = useFantasyStore((state) => state.token);
-  const setToken = useFantasyStore((state) => state.setToken);
-  const setUserEmail = useFantasyStore((state) => state.setUserEmail);
 
   useEffect(() => {
-    if (token) return;
-    const storedToken = localStorage.getItem("fantasy_token");
-    const storedEmail = localStorage.getItem("fantasy_email");
-    if (storedToken) {
-      setToken(storedToken);
-      if (storedEmail) {
-        setUserEmail(storedEmail);
-      }
+    if (!token) {
+      hydrateSessionFromStorage();
     }
-  }, [token, setToken, setUserEmail]);
+  }, [token]);
 
-  const playHref = token ? "/app" : "/login?redirect=/app";
-  const navItems: PublicNavItem[] = pathname.startsWith("/login")
+  const navItems: PublicNavItem[] = token
     ? [
-        { href: "/landing", match: "/landing", label: "Landing" },
+        { href: "/app", match: "/app", label: "JUGAR" },
         { href: "/ranking", match: "/ranking", label: "Ranking" },
         { href: "/fixtures", match: "/fixtures", label: "Rondas" }
       ]
     : [
-        { href: playHref, match: token ? "/app" : "/login", label: "JUGAR" },
+        { href: "/landing", match: "/landing", label: "Landing" },
         { href: "/ranking", match: "/ranking", label: "Ranking" },
-        { href: "/fixtures", match: "/fixtures", label: "Rondas" }
+        { href: "/fixtures", match: "/fixtures", label: "Rondas" },
+        { href: "/login?redirect=/app", match: "/login", label: "JUEGA YA" }
       ];
+
+  const isPlayActive = (currentPath: string) =>
+    ["/app", "/team", "/market", "/stats", "/settings", "/transfer"].some(
+      (path) => currentPath === path || currentPath.startsWith(`${path}/`)
+    );
 
   return (
     <nav className="overflow-x-auto rounded-2xl border border-white/10 bg-black/25 p-2">
       <div className="flex min-w-max items-center gap-2">
         {navItems.map((item) => {
-          const isActive = pathname === item.match;
+          const isActive =
+            item.match === "/app"
+              ? isPlayActive(pathname)
+              : pathname === item.match || pathname.startsWith(`${item.match}/`);
           return (
             <Link
               key={item.match}

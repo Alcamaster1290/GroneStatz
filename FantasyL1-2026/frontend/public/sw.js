@@ -1,9 +1,12 @@
-const STATIC_CACHE = "fantasy-static-v4";
-const RUNTIME_CACHE = "fantasy-runtime-v4";
+const STATIC_CACHE = "fantasy-static-v5";
+const RUNTIME_CACHE = "fantasy-runtime-v5";
 const IS_LOCALHOST =
   self.location.hostname === "localhost" || self.location.hostname === "127.0.0.1";
 const PRE_CACHE_URLS = [
   "/",
+  "/landing",
+  "/login",
+  "/app",
   "/team",
   "/market",
   "/stats",
@@ -88,9 +91,21 @@ self.addEventListener("fetch", (event) => {
         .catch(async () => {
           const cached = await caches.match(request);
           if (cached) return cached;
-          const landing = await caches.match("/");
+
+          const cookieHeader = request.headers.get("cookie") || "";
+          const hasSession = cookieHeader.includes("fantasy_session=1");
+          if (hasSession) {
+            const appEntry = (await caches.match("/app")) || (await caches.match("/team"));
+            if (appEntry) return appEntry;
+          }
+
+          const landing = (await caches.match("/landing")) || (await caches.match("/"));
           if (landing) return landing;
-          return caches.match("/team");
+
+          const ranking = await caches.match("/ranking");
+          if (ranking) return ranking;
+
+          return Response.error();
         })
     );
     return;

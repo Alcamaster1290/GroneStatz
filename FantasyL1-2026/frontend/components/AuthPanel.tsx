@@ -3,15 +3,13 @@
 import { useState } from "react";
 
 import { confirmPasswordReset, login, register, requestPasswordReset } from "@/lib/api";
-import { useFantasyStore } from "@/lib/store";
+import { setSessionToken } from "@/lib/session";
 
 type AuthPanelProps = {
   onAuthenticated?: () => void;
 };
 
 export default function AuthPanel({ onAuthenticated }: AuthPanelProps = {}) {
-  const setToken = useFantasyStore((state) => state.setToken);
-  const setUserEmail = useFantasyStore((state) => state.setUserEmail);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
@@ -63,10 +61,7 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps = {}) {
       }
       const result =
         mode === "login" ? await login(email, password) : await register(email, password);
-      setToken(result.access_token);
-      setUserEmail(email);
-      localStorage.setItem("fantasy_token", result.access_token);
-      localStorage.setItem("fantasy_email", email);
+      setSessionToken(result.access_token, email);
       onAuthenticated?.();
     } catch (err) {
       setErrors(mapAuthErrors(String(err)));

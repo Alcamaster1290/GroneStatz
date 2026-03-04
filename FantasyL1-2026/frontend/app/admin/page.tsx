@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import ModalDialog from "@/components/ModalDialog";
 import PlayerCard from "@/components/PlayerCard";
 import PremiumBadge from "@/components/PremiumBadge";
 import {
@@ -195,11 +196,21 @@ export default function AdminTeamsPage() {
   const [logCategory, setLogCategory] = useState("league");
   const [logsLoading, setLogsLoading] = useState(false);
   const [logsError, setLogsError] = useState<string | null>(null);
+  const [injuredModalOpen, setInjuredModalOpen] = useState(false);
+  const [injuredQuery, setInjuredQuery] = useState("");
+  const [showOnlyInjured, setShowOnlyInjured] = useState(true);
+  const [injuredActionLoadingByPlayerId, setInjuredActionLoadingByPlayerId] = useState<
+    Record<number, boolean>
+  >({});
+  const [injuredModalMessage, setInjuredModalMessage] = useState<string | null>(null);
+  const [leaguesModalOpen, setLeaguesModalOpen] = useState(false);
+  const [logsModalOpen, setLogsModalOpen] = useState(false);
   const [premiumBadgeConfig, setPremiumBadgeConfig] = useState<AdminPremiumBadgeConfig>(
     DEFAULT_PREMIUM_BADGE_CONFIG
   );
   const [premiumBadgeLoading, setPremiumBadgeLoading] = useState(false);
   const [premiumBadgeMessage, setPremiumBadgeMessage] = useState<string | null>(null);
+  const statsSectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const storedAdmin = localStorage.getItem(ADMIN_TOKEN_KEY);
@@ -277,10 +288,27 @@ export default function AdminTeamsPage() {
     return new Map(
       teamsCatalog.map((team) => [
         team.id,
-        team.name_short || team.name_full || `Team ${team.id}`
+        team.name_short || team.name_full || `Equipo ${team.id}`
       ])
     );
   }, [teamsCatalog]);
+
+  const injuryPlayersForModal = useMemo(() => {
+    const normalizedQuery = injuredQuery.trim().toLowerCase();
+    return adminPlayers
+      .filter((player) => (showOnlyInjured ? Boolean(player.is_injured) : true))
+      .filter((player) => {
+        if (!normalizedQuery) return true;
+        const searchTarget = [
+          player.name,
+          player.short_name || "",
+          String(player.player_id)
+        ]
+          .join(" ")
+          .toLowerCase();
+        return searchTarget.includes(normalizedQuery);
+      });
+  }, [adminPlayers, injuredQuery, showOnlyInjured]);
 
   const visibleTeams = useMemo(
     () => teams.slice(0, visibleUsersCount),
@@ -806,6 +834,39 @@ export default function AdminTeamsPage() {
     });
   };
 
+  const updatePlayerInjuryLocalState = (playerId: number, isInjured: boolean) => {
+    setAdminPlayers((prev) => {
+      const next = prev.map((player) =>
+        player.player_id === playerId
+          ? {
+              ...player,
+              is_injured: isInjured
+            }
+          : player
+      );
+      const injuredCount = next.filter((player) => Boolean(player.is_injured)).length;
+      setAdminPlayersSummary((current) => ({
+        ...current,
+        total: next.length,
+        injured: injuredCount
+      }));
+      return next;
+    });
+    setPlayerResults((prev) =>
+      prev.map((player) =>
+        player.player_id === playerId
+          ? {
+              ...player,
+              is_injured: isInjured
+            }
+          : player
+      )
+    );
+    if (String(playerId) === injuryPlayerId) {
+      setInjuryStatus(isInjured);
+    }
+  };
+
   const handleUpdateInjury = async () => {
     if (!adminToken) {
       setInjuryMessage("admin_token_required");
@@ -824,18 +885,40 @@ export default function AdminTeamsPage() {
     setInjuryLoading(true);
     try {
       await updateAdminPlayerInjury(adminToken, playerId, injuryStatus);
-      const refreshed = await getAdminPlayers(adminToken);
-      setAdminPlayers(refreshed.items || []);
-      setAdminPlayersSummary({
-        total: refreshed.total || 0,
-        injured: refreshed.injured || 0,
-        unselected: refreshed.unselected || 0
-      });
+      updatePlayerInjuryLocalState(playerId, injuryStatus);
       setInjuryMessage(injuryStatus ? "lesionado_ok" : "recuperado_ok");
     } catch (err) {
       setInjuryMessage(String(err));
     } finally {
       setInjuryLoading(false);
+    }
+  };
+
+  const handleQuickInjuryUpdate = async (playerId: number, nextIsInjured: boolean) => {
+    if (!adminToken) {
+      setInjuredModalMessage("admin_token_required");
+      return;
+    }
+    setInjuredModalMessage(null);
+    setInjuredActionLoadingByPlayerId((prev) => ({
+      ...prev,
+      [playerId]: true
+    }));
+    try {
+      await updateAdminPlayerInjury(adminToken, playerId, nextIsInjured);
+      updatePlayerInjuryLocalState(playerId, nextIsInjured);
+      setInjuredModalMessage(
+        nextIsInjured
+          ? `Jugador #${playerId} marcado como lesionado.`
+          : `Jugador #${playerId} marcado como recuperado.`
+      );
+    } catch (err) {
+      setInjuredModalMessage(String(err));
+    } finally {
+      setInjuredActionLoadingByPlayerId((prev) => ({
+        ...prev,
+        [playerId]: false
+      }));
     }
   };
 
@@ -1215,11 +1298,74 @@ export default function AdminTeamsPage() {
     }
   };
 
+  const handleOpenInjuredModal = () => {
+    setInjuredModalMessage(null);
+    setInjuredModalOpen(true);
+  };
+
+  const handleOpenLeaguesModal = async () => {
+    setLeaguesModalOpen(true);
+    if (!leagues.length && !leaguesLoading) {
+      await handleLoadLeagues();
+    }
+  };
+
+  const handleOpenLogsModal = async () => {
+    setLogsModalOpen(true);
+    if (!logs.length && !logsLoading) {
+      await handleLoadLogs();
+    }
+  };
+
+  const handleGoToStatsSection = () => {
+    statsSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-semibold">Dashboard</h1>
         <p className="text-sm text-muted">Equipos guardados por usuario.</p>
+      </div>
+
+      <div className="sticky top-3 z-30 rounded-2xl border border-white/10 bg-black/55 p-2 backdrop-blur-md">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <button
+            type="button"
+            onClick={handleOpenInjuredModal}
+            className="rounded-xl border border-white/10 px-3 py-2 text-xs text-ink transition hover:bg-white/5"
+          >
+            Ver lesionados
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              handleOpenLeaguesModal().catch(() => undefined);
+            }}
+            className="rounded-xl border border-white/10 px-3 py-2 text-xs text-ink transition hover:bg-white/5"
+          >
+            Ver ligas
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              handleOpenLogsModal().catch(() => undefined);
+            }}
+            className="rounded-xl border border-white/10 px-3 py-2 text-xs text-ink transition hover:bg-white/5"
+          >
+            Ver logs
+          </button>
+          <button
+            type="button"
+            onClick={handleGoToStatsSection}
+            className="rounded-xl border border-accent/40 bg-accent/10 px-3 py-2 text-xs text-accent transition hover:bg-accent/20"
+          >
+            Ir a stats jornada
+          </button>
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -1602,56 +1748,62 @@ export default function AdminTeamsPage() {
 
       <div className="space-y-2 pt-2">
         <h2 className="text-lg font-semibold">Ligas privadas</h2>
-        <p className="text-sm text-muted">Ver ligas y miembros.</p>
+        <p className="text-sm text-muted">Resumen operativo y acceso rapido al detalle.</p>
       </div>
 
       <div className="glass space-y-3 rounded-2xl p-4">
-        <button
-          onClick={handleLoadLeagues}
-          className="w-full rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
-        >
-          Cargar ligas
-        </button>
+        <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>
+              Ligas cargadas: <span className="font-semibold text-ink">{leagues.length}</span>
+            </span>
+            <span>
+              Miembros:{" "}
+              <span className="font-semibold text-ink">
+                {leagues.reduce((acc, league) => acc + league.members.length, 0)}
+              </span>
+            </span>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleLoadLeagues}
+            className="flex-1 rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+          >
+            Cargar ligas
+          </button>
+          <button
+            onClick={() => {
+              handleOpenLeaguesModal().catch(() => undefined);
+            }}
+            className="flex-1 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+          >
+            Ver en modal
+          </button>
+        </div>
         {leaguesError ? <p className="text-xs text-warning">{leaguesError}</p> : null}
         {leaguesLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
         {leagues.length === 0 && !leaguesLoading ? (
           <p className="text-xs text-muted">Sin ligas registradas.</p>
-        ) : (
-          <div className="space-y-3">
-            {leagues.map((league) => (
-              <div key={league.id} className="rounded-2xl border border-white/10 p-3">
-                <div className="flex items-center justify-between text-sm">
-                  <div>
-                    <p className="font-semibold text-ink">{league.name}</p>
-                    <p className="text-xs text-muted">Codigo: {league.code}</p>
-                  </div>
-                  <span className="text-xs text-muted">
-                    Admin #{league.owner_fantasy_team_id}
-                  </span>
-                </div>
-                <div className="mt-2 space-y-1">
-                  {league.members.map((member) => (
-                    <div
-                      key={member.fantasy_team_id}
-                      className="flex items-center justify-between text-xs text-muted"
-                    >
-                      <span>{member.team_name || `Equipo ${member.fantasy_team_id}`}</span>
-                      <span>{member.user_email}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        ) : null}
       </div>
 
       <div className="space-y-2 pt-2">
         <h2 className="text-lg font-semibold">Logs (ligas / stats)</h2>
-        <p className="text-sm text-muted">Acciones recientes del sistema.</p>
+        <p className="text-sm text-muted">Consulta completa desde modal para reducir scroll.</p>
       </div>
 
       <div className="glass space-y-3 rounded-2xl p-4">
+        <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>
+              Categoria: <span className="font-semibold text-ink">{logCategory || "todas"}</span>
+            </span>
+            <span>
+              Registros: <span className="font-semibold text-ink">{logs.length}</span>
+            </span>
+          </div>
+        </div>
         <div className="flex flex-wrap gap-2">
           <select
             value={logCategory}
@@ -1670,30 +1822,18 @@ export default function AdminTeamsPage() {
           >
             Cargar logs
           </button>
+          <button
+            onClick={() => {
+              handleOpenLogsModal().catch(() => undefined);
+            }}
+            className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+          >
+            Ver en modal
+          </button>
         </div>
         {logsError ? <p className="text-xs text-warning">{logsError}</p> : null}
         {logsLoading ? <p className="text-xs text-muted">Cargando...</p> : null}
-        {logs.length === 0 && !logsLoading ? (
-          <p className="text-xs text-muted">Sin logs.</p>
-        ) : (
-          <div className="space-y-2">
-            {logs.map((log) => (
-              <div key={log.id} className="rounded-2xl border border-white/10 px-3 py-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted">{log.category}</span>
-                  <span className="text-muted">{new Date(log.created_at).toLocaleString()}</span>
-                </div>
-                <p className="text-ink">{log.action}</p>
-                <p className="text-muted">
-                  {log.actor_email ? `Actor: ${log.actor_email}` : ""}
-                  {log.league_id ? ` | Liga ${log.league_id}` : ""}
-                  {log.fantasy_team_id ? ` | Team ${log.fantasy_team_id}` : ""}
-                </p>
-                {log.details ? <p className="text-muted">{log.details}</p> : null}
-              </div>
-            ))}
-          </div>
-        )}
+        {logs.length === 0 && !logsLoading ? <p className="text-xs text-muted">Sin logs.</p> : null}
       </div>
 
       <div className="glass rounded-2xl p-4">
@@ -2158,7 +2298,7 @@ export default function AdminTeamsPage() {
         ) : null}
       </div>
 
-        <div className="space-y-2 pt-2">
+        <div ref={statsSectionRef} id="admin-stats-jornada" className="space-y-2 pt-2">
           <h2 className="text-lg font-semibold">Stats por jornada</h2>
           <p className="text-sm text-muted">
             Basado en player_match.parquet. Formato: player_id, match_id, goles, asistencias,
@@ -2691,6 +2831,241 @@ export default function AdminTeamsPage() {
           </div>
         )}
       </div>
+
+      <ModalDialog
+        open={injuredModalOpen}
+        title="Lista de lesionados"
+        onClose={() => setInjuredModalOpen(false)}
+        maxWidthClass="max-w-4xl"
+      >
+        <div className="space-y-3">
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+            <input
+              value={injuredQuery}
+              onChange={(event) => setInjuredQuery(event.target.value)}
+              placeholder="Buscar por nombre, apodo o player_id"
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+            />
+            <label className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs text-ink">
+              <input
+                type="checkbox"
+                checked={showOnlyInjured}
+                onChange={(event) => setShowOnlyInjured(event.target.checked)}
+                className="h-4 w-4 rounded border border-white/10 bg-black/40"
+              />
+              Solo lesionados
+            </label>
+            <span className="rounded-xl border border-white/10 px-3 py-2 text-xs text-muted">
+              {injuryPlayersForModal.length} jugador(es)
+            </span>
+          </div>
+
+          {injuredModalMessage ? (
+            <p className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
+              {injuredModalMessage}
+            </p>
+          ) : null}
+          {adminPlayersLoading ? (
+            <p className="text-xs text-muted">Cargando jugadores...</p>
+          ) : null}
+          {adminPlayersError ? (
+            <p className="text-xs text-warning">{adminPlayersError}</p>
+          ) : null}
+          {!adminPlayersLoading && injuryPlayersForModal.length === 0 ? (
+            <p className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
+              No hay jugadores para el filtro aplicado.
+            </p>
+          ) : null}
+
+          <div className="space-y-2">
+            {injuryPlayersForModal.map((player) => {
+              const isRowLoading = Boolean(
+                injuredActionLoadingByPlayerId[player.player_id]
+              );
+              const teamName =
+                player.team_id != null
+                  ? teamMap.get(player.team_id) || `Equipo ${player.team_id}`
+                  : "Sin equipo";
+              return (
+                <div
+                  key={player.player_id}
+                  className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-ink">
+                        {player.short_name || player.name}
+                      </p>
+                      <p className="text-xs text-muted">
+                        #{player.player_id} - {player.position} - {teamName}
+                      </p>
+                      <p className="text-[11px]">
+                        {player.is_injured ? (
+                          <span className="text-red-200">Estado: Lesionado</span>
+                        ) : (
+                          <span className="text-emerald-300">Estado: Disponible</span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInjuryPlayerId(String(player.player_id));
+                          setInjuryStatus(Boolean(player.is_injured));
+                          setInjuredModalOpen(false);
+                        }}
+                        className="rounded-lg border border-white/10 px-3 py-1 text-xs text-ink transition hover:bg-white/5"
+                      >
+                        Seleccionar en formulario
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isRowLoading}
+                        onClick={() =>
+                          handleQuickInjuryUpdate(
+                            player.player_id,
+                            !Boolean(player.is_injured)
+                          )
+                        }
+                        className="rounded-lg bg-accent px-3 py-1 text-xs font-semibold text-black disabled:opacity-60"
+                      >
+                        {isRowLoading
+                          ? "Guardando..."
+                          : player.is_injured
+                            ? "Recuperar"
+                            : "Marcar lesionado"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </ModalDialog>
+
+      <ModalDialog
+        open={leaguesModalOpen}
+        title="Detalle de ligas privadas"
+        onClose={() => setLeaguesModalOpen(false)}
+        maxWidthClass="max-w-4xl"
+      >
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
+            <span>Ligas: {leagues.length}</span>
+            <span>
+              Miembros: {leagues.reduce((acc, league) => acc + league.members.length, 0)}
+            </span>
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={handleLoadLeagues}
+              className="rounded-xl border border-white/10 px-3 py-1 text-xs text-ink"
+              disabled={leaguesLoading}
+            >
+              {leaguesLoading ? "Cargando..." : "Recargar ligas"}
+            </button>
+          </div>
+          {leaguesError ? <p className="text-xs text-warning">{leaguesError}</p> : null}
+          {!leaguesLoading && leagues.length === 0 ? (
+            <p className="text-xs text-muted">Sin ligas registradas.</p>
+          ) : null}
+          <div className="space-y-2">
+            {leagues.map((league) => (
+              <div
+                key={league.id}
+                className="rounded-2xl border border-white/10 bg-black/20 p-3"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold text-ink">{league.name}</p>
+                    <p className="text-[11px] text-muted">
+                      ID {league.id} - Codigo {league.code}
+                    </p>
+                  </div>
+                  <div className="text-right text-[11px] text-muted">
+                    <p>Owner #{league.owner_fantasy_team_id}</p>
+                    <p>{new Date(league.created_at).toLocaleString()}</p>
+                  </div>
+                </div>
+                <div className="mt-3 space-y-1">
+                  <p className="text-[11px] text-muted">
+                    Miembros ({league.members.length})
+                  </p>
+                  <div className="space-y-1">
+                    {league.members.map((member) => (
+                      <div
+                        key={`${league.id}-${member.fantasy_team_id}`}
+                        className="flex items-center justify-between rounded-xl border border-white/10 px-2 py-1 text-[11px]"
+                      >
+                        <span className="text-ink">
+                          {member.team_name || "Sin nombre"} #{member.fantasy_team_id}
+                        </span>
+                        <span className="text-muted">{member.user_email}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </ModalDialog>
+
+      <ModalDialog
+        open={logsModalOpen}
+        title="Logs administrativos"
+        onClose={() => setLogsModalOpen(false)}
+        maxWidthClass="max-w-4xl"
+      >
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <select
+              value={logCategory}
+              onChange={(event) => setLogCategory(event.target.value)}
+              className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+            >
+              <option value="">Todos</option>
+              <option value="league">Ligas</option>
+              <option value="stats">Stats</option>
+              <option value="round">Rondas</option>
+              <option value="admin">Admin</option>
+            </select>
+            <button
+              onClick={handleLoadLogs}
+              className="rounded-xl border border-white/10 px-4 py-2 text-sm text-ink"
+              disabled={logsLoading}
+            >
+              {logsLoading ? "Cargando..." : "Cargar logs"}
+            </button>
+          </div>
+          {logsError ? <p className="text-xs text-warning">{logsError}</p> : null}
+          {!logsLoading && logs.length === 0 ? (
+            <p className="text-xs text-muted">Sin logs.</p>
+          ) : null}
+          <div className="space-y-2">
+            {logs.map((log) => (
+              <div key={log.id} className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted">
+                  <span>{log.category}</span>
+                  <span>{new Date(log.created_at).toLocaleString()}</span>
+                </div>
+                <p className="mt-1 text-sm font-semibold text-ink">{log.action}</p>
+                <p className="mt-1 text-xs text-muted">
+                  actor {log.actor_email || "sistema"} - team{" "}
+                  {log.fantasy_team_id ?? "-"} - league {log.league_id ?? "-"}
+                </p>
+                {log.details ? (
+                  <p className="mt-2 rounded-xl border border-white/10 bg-black/30 px-2 py-1 text-[11px] text-muted">
+                    {log.details}
+                  </p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      </ModalDialog>
     </div>
   );
 }

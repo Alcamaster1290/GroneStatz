@@ -1,47 +1,28 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import AuthPanel from "@/components/AuthPanel";
 import PublicPageNav from "@/components/PublicPageNav";
+import { hydrateSessionFromStorage } from "@/lib/session";
 import { useFantasyStore } from "@/lib/store";
-
-const normalizeRedirect = (value: string | null) => {
-  if (!value) return "/app";
-  if (!value.startsWith("/") || value.startsWith("//")) return "/app";
-  if (value === "/landing" || value.startsWith("/landing?")) return "/app";
-  if (value === "/login" || value.startsWith("/login?")) return "/app";
-  return value;
-};
 
 export default function LoginClient() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const token = useFantasyStore((state) => state.token);
-  const setToken = useFantasyStore((state) => state.setToken);
-  const setUserEmail = useFantasyStore((state) => state.setUserEmail);
-
-  const redirectTo = useMemo(
-    () => normalizeRedirect(searchParams.get("redirect")),
-    [searchParams]
-  );
+  const postLoginTarget = "/app";
 
   useEffect(() => {
     if (token) {
-      router.replace(redirectTo);
+      router.replace(postLoginTarget);
       return;
     }
-    const storedToken = localStorage.getItem("fantasy_token");
-    const storedEmail = localStorage.getItem("fantasy_email");
-    if (storedToken) {
-      setToken(storedToken);
-      if (storedEmail) {
-        setUserEmail(storedEmail);
-      }
-      router.replace(redirectTo);
+    const hydrated = hydrateSessionFromStorage();
+    if (hydrated.token) {
+      router.replace(postLoginTarget);
     }
-  }, [token, redirectTo, router, setToken, setUserEmail]);
+  }, [token, postLoginTarget, router]);
 
   return (
     <div className="space-y-4">
@@ -49,7 +30,7 @@ export default function LoginClient() {
       <div>
         <h1 className="text-xl font-semibold text-ink">Login</h1>
       </div>
-      <AuthPanel onAuthenticated={() => router.replace(redirectTo)} />
+      <AuthPanel onAuthenticated={() => router.replace(postLoginTarget)} />
     </div>
   );
 }

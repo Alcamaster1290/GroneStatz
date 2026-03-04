@@ -558,6 +558,7 @@ export default function TeamPage() {
   const [roundsInfo, setRoundsInfo] = useState<RoundInfo[]>([]);
   const [roundStatus, setRoundStatus] = useState<string | null>(null);
   const [authResolved, setAuthResolved] = useState(false);
+  const [resolvedSessionToken, setResolvedSessionToken] = useState<string | null>(null);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [appEnv, setAppEnv] = useState<string>("local");
   const [roundMissing, setRoundMissing] = useState(false);
@@ -997,12 +998,14 @@ export default function TeamPage() {
   useEffect(() => {
     const stored = localStorage.getItem("fantasy_token");
     const storedEmail = localStorage.getItem("fantasy_email");
+    const resolvedToken = token || stored || null;
     if (!token && stored) {
       setToken(stored);
     }
     if (!userEmail && storedEmail) {
       setUserEmail(storedEmail);
     }
+    setResolvedSessionToken(resolvedToken);
     setAuthResolved(true);
   }, [token, setToken, userEmail, setUserEmail]);
 
@@ -1588,16 +1591,16 @@ export default function TeamPage() {
 
   useEffect(() => {
     if (!authResolved) return;
-    if (!token) {
-      router.replace("/landing");
+    if (!resolvedSessionToken) {
+      router.replace("/login?redirect=/app");
     }
-  }, [authResolved, token, router]);
+  }, [authResolved, resolvedSessionToken, router]);
 
   if (!authResolved) {
     return null;
   }
 
-  if (!token) {
+  if (!resolvedSessionToken) {
     return null;
   }
 
