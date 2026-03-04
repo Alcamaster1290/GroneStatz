@@ -117,8 +117,10 @@ export default function SettingsPage() {
   const welcomeKey = `fantasy_welcome_seen_${userEmail && userEmail.trim() ? userEmail.trim() : "anon"}`;
   const favoriteDeferredKey = `fantasy_favorite_deferred_${userEmail && userEmail.trim() ? userEmail.trim() : "anon"}`;
   const appChannel = process.env.NEXT_PUBLIC_APP_CHANNEL || "web";
+  const pushFeatureEnabled = (process.env.NEXT_PUBLIC_PUSH_ENABLED || "false") === "true";
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || "dev";
-  const pushSectionVisible = isNativeMobilePlatform() && appChannel !== "web";
+  const pushSectionVisible =
+    pushFeatureEnabled && isNativeMobilePlatform() && appChannel !== "web";
 
   useEffect(() => {
     if (!token) return;

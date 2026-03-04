@@ -1,4 +1,15 @@
 User-agent: *
 Allow: /
+Allow: /landing
+Allow: /login
+Allow: /ranking
+Allow: /fixtures
+Disallow: /admin
+Disallow: /app
+Disallow: /team
+Disallow: /market
+Disallow: /stats
+Disallow: /settings
+Disallow: /transfer
 
 Sitemap: https://fantasyliga1peru.com/sitemap.xml

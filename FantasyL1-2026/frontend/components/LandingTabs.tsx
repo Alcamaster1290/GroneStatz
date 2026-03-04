@@ -287,7 +287,7 @@ export default function LandingTabs() {
           />
           <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Fantasy Liga 1 Peru 2026</p>
           <h1 className="mt-3 max-w-3xl text-3xl font-semibold leading-tight text-white md:text-5xl">
-            Vive la nueva forma de ver la poderosa Liga 1.
+            Vive la nueva forma de ver la poderosa Liga 1 Peru.
           </h1>
           <p className="mt-4 max-w-2xl text-sm text-zinc-300 md:text-base">
             Juego simple, competitivo y real: arma tu plantel, selecciona a tu capitán y compite en

@@ -12,7 +12,7 @@ const siteUrl =
   "https://fantasyliga1peru.com";
 const siteTitle = "Fantasy Liga 1 Peru 2026 | Fantasy oficial de la Liga 1 Peru";
 const siteDescription =
-  "Fantasy Liga 1 Peru 2026: arma tu equipo, juega ranking general y ligas privadas con datos reales de cada fecha del futbol peruano.";
+  "Liga 1 Peru 2026 en formato fantasy: arma tu equipo, juega ranking general y ligas privadas con datos reales de cada fecha del futbol peruano.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -22,13 +22,18 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   keywords: [
     "liga 1 peru",
+    "liga 1 perú",
     "liga 1 peru 2026",
+    "liga 1",
+    "liga peruana",
     "liga 1 peru fantasy",
     "fantasy liga 1 peru",
+    "fantasy liga 1 perú",
     "fantasy peru 2026",
     "futbol peruano",
     "ranking liga 1 peru",
-    "juego fantasy liga 1"
+    "juego fantasy liga 1",
+    "liga1 peru"
   ],
   alternates: {
     canonical: "/"

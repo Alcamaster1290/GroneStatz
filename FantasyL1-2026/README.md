@@ -143,14 +143,82 @@ npm run cap:add:ios
 npm run cap:sync
 ```
 
+### Build bundle local por perfil (recomendado para tiendas)
+Perfiles incluidos:
+- `frontend/.env.mobile.qa`
+- `frontend/.env.mobile.prod`
+
+Build + sync QA:
+```
+cd frontend
+npm run build:mobile:qa
+```
+
+Build + sync PROD:
+```
+cd frontend
+npm run build:mobile:prod
+```
+
+Solo build del bundle local (sin sync):
+```
+npm run build:mobile:bundle:qa
+npm run build:mobile:bundle:prod
+```
+
+Solo sync de Capacitor por perfil:
+```
+npm run cap:sync:qa
+npm run cap:sync:prod
+```
+
+Build release Android (AAB) por perfil:
+```
+npm run android:release:qa
+npm run android:release:prod
+```
+
+Build release Android (APK) por perfil:
+```
+npm run android:assemble:qa
+npm run android:assemble:prod
+```
+
+Este flujo hace:
+1) build export local a `www`
+2) `cap sync android`
+3) `gradlew bundleRelease|assembleRelease`
+
+Notas de arquitectura mobile:
+- En `qa/prod` se usa bundle local (`frontend/www`) y **no** `server.url` remoto.
+- `server.url` queda para desarrollo interno (`MOBILE_BUILD_PROFILE=dev` o `CAPACITOR_USE_REMOTE_SERVER=true`).
+- `NEXT_PUBLIC_API_URL` debe ser absoluta en builds mobile de tienda.
+- Push en v1 de stores queda deshabilitado via `NEXT_PUBLIC_PUSH_ENABLED=false`.
+
 Variables frontend relevantes:
 - `NEXT_PUBLIC_APP_CHANNEL=mobile`
 - `NEXT_PUBLIC_MOBILE_WEB_URL=https://fantasyliga1peru.com` (prod)
 - `NEXT_PUBLIC_MOBILE_WEB_URL=https://qa.fantasyliga1peru.com` (qa)
+- `NEXT_PUBLIC_PUSH_ENABLED=false` (v1 sin push)
+- `MOBILE_ANDROID_VERSION_CODE` (int para Play Store)
+- `MOBILE_ANDROID_VERSION_NAME` (ej. `1.4.0`)
+
+Firma Android release:
+- Opcion A: variables de entorno
+  - `ANDROID_KEYSTORE_PATH`
+  - `ANDROID_KEYSTORE_PASSWORD`
+  - `ANDROID_KEY_ALIAS`
+  - `ANDROID_KEY_PASSWORD`
+- Opcion B: `frontend/android/keystore.properties` (no commitear)
+  - Usa `frontend/android/keystore.properties.example` como base.
 
 Push móvil:
 - Backend: `PUSH_ENABLED`, `PUSH_REMINDER_HOURS_BEFORE`, `FCM_PROJECT_ID`, `FCM_SERVICE_ACCOUNT_JSON` (o `GOOGLE_APPLICATION_CREDENTIALS`).
 - Frontend: activar/desactivar desde `Ajustes`.
+
+Runbooks mobile:
+- `MOBILE_RELEASE.md` (plan por modulos y comandos de release)
+- `MOBILE_QA_CHECKLIST.md` (matriz minima de validacion en dispositivos)
 
 ## Admin API
 Header requerido: `X-Admin-Token: <ADMIN_TOKEN>`
