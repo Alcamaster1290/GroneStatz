@@ -81,6 +81,42 @@ function formatDateLabel(dateKey: string): string {
   return `${weekday} ${day} de ${monthLabel}`;
 }
 
+function resolveRoundStatus(info: RoundInfo | undefined): string | null {
+  if (!info) return null;
+  if (info.status && String(info.status).trim()) return String(info.status).trim();
+  return info.is_closed ? "Cerrada" : "Pendiente";
+}
+
+function roundStatusPriority(status: string | null): number {
+  if (!status) return 3;
+  const normalized = status
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+  if (normalized === "pendiente") return 0;
+  if (normalized === "proximamente") return 1;
+  if (normalized === "cerrada") return 2;
+  return 3;
+}
+
+function pickDefaultRound(roundNumbers: number[], roundsInfo: RoundInfo[]): number | null {
+  if (!roundNumbers.length) return null;
+  const infoByRound = new Map(roundsInfo.map((round) => [round.round_number, round]));
+  let selected = roundNumbers[0];
+  let selectedPriority = roundStatusPriority(resolveRoundStatus(infoByRound.get(selected)));
+  for (const roundNumber of roundNumbers) {
+    const priority = roundStatusPriority(
+      resolveRoundStatus(infoByRound.get(roundNumber))
+    );
+    if (priority < selectedPriority) {
+      selected = roundNumber;
+      selectedPriority = priority;
+    }
+  }
+  return selected;
+}
+
 const positionLabels: Record<string, string> = {
   G: "Arquero",
   D: "Defensa",
@@ -97,6 +133,7 @@ export default function FixturesPage() {
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [teams, setTeams] = useState<{ id: number; name_short?: string; name_full?: string }[]>([]);
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
+  const [hasManualRoundSelection, setHasManualRoundSelection] = useState(false);
   const [roundsInfo, setRoundsInfo] = useState<RoundInfo[]>([]);
   const [roundStatus, setRoundStatus] = useState<string | null>(null);
   const [matchStatsOpen, setMatchStatsOpen] = useState(false);
@@ -223,11 +260,18 @@ export default function FixturesPage() {
   useEffect(() => {
     if (!roundNumbers.length) {
       setSelectedRound(null);
+      setHasManualRoundSelection(false);
       return;
     }
-    if (selectedRound && roundNumbers.includes(selectedRound)) return;
-    setSelectedRound(roundNumbers[0]);
-  }, [roundNumbers, selectedRound]);
+    const defaultRound = pickDefaultRound(roundNumbers, roundsInfo);
+    if (selectedRound === null || !roundNumbers.includes(selectedRound)) {
+      setSelectedRound(defaultRound);
+      return;
+    }
+    if (!hasManualRoundSelection && defaultRound !== null && defaultRound !== selectedRound) {
+      setSelectedRound(defaultRound);
+    }
+  }, [roundNumbers, roundsInfo, selectedRound, hasManualRoundSelection]);
 
   useEffect(() => {
     if (!selectedRound) {
@@ -236,9 +280,7 @@ export default function FixturesPage() {
     }
     const info = roundsInfo.find((round) => round.round_number === selectedRound);
     if (info) {
-      setRoundStatus(
-        info.status ? info.status : info.is_closed ? "Cerrada" : "Pendiente"
-      );
+      setRoundStatus(resolveRoundStatus(info));
     } else {
       setRoundStatus(null);
     }
@@ -315,6 +357,7 @@ export default function FixturesPage() {
             type="button"
             onClick={() => {
               if (canPrevRound && roundIndex > 0) {
+                setHasManualRoundSelection(true);
                 setSelectedRound(roundNumbers[roundIndex - 1]);
               }
             }}
@@ -333,6 +376,7 @@ export default function FixturesPage() {
             type="button"
             onClick={() => {
               if (canNextRound && roundIndex >= 0) {
+                setHasManualRoundSelection(true);
                 setSelectedRound(roundNumbers[roundIndex + 1]);
               }
             }}

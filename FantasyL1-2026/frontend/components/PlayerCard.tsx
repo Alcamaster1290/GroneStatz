@@ -10,6 +10,14 @@ const positionLabels: Record<string, string> = {
   F: "Delantero"
 };
 
+type PlayerCardNextMatch = {
+  opponent: string;
+  when: string;
+  round: number | null;
+  homeAway: "home" | "away" | null;
+  status: string | null;
+};
+
 function PlayerFace({ playerId, sizeClass }: { playerId: number; sizeClass: string }) {
   const [hidden, setHidden] = useState(false);
 
@@ -45,13 +53,15 @@ export default function PlayerCard({
   onClick,
   onPriceDeltaClick,
   compact = false,
-  showPoints = false
+  showPoints = false,
+  nextMatch
 }: {
   player: Player;
   onClick?: () => void;
   onPriceDeltaClick?: (player: Player) => void;
   compact?: boolean;
   showPoints?: boolean;
+  nextMatch?: PlayerCardNextMatch | null;
 }) {
   const avatarSize = compact ? "h-9 w-9" : "h-11 w-11";
   const teamSize = compact ? "h-7 w-7" : "h-8 w-8";
@@ -75,6 +85,10 @@ export default function PlayerCard({
   const isDefender = player.position === "D";
   const isInjured = Boolean(player.is_injured);
   const isDeltaInteractive = Boolean(onPriceDeltaClick);
+  const showNextMatch = nextMatch !== undefined;
+  const nextMatchLine = nextMatch
+    ? `${nextMatch.homeAway === "away" ? "@ " : "vs "}${nextMatch.opponent} · ${nextMatch.when}${nextMatch.round ? ` · R${nextMatch.round}` : ""}`
+    : "Sin partido programado";
 
   return (
     <div
@@ -85,7 +99,7 @@ export default function PlayerCard({
         compact ? "py-2" : ""
       )}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <PlayerFace playerId={player.player_id} sizeClass={avatarSize} />
         <div className={clsx("flex items-center justify-center rounded-full bg-surface2", teamSize)}>
           <img
@@ -97,8 +111,8 @@ export default function PlayerCard({
             }}
           />
         </div>
-        <div>
-          <p className="text-sm font-semibold text-ink">{player.name}</p>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-ink">{player.name}</p>
           <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted">
             <span className="rounded-full border border-white/10 px-2 py-0.5">
               {positionLabels[player.position]}
@@ -127,6 +141,16 @@ export default function PlayerCard({
             )}
             {showPoints ? <span>Puntos {pointsTotal.toFixed(1)}</span> : null}
           </div>
+          {showNextMatch ? (
+            <p
+              className={clsx(
+                "mt-1 text-muted",
+                compact ? "truncate text-[10px]" : "text-[11px]"
+              )}
+            >
+              <span className="font-semibold text-ink">Próximo partido:</span> {nextMatchLine}
+            </p>
+          ) : null}
         </div>
       </div>
       <div className="text-right">

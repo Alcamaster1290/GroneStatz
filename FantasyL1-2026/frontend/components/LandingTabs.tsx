@@ -67,6 +67,22 @@ const formatKickoff = (kickoffAt: string | null) => {
   return `${dayLabel}/${monthLabel}${time ? `, ${time}` : ""}`;
 };
 
+const toKickoffTimestamp = (kickoffAt: string | null) => {
+  if (!kickoffAt) return Number.MAX_SAFE_INTEGER;
+  const normalized = kickoffAt.replace("T", " ").trim();
+  const [datePart, timePart = "00:00:00"] = normalized.split(" ");
+  const [yearRaw, monthRaw, dayRaw] = datePart.split("-");
+  const [hourRaw = "0", minuteRaw = "0", secondRaw = "0"] = timePart.split(":");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  const hour = Number(hourRaw);
+  const minute = Number(minuteRaw);
+  const second = Number(secondRaw);
+  if (!year || !month || !day) return Number.MAX_SAFE_INTEGER;
+  return new Date(year, month - 1, day, hour, minute, second).getTime();
+};
+
 function TeamLogo({
   teamId,
   teamName,
@@ -225,9 +241,14 @@ export default function LandingTabs() {
   }, [premiumConfig]);
 
   const fixtureBlocks = useMemo(() => {
+    const orderedFixtures = [...nextRoundFixtures].sort((a, b) => {
+      const diff = toKickoffTimestamp(a.kickoff_at) - toKickoffTimestamp(b.kickoff_at);
+      if (diff !== 0) return diff;
+      return a.id - b.id;
+    });
     const blocks: Fixture[][] = [];
-    for (let i = 0; i < nextRoundFixtures.length; i += 10) {
-      blocks.push(nextRoundFixtures.slice(i, i + 10));
+    for (let i = 0; i < orderedFixtures.length; i += 10) {
+      blocks.push(orderedFixtures.slice(i, i + 10));
     }
     return blocks;
   }, [nextRoundFixtures]);

@@ -76,7 +76,15 @@ export default function StatsPage() {
   const [position, setPosition] = useState<Position | "">("");
   const [teamId, setTeamId] = useState("");
   const [sortKey, setSortKey] = useState<
-    "points" | "goals" | "assists" | "price" | "price_delta" | "selected"
+    | "points"
+    | "goals"
+    | "assists"
+    | "price"
+    | "price_delta"
+    | "selected"
+    | "minutesplayed"
+    | "yellow_cards"
+    | "red_cards"
   >("selected");
 
   useEffect(() => {
@@ -241,6 +249,12 @@ export default function StatsPage() {
           return (b.goals || 0) - (a.goals || 0);
         case "assists":
           return (b.assists || 0) - (a.assists || 0);
+        case "minutesplayed":
+          return (b.minutesplayed || 0) - (a.minutesplayed || 0);
+        case "yellow_cards":
+          return (b.yellow_cards || 0) - (a.yellow_cards || 0);
+        case "red_cards":
+          return (b.red_cards || 0) - (a.red_cards || 0);
         case "price":
           return (b.price_current || 0) - (a.price_current || 0);
         case "price_delta":
@@ -314,6 +328,9 @@ export default function StatsPage() {
                     | "points"
                     | "goals"
                     | "assists"
+                    | "minutesplayed"
+                    | "yellow_cards"
+                    | "red_cards"
                     | "price"
                     | "price_delta"
                     | "selected"
@@ -325,6 +342,9 @@ export default function StatsPage() {
               <option value="points">Puntos</option>
               <option value="goals">Goles</option>
               <option value="assists">Asistencias</option>
+              <option value="minutesplayed">Minutos jugados</option>
+              <option value="yellow_cards">Tarjetas amarillas</option>
+              <option value="red_cards">Tarjetas rojas</option>
               <option value="price">Precio</option>
               <option value="price_delta">Variacion de precio</option>
             </select>
@@ -444,16 +464,23 @@ export default function StatsPage() {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2 text-[10px] text-muted">
+                <div
+                  className={
+                    "gap-2 text-[10px] text-muted " +
+                    (rounds.length > 6
+                      ? "flex overflow-x-auto whitespace-nowrap pb-1"
+                      : "flex flex-wrap")
+                  }
+                >
                   {rounds.length === 0 ? (
-                    <span className="rounded-full border border-white/10 px-2 py-1">
+                    <span className="shrink-0 rounded-full border border-white/10 px-2 py-1">
                       Sin rondas
                     </span>
                   ) : (
                     rounds.map((round) => (
                       <span
                         key={`${player.player_id}-round-${round.round_number}`}
-                        className="rounded-full border border-white/10 px-2 py-1"
+                        className="shrink-0 rounded-full border border-white/10 px-2 py-1"
                       >
                         R{round.round_number}: {round.points.toFixed(1)}
                       </span>

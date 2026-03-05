@@ -145,6 +145,96 @@ const positionLabels: Record<string, string> = {
   F: "Delantero"
 };
 
+type NextMatchSummary = {
+  opponent: string;
+  when: string;
+  round: number | null;
+  homeAway: "home" | "away" | null;
+  status: string | null;
+  kickoffMs: number;
+};
+
+function parseKickoffToMs(kickoff: string | null): number | null {
+  if (!kickoff) return null;
+  const normalized = kickoff.replace("T", " ").trim();
+  if (!normalized) return null;
+  const [datePart, timePart = "00:00:00"] = normalized.split(" ");
+  const [yearRaw, monthRaw, dayRaw] = datePart.split("-");
+  const [hourRaw = "0", minuteRaw = "0", secondRaw = "0"] = timePart.split(":");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  const hour = Number(hourRaw);
+  const minute = Number(minuteRaw);
+  const second = Number(secondRaw);
+  if (!year || !month || !day) return null;
+  if (
+    Number.isNaN(hour) ||
+    Number.isNaN(minute) ||
+    Number.isNaN(second)
+  ) {
+    return null;
+  }
+  const value = new Date(year, month - 1, day, hour, minute, second).getTime();
+  return Number.isFinite(value) ? value : null;
+}
+
+function formatNextMatchWhen(kickoff: string | null): string {
+  if (!kickoff) return "Por confirmar";
+  const normalized = kickoff.replace("T", " ").trim();
+  const [datePart, timePart] = normalized.split(" ");
+  if (!datePart) return "Por confirmar";
+  const [, monthRaw, dayRaw] = datePart.split("-");
+  const day = Number(dayRaw);
+  const month = Number(monthRaw);
+  if (!day || !month) return "Por confirmar";
+  const time = timePart ? timePart.slice(0, 5) : "";
+  return `${day}/${month}${time ? `, ${time}` : ""}`;
+}
+
+function buildNextMatchByTeam(
+  fixtures: Fixture[],
+  nowMs: number,
+  teamNameById: Map<number, string>
+): Map<number, NextMatchSummary> {
+  const result = new Map<number, NextMatchSummary>();
+  const maybeUpdate = (
+    teamId: number | null,
+    opponentId: number | null,
+    fixture: Fixture,
+    kickoffMs: number,
+    homeAway: "home" | "away"
+  ) => {
+    if (teamId === null || teamId === undefined) return;
+    const opponent =
+      opponentId === null || opponentId === undefined
+        ? "Rival por definir"
+        : teamNameById.get(opponentId) || `Equipo ${opponentId}`;
+    const candidate: NextMatchSummary = {
+      opponent,
+      when: formatNextMatchWhen(fixture.kickoff_at),
+      round: typeof fixture.round_number === "number" ? fixture.round_number : null,
+      homeAway,
+      status: fixture.status ?? null,
+      kickoffMs
+    };
+    const current = result.get(teamId);
+    if (!current || candidate.kickoffMs < current.kickoffMs) {
+      result.set(teamId, candidate);
+    }
+  };
+
+  fixtures.forEach((fixture) => {
+    if (fixture.status === "Finalizado") return;
+    const kickoffMs = parseKickoffToMs(fixture.kickoff_at);
+    if (kickoffMs === null || kickoffMs < nowMs) return;
+    maybeUpdate(fixture.home_team_id, fixture.away_team_id, fixture, kickoffMs, "home");
+    maybeUpdate(fixture.away_team_id, fixture.home_team_id, fixture, kickoffMs, "away");
+  });
+
+  return result;
+}
+
 function formatRoundDateLabel(dateKey: string): string {
   if (!dateKey || dateKey === "TBD") return "Por confirmar";
   const [year, month, day] = dateKey.split("-").map((part) => Number(part));
@@ -219,11 +309,13 @@ function renderPointsSparkline(values: number[]) {
 function MarketPlayerDetails({
   player,
   fixtures,
-  pointsTrend
+  pointsTrend,
+  nextMatch
 }: {
   player: Player;
   fixtures: Fixture[];
   pointsTrend: number[];
+  nextMatch: NextMatchSummary | null;
 }) {
   const displayName = player.short_name || player.shortName || player.name;
   const isKeeper = player.position === "G";
@@ -265,15 +357,22 @@ function MarketPlayerDetails({
     return `${day}/${month}/${shortYear}${time ? `, ${time}` : ""}`;
   };
 
+  const nowMs = Date.now();
   const teamFixtures = fixtures
     .filter(
       (fixture) =>
         fixture.home_team_id === player.team_id || fixture.away_team_id === player.team_id
     )
     .sort((a, b) => {
-      const aKey = a.kickoff_at ? a.kickoff_at : "9999-99-99";
-      const bKey = b.kickoff_at ? b.kickoff_at : "9999-99-99";
-      return aKey.localeCompare(bKey);
+      const aMs = parseKickoffToMs(a.kickoff_at);
+      const bMs = parseKickoffToMs(b.kickoff_at);
+      const aUpcoming = a.status !== "Finalizado" && aMs !== null && aMs >= nowMs;
+      const bUpcoming = b.status !== "Finalizado" && bMs !== null && bMs >= nowMs;
+      if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
+      const aKey = aMs ?? Number.MAX_SAFE_INTEGER;
+      const bKey = bMs ?? Number.MAX_SAFE_INTEGER;
+      if (aKey !== bKey) return aKey - bKey;
+      return a.id - b.id;
     })
     .slice(0, 3);
   return (
@@ -333,6 +432,14 @@ function MarketPlayerDetails({
             {priceDeltaSymbol} {priceDeltaValue}
           </p>
         </div>
+      </div>
+      <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
+        <p className="text-[10px] uppercase text-muted">Próximo partido</p>
+        <p className="mt-1 text-ink">
+          {nextMatch
+            ? `${nextMatch.homeAway === "away" ? "@ " : "vs "}${nextMatch.opponent} · ${nextMatch.when}${nextMatch.round ? ` · R${nextMatch.round}` : ""}`
+            : "Sin partido programado"}
+        </p>
       </div>
       <div className="space-y-2">
         <p className="text-xs font-semibold text-ink">Partidos</p>
@@ -867,6 +974,16 @@ export default function MarketPage() {
     });
     return teams.filter((team) => (counts.get(team.id) || 0) > 1);
   }, [teams, playersAll, playersBase]);
+
+  const teamNameById = useMemo(() => {
+    return new Map(
+      teams.map((team) => [team.id, team.name_short || team.name_full || `Equipo ${team.id}`])
+    );
+  }, [teams]);
+
+  const nextMatchByTeam = useMemo(() => {
+    return buildNextMatchByTeam(fixtures, Date.now(), teamNameById);
+  }, [fixtures, teamNameById]);
 
   const nextRoundStartLabel = useMemo(() => {
     if (!currentRoundNumber) return "Por confirmar";
@@ -1554,6 +1671,7 @@ export default function MarketPage() {
                     player={player}
                     compact
                     showPoints
+                    nextMatch={nextMatchByTeam.get(player.team_id) ?? null}
                     onPriceDeltaClick={handleOpenPriceHistory}
                     onClick={() => {
                       setInPlayerId(player.player_id);
@@ -1572,11 +1690,17 @@ export default function MarketPage() {
             <p className="text-xs uppercase text-muted">Sale</p>
             {outPlayer ? (
               <div className="space-y-2">
-                <PlayerCard player={outPlayer} compact showPoints />
+                <PlayerCard
+                  player={outPlayer}
+                  compact
+                  showPoints
+                  nextMatch={nextMatchByTeam.get(outPlayer.team_id) ?? null}
+                />
                 <MarketPlayerDetails
                   player={outPlayer}
                   fixtures={fixtures}
                   pointsTrend={pointsTrendByPlayer[outPlayer.player_id] ?? []}
+                  nextMatch={nextMatchByTeam.get(outPlayer.team_id) ?? null}
                 />
               </div>
             ) : (
@@ -1587,11 +1711,17 @@ export default function MarketPage() {
             <p className="text-xs uppercase text-muted">Entra</p>
             {inPlayer ? (
               <div className="space-y-2">
-                <PlayerCard player={inPlayer} compact showPoints />
+                <PlayerCard
+                  player={inPlayer}
+                  compact
+                  showPoints
+                  nextMatch={nextMatchByTeam.get(inPlayer.team_id) ?? null}
+                />
                 <MarketPlayerDetails
                   player={inPlayer}
                   fixtures={fixtures}
                   pointsTrend={pointsTrendByPlayer[inPlayer.player_id] ?? []}
+                  nextMatch={nextMatchByTeam.get(inPlayer.team_id) ?? null}
                 />
               </div>
             ) : (

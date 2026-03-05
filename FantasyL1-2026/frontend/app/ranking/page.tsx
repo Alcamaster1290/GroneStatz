@@ -203,16 +203,23 @@ function RankingTable({
                 </span>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 text-[10px] text-muted">
+            <div
+              className={
+                "gap-2 text-[10px] text-muted " +
+                (entry.rounds.length > 6
+                  ? "flex overflow-x-auto whitespace-nowrap pb-1"
+                  : "flex flex-wrap")
+              }
+            >
               {entry.rounds.length === 0 ? (
-                <span className="rounded-full border border-white/10 px-2 py-1">
+                <span className="shrink-0 rounded-full border border-white/10 px-2 py-1">
                   Sin rondas
                 </span>
               ) : (
                 entry.rounds.map((round) => (
                   <span
                     key={`${entry.fantasy_team_id}-${round.round_number}`}
-                    className="rounded-full border border-white/10 px-2 py-1"
+                    className="shrink-0 rounded-full border border-white/10 px-2 py-1"
                   >
                     R{round.round_number}: {Math.round(round.points)}
                     {pendingRoundNumber === round.round_number && typeof round.price_delta === "number" ? ` · Δ ${round.price_delta > 0 ? "+" : ""}${round.price_delta.toFixed(1)}` : ""}
