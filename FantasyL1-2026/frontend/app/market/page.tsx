@@ -21,7 +21,6 @@ import {
   getPlayerPriceHistory,
   getTeam,
   getTeams,
-  getTransferCount,
   transferPlayer,
   updateFavoriteTeam,
   updateSquad
@@ -30,9 +29,9 @@ import { useFantasyStore } from "@/lib/store";
 import {
   Fixture,
   MarketFiltersState,
+  PlayerMatch,
   Player,
   PlayerPriceHistoryPoint,
-  TransferCount
 } from "@/lib/types";
 import { validateSquad } from "@/lib/validation";
 
@@ -162,11 +161,6 @@ type NextMatchSummary = {
   fixtureSortKey: number;
 };
 
-type TeamFixtureIndex = {
-  nextMatchByTeam: Map<number, NextMatchSummary>;
-  fixturesByTeam: Map<number, Fixture[]>;
-};
-
 function normalizeFixtureStatus(status: string | null | undefined): string {
   return String(status || "").trim().toLowerCase();
 }
@@ -208,7 +202,7 @@ function parseKickoffToMs(kickoff: string | null): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-function formatKickoffLabel(kickoff: string | null, includeYear = false): string {
+function formatKickoffLabel(kickoff: string | null | undefined, includeYear = false): string {
   if (!kickoff) return "Por confirmar";
   const normalized = String(kickoff)
     .replace("T", " ")
@@ -234,12 +228,8 @@ function buildFixtureIndexByTeam(
   fixtures: Fixture[],
   nowMs: number,
   teamNameById: Map<number, string>
-): TeamFixtureIndex {
+) {
   const nextMatchByTeam = new Map<number, NextMatchSummary>();
-  const fixtureRowsByTeam = new Map<
-    number,
-    { fixture: Fixture; kickoffMs: number | null; isUpcoming: boolean }[]
-  >();
 
   const maybeUpsert = (
     teamId: number | null,
@@ -274,54 +264,29 @@ function buildFixtureIndexByTeam(
     }
   };
 
-  const pushFixtureForTeam = (
-    teamId: number | null,
-    fixture: Fixture,
-    kickoffMs: number | null,
-    isUpcoming: boolean
-  ) => {
-    if (teamId === null || teamId === undefined) return;
-    const rows = fixtureRowsByTeam.get(teamId) ?? [];
-    rows.push({ fixture, kickoffMs, isUpcoming });
-    fixtureRowsByTeam.set(teamId, rows);
-  };
-
   fixtures.forEach((fixture) => {
     const kickoffMs = parseKickoffToMs(fixture.kickoff_at);
     const finished = isFixtureFinished(fixture.status);
     const isUpcoming = !finished && kickoffMs !== null && kickoffMs >= nowMs;
-
-    pushFixtureForTeam(fixture.home_team_id, fixture, kickoffMs, isUpcoming);
-    pushFixtureForTeam(fixture.away_team_id, fixture, kickoffMs, isUpcoming);
 
     if (!isUpcoming || kickoffMs === null) return;
     maybeUpsert(fixture.home_team_id, fixture.away_team_id, fixture, kickoffMs, "home");
     maybeUpsert(fixture.away_team_id, fixture.home_team_id, fixture, kickoffMs, "away");
   });
 
-  const fixturesByTeam = new Map<number, Fixture[]>();
-  fixtureRowsByTeam.forEach((rows, teamId) => {
-    const ordered = rows
-      .sort((a, b) => {
-        if (a.isUpcoming !== b.isUpcoming) return a.isUpcoming ? -1 : 1;
-        const aKey = a.kickoffMs ?? Number.MAX_SAFE_INTEGER;
-        const bKey = b.kickoffMs ?? Number.MAX_SAFE_INTEGER;
-        if (aKey !== bKey) return aKey - bKey;
-        const aMatchKey = Number(a.fixture.match_id || a.fixture.id || 0);
-        const bMatchKey = Number(b.fixture.match_id || b.fixture.id || 0);
-        return aMatchKey - bMatchKey;
-      })
-      .slice(0, 3)
-      .map((row) => row.fixture);
-    if (ordered.length) {
-      fixturesByTeam.set(teamId, ordered);
-    }
-  });
+  return nextMatchByTeam;
+}
 
-  return {
-    nextMatchByTeam,
-    fixturesByTeam
-  };
+function buildPointsTrend(matches: PlayerMatch[]) {
+  const byRound = new Map<number, number>();
+  matches.forEach((match) => {
+    if (typeof match.round_number !== "number") return;
+    const points = typeof match.points === "number" ? match.points : 0;
+    byRound.set(match.round_number, (byRound.get(match.round_number) ?? 0) + points);
+  });
+  return Array.from(byRound.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map((entry) => Math.round(entry[1] * 10) / 10);
 }
 
 function formatRoundDateLabel(dateKey: string): string {
@@ -397,17 +362,18 @@ function renderPointsSparkline(values: number[]) {
 
 function MarketPlayerDetails({
   player,
-  teamFixtures,
-  pointsTrend,
-  nextMatch
+  playerMatches,
+  nextMatch,
+  teamNameById
 }: {
   player: Player;
-  teamFixtures: Fixture[];
-  pointsTrend: number[];
+  playerMatches: PlayerMatch[];
   nextMatch: NextMatchSummary | null;
+  teamNameById: Map<number, string>;
 }) {
   const displayName = player.short_name || player.shortName || player.name;
   const isKeeper = player.position === "G";
+  const pointsTrend = buildPointsTrend(playerMatches);
   const pointsValue =
     typeof player.points_total === "number" ? Math.trunc(player.points_total) : 0;
   const priceDelta =
@@ -435,6 +401,9 @@ function MarketPlayerDetails({
     : player.position === "D"
       ? player.goals_conceded ?? 0
       : player.assists ?? 0;
+  const nextMatchMeta = nextMatch
+    ? `${nextMatch.round ? `R${nextMatch.round} - ` : ""}${nextMatch.when}`
+    : null;
 
   return (
     <div className="space-y-3">
@@ -495,10 +464,10 @@ function MarketPlayerDetails({
         </div>
       </div>
       <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
-        <p className="text-[10px] uppercase text-muted">Pr\u00f3ximo partido</p>
+        <p className="text-[10px] uppercase text-muted">Próximo partido</p>
         {nextMatch ? (
-          <div className="mt-1 inline-flex max-w-full items-center gap-2 text-ink">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface2/70 ring-1 ring-white/10">
+          <div className="mt-1 flex items-center gap-3 text-ink">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface2/70 ring-1 ring-white/10">
               {nextMatch.opponentTeamId ? (
                 <img
                   src={`/images/teams/${nextMatch.opponentTeamId}.png`}
@@ -510,11 +479,12 @@ function MarketPlayerDetails({
                 />
               ) : null}
             </span>
-            <span className="truncate">
-              {nextMatch.homeAway === "away" ? "@ " : "vs "}
-              {nextMatch.opponent} - {nextMatch.when}
-              {nextMatch.round ? ` - R${nextMatch.round}` : ""}
-            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-ink">
+                {nextMatch.homeAway === "away" ? "Visita a" : "Recibe a"} {nextMatch.opponent}
+              </p>
+              {nextMatchMeta ? <p className="text-[11px] text-muted">{nextMatchMeta}</p> : null}
+            </div>
           </div>
         ) : (
           <p className="mt-1 text-ink">Sin partido programado</p>
@@ -522,50 +492,61 @@ function MarketPlayerDetails({
       </div>
       <div className="space-y-2">
         <p className="text-xs font-semibold text-ink">Partidos</p>
-        {teamFixtures.length ? (
+        {playerMatches.length ? (
           <div className="space-y-2">
-            {teamFixtures.map((fixture) => {
-              const homeId = fixture.home_team_id;
-              const awayId = fixture.away_team_id;
-              const isFinished = isFixtureFinished(fixture.status);
+            {playerMatches.map((match) => {
+              const homeId = match.home_team_id ?? null;
+              const awayId = match.away_team_id ?? null;
+              const isFinished = isFixtureFinished(match.status);
               const hasScore =
-                typeof fixture.home_score === "number" && typeof fixture.away_score === "number";
+                typeof match.home_score === "number" && typeof match.away_score === "number";
+              const homeName = homeId ? teamNameById.get(homeId) || `Equipo ${homeId}` : "Local";
+              const awayName = awayId ? teamNameById.get(awayId) || `Equipo ${awayId}` : "Visita";
+              const pointsLabel =
+                typeof match.points === "number" ? match.points.toFixed(1) : "-";
               return (
                 <div
-                  key={fixture.id}
-                  className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs"
+                  key={`${match.match_id}-${match.round_number}`}
+                  className="flex items-start justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs"
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-black/40">
-                      {homeId ? (
-                        <img
-                          src={`/images/teams/${homeId}.png`}
-                          alt=""
-                          className="h-full w-full object-contain"
-                        />
-                      ) : null}
-                    </span>
-                    <span className="text-muted">-</span>
-                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-black/40">
-                      {awayId ? (
-                        <img
-                          src={`/images/teams/${awayId}.png`}
-                          alt=""
-                          className="h-full w-full object-contain"
-                        />
-                      ) : null}
-                    </span>
-                    <div className="ml-1 flex flex-col leading-tight">
-                      <p className="text-[10px] text-muted">{fixture.status}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-black/40">
+                        {homeId ? (
+                          <img
+                            src={`/images/teams/${homeId}.png`}
+                            alt=""
+                            className="h-full w-full object-contain"
+                          />
+                        ) : null}
+                      </span>
+                      <p className="min-w-0 truncate text-[11px] font-semibold text-ink">
+                        {homeName} <span className="text-muted">vs</span> {awayName}
+                      </p>
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-black/40">
+                        {awayId ? (
+                          <img
+                            src={`/images/teams/${awayId}.png`}
+                            alt=""
+                            className="h-full w-full object-contain"
+                          />
+                        ) : null}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-muted">
+                      <span>R{match.round_number}</span>
+                      <span>{formatKickoffLabel(match.kickoff_at, true)}</span>
+                      <span>{match.status}</span>
                       {isFinished && hasScore ? (
-                        <p className="text-[11px] font-semibold text-ink">
-                          {fixture.home_score} - {fixture.away_score}
-                        </p>
+                        <span className="font-semibold text-ink">
+                          {match.home_score} - {match.away_score}
+                        </span>
                       ) : null}
                     </div>
                   </div>
-                  <div className="text-right text-[10px] text-muted">
-                    <p>{formatKickoffLabel(fixture.kickoff_at, true)}</p>
+                  <div className="shrink-0 rounded-xl border border-white/10 bg-black/30 px-2 py-1 text-right">
+                    <p className="text-[10px] uppercase text-muted">Puntos</p>
+                    <p className="text-sm font-semibold text-ink">{pointsLabel}</p>
                   </div>
                 </div>
               );
@@ -657,7 +638,6 @@ export default function MarketPage() {
   const [welcomeSeen, setWelcomeSeen] = useState(false);
   const [teamNameError, setTeamNameError] = useState<string | null>(null);
   const [favoriteError, setFavoriteError] = useState<string | null>(null);
-  const [transferInfo, setTransferInfo] = useState<TransferCount | null>(null);
   const [playersAll, setPlayersAll] = useState<Player[] | null>(null);
   const [budgetCap, setBudgetCap] = useState(100);
   const [currentRoundNumber, setCurrentRoundNumber] = useState<number | null>(null);
@@ -666,7 +646,7 @@ export default function MarketPage() {
   const [priceHistoryError, setPriceHistoryError] = useState<string | null>(null);
   const [priceHistoryPlayer, setPriceHistoryPlayer] = useState<Player | null>(null);
   const [priceHistoryPoints, setPriceHistoryPoints] = useState<PlayerPriceHistoryPoint[]>([]);
-  const [pointsTrendByPlayer, setPointsTrendByPlayer] = useState<Record<number, number[]>>({});
+  const [playerMatchesByPlayer, setPlayerMatchesByPlayer] = useState<Record<number, PlayerMatch[]>>({});
   const priceHistoryRequestId = useRef(0);
   const router = useRouter();
   const welcomeKey = useMemo(() => {
@@ -870,26 +850,11 @@ export default function MarketPage() {
   }, [token]);
 
   useEffect(() => {
-    if (!token) return;
-    getTransferCount(token)
-      .then(setTransferInfo)
-      .catch(() => setTransferInfo(null));
-  }, [token]);
-
-  useEffect(() => {
-    if (!token) return;
-    if (!sheetOpen) return;
-    getTransferCount(token)
-      .then(setTransferInfo)
-      .catch(() => setTransferInfo(null));
-  }, [token, sheetOpen]);
-
-  useEffect(() => {
     if (!sheetOpen) return;
     const targetIds = [outPlayerId, inPlayerId].filter(
       (id): id is number => typeof id === "number"
     );
-    const missingIds = targetIds.filter((playerId) => !(playerId in pointsTrendByPlayer));
+    const missingIds = targetIds.filter((playerId) => !(playerId in playerMatchesByPlayer));
     if (!missingIds.length) return;
 
     let cancelled = false;
@@ -897,21 +862,12 @@ export default function MarketPage() {
       missingIds.map(async (playerId) => {
         try {
           const matches = await getPlayerMatches(playerId);
-          const byRound = new Map<number, number>();
-          matches.forEach((match) => {
-            if (typeof match.round_number !== "number") return;
-            const points = typeof match.points === "number" ? match.points : 0;
-            byRound.set(match.round_number, (byRound.get(match.round_number) ?? 0) + points);
-          });
-          const trend = Array.from(byRound.entries())
-            .sort((a, b) => a[0] - b[0])
-            .map((entry) => Math.round(entry[1] * 10) / 10);
           if (!cancelled) {
-            setPointsTrendByPlayer((prev) => ({ ...prev, [playerId]: trend }));
+            setPlayerMatchesByPlayer((prev) => ({ ...prev, [playerId]: matches }));
           }
         } catch {
           if (!cancelled) {
-            setPointsTrendByPlayer((prev) => ({ ...prev, [playerId]: [] }));
+            setPlayerMatchesByPlayer((prev) => ({ ...prev, [playerId]: [] }));
           }
         }
       })
@@ -920,7 +876,7 @@ export default function MarketPage() {
     return () => {
       cancelled = true;
     };
-  }, [sheetOpen, outPlayerId, inPlayerId, pointsTrendByPlayer]);
+  }, [sheetOpen, outPlayerId, inPlayerId, playerMatchesByPlayer]);
 
   const positionsKey = useMemo(
     () => (Array.isArray(filters.positions) ? filters.positions.join("|") : ""),
@@ -1082,11 +1038,9 @@ export default function MarketPage() {
     );
   }, [teams]);
 
-  const fixtureIndexByTeam = useMemo(() => {
+  const nextMatchByTeam = useMemo(() => {
     return buildFixtureIndexByTeam(fixtures, Date.now(), teamNameById);
   }, [fixtures, teamNameById]);
-  const nextMatchByTeam = fixtureIndexByTeam.nextMatchByTeam;
-  const fixturesByTeam = fixtureIndexByTeam.fixturesByTeam;
 
   const nextRoundStartLabel = useMemo(() => {
     if (!currentRoundNumber) return "Por confirmar";
@@ -1102,7 +1056,8 @@ export default function MarketPage() {
   const rowVirtualizer = useVirtualizer({
     count: filteredPlayers.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 72,
+    estimateSize: () => 132,
+    measureElement: (element) => element?.getBoundingClientRect().height ?? 0,
     overscan: 6
   });
 
@@ -1148,21 +1103,6 @@ export default function MarketPage() {
   }, [draftSquad]);
   const budgetLeftRaw = roundToTenth(budgetCap - draftBudget);
   const budgetLeft = Math.abs(budgetLeftRaw) < 0.05 ? 0 : budgetLeftRaw;
-  const transferPreview = useMemo(() => {
-    const squadIds = new Set(squad.map((player) => player.player_id));
-    const draftIds = new Set(draftSquad.map((player) => player.player_id));
-    const outgoing = squad.filter((player) => !draftIds.has(player.player_id));
-    const incoming = draftSquad.filter((player) => !squadIds.has(player.player_id));
-    const transferCount = Math.min(outgoing.length, incoming.length);
-    const transfersUsed = transferInfo?.transfers_used ?? 0;
-    return {
-      outgoing,
-      incoming,
-      transferCount,
-      transfersUsed
-    };
-  }, [draftSquad, squad, transferInfo]);
-
   const formatError = (code: string) => {
     const safeCode = normalizeErrorCode(code);
     const positionCounts = {
@@ -1354,9 +1294,6 @@ export default function MarketPage() {
         );
         setDraftSquad(team.squad || []);
         setBudgetCap(resolveBudgetCap(team));
-        getTransferCount(token)
-          .then(setTransferInfo)
-          .catch(() => setTransferInfo(null));
         setSaveMessage("Transferencia guardada");
       } catch (err) {
         const codes = splitErrorCodes(err);
@@ -1597,9 +1534,6 @@ export default function MarketPage() {
         token,
         draftSquad.map((player) => player.player_id)
       );
-      getTransferCount(token)
-        .then(setTransferInfo)
-        .catch(() => setTransferInfo(null));
       const team = await getTeam(token);
       setSquad(
         team.squad || [],
@@ -1761,7 +1695,9 @@ export default function MarketPage() {
               if (!player) return null;
               return (
                 <div
-                  key={player.player_id}
+                  key={virtualRow.key}
+                  ref={rowVirtualizer.measureElement}
+                  className="pb-4"
                   style={{
                     position: "absolute",
                     top: 0,
@@ -1801,9 +1737,9 @@ export default function MarketPage() {
                 />
                 <MarketPlayerDetails
                   player={outPlayer}
-                  teamFixtures={fixturesByTeam.get(outPlayer.team_id) ?? []}
-                  pointsTrend={pointsTrendByPlayer[outPlayer.player_id] ?? []}
+                  playerMatches={playerMatchesByPlayer[outPlayer.player_id] ?? []}
                   nextMatch={nextMatchByTeam.get(outPlayer.team_id) ?? null}
+                  teamNameById={teamNameById}
                 />
               </div>
             ) : (
@@ -1822,23 +1758,15 @@ export default function MarketPage() {
                 />
                 <MarketPlayerDetails
                   player={inPlayer}
-                  teamFixtures={fixturesByTeam.get(inPlayer.team_id) ?? []}
-                  pointsTrend={pointsTrendByPlayer[inPlayer.player_id] ?? []}
+                  playerMatches={playerMatchesByPlayer[inPlayer.player_id] ?? []}
                   nextMatch={nextMatchByTeam.get(inPlayer.team_id) ?? null}
+                  teamNameById={teamNameById}
                 />
               </div>
             ) : (
               <p className="text-xs text-muted">Selecciona en mercado</p>
             )}
           </div>
-          {transferInfo ? (
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-3 text-xs text-muted">
-              <p>
-                Transferencias realizadas en la ronda:{" "}
-                <span className="font-semibold text-ink">{transferInfo.transfers_used}</span>
-              </p>
-            </div>
-          ) : null}
           {actionError ? (
             <div className="rounded-xl border border-red-400/40 bg-red-500/10 px-3 py-2 text-xs text-red-200">
               {formatError(actionError).title}
@@ -2061,3 +1989,4 @@ export default function MarketPage() {
     </div>
   );
 }
+

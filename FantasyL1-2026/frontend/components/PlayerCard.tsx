@@ -87,9 +87,9 @@ export default function PlayerCard({
   const isInjured = Boolean(player.is_injured);
   const isDeltaInteractive = Boolean(onPriceDeltaClick);
   const showNextMatch = nextMatch !== undefined;
-  const nextMatchLine = nextMatch
-    ? `${nextMatch.homeAway === "away" ? "@ " : "vs "}${nextMatch.opponent} - ${nextMatch.when}${nextMatch.round ? ` - R${nextMatch.round}` : ""}`
-    : "Sin partido programado";
+  const nextMatchMeta = nextMatch
+    ? [nextMatch.round ? `R${nextMatch.round}` : null, nextMatch.when].filter(Boolean).join(" - ")
+    : null;
 
   return (
     <div
@@ -145,14 +145,16 @@ export default function PlayerCard({
           {showNextMatch ? (
             <div
               className={clsx(
-                "mt-1 inline-flex max-w-full items-center gap-1.5 text-muted",
+                "mt-2 max-w-full rounded-xl border border-white/8 bg-black/15 px-2.5 py-2 text-muted",
                 compact ? "text-[10px]" : "text-[11px]"
               )}
             >
-              <span className="font-semibold text-ink">Pr\u00f3ximo partido:</span>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted/90">
+                Próximo partido
+              </p>
               {nextMatch ? (
-                <>
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-surface2/70 ring-1 ring-white/10">
+                <div className="mt-1 flex items-start gap-2">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface2/70 ring-1 ring-white/10">
                     {nextMatch.opponentTeamId ? (
                       <img
                         src={`/images/teams/${nextMatch.opponentTeamId}.png`}
@@ -164,10 +166,19 @@ export default function PlayerCard({
                       />
                     ) : null}
                   </span>
-                  <span className={clsx("min-w-0", compact ? "truncate" : "")}>{nextMatchLine}</span>
-                </>
+                  <span className="min-w-0">
+                    <span className={clsx("block font-medium text-ink", compact ? "truncate" : "")}>
+                      {nextMatch.homeAway === "away" ? "Visita a" : "Recibe a"} {nextMatch.opponent}
+                    </span>
+                    {nextMatchMeta ? (
+                      <span className={clsx("mt-0.5 block text-muted", compact ? "truncate" : "")}>
+                        {nextMatchMeta}
+                      </span>
+                    ) : null}
+                  </span>
+                </div>
               ) : (
-                <span>{nextMatchLine}</span>
+                <p className="mt-1 text-ink">Sin partido programado</p>
               )}
             </div>
           ) : null}
