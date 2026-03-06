@@ -22,7 +22,7 @@ export default function MarketFilters({
   teams
 }: {
   value: MarketFiltersState;
-  onChange: (next: MarketFiltersState) => void;
+  onChange: (patch: Partial<MarketFiltersState>) => void;
   priceBounds?: { min: number; max: number };
   teams?: { id: number; name_short?: string; name_full?: string }[];
 }) {
@@ -33,12 +33,12 @@ export default function MarketFilters({
     const next = value.positions.includes(position)
       ? value.positions.filter((item) => item !== position)
       : [...value.positions, position];
-    onChange({ ...value, positions: next });
+    onChange({ positions: next });
   };
 
   const handleMinChange = (raw: string) => {
     if (!raw.trim()) {
-      onChange({ ...value, minPrice: "" });
+      onChange({ minPrice: "" });
       return;
     }
     const parsed = Number(raw);
@@ -46,12 +46,12 @@ export default function MarketFilters({
     const nextMin = clamp(Math.round(parsed * 10) / 10, minBound, maxBound);
     const currentMax = parseMaybeNumber(value.maxPrice);
     const nextMax = currentMax !== null ? Math.max(nextMin, currentMax) : maxBound;
-    onChange({ ...value, minPrice: nextMin.toFixed(1), maxPrice: nextMax.toFixed(1) });
+    onChange({ minPrice: nextMin.toFixed(1), maxPrice: nextMax.toFixed(1) });
   };
 
   const handleMaxChange = (raw: string) => {
     if (!raw.trim()) {
-      onChange({ ...value, maxPrice: "" });
+      onChange({ maxPrice: "" });
       return;
     }
     const parsed = Number(raw);
@@ -59,7 +59,7 @@ export default function MarketFilters({
     const currentMin = parseMaybeNumber(value.minPrice);
     const safeMin = currentMin !== null ? currentMin : minBound;
     const nextMax = clamp(Math.round(parsed * 10) / 10, safeMin, maxBound);
-    onChange({ ...value, maxPrice: nextMax.toFixed(1) });
+    onChange({ maxPrice: nextMax.toFixed(1) });
   };
 
   const stepPrice = (raw: string, delta: number, boundMin: number, boundMax: number) => {
@@ -73,21 +73,21 @@ export default function MarketFilters({
     const nextMin = stepPrice(value.minPrice, delta, minBound, maxBound);
     const currentMax = parseMaybeNumber(value.maxPrice);
     const nextMax = currentMax !== null ? Math.max(Number(nextMin), currentMax) : maxBound;
-    onChange({ ...value, minPrice: nextMin, maxPrice: nextMax.toFixed(1) });
+    onChange({ minPrice: nextMin, maxPrice: nextMax.toFixed(1) });
   };
 
   const handleStepMax = (delta: number) => {
     const minVal = parseMaybeNumber(value.minPrice);
     const safeMin = minVal !== null ? minVal : minBound;
     const nextMax = stepPrice(value.maxPrice, delta, safeMin, maxBound);
-    onChange({ ...value, maxPrice: nextMax });
+    onChange({ maxPrice: nextMax });
   };
 
   return (
     <div className="glass mb-4 space-y-3 rounded-2xl p-4">
       <input
         value={value.query}
-        onChange={(event) => onChange({ ...value, query: event.target.value })}
+        onChange={(event) => onChange({ query: event.target.value })}
         placeholder="Busqueda por nombre"
         className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-ink"
       />
@@ -95,7 +95,7 @@ export default function MarketFilters({
         <p className="text-xs text-muted">Equipo</p>
         <select
           value={value.teamId}
-          onChange={(event) => onChange({ ...value, teamId: event.target.value })}
+          onChange={(event) => onChange({ teamId: event.target.value })}
           className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-ink"
         >
           <option value="">Todos</option>

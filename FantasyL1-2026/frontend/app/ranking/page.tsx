@@ -114,6 +114,9 @@ function RankingTable({
           const rank = index + 1;
           const topStyle = TOP_RANK_STYLES[rank];
           const isTopFive = Boolean(topStyle);
+          const hasCaptainFromClosedRound =
+            (data.captain_source_round_number ?? null) !== null &&
+            typeof entry.captain_player_id === "number";
           return (
             <div
               key={entry.fantasy_team_id}
@@ -139,7 +142,7 @@ function RankingTable({
                 >
                   #{rank}
                 </span>
-                {entry.captain_player_id ? (
+                {hasCaptainFromClosedRound ? (
                   <span className="relative flex h-6 w-6 items-center justify-center rounded-full bg-surface2/60">
                     <img
                       src={`/images/players/${entry.captain_player_id}.png`}

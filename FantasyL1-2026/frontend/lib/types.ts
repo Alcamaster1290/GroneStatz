@@ -431,6 +431,7 @@ export type RankingEntry = {
 
 export type RankingResponse = {
   round_numbers: number[];
+  captain_source_round_number?: number | null;
   entries: RankingEntry[];
 };
 

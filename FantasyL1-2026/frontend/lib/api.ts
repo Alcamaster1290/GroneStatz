@@ -402,7 +402,9 @@ export async function getCatalogPlayers(params: {
   min_price?: number;
   limit?: number;
   offset?: number;
-}): Promise<Player[]> {
+}, options: {
+  signal?: AbortSignal;
+} = {}): Promise<Player[]> {
   const search = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") {
@@ -410,7 +412,10 @@ export async function getCatalogPlayers(params: {
     }
   });
   const query = search.toString();
-  return apiFetch(`/catalog/players${query ? `?${query}` : ""}`);
+  return apiFetch(
+    `/catalog/players${query ? `?${query}` : ""}`,
+    { signal: options?.signal }
+  );
 }
 
 export async function getPlayerPriceHistory(playerId: number): Promise<PlayerPriceHistoryPoint[]> {

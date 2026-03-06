@@ -39,6 +39,7 @@ class RankingEntryOut(BaseModel):
 
 class RankingOut(BaseModel):
     round_numbers: List[int]
+    captain_source_round_number: int | None = None
     entries: List[RankingEntryOut]
 
 

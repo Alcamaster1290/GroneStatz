@@ -27,7 +27,13 @@ import {
   updateSquad
 } from "@/lib/api";
 import { useFantasyStore } from "@/lib/store";
-import { Fixture, Player, PlayerPriceHistoryPoint, TransferCount } from "@/lib/types";
+import {
+  Fixture,
+  MarketFiltersState,
+  Player,
+  PlayerPriceHistoryPoint,
+  TransferCount
+} from "@/lib/types";
 import { validateSquad } from "@/lib/validation";
 
 function PlayerFace({ playerId }: { playerId: number }) {
@@ -147,58 +153,95 @@ const positionLabels: Record<string, string> = {
 
 type NextMatchSummary = {
   opponent: string;
+  opponentTeamId: number | null;
   when: string;
   round: number | null;
   homeAway: "home" | "away" | null;
   status: string | null;
   kickoffMs: number;
+  fixtureSortKey: number;
 };
+
+type TeamFixtureIndex = {
+  nextMatchByTeam: Map<number, NextMatchSummary>;
+  fixturesByTeam: Map<number, Fixture[]>;
+};
+
+function normalizeFixtureStatus(status: string | null | undefined): string {
+  return String(status || "").trim().toLowerCase();
+}
+
+function isFixtureFinished(status: string | null | undefined): boolean {
+  const normalized = normalizeFixtureStatus(status);
+  return normalized === "finalizado" || normalized === "finished" || normalized === "cerrado";
+}
 
 function parseKickoffToMs(kickoff: string | null): number | null {
   if (!kickoff) return null;
-  const normalized = kickoff.replace("T", " ").trim();
-  if (!normalized) return null;
-  const [datePart, timePart = "00:00:00"] = normalized.split(" ");
-  const [yearRaw, monthRaw, dayRaw] = datePart.split("-");
-  const [hourRaw = "0", minuteRaw = "0", secondRaw = "0"] = timePart.split(":");
+  const raw = String(kickoff).trim();
+  if (!raw) return null;
+  const direct = Date.parse(raw);
+  if (Number.isFinite(direct)) return direct;
+
+  const noTimezone = raw.replace(/Z$/i, "").replace(/[+-]\d{2}:\d{2}$/i, "");
+  const normalized = noTimezone.includes("T")
+    ? noTimezone
+    : noTimezone.replace(" ", "T");
+  const fallback = Date.parse(normalized);
+  if (Number.isFinite(fallback)) return fallback;
+
+  const match = normalized.match(
+    /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2})(?::(\d{2}))?(?::(\d{2}))?)?/
+  );
+  if (!match) return null;
+  const [, yearRaw, monthRaw, dayRaw, hourRaw = "0", minuteRaw = "0", secondRaw = "0"] = match;
   const year = Number(yearRaw);
   const month = Number(monthRaw);
   const day = Number(dayRaw);
   const hour = Number(hourRaw);
   const minute = Number(minuteRaw);
   const second = Number(secondRaw);
-  if (!year || !month || !day) return null;
-  if (
-    Number.isNaN(hour) ||
-    Number.isNaN(minute) ||
-    Number.isNaN(second)
-  ) {
+  if (!year || !month || !day) {
     return null;
   }
   const value = new Date(year, month - 1, day, hour, minute, second).getTime();
   return Number.isFinite(value) ? value : null;
 }
 
-function formatNextMatchWhen(kickoff: string | null): string {
+function formatKickoffLabel(kickoff: string | null, includeYear = false): string {
   if (!kickoff) return "Por confirmar";
-  const normalized = kickoff.replace("T", " ").trim();
+  const normalized = String(kickoff)
+    .replace("T", " ")
+    .replace(/Z$/i, "")
+    .replace(/[+-]\d{2}:\d{2}$/i, "")
+    .trim();
   const [datePart, timePart] = normalized.split(" ");
+  const [yearRaw, monthRaw, dayRaw] = datePart.split("-");
   if (!datePart) return "Por confirmar";
-  const [, monthRaw, dayRaw] = datePart.split("-");
   const day = Number(dayRaw);
   const month = Number(monthRaw);
   if (!day || !month) return "Por confirmar";
   const time = timePart ? timePart.slice(0, 5) : "";
-  return `${day}/${month}${time ? `, ${time}` : ""}`;
+  if (!includeYear) {
+    return `${day}/${month}${time ? `, ${time}` : ""}`;
+  }
+  const yearSuffix = yearRaw ? yearRaw.slice(2) : "";
+  const dateLabel = yearSuffix ? `${day}/${month}/${yearSuffix}` : `${day}/${month}`;
+  return `${dateLabel}${time ? `, ${time}` : ""}`;
 }
 
-function buildNextMatchByTeam(
+function buildFixtureIndexByTeam(
   fixtures: Fixture[],
   nowMs: number,
   teamNameById: Map<number, string>
-): Map<number, NextMatchSummary> {
-  const result = new Map<number, NextMatchSummary>();
-  const maybeUpdate = (
+): TeamFixtureIndex {
+  const nextMatchByTeam = new Map<number, NextMatchSummary>();
+  const fixtureRowsByTeam = new Map<
+    number,
+    { fixture: Fixture; kickoffMs: number | null; isUpcoming: boolean }[]
+  >();
+
+  const maybeUpsert = (
     teamId: number | null,
     opponentId: number | null,
     fixture: Fixture,
@@ -212,27 +255,73 @@ function buildNextMatchByTeam(
         : teamNameById.get(opponentId) || `Equipo ${opponentId}`;
     const candidate: NextMatchSummary = {
       opponent,
-      when: formatNextMatchWhen(fixture.kickoff_at),
+      opponentTeamId: opponentId ?? null,
+      when: formatKickoffLabel(fixture.kickoff_at),
       round: typeof fixture.round_number === "number" ? fixture.round_number : null,
       homeAway,
       status: fixture.status ?? null,
-      kickoffMs
+      kickoffMs,
+      fixtureSortKey: Number(fixture.match_id || fixture.id || 0)
     };
-    const current = result.get(teamId);
-    if (!current || candidate.kickoffMs < current.kickoffMs) {
-      result.set(teamId, candidate);
+    const current = nextMatchByTeam.get(teamId);
+    if (
+      !current ||
+      candidate.kickoffMs < current.kickoffMs ||
+      (candidate.kickoffMs === current.kickoffMs &&
+        candidate.fixtureSortKey < current.fixtureSortKey)
+    ) {
+      nextMatchByTeam.set(teamId, candidate);
     }
   };
 
+  const pushFixtureForTeam = (
+    teamId: number | null,
+    fixture: Fixture,
+    kickoffMs: number | null,
+    isUpcoming: boolean
+  ) => {
+    if (teamId === null || teamId === undefined) return;
+    const rows = fixtureRowsByTeam.get(teamId) ?? [];
+    rows.push({ fixture, kickoffMs, isUpcoming });
+    fixtureRowsByTeam.set(teamId, rows);
+  };
+
   fixtures.forEach((fixture) => {
-    if (fixture.status === "Finalizado") return;
     const kickoffMs = parseKickoffToMs(fixture.kickoff_at);
-    if (kickoffMs === null || kickoffMs < nowMs) return;
-    maybeUpdate(fixture.home_team_id, fixture.away_team_id, fixture, kickoffMs, "home");
-    maybeUpdate(fixture.away_team_id, fixture.home_team_id, fixture, kickoffMs, "away");
+    const finished = isFixtureFinished(fixture.status);
+    const isUpcoming = !finished && kickoffMs !== null && kickoffMs >= nowMs;
+
+    pushFixtureForTeam(fixture.home_team_id, fixture, kickoffMs, isUpcoming);
+    pushFixtureForTeam(fixture.away_team_id, fixture, kickoffMs, isUpcoming);
+
+    if (!isUpcoming || kickoffMs === null) return;
+    maybeUpsert(fixture.home_team_id, fixture.away_team_id, fixture, kickoffMs, "home");
+    maybeUpsert(fixture.away_team_id, fixture.home_team_id, fixture, kickoffMs, "away");
   });
 
-  return result;
+  const fixturesByTeam = new Map<number, Fixture[]>();
+  fixtureRowsByTeam.forEach((rows, teamId) => {
+    const ordered = rows
+      .sort((a, b) => {
+        if (a.isUpcoming !== b.isUpcoming) return a.isUpcoming ? -1 : 1;
+        const aKey = a.kickoffMs ?? Number.MAX_SAFE_INTEGER;
+        const bKey = b.kickoffMs ?? Number.MAX_SAFE_INTEGER;
+        if (aKey !== bKey) return aKey - bKey;
+        const aMatchKey = Number(a.fixture.match_id || a.fixture.id || 0);
+        const bMatchKey = Number(b.fixture.match_id || b.fixture.id || 0);
+        return aMatchKey - bMatchKey;
+      })
+      .slice(0, 3)
+      .map((row) => row.fixture);
+    if (ordered.length) {
+      fixturesByTeam.set(teamId, ordered);
+    }
+  });
+
+  return {
+    nextMatchByTeam,
+    fixturesByTeam
+  };
 }
 
 function formatRoundDateLabel(dateKey: string): string {
@@ -244,10 +333,10 @@ function formatRoundDateLabel(dateKey: string): string {
     "Domingo",
     "Lunes",
     "Martes",
-    "Miércoles",
+    "Mi\u00e9rcoles",
     "Jueves",
     "Viernes",
-    "Sábado"
+    "S\u00e1bado"
   ];
   const months = [
     "Enero",
@@ -308,12 +397,12 @@ function renderPointsSparkline(values: number[]) {
 
 function MarketPlayerDetails({
   player,
-  fixtures,
+  teamFixtures,
   pointsTrend,
   nextMatch
 }: {
   player: Player;
-  fixtures: Fixture[];
+  teamFixtures: Fixture[];
   pointsTrend: number[];
   nextMatch: NextMatchSummary | null;
 }) {
@@ -347,34 +436,6 @@ function MarketPlayerDetails({
       ? player.goals_conceded ?? 0
       : player.assists ?? 0;
 
-  const formatKickoff = (kickoff: string | null) => {
-    if (!kickoff) return "Por confirmar";
-    const normalized = kickoff.replace("T", " ").trim();
-    const [datePart, timePart] = normalized.split(" ");
-    const [year, month, day] = datePart.split("-");
-    const shortYear = year ? year.slice(2) : "";
-    const time = timePart ? timePart.slice(0, 5) : "";
-    return `${day}/${month}/${shortYear}${time ? `, ${time}` : ""}`;
-  };
-
-  const nowMs = Date.now();
-  const teamFixtures = fixtures
-    .filter(
-      (fixture) =>
-        fixture.home_team_id === player.team_id || fixture.away_team_id === player.team_id
-    )
-    .sort((a, b) => {
-      const aMs = parseKickoffToMs(a.kickoff_at);
-      const bMs = parseKickoffToMs(b.kickoff_at);
-      const aUpcoming = a.status !== "Finalizado" && aMs !== null && aMs >= nowMs;
-      const bUpcoming = b.status !== "Finalizado" && bMs !== null && bMs >= nowMs;
-      if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
-      const aKey = aMs ?? Number.MAX_SAFE_INTEGER;
-      const bKey = bMs ?? Number.MAX_SAFE_INTEGER;
-      if (aKey !== bKey) return aKey - bKey;
-      return a.id - b.id;
-    })
-    .slice(0, 3);
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
@@ -434,12 +495,30 @@ function MarketPlayerDetails({
         </div>
       </div>
       <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-muted">
-        <p className="text-[10px] uppercase text-muted">Próximo partido</p>
-        <p className="mt-1 text-ink">
-          {nextMatch
-            ? `${nextMatch.homeAway === "away" ? "@ " : "vs "}${nextMatch.opponent} · ${nextMatch.when}${nextMatch.round ? ` · R${nextMatch.round}` : ""}`
-            : "Sin partido programado"}
-        </p>
+        <p className="text-[10px] uppercase text-muted">Pr\u00f3ximo partido</p>
+        {nextMatch ? (
+          <div className="mt-1 inline-flex max-w-full items-center gap-2 text-ink">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface2/70 ring-1 ring-white/10">
+              {nextMatch.opponentTeamId ? (
+                <img
+                  src={`/images/teams/${nextMatch.opponentTeamId}.png`}
+                  alt=""
+                  className="h-full w-full object-contain"
+                  onError={(event) => {
+                    (event.currentTarget as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              ) : null}
+            </span>
+            <span className="truncate">
+              {nextMatch.homeAway === "away" ? "@ " : "vs "}
+              {nextMatch.opponent} - {nextMatch.when}
+              {nextMatch.round ? ` - R${nextMatch.round}` : ""}
+            </span>
+          </div>
+        ) : (
+          <p className="mt-1 text-ink">Sin partido programado</p>
+        )}
       </div>
       <div className="space-y-2">
         <p className="text-xs font-semibold text-ink">Partidos</p>
@@ -448,7 +527,7 @@ function MarketPlayerDetails({
             {teamFixtures.map((fixture) => {
               const homeId = fixture.home_team_id;
               const awayId = fixture.away_team_id;
-              const isFinished = fixture.status === "Finalizado";
+              const isFinished = isFixtureFinished(fixture.status);
               const hasScore =
                 typeof fixture.home_score === "number" && typeof fixture.away_score === "number";
               return (
@@ -486,7 +565,7 @@ function MarketPlayerDetails({
                     </div>
                   </div>
                   <div className="text-right text-[10px] text-muted">
-                    <p>{formatKickoff(fixture.kickoff_at)}</p>
+                    <p>{formatKickoffLabel(fixture.kickoff_at, true)}</p>
                   </div>
                 </div>
               );
@@ -499,7 +578,6 @@ function MarketPlayerDetails({
     </div>
   );
 }
-
 function PitchRow({
   label,
   players,
@@ -589,8 +667,6 @@ export default function MarketPage() {
   const [priceHistoryPlayer, setPriceHistoryPlayer] = useState<Player | null>(null);
   const [priceHistoryPoints, setPriceHistoryPoints] = useState<PlayerPriceHistoryPoint[]>([]);
   const [pointsTrendByPlayer, setPointsTrendByPlayer] = useState<Record<number, number[]>>({});
-  const lastPositionsKey = useRef<string>("");
-  const lastTeamKey = useRef<string>("");
   const priceHistoryRequestId = useRef(0);
   const router = useRouter();
   const welcomeKey = useMemo(() => {
@@ -621,6 +697,29 @@ export default function MarketPage() {
       .map((part) => part.trim())
       .filter(Boolean);
   };
+  const areSamePositions = (a: MarketFiltersState["positions"], b: MarketFiltersState["positions"]) =>
+    a.length === b.length && a.every((value, index) => value === b[index]);
+  const applyFilterPatch = (patch: Partial<MarketFiltersState>) => {
+    setFilters((prev) => {
+      const next: MarketFiltersState = {
+        ...prev,
+        ...patch
+      };
+      const teamChanged =
+        Object.prototype.hasOwnProperty.call(patch, "teamId") &&
+        typeof patch.teamId === "string" &&
+        patch.teamId !== prev.teamId;
+      const positionsChanged =
+        Object.prototype.hasOwnProperty.call(patch, "positions") &&
+        Array.isArray(patch.positions) &&
+        !areSamePositions(patch.positions, prev.positions);
+      if (teamChanged || positionsChanged) {
+        next.minPrice = "";
+        next.maxPrice = "";
+      }
+      return next;
+    });
+  };
 
   const parentRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -642,15 +741,15 @@ export default function MarketPage() {
 
   useEffect(() => {
     if (!Array.isArray(filters.positions)) {
-      setFilters({ ...filters, positions: [] });
+      setFilters({ positions: [] });
     }
-  }, [filters, setFilters]);
+  }, [filters.positions, setFilters]);
 
   useEffect(() => {
     if (typeof filters.teamId !== "string") {
-      setFilters({ ...filters, teamId: "" });
+      setFilters({ teamId: "" });
     }
-  }, [filters, setFilters]);
+  }, [filters.teamId, setFilters]);
 
   useEffect(() => {
     if (!token) return;
@@ -830,26 +929,9 @@ export default function MarketPage() {
   const teamKey = useMemo(() => filters.teamId || "", [filters.teamId]);
 
   useEffect(() => {
-    if (lastPositionsKey.current !== positionsKey) {
-      lastPositionsKey.current = positionsKey;
-      if (filters.minPrice !== "" || filters.maxPrice !== "") {
-        setFilters({ ...filters, minPrice: "", maxPrice: "" });
-      }
-    }
-  }, [positionsKey, filters, setFilters]);
-
-  useEffect(() => {
-    if (lastTeamKey.current !== teamKey) {
-      lastTeamKey.current = teamKey;
-      if (filters.minPrice !== "" || filters.maxPrice !== "") {
-        setFilters({ ...filters, minPrice: "", maxPrice: "" });
-      }
-    }
-  }, [teamKey, filters, setFilters]);
-
-  useEffect(() => {
     if (playersAll && playersAll.length > 0) return;
     let cancelled = false;
+    const controller = new AbortController();
     const loadAll = async () => {
       const limit = 200;
       const maxPages = 10;
@@ -858,10 +940,12 @@ export default function MarketPage() {
         const result = await getCatalogPlayers({
           limit,
           offset: page * limit
-        });
+        }, { signal: controller.signal });
+        if (cancelled || controller.signal.aborted) return;
         all.push(...result);
         if (result.length < limit) break;
       }
+      if (cancelled || controller.signal.aborted) return;
       const unique = new Map<number, Player>();
       all.forEach((player) => {
         unique.set(player.player_id, player);
@@ -873,56 +957,73 @@ export default function MarketPage() {
     };
 
     loadAll().catch(() => {
+      if (cancelled || controller.signal.aborted) return;
       if (!cancelled) setPlayersAll([]);
     });
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [playersAll]);
 
   useEffect(() => {
+    const controller = new AbortController();
+    let cancelled = false;
     const fetchPlayers = async () => {
       setFetchError(null);
       setLoadingPlayers(true);
       const limit = 200;
       const maxPages = 10;
       const all: Player[] = [];
-      const positions =
-        Array.isArray(filters.positions) && filters.positions.length > 0 ? filters.positions : [""];
+      const selectedPositions = Array.isArray(filters.positions) ? filters.positions : [];
+      const serverPosition = selectedPositions.length === 1 ? selectedPositions[0] : undefined;
 
-      for (const position of positions) {
-        for (let page = 0; page < maxPages; page += 1) {
-          const result = await getCatalogPlayers({
-            position: position || undefined,
+      for (let page = 0; page < maxPages; page += 1) {
+        const result = await getCatalogPlayers(
+          {
+            position: serverPosition,
             q: filters.query || undefined,
             team_id: filters.teamId ? Number(filters.teamId) : undefined,
             limit,
             offset: page * limit
-          });
-          all.push(...result);
-          if (result.length < limit) break;
-        }
+          },
+          { signal: controller.signal }
+        );
+        if (cancelled || controller.signal.aborted) return;
+        all.push(...result);
+        if (result.length < limit) break;
       }
 
+      if (cancelled || controller.signal.aborted) return;
       const unique = new Map<number, Player>();
       all.forEach((player) => {
         unique.set(player.player_id, player);
       });
-      const sorted = Array.from(unique.values()).sort((a, b) => b.price_current - a.price_current);
+      const deduped = Array.from(unique.values());
+      const normalized = selectedPositions.length > 1
+        ? deduped.filter((player) => selectedPositions.includes(player.position))
+        : deduped;
+      const sorted = normalized.sort((a, b) => b.price_current - a.price_current);
+      if (cancelled || controller.signal.aborted) return;
       setPlayersBase(sorted);
       setLoadingPlayers(false);
     };
 
     const timeout = setTimeout(() => {
       fetchPlayers().catch((err) => {
+        if (cancelled || controller.signal.aborted) return;
         setPlayersBase([]);
         setFetchError(String(err));
         setLoadingPlayers(false);
       });
     }, 250);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      cancelled = true;
+      controller.abort();
+      clearTimeout(timeout);
+    };
   }, [filters.query, positionsKey, teamKey]);
 
   const priceBounds = useMemo(() => {
@@ -939,7 +1040,7 @@ export default function MarketPage() {
   useEffect(() => {
     if (playersBase.length === 0) {
       if (filters.minPrice || filters.maxPrice) {
-        setFilters({ ...filters, minPrice: "", maxPrice: "" });
+        setFilters({ minPrice: "", maxPrice: "" });
       }
       return;
     }
@@ -953,9 +1054,9 @@ export default function MarketPage() {
     const nextMinStr = nextMin.toFixed(1);
     const nextMaxStr = nextMax.toFixed(1);
     if (nextMinStr !== filters.minPrice || nextMaxStr !== filters.maxPrice) {
-      setFilters({ ...filters, minPrice: nextMinStr, maxPrice: nextMaxStr });
+      setFilters({ minPrice: nextMinStr, maxPrice: nextMaxStr });
     }
-  }, [playersBase.length, priceBounds.min, priceBounds.max, filters.minPrice, filters.maxPrice, filters, setFilters]);
+  }, [playersBase.length, priceBounds.min, priceBounds.max, filters.minPrice, filters.maxPrice, setFilters]);
 
   const filteredPlayers = useMemo(() => {
     if (playersBase.length === 0) return [];
@@ -981,9 +1082,11 @@ export default function MarketPage() {
     );
   }, [teams]);
 
-  const nextMatchByTeam = useMemo(() => {
-    return buildNextMatchByTeam(fixtures, Date.now(), teamNameById);
+  const fixtureIndexByTeam = useMemo(() => {
+    return buildFixtureIndexByTeam(fixtures, Date.now(), teamNameById);
   }, [fixtures, teamNameById]);
+  const nextMatchByTeam = fixtureIndexByTeam.nextMatchByTeam;
+  const fixturesByTeam = fixtureIndexByTeam.fixturesByTeam;
 
   const nextRoundStartLabel = useMemo(() => {
     if (!currentRoundNumber) return "Por confirmar";
@@ -1126,24 +1229,24 @@ export default function MarketPage() {
       },
       no_valid_random_squad: {
         title: "No se pudo generar equipo",
-          detail: "Intenta de nuevo o ajusta el catálogo.",
+        detail: "Intenta de nuevo o ajusta el cat\u00e1logo.",
         tone: "warning"
       },
-        round_closed: {
-          title: "Ronda cerrada",
-          detail: "La ronda está cerrada. Guardaremos el equipo para la siguiente ronda.",
-          tone: "danger"
-        },
-        out_player_not_in_squad: {
-          title: "Jugador no está en tu plantel",
-          detail: "Selecciona un jugador que ya forme parte de tu equipo.",
-          tone: "danger"
-        },
-        in_player_already_in_squad: {
-          title: "Jugador ya está en tu plantel",
-          detail: "El jugador elegido ya pertenece a tu equipo.",
-          tone: "warning"
-        },
+      round_closed: {
+        title: "Ronda cerrada",
+        detail: "La ronda est\u00e1 cerrada. Guardaremos el equipo para la siguiente ronda.",
+        tone: "danger"
+      },
+      out_player_not_in_squad: {
+        title: "Jugador no est\u00e1 en tu plantel",
+        detail: "Selecciona un jugador que ya forme parte de tu equipo.",
+        tone: "danger"
+      },
+      in_player_already_in_squad: {
+        title: "Jugador ya est\u00e1 en tu plantel",
+        detail: "El jugador elegido ya pertenece a tu equipo.",
+        tone: "warning"
+      },
       squad_diff_mismatch: {
         title: "Cambios inconsistentes",
         detail: "Revisa el plantel antes de guardar e intenta nuevamente.",
@@ -1155,18 +1258,18 @@ export default function MarketPage() {
         tone: "warning"
       },
       network_error: {
-        title: "Sin conexión",
+        title: "Sin conexi\u00f3n",
         detail: "No se puede conectar con el backend. Verifica el servidor.",
         tone: "danger"
       },
       offline_write_blocked: {
-        title: "Sin conexión",
+        title: "Sin conexi\u00f3n",
         detail: "No puedes guardar cambios sin internet. Modo solo lectura.",
         tone: "warning"
       },
       service_unavailable: {
         title: "Servicio no disponible",
-        detail: "El backend está caído o no responde.",
+        detail: "El backend est\u00e1 ca\u00eddo o no responde.",
         tone: "danger"
       },
       endpoint_not_found: {
@@ -1637,7 +1740,7 @@ export default function MarketPage() {
 
         <MarketFilters
           value={filters}
-          onChange={setFilters}
+          onChange={applyFilterPatch}
           priceBounds={priceBounds}
           teams={activeTeams}
         />
@@ -1698,7 +1801,7 @@ export default function MarketPage() {
                 />
                 <MarketPlayerDetails
                   player={outPlayer}
-                  fixtures={fixtures}
+                  teamFixtures={fixturesByTeam.get(outPlayer.team_id) ?? []}
                   pointsTrend={pointsTrendByPlayer[outPlayer.player_id] ?? []}
                   nextMatch={nextMatchByTeam.get(outPlayer.team_id) ?? null}
                 />
@@ -1719,7 +1822,7 @@ export default function MarketPage() {
                 />
                 <MarketPlayerDetails
                   player={inPlayer}
-                  fixtures={fixtures}
+                  teamFixtures={fixturesByTeam.get(inPlayer.team_id) ?? []}
                   pointsTrend={pointsTrendByPlayer[inPlayer.player_id] ?? []}
                   nextMatch={nextMatchByTeam.get(inPlayer.team_id) ?? null}
                 />

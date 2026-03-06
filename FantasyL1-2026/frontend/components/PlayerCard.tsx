@@ -12,6 +12,7 @@ const positionLabels: Record<string, string> = {
 
 type PlayerCardNextMatch = {
   opponent: string;
+  opponentTeamId: number | null;
   when: string;
   round: number | null;
   homeAway: "home" | "away" | null;
@@ -87,7 +88,7 @@ export default function PlayerCard({
   const isDeltaInteractive = Boolean(onPriceDeltaClick);
   const showNextMatch = nextMatch !== undefined;
   const nextMatchLine = nextMatch
-    ? `${nextMatch.homeAway === "away" ? "@ " : "vs "}${nextMatch.opponent} · ${nextMatch.when}${nextMatch.round ? ` · R${nextMatch.round}` : ""}`
+    ? `${nextMatch.homeAway === "away" ? "@ " : "vs "}${nextMatch.opponent} - ${nextMatch.when}${nextMatch.round ? ` - R${nextMatch.round}` : ""}`
     : "Sin partido programado";
 
   return (
@@ -142,14 +143,33 @@ export default function PlayerCard({
             {showPoints ? <span>Puntos {pointsTotal.toFixed(1)}</span> : null}
           </div>
           {showNextMatch ? (
-            <p
+            <div
               className={clsx(
-                "mt-1 text-muted",
-                compact ? "truncate text-[10px]" : "text-[11px]"
+                "mt-1 inline-flex max-w-full items-center gap-1.5 text-muted",
+                compact ? "text-[10px]" : "text-[11px]"
               )}
             >
-              <span className="font-semibold text-ink">Próximo partido:</span> {nextMatchLine}
-            </p>
+              <span className="font-semibold text-ink">Pr\u00f3ximo partido:</span>
+              {nextMatch ? (
+                <>
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-surface2/70 ring-1 ring-white/10">
+                    {nextMatch.opponentTeamId ? (
+                      <img
+                        src={`/images/teams/${nextMatch.opponentTeamId}.png`}
+                        alt=""
+                        className="h-full w-full object-contain"
+                        onError={(event) => {
+                          (event.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    ) : null}
+                  </span>
+                  <span className={clsx("min-w-0", compact ? "truncate" : "")}>{nextMatchLine}</span>
+                </>
+              ) : (
+                <span>{nextMatchLine}</span>
+              )}
+            </div>
           ) : null}
         </div>
       </div>

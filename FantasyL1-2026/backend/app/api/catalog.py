@@ -127,7 +127,7 @@ def list_players(
     if min_price is not None:
         query = query.where(PlayerCatalog.price_current >= min_price)
 
-        query = query.order_by(PlayerCatalog.name).limit(limit).offset(offset)
+    query = query.order_by(PlayerCatalog.name).limit(limit).offset(offset)
     rows = db.execute(query).all()
     points_map = {}
     if rows and round_obj:
@@ -359,7 +359,13 @@ def list_player_stats(
 def list_fixtures(
     round_number: Optional[int] = None, db: Session = Depends(get_db)
 ) -> List[FixtureOut]:
-    query = select(Fixture, Round.round_number).join(Round, Fixture.round_id == Round.id)
+    season = get_or_create_season(db)
+    query = (
+        select(Fixture, Round.round_number)
+        .join(Round, Fixture.round_id == Round.id)
+        .where(Fixture.season_id == season.id, Round.season_id == season.id)
+        .order_by(Fixture.kickoff_at.nulls_last(), Fixture.match_id)
+    )
     if round_number is not None:
         query = query.where(Round.round_number == round_number)
     rows = db.execute(query).all()

@@ -31,7 +31,11 @@ type StoreState = {
   setValidationErrors: (errors: string[]) => void;
   setCaptainId: (playerId: number | null) => void;
   setViceCaptainId: (playerId: number | null) => void;
-  setMarketFilters: (filters: MarketFiltersState) => void;
+  setMarketFilters: (
+    filters:
+      | Partial<MarketFiltersState>
+      | ((prev: MarketFiltersState) => Partial<MarketFiltersState> | MarketFiltersState)
+  ) => void;
   setMarketDraftSquad: (squad: Player[] | ((prev: Player[]) => Player[])) => void;
   setMarketDraftBackup: (squad: Player[]) => void;
   setMarketDraftLoaded: (loaded: boolean) => void;
@@ -117,7 +121,19 @@ export const useFantasyStore = create<StoreState>((set) => ({
   setValidationErrors: (validationErrors) => set({ validationErrors }),
   setCaptainId: (captainId) => set({ captainId }),
   setViceCaptainId: (viceCaptainId) => set({ viceCaptainId }),
-  setMarketFilters: (marketFilters) => set({ marketFilters }),
+  setMarketFilters: (marketFilters) =>
+    set((state) => {
+      const next =
+        typeof marketFilters === "function"
+          ? marketFilters(state.marketFilters)
+          : marketFilters;
+      return {
+        marketFilters: {
+          ...state.marketFilters,
+          ...next
+        }
+      };
+    }),
   setMarketDraftSquad: (marketDraftSquad) =>
     set((state) => ({
       marketDraftSquad: normalizeSquad(

@@ -291,15 +291,15 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
                 pending_delta_map[team_id] = _round_tenth(total_delta)
 
     captain_map: Dict[int, int | None] = {}
-    target_round = max(closed_rounds) if closed_rounds else pending_round
-    if target_round is not None:
+    latest_closed_round_number = max(closed_rounds) if closed_rounds else None
+    if latest_closed_round_number is not None:
         lineup_rows = (
             db.execute(
                 select(FantasyLineup.fantasy_team_id, FantasyLineup.captain_player_id)
                 .join(Round, Round.id == FantasyLineup.round_id)
                 .where(
                     FantasyLineup.fantasy_team_id.in_(team_ids),
-                    Round.round_number == target_round,
+                    Round.round_number == latest_closed_round_number,
                     Round.season_id == season.id,
                 )
             )
@@ -350,4 +350,8 @@ def build_rankings(db: Session, team_ids: List[int]) -> RankingOut:
         )
 
     entries.sort(key=_sort_key)
-    return RankingOut(round_numbers=round_numbers, entries=entries)
+    return RankingOut(
+        round_numbers=round_numbers,
+        captain_source_round_number=latest_closed_round_number,
+        entries=entries,
+    )
