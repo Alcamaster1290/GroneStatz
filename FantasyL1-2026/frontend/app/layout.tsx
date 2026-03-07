@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Oswald, Source_Sans_3 } from "next/font/google";
+import { Cormorant_Garamond, Source_Sans_3 } from "next/font/google";
 
 import "./globals.css";
 
@@ -10,9 +10,9 @@ import RouteAwareHeader from "@/components/RouteAwareHeader";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import UiRedesignRouteGate from "@/components/UiRedesignRouteGate";
 
-const displayFont = Oswald({
+const displayFont = Cormorant_Garamond({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["600", "700"],
   variable: "--font-display"
 });
 

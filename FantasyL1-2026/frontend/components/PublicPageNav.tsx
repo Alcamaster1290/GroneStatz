@@ -42,7 +42,7 @@ export default function PublicPageNav() {
     );
 
   return (
-    <nav className="ui-panel overflow-x-auto p-2">
+    <nav className="premium-nav-shell overflow-x-auto rounded-2xl p-2">
       <div className="flex min-w-max items-center gap-2">
         {navItems.map((item) => {
           const isActive =
@@ -54,8 +54,10 @@ export default function PublicPageNav() {
               key={item.match}
               href={item.href}
               className={
-                "ui-btn rounded-full px-3 py-1.5 text-[11px] transition " +
-                (isActive ? "ui-btn-primary" : "ui-btn-secondary")
+                "ui-btn rounded-full px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] transition " +
+                (isActive
+                  ? "ui-btn-primary premium-nav-active"
+                  : "ui-btn-secondary border-white/20 text-zinc-200 hover:border-white/35")
               }
             >
               {item.label}

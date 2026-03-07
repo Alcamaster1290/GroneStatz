@@ -32,7 +32,7 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-black/75 backdrop-blur-sm">
+    <nav className="premium-nav-shell fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur-sm">
       <div className="mx-auto flex max-w-md items-center justify-between px-4 pb-3 pt-2.5 text-[11px]">
         {items.map((item) => {
           const active = pathname.startsWith(item.href);
@@ -47,9 +47,9 @@ export default function BottomNav() {
               className={
                 "ui-btn flex min-w-[52px] flex-col items-center gap-1 rounded-xl px-2 py-1.5 transition " +
                 (active
-                  ? "ui-btn-primary"
+                  ? "ui-btn-primary premium-nav-active"
                   : disabled
-                    ? "cursor-not-allowed border border-white/10 text-white/30"
+                    ? "cursor-not-allowed border border-white/10 bg-black/25 text-white/30"
                     : "ui-btn-secondary")
               }
             >
