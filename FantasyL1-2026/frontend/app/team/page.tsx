@@ -1638,7 +1638,7 @@ export default function TeamPage() {
   const canNextRound = roundIndex >= 0 && roundIndex < availableRounds.length - 1;
 
   return (
-    <div className="space-y-6">
+    <div className="ui-page space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold">Fantasy Liga 1 2026</h1>

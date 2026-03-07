@@ -15,49 +15,49 @@ type Slide = {
 
 const SLIDES: Slide[] = [
   {
-    title: "Bienvenido al Fantasy Liga 1 Perú 2026 🇵🇪",
+    title: "Bienvenido al Fantasy Liga 1 Peru 2026",
     bullets: [
-      "Únete a la nueva forma de vivir la Liga 1 totalmente gratis.",
-      "Participa por el premio mayor y compite cada jornada.",
+      "Unete a una nueva forma de vivir la Liga 1 totalmente gratis.",
+      "Compite cada jornada con datos reales.",
       "Arma tu equipo con 100 M y empieza a jugar."
     ],
-    icon: "⚽"
+    icon: "L1"
   },
   {
-    title: "Cómo se suman los puntos",
+    title: "Como se suman los puntos",
     bullets: [
       "Gol +4, asistencia +3.",
       "Minutos jugados: hasta +2 por partido.",
       "Tarjetas restan puntos."
     ],
-    icon: "⭐"
+    icon: "PTS"
   },
   {
-    title: "Torneo General",
+    title: "Torneo general",
     bullets: [
-      "Todos los usuarios compiten en una tabla única.",
+      "Todos los usuarios compiten en una tabla unica.",
       "Suma puntos jornada a jornada.",
       "Sube posiciones y gana reconocimiento."
     ],
-    icon: "🏆"
+    icon: "TOP"
   },
   {
-    title: "Torneos Privados",
+    title: "Torneos privados",
     bullets: [
       "Crea ligas cerradas con amigos o comunidades.",
-      "Comparte un código privado para unirte.",
+      "Comparte un codigo privado para unirte.",
       "El admin puede gestionar miembros."
     ],
-    icon: "👥"
+    icon: "GRP"
   },
   {
-    title: "Mercado dinámico",
+    title: "Mercado dinamico",
     bullets: [
-      "El valor de los jugadores sube o baja según su rendimiento.",
+      "El valor de los jugadores sube o baja segun su rendimiento.",
       "Aprovecha los cambios de precio cada ronda.",
       "Planifica tus transferencias: son ilimitadas y sin costo."
     ],
-    icon: "📈"
+    icon: "MKT"
   }
 ];
 
@@ -130,12 +130,12 @@ export default function WelcomeSlideshow({ open, onComplete }: WelcomeSlideshowP
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 py-6">
       <div
-        className="glass w-full max-w-md space-y-4 rounded-3xl border border-white/10 p-5"
+        className="ui-panel w-full max-w-md space-y-4 rounded-3xl p-5"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
         <div className="flex items-center justify-between">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-2xl">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-sm font-bold">
             {slide.icon}
           </div>
           <div className="flex gap-2">{dots}</div>
@@ -157,30 +157,24 @@ export default function WelcomeSlideshow({ open, onComplete }: WelcomeSlideshowP
           <button
             onClick={handlePrev}
             disabled={!canPrev}
-            className="rounded-xl border border-white/10 px-4 py-2 text-xs text-ink disabled:opacity-40"
+            className="ui-btn ui-btn-secondary px-4 py-2 text-xs disabled:opacity-40"
           >
             Anterior
           </button>
-          <button
-            onClick={handleSkip}
-            className="text-xs text-muted underline"
-          >
-            Saltear
+          <button onClick={handleSkip} className="text-xs text-muted underline">
+            Saltar
           </button>
           <button
             onClick={handleNext}
             disabled={!canNext}
-            className="rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-black disabled:opacity-40"
+            className="ui-btn ui-btn-primary px-4 py-2 text-xs disabled:opacity-40"
           >
             Siguiente
           </button>
         </div>
 
         {isLast ? (
-          <button
-            onClick={onComplete}
-            className="w-full rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black"
-          >
+          <button onClick={onComplete} className="ui-btn ui-btn-primary w-full px-4 py-2 text-sm">
             Nombrar mi equipo
           </button>
         ) : null}

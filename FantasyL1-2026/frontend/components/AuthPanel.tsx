@@ -21,25 +21,28 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps = {}) {
 
   const mapAuthErrors = (raw: string): string[] => {
     const cleaned = raw.replace(/^Error:\s*/i, "");
-    const parts = cleaned.split(/[|,]/).map((part) => part.trim()).filter(Boolean);
+    const parts = cleaned
+      .split(/[|,]/)
+      .map((part) => part.trim())
+      .filter(Boolean);
     const codes = parts.length ? parts : [cleaned];
 
     const dictionary: Record<string, string> = {
-      email_invalid: "El correo no es válido.",
-      password_min_length: "La contraseña debe tener al menos 6 caracteres.",
-      password_invalid: "La contraseña no es válida.",
-      validation_error: "Completa email y contraseña correctamente.",
+      email_invalid: "El correo no es valido.",
+      password_min_length: "La contrasena debe tener al menos 6 caracteres.",
+      password_invalid: "La contrasena no es valida.",
+      validation_error: "Completa email y contrasena correctamente.",
       invalid_credentials: "Credenciales incorrectas.",
-      email_already_registered: "Este correo ya está registrado.",
+      email_already_registered: "Este correo ya esta registrado.",
       db_unavailable: "No se puede conectar a la base de datos (Postgres).",
-      network_error: "No se puede conectar con el backend. Verifica que esté activo.",
-      endpoint_not_found: "No se encontró el endpoint de autenticación. Revisa la API.",
-      service_unavailable: "Backend no disponible o servicio caído.",
+      network_error: "No se puede conectar con el backend. Verifica que este activo.",
+      endpoint_not_found: "No se encontro el endpoint de autenticacion. Revisa la API.",
+      service_unavailable: "Backend no disponible o servicio caido.",
       server_error: "Error interno del servidor.",
       rate_limited: "Demasiados intentos. Espera un momento.",
-      reset_code_invalid: "El código no es válido.",
-      reset_code_expired: "El código expiró.",
-      reset_code_used: "El código ya fue usado.",
+      reset_code_invalid: "El codigo no es valido.",
+      reset_code_expired: "El codigo expiro.",
+      reset_code_used: "El codigo ya fue usado.",
       unauthorized: "No autorizado.",
       forbidden: "Acceso denegado.",
       api_error: "Error del servidor."
@@ -52,11 +55,11 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps = {}) {
     try {
       setErrors([]);
       if (!email.trim() || !password.trim()) {
-        setErrors(["Completa email y contraseña."]);
+        setErrors(["Completa email y contrasena."]);
         return;
       }
       if (password.trim().length < 6) {
-        setErrors(["La contraseña debe tener al menos 6 caracteres."]);
+        setErrors(["La contrasena debe tener al menos 6 caracteres."]);
         return;
       }
       const result =
@@ -77,7 +80,7 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps = {}) {
     }
     try {
       await requestPasswordReset(email.trim());
-      setResetMessage("Código enviado. Revisa tu correo.");
+      setResetMessage("Codigo enviado. Revisa tu correo.");
       setResetStep("confirm");
     } catch (err) {
       setErrors(mapAuthErrors(String(err)));
@@ -88,16 +91,16 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps = {}) {
     setErrors([]);
     setResetMessage(null);
     if (!email.trim() || !resetCode.trim() || !password.trim()) {
-      setErrors(["Completa email, código y nueva contraseña."]);
+      setErrors(["Completa email, codigo y nueva contrasena."]);
       return;
     }
     if (password.trim().length < 6) {
-      setErrors(["La contraseña debe tener al menos 6 caracteres."]);
+      setErrors(["La contrasena debe tener al menos 6 caracteres."]);
       return;
     }
     try {
       await confirmPasswordReset(email.trim(), resetCode.trim(), password.trim());
-      setResetMessage("Contraseña actualizada. Ya puedes iniciar sesión.");
+      setResetMessage("Contrasena actualizada. Ya puedes iniciar sesion.");
       setResetMode(false);
       setResetStep("request");
       setResetCode("");
@@ -107,7 +110,7 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps = {}) {
   };
 
   return (
-    <div className="glass mx-auto mt-16 max-w-md space-y-4 rounded-3xl p-6">
+    <div className="ui-panel mx-auto mt-16 max-w-md space-y-4 p-6">
       <div className="flex items-center gap-3">
         <img
           src="/favicon.png"
@@ -123,23 +126,23 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps = {}) {
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         placeholder="email"
-        className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-sm"
+        className="ui-input px-4 py-2 text-sm"
       />
       {!resetMode || resetStep === "confirm" ? (
         <input
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder={resetMode ? "nueva contraseña" : "password"}
-          className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-sm"
+          placeholder={resetMode ? "nueva contrasena" : "password"}
+          className="ui-input px-4 py-2 text-sm"
         />
       ) : null}
       {resetMode && resetStep === "confirm" ? (
         <input
           value={resetCode}
           onChange={(event) => setResetCode(event.target.value)}
-          placeholder="código"
-          className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-sm"
+          placeholder="codigo"
+          className="ui-input px-4 py-2 text-sm"
         />
       ) : null}
       {errors.length > 0 ? (
@@ -155,9 +158,9 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps = {}) {
           <>
             <button
               onClick={resetStep === "request" ? handleRequestReset : handleConfirmReset}
-              className="flex-1 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+              className="ui-btn ui-btn-primary flex-1 px-4 py-2 text-sm"
             >
-              {resetStep === "request" ? "Enviar código" : "Cambiar clave"}
+              {resetStep === "request" ? "Enviar codigo" : "Cambiar clave"}
             </button>
             <button
               onClick={() => {
@@ -167,7 +170,7 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps = {}) {
                 setResetMessage(null);
                 setErrors([]);
               }}
-              className="flex-1 rounded-xl border border-white/20 px-4 py-2 text-sm text-ink"
+              className="ui-btn ui-btn-secondary flex-1 px-4 py-2 text-sm"
             >
               Volver
             </button>
@@ -176,13 +179,13 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps = {}) {
           <>
             <button
               onClick={() => handleAuth("login")}
-              className="flex-1 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+              className="ui-btn ui-btn-primary flex-1 px-4 py-2 text-sm"
             >
               Login
             </button>
             <button
               onClick={() => handleAuth("register")}
-              className="flex-1 rounded-xl border border-white/20 px-4 py-2 text-sm text-ink"
+              className="ui-btn ui-btn-secondary flex-1 px-4 py-2 text-sm"
             >
               Registro
             </button>
@@ -199,10 +202,9 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps = {}) {
           }}
           className="w-full text-xs text-muted underline"
         >
-          Recuperar contraseña
+          Recuperar contrasena
         </button>
       ) : null}
     </div>
   );
 }
-

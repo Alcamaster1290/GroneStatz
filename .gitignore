@@ -224,3 +224,7 @@ FantasyL1-2026/frontend/www/
 
 # Python virtualenvs
 **/.venv*/
+# Cypress / Percy artifacts
+FantasyL1-2026/frontend/cypress/screenshots/
+FantasyL1-2026/frontend/cypress/videos/
+FantasyL1-2026/frontend/.percy/

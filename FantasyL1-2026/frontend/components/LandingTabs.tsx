@@ -261,7 +261,7 @@ export default function LandingTabs() {
   };
 
   return (
-    <div className="relative isolate overflow-hidden pb-12 pt-2 md:pb-16">
+    <div className="ui-page relative isolate overflow-hidden pb-12 pt-2 md:pb-16">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -left-28 -top-20 h-72 w-72 rounded-full bg-[#f2c94c]/12 blur-3xl"

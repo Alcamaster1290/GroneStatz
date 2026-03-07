@@ -1,33 +1,83 @@
-@import "@fontsource/space-grotesk/400.css";
-@import "@fontsource/space-grotesk/500.css";
-@import "@fontsource/space-grotesk/700.css";
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg: #120708;
-  --surface: #181017;
-  --surface-2: #22121b;
-  --ink: #f7f3ed;
-  --muted: #9aa3b2;
-  --accent: #f2c94c;
-  --accent-2: #5de0a5;
-  --warning: #ff6b6b;
+  --radius-sm: 0.65rem;
+  --radius-md: 0.95rem;
+  --radius-lg: 1.3rem;
+  --radius-xl: 1.9rem;
+
+  --bg-0: oklch(17% 0.02 20);
+  --bg-1: oklch(22% 0.04 24);
+  --surface-0: oklch(25% 0.03 24);
+  --surface-1: oklch(29% 0.04 24);
+  --surface-2-brand: oklch(34% 0.06 34);
+
+  --ink-0: oklch(95% 0.01 60);
+  --ink-1: oklch(74% 0.03 62);
+  --accent-amber: oklch(82% 0.15 82);
+  --accent-emerald: oklch(80% 0.14 154);
+  --warning-red: oklch(70% 0.18 23);
+
+  --bg: var(--bg-0);
+  --surface: var(--surface-0);
+  --surface-2: var(--surface-1);
+  --ink: var(--ink-0);
+  --muted: var(--ink-1);
+  --accent: var(--accent-amber);
+  --accent-2: var(--accent-emerald);
+  --warning: var(--warning-red);
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  color-scheme: dark;
+}
+
 body {
   min-height: 100vh;
+  color: var(--ink);
+  font-family: "Space Grotesk", sans-serif;
+  line-height: 1.55;
   background: radial-gradient(1200px 600px at 20% 20%, rgba(229, 28, 28, 0.16), transparent 60%),
     radial-gradient(900px 500px at 80% 10%, rgba(242, 201, 76, 0.1), transparent 55%),
     linear-gradient(160deg, #120708 0%, #1a0b12 45%, #220f1a 100%);
-  color: var(--ink);
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: "Space Grotesk", sans-serif;
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent) 75%, white);
+  outline-offset: 2px;
+}
+
+input,
+select,
+textarea {
+  color: var(--ink);
 }
 
 .glass {
@@ -57,5 +107,146 @@ body {
 }
 
 .animate-float-in {
-  animation: floatIn 400ms ease-out;
+  animation: floatIn 400ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@layer components {
+  .ui-page {
+    animation: none;
+  }
+
+  .ui-panel {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    background: rgba(16, 11, 16, 0.72);
+    backdrop-filter: blur(10px);
+  }
+
+  .ui-card {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    background: rgba(14, 10, 14, 0.72);
+  }
+
+  .ui-btn {
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    transition: transform 180ms cubic-bezier(0.25, 1, 0.5, 1),
+      background-color 180ms cubic-bezier(0.25, 1, 0.5, 1),
+      border-color 180ms cubic-bezier(0.25, 1, 0.5, 1),
+      color 180ms cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .ui-btn:active {
+    transform: translateY(1px);
+  }
+
+  .ui-btn-primary {
+    background: var(--accent);
+    color: #14120f;
+    border-color: rgba(0, 0, 0, 0.2);
+    font-weight: 700;
+  }
+
+  .ui-btn-secondary {
+    background: rgba(0, 0, 0, 0.25);
+    color: var(--ink);
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+
+  .ui-input {
+    width: 100%;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--ink);
+  }
+
+  .ui-chip {
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--muted);
+  }
+}
+
+html[data-ui-redesign="1"] body {
+  font-family: var(--font-body), "Space Grotesk", sans-serif;
+  line-height: 1.58;
+  background:
+    radial-gradient(1020px 500px at 12% 8%, color-mix(in oklab, var(--accent) 34%, transparent), transparent 62%),
+    radial-gradient(900px 520px at 86% 0%, color-mix(in oklab, var(--accent-2) 25%, transparent), transparent 58%),
+    linear-gradient(163deg, oklch(16% 0.02 20) 0%, oklch(19% 0.03 24) 48%, oklch(14% 0.02 18) 100%);
+}
+
+html[data-ui-redesign="1"] h1,
+html[data-ui-redesign="1"] h2,
+html[data-ui-redesign="1"] h3,
+html[data-ui-redesign="1"] h4,
+html[data-ui-redesign="1"] h5,
+html[data-ui-redesign="1"] h6 {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  letter-spacing: 0.015em;
+}
+
+html[data-ui-redesign="1"] .glass {
+  backdrop-filter: none;
+  background: color-mix(in oklab, var(--surface) 88%, black);
+  border-color: color-mix(in oklab, var(--ink) 12%, transparent);
+}
+
+html[data-ui-redesign="1"] .ui-page {
+  animation: floatIn 380ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+html[data-ui-redesign="1"] .ui-panel {
+  border: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+  background: color-mix(in oklab, var(--surface) 85%, black);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.35);
+  backdrop-filter: none;
+}
+
+html[data-ui-redesign="1"] .ui-card {
+  border-color: color-mix(in oklab, var(--ink) 11%, transparent);
+  background: color-mix(in oklab, var(--surface-2) 86%, black);
+}
+
+html[data-ui-redesign="1"] .ui-btn-primary {
+  background: color-mix(in oklab, var(--accent) 86%, oklch(59% 0.09 70));
+  color: oklch(20% 0.02 30);
+  border-color: color-mix(in oklab, var(--accent) 64%, black);
+}
+
+html[data-ui-redesign="1"] .ui-btn-secondary {
+  background: color-mix(in oklab, var(--surface-1) 88%, black);
+  border-color: color-mix(in oklab, var(--ink) 18%, transparent);
+}
+
+html[data-ui-redesign="1"] .ui-input {
+  border-color: color-mix(in oklab, var(--ink) 14%, transparent);
+  background: color-mix(in oklab, var(--surface) 92%, black);
+}
+
+html[data-ui-redesign="1"] .ui-chip {
+  border-color: color-mix(in oklab, var(--ink) 18%, transparent);
+  background: color-mix(in oklab, var(--surface) 74%, black);
+}
+
+html[data-ui-redesign="1"] .text-muted {
+  color: var(--muted);
+}
+
+html[data-ui-redesign="1"] .text-ink {
+  color: var(--ink);
+}
+
+html[data-ui-redesign="1"] input,
+html[data-ui-redesign="1"] select,
+html[data-ui-redesign="1"] textarea {
+  border-color: color-mix(in oklab, var(--ink) 14%, transparent);
+  background: color-mix(in oklab, var(--surface) 90%, black);
+}
+
+html[data-ui-redesign="1"] .bg-accent {
+  background: color-mix(in oklab, var(--accent) 86%, oklch(59% 0.09 70));
 }

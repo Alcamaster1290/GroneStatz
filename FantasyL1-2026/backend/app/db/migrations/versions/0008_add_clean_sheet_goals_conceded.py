@@ -33,6 +33,10 @@ def _drop_column_if_exists(table_name: str, column_name: str) -> None:
 
 
 def upgrade() -> None:
+    # Alembic creates version_num as VARCHAR(32) by default, but our revision ids are longer.
+    # Expand it here before Alembic writes this revision id to avoid StringDataRightTruncation.
+    op.execute("ALTER TABLE IF EXISTS alembic_version ALTER COLUMN version_num TYPE VARCHAR(255)")
+
     _add_column_if_missing(
         "player_match_stats",
         sa.Column("clean_sheet", sa.Integer(), nullable=True),

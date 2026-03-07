@@ -20,22 +20,28 @@ export default function ModalDialog({
   maxWidthClass = "max-w-3xl"
 }: ModalDialogProps) {
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const titleId = `modal-title-${title.toLowerCase().replace(/\s+/g, "-")}`;
 
   useEffect(() => {
     if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
       }
     };
-    document.addEventListener("keydown", handleEsc);
-    return () => document.removeEventListener("keydown", handleEsc);
-  }, [open, onClose]);
 
-  useEffect(() => {
-    if (!open) return;
+    document.addEventListener("keydown", handleEsc);
     closeButtonRef.current?.focus();
-  }, [open]);
+
+    return () => {
+      document.removeEventListener("keydown", handleEsc);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open, onClose]);
 
   return (
     <div
@@ -47,7 +53,7 @@ export default function ModalDialog({
     >
       <div
         className={clsx(
-          "absolute inset-0 bg-black/70 transition-opacity",
+          "absolute inset-0 bg-black/75 transition-opacity",
           open ? "opacity-100" : "opacity-0"
         )}
         onClick={onClose}
@@ -57,20 +63,22 @@ export default function ModalDialog({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={title}
+          aria-labelledby={titleId}
           className={clsx(
-            "glass w-full rounded-2xl border border-white/10 shadow-[0_25px_80px_rgba(0,0,0,0.45)]",
+            "ui-panel w-full rounded-2xl shadow-[0_28px_80px_rgba(0,0,0,0.48)]",
             maxWidthClass,
             open ? "scale-100 opacity-100" : "scale-95 opacity-0"
           )}
         >
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-            <h3 className="text-sm font-semibold text-ink">{title}</h3>
+            <h3 id={titleId} className="text-sm font-semibold text-ink">
+              {title}
+            </h3>
             <button
               ref={closeButtonRef}
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-white/15 px-3 py-1 text-xs text-ink transition hover:bg-white/5"
+              className="ui-btn ui-btn-secondary px-3 py-1 text-xs"
               aria-label="Cerrar"
             >
               Cerrar

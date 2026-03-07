@@ -32,8 +32,8 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-black/70 backdrop-blur-md">
-      <div className="mx-auto flex max-w-md items-center justify-between px-6 py-3 text-xs">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-black/75 backdrop-blur-sm">
+      <div className="mx-auto flex max-w-md items-center justify-between px-4 pb-3 pt-2.5 text-[11px]">
         {items.map((item) => {
           const active = pathname.startsWith(item.href);
           const Icon = item.icon;
@@ -45,16 +45,16 @@ export default function BottomNav() {
               href={item.href}
               onClick={(e) => handleClick(e, item.href, item.requiresAuth)}
               className={
-                "flex flex-col items-center gap-1 transition " +
+                "ui-btn flex min-w-[52px] flex-col items-center gap-1 rounded-xl px-2 py-1.5 transition " +
                 (active
-                  ? "text-accent"
+                  ? "ui-btn-primary"
                   : disabled
-                    ? "text-white/20 cursor-not-allowed"
-                    : "text-muted hover:text-white/80")
+                    ? "cursor-not-allowed border border-white/10 text-white/30"
+                    : "ui-btn-secondary")
               }
             >
-              <Icon size={18} />
-              <span>{item.label}</span>
+              <Icon size={16} />
+              <span className="leading-none">{item.label}</span>
             </Link>
           );
         })}

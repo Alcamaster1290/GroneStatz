@@ -9,7 +9,7 @@ function LoginFallback() {
         <h1 className="text-xl font-semibold text-ink">Login</h1>
         <p className="text-sm text-muted">Accede para continuar al juego.</p>
       </div>
-      <div className="glass rounded-2xl p-4 text-sm text-muted">Cargando...</div>
+      <div className="ui-panel rounded-2xl p-4 text-sm text-muted">Cargando...</div>
     </div>
   );
 }

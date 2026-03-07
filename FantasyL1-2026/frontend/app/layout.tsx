@@ -1,11 +1,26 @@
 import type { Metadata } from "next";
+import { Oswald, Source_Sans_3 } from "next/font/google";
+
 import "./globals.css";
 
 import AuthSessionBootstrap from "@/components/AuthSessionBootstrap";
 import BottomNav from "@/components/BottomNav";
+import MobileBootstrap from "@/components/MobileBootstrap";
 import RouteAwareHeader from "@/components/RouteAwareHeader";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
-import MobileBootstrap from "@/components/MobileBootstrap";
+import UiRedesignRouteGate from "@/components/UiRedesignRouteGate";
+
+const displayFont = Oswald({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display"
+});
+
+const bodyFont = Source_Sans_3({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body"
+});
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
@@ -79,7 +94,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#0b0b0f"
+  themeColor: "#1b1110"
 };
 
 export default function RootLayout({
@@ -89,7 +104,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className="text-ink">
+      <body className={`${displayFont.variable} ${bodyFont.variable} text-ink`}>
+        <UiRedesignRouteGate />
         <AuthSessionBootstrap />
         <div className="relative min-h-screen pb-24">
           <div className="pointer-events-none absolute inset-0 opacity-30">

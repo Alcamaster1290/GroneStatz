@@ -1556,7 +1556,7 @@ export default function MarketPage() {
   if (!token) return <AuthPanel />;
 
   return (
-    <div className="space-y-5">
+    <div className="ui-page space-y-5">
       <div>
         <h1 className="text-xl font-semibold">Mercado</h1>
         <p className="text-sm text-muted">

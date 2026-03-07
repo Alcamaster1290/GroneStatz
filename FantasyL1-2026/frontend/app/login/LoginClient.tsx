@@ -25,7 +25,7 @@ export default function LoginClient() {
   }, [token, postLoginTarget, router]);
 
   return (
-    <div className="space-y-4">
+    <div className="ui-page space-y-4">
       <PublicPageNav />
       <div>
         <h1 className="text-xl font-semibold text-ink">Login</h1>

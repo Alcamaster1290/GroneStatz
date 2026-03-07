@@ -223,6 +223,8 @@ Variables frontend relevantes:
 - `NEXT_PUBLIC_MOBILE_WEB_URL=https://fantasyliga1peru.com` (prod)
 - `NEXT_PUBLIC_MOBILE_WEB_URL=https://qa.fantasyliga1peru.com` (qa)
 - `NEXT_PUBLIC_PUSH_ENABLED=false` (v1 sin push)
+- `NEXT_PUBLIC_UI_REDESIGN_V1=false` (feature flag global de rediseño UI)
+- `NEXT_PUBLIC_UI_REDESIGN_V1_ROUTES=landing,login,ranking,fixtures,stats,settings,team,market` (activación progresiva por rutas)
 - `MOBILE_ANDROID_VERSION_CODE` (int para Play Store)
 - `MOBILE_ANDROID_VERSION_NAME` (ej. `1.4.0`)
 
@@ -281,6 +283,21 @@ QA:
 ```
 docker compose -f ../docker-compose.qa.yml --env-file ../.env.qa up -d --build
 ```
+
+## E2E + Visual Regression (frontend)
+Dentro de `frontend/`:
+```
+npm run e2e:smoke
+npm run e2e:visual
+PERCY_TOKEN=<token> npm run test:visual
+```
+Notas:
+- Los scripts E2E/visual limpian `ELECTRON_RUN_AS_NODE` al ejecutar Cypress (evita fallos en Windows cuando esa variable está definida globalmente).
+- `npm run test:e2e:ci` y `npm run test:visual` levantan `next start` en puertos dedicados (`3101` y `3102`) para evitar choques con servidores locales en `3000`.
+- Si no tienes `PERCY_TOKEN`, `npm run test:visual` hace fallback automático a `e2e:visual` local; snapshots Percy siguen siendo obligatorios antes de activar flags en producción.
+Variables opcionales para flujo autenticado:
+- `CYPRESS_E2E_EMAIL`
+- `CYPRESS_E2E_PASSWORD`
 
 ## Troubleshooting rápido
 - `ModuleNotFoundError: app`: corre alembic desde la raíz del proyecto con `.venv` activo.

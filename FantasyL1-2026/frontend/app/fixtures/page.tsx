@@ -343,7 +343,7 @@ export default function FixturesPage() {
   const canNextRound = roundIndex >= 0 && roundIndex < roundNumbers.length - 1;
 
   return (
-    <div className="space-y-5">
+    <div className="ui-page space-y-5">
       <PublicPageNav />
 
       <div>

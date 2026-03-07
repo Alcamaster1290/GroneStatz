@@ -89,12 +89,16 @@ services:
         NEXT_PUBLIC_ENABLE_PASSWORD_RESET: "false"
         NEXT_PUBLIC_APP_CHANNEL: "mobile"
         NEXT_PUBLIC_MOBILE_WEB_URL: "https://fantasyliga1peru.com"
+        NEXT_PUBLIC_UI_REDESIGN_V1: "${NEXT_PUBLIC_UI_REDESIGN_V1:-false}"
+        NEXT_PUBLIC_UI_REDESIGN_V1_ROUTES: "${NEXT_PUBLIC_UI_REDESIGN_V1_ROUTES:-landing,login,ranking,fixtures,stats,settings,team,market}"
     container_name: fantasy_l1_web
     environment:
       NEXT_PUBLIC_API_URL: https://api.fantasyliga1peru.com
       NEXT_PUBLIC_ENABLE_PASSWORD_RESET: "false"
       NEXT_PUBLIC_APP_CHANNEL: "mobile"
       NEXT_PUBLIC_MOBILE_WEB_URL: "https://fantasyliga1peru.com"
+      NEXT_PUBLIC_UI_REDESIGN_V1: "${NEXT_PUBLIC_UI_REDESIGN_V1:-false}"
+      NEXT_PUBLIC_UI_REDESIGN_V1_ROUTES: "${NEXT_PUBLIC_UI_REDESIGN_V1_ROUTES:-landing,login,ranking,fixtures,stats,settings,team,market}"
       NODE_ENV: production
     depends_on:
       - api

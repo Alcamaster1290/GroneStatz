@@ -839,7 +839,7 @@ export default function RankingPage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="ui-page space-y-5">
       <PublicPageNav />
 
       {!token ? (

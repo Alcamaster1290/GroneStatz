@@ -272,7 +272,7 @@ export default function StatsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="ui-page space-y-6">
       <div>
         <h1 className="text-xl font-semibold">Estadisticas</h1>
         <p className="text-xs text-muted">Seleccion y totales por jugador.</p>

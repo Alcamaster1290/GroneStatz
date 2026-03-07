@@ -263,7 +263,7 @@ export default function SettingsPage() {
   const nativePushAvailable = isNativeMobilePlatform();
 
   return (
-    <div className="space-y-4">
+    <div className="ui-page space-y-4">
       <div>
         <h1 className="text-xl font-semibold">Ajustes</h1>
         <p className="text-sm text-muted">Personaliza tu equipo</p>

@@ -89,17 +89,17 @@ export default function FavoriteTeamGate({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 py-6">
-      <div className="glass w-full max-w-md space-y-4 rounded-3xl border border-white/10 p-5">
+      <div className="ui-panel w-full max-w-md space-y-4 rounded-3xl p-5">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-ink">Cual es tu equipo favorito de la Liga 1?</h2>
+            <h2 className="text-lg font-semibold text-ink">¿Cuál es tu equipo favorito de la Liga 1?</h2>
             <p className="text-xs text-muted">
               Selecciona el club que quieres seguir en la Liga 1 2026.
             </p>
           </div>
           {onClose ? (
-            <button onClick={onClose} className="text-xs text-muted">
-              X
+            <button onClick={onClose} className="ui-btn ui-btn-secondary px-2 py-1 text-xs">
+              Cerrar
             </button>
           ) : null}
         </div>
@@ -108,10 +108,10 @@ export default function FavoriteTeamGate({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Buscar equipo"
-          className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+          className="ui-input px-3 py-2 text-sm"
         />
 
-        <div className="max-h-60 space-y-2 overflow-y-auto rounded-2xl border border-white/10 p-2">
+        <div className="max-h-60 space-y-2 overflow-y-auto rounded-2xl border border-white/10 bg-black/15 p-2">
           {loading ? (
             <div className="px-3 py-2 text-xs text-muted">Cargando equipos...</div>
           ) : null}
@@ -126,10 +126,10 @@ export default function FavoriteTeamGate({
                 type="button"
                 onClick={() => onSelect(team.id)}
                 className={
-                  "flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm transition " +
+                  "ui-btn flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left text-sm transition " +
                   (isSelected
-                    ? "border-accent bg-accent/20 text-ink"
-                    : "border-white/10 text-muted hover:border-white/20")
+                    ? "ui-btn-primary"
+                    : "ui-btn-secondary")
                 }
               >
                 <div className="h-9 w-9 rounded-full bg-surface2/60 p-1">
@@ -156,14 +156,14 @@ export default function FavoriteTeamGate({
             onClick={() => {
               if (onSkip) onSkip();
             }}
-            className="w-1/3 rounded-xl border border-white/15 px-3 py-2 text-sm text-ink"
+            className="ui-btn ui-btn-secondary w-1/3 px-3 py-2 text-sm"
           >
             Elegir luego
           </button>
           <button
             onClick={onSave}
             disabled={!selectedTeamId}
-            className="w-2/3 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black disabled:opacity-40"
+            className="ui-btn ui-btn-primary w-2/3 px-4 py-2 text-sm disabled:opacity-40"
           >
             Guardar equipo favorito
           </button>

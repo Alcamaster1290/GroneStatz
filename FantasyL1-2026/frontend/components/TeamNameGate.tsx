@@ -21,7 +21,7 @@ export default function TeamNameGate({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
-      <div className="glass w-full max-w-sm space-y-4 rounded-2xl border border-white/10 p-5">
+      <div className="ui-panel w-full max-w-sm space-y-4 rounded-2xl p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-ink">Nombre del equipo</p>
@@ -33,9 +33,9 @@ export default function TeamNameGate({
             <button
               onClick={onClose}
               aria-label="Cerrar"
-              className="rounded-lg border border-white/15 px-2 py-1 text-xs text-muted transition hover:text-ink"
+              className="ui-btn ui-btn-secondary px-2 py-1 text-xs"
             >
-              X
+              Cerrar
             </button>
           ) : null}
         </div>
@@ -44,14 +44,14 @@ export default function TeamNameGate({
           <input
             value={teamName}
             onChange={(event) => onTeamNameChange(event.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm"
+            className="ui-input px-3 py-2 text-sm"
             placeholder="Ej: Los Grones"
           />
           {error ? <p className="text-xs text-warning">{error}</p> : null}
         </div>
         <button
           onClick={onSave}
-          className="w-full rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
+          className="ui-btn ui-btn-primary w-full px-4 py-2 text-sm"
         >
           Guardar nombre
         </button>
