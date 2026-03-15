@@ -683,6 +683,7 @@ def build_matches_schema(df_master: pd.DataFrame, normalize_date: bool = True) -
     cols = [
         "match_id",
         "round_number",
+        "tournament",
         "season",
         "home_id",
         "away_id",
