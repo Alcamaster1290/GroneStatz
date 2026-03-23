@@ -314,8 +314,7 @@ def _ensure_fixture_teams(
     missing = {team_id for team_id in team_ids if team_id not in existing}
     if not missing:
         return
-    for team_id in sorted(missing):
-        db.add(Team(id=team_id))
+    db.add_all([Team(id=team_id) for team_id in sorted(missing)])
     db.flush()
 
 
