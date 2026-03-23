@@ -62,7 +62,12 @@ from app.schemas.admin import (
 )
 from app.services.app_config import get_premium_badge_config, update_premium_badge_config
 from app.services.data_pipeline import ingest_parquets_to_duckdb, sync_duckdb_to_postgres
-from app.services.fantasy import ensure_round, get_or_create_season, get_round_by_number
+from app.services.fantasy import (
+    ensure_round,
+    get_or_create_season,
+    get_round_by_number,
+    get_transfer_count_for_round,
+)
 from app.services.action_log import log_action
 from app.services.push_notifications import run_round_deadline_reminders
 from app.services.round_recovery import recover_round_lineups_from_market
@@ -152,20 +157,6 @@ def _get_team_player_ids_for_delta(db: Session, fantasy_team_id: int) -> list[in
     return [player_id for player_id, _ in rows_sorted[:15]]
 
 
-def _get_transfer_count_for_round(db: Session, fantasy_team_id: int, round_id: int) -> int:
-    return int(
-        db.execute(
-            select(func.count())
-            .select_from(FantasyTransfer)
-            .where(
-                FantasyTransfer.fantasy_team_id == fantasy_team_id,
-                FantasyTransfer.round_id == round_id,
-            )
-        ).scalar()
-        or 0
-    )
-
-
 def _get_transfer_fee_total_for_count(transfer_count: int) -> Decimal:
     _ = transfer_count
     return Decimal("0.0")
@@ -233,7 +224,7 @@ def _recompute_team_budget_cap_for_round(
             )
             market_delta_total = _round_price(delta_total)
 
-    transfer_count = _get_transfer_count_for_round(db, team.id, round_obj.id)
+    transfer_count = get_transfer_count_for_round(db, team.id, round_obj.id)
     fee_total = _get_transfer_fee_total_for_count(transfer_count)
     effective_cap = _round_price(Decimal("100.0") + market_delta_total - fee_total)
     team.budget_cap = effective_cap
@@ -1592,7 +1583,7 @@ def revert_transfer_by_id(
     if team is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="team_not_found")
 
-    before_count = _get_transfer_count_for_round(db, team.id, round_obj.id)
+    before_count = get_transfer_count_for_round(db, team.id, round_obj.id)
     status_label, reason = _revert_transfer_row(
         db,
         transfer,
