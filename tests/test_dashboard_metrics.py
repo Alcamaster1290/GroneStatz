@@ -742,3 +742,90 @@ def test_build_match_team_average_positions_falls_back_to_minutes_when_starter_f
     assert len(positions) == 4
     assert metadata["home_strategy"] == "minutos"
     assert metadata["away_strategy"] == "minutos"
+
+
+def test_build_player_profile_accumulated_scope_uses_regular_tournaments_even_if_filter_is_playoff_only() -> None:
+    matches = normalize_matches(
+        pd.DataFrame(
+            {
+                "match_id": [1, 2],
+                "round_number": [1, 28],
+                "tournament": ["Liga 1, Apertura", "Primera Division, Grand Final"],
+                "fecha": ["01/01/2025 15:00", "20/12/2025 20:00"],
+                "home_id": [10, 10],
+                "away_id": [20, 20],
+                "home": ["Alianza", "Alianza"],
+                "away": ["Melgar", "Melgar"],
+                "home_score": [1, 2],
+                "away_score": [0, 1],
+                "estadio": ["Matute", "Matute"],
+                "ciudad": ["Lima", "Lima"],
+                "arbitro": ["A", "B"],
+            }
+        )
+    )
+    bundle = _make_dashboard_bundle(
+        player_match=pd.DataFrame(
+            {
+                "match_id": [1, 2],
+                "player_id": [1, 1],
+                "team_id": [10, 10],
+                "name": ["Jugador Valido", "Jugador Valido"],
+                "position": ["F", "F"],
+                "minutesplayed": [90, 90],
+                "goals": [1, 0],
+                "assists": [0, 1],
+                "saves": [0, 0],
+                "fouls": [1, 1],
+                "penaltywon": [0, 0],
+                "penaltysave": [0, 0],
+                "penaltyconceded": [0, 0],
+                "fecha_dt": pd.to_datetime(["2025-01-01", "2025-12-20"]),
+                "home": ["Alianza", "Alianza"],
+                "away": ["Melgar", "Melgar"],
+                "scoreline": ["1 - 0", "2 - 1"],
+                "round_label": ["Apertura Â· R1", "Grand Final Â· R28"],
+            }
+        ),
+        matches=matches,
+        average_positions=pd.DataFrame(
+            {
+                "match_id": [1],
+                "player_id": [1],
+                "team_id": [10],
+                "team_name": ["Alianza"],
+                "name": ["Jugador Valido"],
+                "shirt_number": [9],
+                "position": ["F"],
+                "average_x": [44.0],
+                "average_y": [49.0],
+                "points_count": [24],
+                "is_starter": [True],
+            }
+        ),
+        heatmap_points=pd.DataFrame(
+            {
+                "match_id": [1],
+                "player_id": [1],
+                "team_id": [10],
+                "team_name": ["Alianza"],
+                "name": ["Jugador Valido"],
+                "x": [28.0],
+                "y": [53.0],
+            }
+        ),
+    )
+
+    profile = build_player_profile(
+        bundle,
+        FilterState(round_range=(1, 28), min_minutes=0, tournaments=("Primera Division, Grand Final",)),
+        player_id=1,
+        context_match_id=2,
+    )
+
+    assert profile is not None
+    assert profile.default_visual_scope == PLAYER_ACCUMULATED_SCOPE
+    assert profile.accumulated_average_position_row is not None
+    assert int(profile.accumulated_average_position_row["matches_count"]) == 1
+    assert profile.visual_coverage["regular_average_match_count"] == 1
+    assert profile.visual_coverage["regular_heatmap_match_count"] == 1

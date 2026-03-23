@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import streamlit as st
 
+from gronestats.dashboard.data import find_player_image
 from gronestats.dashboard.metrics import (
     PLAYER_ACCUMULATED_SCOPE,
     PLAYER_AVERAGE_POSITION_MODE,
     PLAYER_CONTEXTUAL_SCOPE,
     PLAYER_HEATMAP_MODE,
 )
-from gronestats.dashboard.data import find_player_image
 from gronestats.dashboard.models import PlayerProfile
 from gronestats.dashboard.state import build_action
 from gronestats.dashboard.views.pitch import build_player_average_position_figure, build_player_heatmap_figure
@@ -48,11 +48,11 @@ def _format_rounds_label(rounds: list[str]) -> str:
 def _describe_available_views(profile: PlayerProfile, selected_match_row) -> str:
     available = []
     if selected_match_row is not None and bool(selected_match_row.get("has_average_position")):
-        available.append("posición promedio contextual")
+        available.append("posicion promedio contextual")
     if selected_match_row is not None and bool(selected_match_row.get("has_heatmap")):
         available.append("heatmap contextual")
     if profile.accumulated_average_position_row is not None:
-        available.append("posición promedio acumulada")
+        available.append("posicion promedio acumulada")
     if not profile.accumulated_heatmap_points.empty:
         available.append("heatmap acumulado")
     return ", ".join(available) if available else "ninguna vista disponible"
@@ -168,7 +168,7 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
     with top_right:
         render_section_title(
             "Mapa del jugador",
-            "Cruza capa visual y alcance entre partido contextual y acumulado del tramo filtrado.",
+            "Cruza capa visual y alcance entre partido contextual y acumulado del tramo regular.",
         )
         render_panel_open()
         if profile.available_visual_matches.empty:
@@ -191,12 +191,6 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
                 st.session_state["player_visual_scope"] = profile.default_visual_scope
             if st.session_state.get("player_visual_match_id") not in match_options:
                 st.session_state["player_visual_match_id"] = profile.default_visual_match_id
-
-            coverage = profile.visual_coverage or {}
-            average_match_count = int(coverage.get("average_match_count", 0))
-            heatmap_match_count = int(coverage.get("heatmap_match_count", 0))
-            average_rounds = coverage.get("average_round_labels", [])
-            heatmap_rounds = coverage.get("heatmap_round_labels", [])
 
             controls = st.columns([1.0, 1.0, 1.3], gap="medium")
             with controls[0]:
@@ -223,17 +217,29 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
                     )
                 else:
                     selected_match_id = st.session_state.get("player_visual_match_id") or profile.default_visual_match_id
-                    render_selection_note(
-                        f"Cobertura activa | Posición promedio: {average_match_count} partidos ({_format_rounds_label(average_rounds)}) | "
-                        f"Heatmap: {heatmap_match_count} partidos ({_format_rounds_label(heatmap_rounds)})"
-                    )
+
+            coverage = profile.visual_coverage or {}
+            if selected_scope == PLAYER_CONTEXTUAL_SCOPE:
+                average_match_count = int(coverage.get("average_match_count", 0))
+                heatmap_match_count = int(coverage.get("heatmap_match_count", 0))
+                average_rounds = coverage.get("average_round_labels", [])
+                heatmap_rounds = coverage.get("heatmap_round_labels", [])
+            else:
+                average_match_count = int(coverage.get("regular_average_match_count", 0))
+                heatmap_match_count = int(coverage.get("regular_heatmap_match_count", 0))
+                average_rounds = coverage.get("regular_average_round_labels", [])
+                heatmap_rounds = coverage.get("regular_heatmap_round_labels", [])
+                render_selection_note(
+                    f"Cobertura del tramo regular | Posicion promedio: {average_match_count} partidos ({_format_rounds_label(average_rounds)}) | "
+                    f"Heatmap: {heatmap_match_count} partidos ({_format_rounds_label(heatmap_rounds)})"
+                )
 
             selected_match = visual_matches[visual_matches["match_id"] == selected_match_id].head(1)
             selected_match_row = selected_match.iloc[0] if not selected_match.empty else None
             if selected_scope == PLAYER_CONTEXTUAL_SCOPE and selected_match_row is not None:
                 capabilities = []
                 if bool(selected_match_row.get("has_average_position")):
-                    capabilities.append("posición promedio")
+                    capabilities.append("posicion promedio")
                 if bool(selected_match_row.get("has_heatmap")):
                     capabilities.append("heatmap")
                 render_selection_note(
@@ -244,7 +250,7 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
             if selected_scope == PLAYER_CONTEXTUAL_SCOPE and selected_mode == PLAYER_AVERAGE_POSITION_MODE:
                 if profile.contextual_average_position_row is None:
                     render_empty_state(
-                        "No hay posición promedio disponible para este jugador en el partido contextual seleccionado. "
+                        "No hay posicion promedio disponible para este jugador en el partido contextual seleccionado. "
                         f"Disponible: {_describe_available_views(profile, selected_match_row)}."
                     )
                 else:
@@ -252,7 +258,7 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
                         build_player_average_position_figure(
                             profile.contextual_average_position_row,
                             team_color=profile.team_color,
-                            title_suffix="posición promedio contextual",
+                            title_suffix="posicion promedio contextual",
                             footer_note=(
                                 f"Puntos registrados: {safe_text(profile.contextual_average_position_row.get('points_count'), '0')} | "
                                 f"{safe_text(selected_match_row.get('partido') if selected_match_row is not None else None, 'Partido contextual')}"
@@ -283,7 +289,7 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
             elif selected_scope == PLAYER_ACCUMULATED_SCOPE and selected_mode == PLAYER_AVERAGE_POSITION_MODE:
                 if profile.accumulated_average_position_row is None:
                     render_empty_state(
-                        "No hay posición promedio acumulada disponible para este jugador dentro del tramo filtrado activo. "
+                        "No hay posicion promedio acumulada disponible para este jugador dentro del tramo regular activo. "
                         f"Disponible: {_describe_available_views(profile, selected_match_row)}."
                     )
                 else:
@@ -291,7 +297,7 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
                         build_player_average_position_figure(
                             profile.accumulated_average_position_row,
                             team_color=profile.team_color,
-                            title_suffix="posición promedio acumulada",
+                            title_suffix="posicion promedio acumulada",
                             footer_note=(
                                 f"Partidos: {safe_text(profile.accumulated_average_position_row.get('matches_count'), '0')} | "
                                 f"Puntos registrados: {safe_text(profile.accumulated_average_position_row.get('points_count_total', profile.accumulated_average_position_row.get('points_count')), '0')}"
@@ -302,7 +308,7 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
             else:
                 if profile.accumulated_heatmap_points.empty:
                     render_empty_state(
-                        "No hay heatmap acumulado disponible para este jugador dentro del tramo filtrado activo. "
+                        "No hay heatmap acumulado disponible para este jugador dentro del tramo regular activo. "
                         f"Disponible: {_describe_available_views(profile, selected_match_row)}."
                     )
                 else:
@@ -328,7 +334,12 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
             render_empty_state("No hay percentiles suficientes para este jugador.")
         else:
             st.plotly_chart(build_percentile_figure(profile.percentiles), width="stretch")
-            st.dataframe(profile.percentiles, width="stretch", hide_index=True, column_config={"Metric": "Metrica", "value": "Valor", "percentile": "Percentil"})
+            st.dataframe(
+                profile.percentiles,
+                width="stretch",
+                hide_index=True,
+                column_config={"Metric": "Metrica", "value": "Valor", "percentile": "Percentil"},
+            )
 
     with right:
         render_section_title("Ultimos partidos", "Selecciona una fila para abrir el partido.")
@@ -356,13 +367,17 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
             if action is None and row_index is not None:
                 selected = profile.recent_matches.iloc[row_index]
                 match_id = safe_optional_int(selected.get("match_id"))
-                action = build_action(
-                    "match",
-                    match_id=match_id,
-                    team_id=team_id,
-                    venue="Todos",
-                    result="Todos",
-                    origin_label=safe_text(profile.player_row.get("name"), "Jugador"),
-                ) if match_id is not None else None
+                action = (
+                    build_action(
+                        "match",
+                        match_id=match_id,
+                        team_id=team_id,
+                        venue="Todos",
+                        result="Todos",
+                        origin_label=safe_text(profile.player_row.get("name"), "Jugador"),
+                    )
+                    if match_id is not None
+                    else None
+                )
 
     return action

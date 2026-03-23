@@ -88,8 +88,9 @@ def build_team_palette(primary: object, fallback: str = COLORS["accent"]) -> dic
     }
 
 
-def render_app_header(page_title: str, subtitle: str, loaded_at: datetime) -> None:
+def render_app_header(page_title: str, subtitle: str, loaded_at: datetime, *, scope_summary: str | None = None) -> None:
     formatted_timestamp = loaded_at.strftime("%d/%m/%Y %H:%M:%S")
+    scope_chip = f"<span class=\"gs-chip\">Filtros activos: {scope_summary}</span>" if scope_summary else ""
     html = f"""
     <section class="gs-shell">
       <header class="gs-header">
@@ -97,6 +98,7 @@ def render_app_header(page_title: str, subtitle: str, loaded_at: datetime) -> No
         <h1 class="gs-header__title">{page_title}</h1>
         <p class="gs-header__subtitle">{subtitle}</p>
         <div class="gs-chip-row">
+          {scope_chip}
           <span class="gs-chip">Cobertura verificada 2025</span>
           <span class="gs-chip">Parquets normalizados</span>
           <span class="gs-chip">Actualizado en carga: {formatted_timestamp}</span>

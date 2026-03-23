@@ -15,7 +15,7 @@ from gronestats.dashboard.config import (
     TOURNAMENT_LABELS,
     TOURNAMENT_ORDER,
 )
-from gronestats.dashboard.models import DatasetBundle
+from gronestats.dashboard.models import DatasetBundle, FilterState
 
 
 def read_parquet(path: Path) -> pd.DataFrame:
@@ -59,6 +59,44 @@ def build_round_label(tournament: object, round_number: object) -> str:
     if pd.isna(round_value):
         return label
     return f"{label} · R{int(round_value)}"
+
+
+def _join_tournament_labels(labels: list[str]) -> str:
+    if not labels:
+        return "Sin torneo"
+    if len(labels) == 1:
+        return labels[0]
+    if len(labels) == 2:
+        return f"{labels[0]} + {labels[1]}"
+    return ", ".join(labels)
+
+
+def describe_active_scope(matches: pd.DataFrame, filters: FilterState) -> str:
+    selected_tournaments = list(filters.tournaments or [])
+    if selected_tournaments:
+        tournament_values = sorted(dict.fromkeys(selected_tournaments), key=tournament_sort_key)
+    elif "tournament" in matches.columns:
+        tournament_values = sorted(matches["tournament"].dropna().astype(str).unique().tolist(), key=tournament_sort_key)
+    else:
+        tournament_values = []
+
+    scope = matches.copy()
+    if tournament_values and "tournament" in scope.columns:
+        scope = scope[scope["tournament"].isin(tournament_values)]
+
+    start_round, end_round = filters.round_range
+    if "round_number" in scope.columns and not scope.empty:
+        scope = scope[scope["round_number"].between(start_round, end_round)]
+
+    if not scope.empty and "round_number" in scope.columns:
+        min_round = int(scope["round_number"].min())
+        max_round = int(scope["round_number"].max())
+    else:
+        min_round, max_round = start_round, end_round
+
+    tournament_label = _join_tournament_labels([tournament_display_label(value) for value in tournament_values])
+    round_label = f"R{min_round}" if min_round == max_round else f"R{min_round}-R{max_round}"
+    return f"{tournament_label} | {round_label}"
 
 
 def normalize_matches(df: pd.DataFrame) -> pd.DataFrame:

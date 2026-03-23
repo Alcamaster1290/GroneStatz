@@ -5,7 +5,7 @@ import re
 
 import pandas as pd
 
-from gronestats.dashboard.config import COLORS, PREFERRED_MATCH_STATS, RECENT_FORM_MATCHES, TOP_FORM_TEAMS
+from gronestats.dashboard.config import COLORS, DEFAULT_DASHBOARD_TOURNAMENTS, PREFERRED_MATCH_STATS, RECENT_FORM_MATCHES, REGULAR_SEASON_MAX_ROUND, TOP_FORM_TEAMS
 from gronestats.dashboard.models import DatasetBundle, FilterState, LeagueOverview, MatchSummary, PlayerProfile, TeamProfile
 
 
@@ -142,6 +142,23 @@ def apply_match_filters(matches: pd.DataFrame, filters: FilterState) -> pd.DataF
     work = matches.copy()
     if filters.tournaments and "tournament" in work.columns:
         work = work[work["tournament"].isin(filters.tournaments)]
+    start_round, end_round = filters.round_range
+    if "round_number" in work.columns:
+        work = work[work["round_number"].between(start_round, end_round)]
+    return work.copy()
+
+
+def apply_regular_season_filters(matches: pd.DataFrame, filters: FilterState) -> pd.DataFrame:
+    if matches.empty:
+        return matches
+    work = matches.copy()
+    if "tournament" in work.columns and work["tournament"].notna().any():
+        allowed = [tournament for tournament in DEFAULT_DASHBOARD_TOURNAMENTS if tournament in set(work["tournament"].dropna().astype(str))]
+        if allowed:
+            work = work[work["tournament"].isin(allowed)]
+    elif "round_number" in work.columns:
+        work = work[work["round_number"] <= REGULAR_SEASON_MAX_ROUND]
+
     start_round, end_round = filters.round_range
     if "round_number" in work.columns:
         work = work[work["round_number"].between(start_round, end_round)]
@@ -718,7 +735,7 @@ def _build_player_accumulated_heatmap(
     if bundle.heatmap_points.empty:
         return pd.DataFrame()
 
-    filtered_matches = apply_match_filters(bundle.matches, filters)
+    filtered_matches = apply_regular_season_filters(bundle.matches, filters)
     if filtered_matches.empty:
         return pd.DataFrame()
 
@@ -742,7 +759,7 @@ def _build_player_accumulated_average_position(
     if bundle.average_positions.empty:
         return None
 
-    filtered_matches = apply_match_filters(bundle.matches, filters)
+    filtered_matches = apply_regular_season_filters(bundle.matches, filters)
     if filtered_matches.empty:
         return None
     match_ids = set(filtered_matches["match_id"].dropna().astype(int).tolist())
@@ -815,6 +832,50 @@ def _build_player_visual_coverage(visual_matches: pd.DataFrame) -> dict[str, obj
         "heatmap_match_count": int(heatmap_matches["match_id"].nunique()) if not heatmap_matches.empty else 0,
         "average_round_labels": average_matches["round_label"].dropna().astype(str).drop_duplicates().tolist() if not average_matches.empty and "round_label" in average_matches.columns else [],
         "heatmap_round_labels": heatmap_matches["round_label"].dropna().astype(str).drop_duplicates().tolist() if not heatmap_matches.empty and "round_label" in heatmap_matches.columns else [],
+    }
+
+
+def _build_player_accumulated_visual_coverage(
+    bundle: DatasetBundle,
+    filters: FilterState,
+    *,
+    player_id: int,
+) -> dict[str, object]:
+    regular_matches = apply_regular_season_filters(bundle.matches, filters)
+    if regular_matches.empty:
+        return {
+            "regular_average_match_count": 0,
+            "regular_heatmap_match_count": 0,
+            "regular_average_round_labels": [],
+            "regular_heatmap_round_labels": [],
+        }
+
+    match_ids = set(regular_matches["match_id"].dropna().astype(int).tolist())
+    average_match_ids = set()
+    heatmap_match_ids = set()
+
+    if not bundle.average_positions.empty:
+        average_match_ids = set(
+            bundle.average_positions[
+                (bundle.average_positions["player_id"] == player_id)
+                & (bundle.average_positions["match_id"].isin(match_ids))
+            ]["match_id"].dropna().astype(int).tolist()
+        )
+    if not bundle.heatmap_points.empty:
+        heatmap_match_ids = set(
+            bundle.heatmap_points[
+                (bundle.heatmap_points["player_id"] == player_id)
+                & (bundle.heatmap_points["match_id"].isin(match_ids))
+            ]["match_id"].dropna().astype(int).tolist()
+        )
+
+    average_matches = regular_matches[regular_matches["match_id"].isin(average_match_ids)].copy()
+    heatmap_matches = regular_matches[regular_matches["match_id"].isin(heatmap_match_ids)].copy()
+    return {
+        "regular_average_match_count": int(average_matches["match_id"].nunique()) if not average_matches.empty else 0,
+        "regular_heatmap_match_count": int(heatmap_matches["match_id"].nunique()) if not heatmap_matches.empty else 0,
+        "regular_average_round_labels": average_matches["round_label"].dropna().astype(str).drop_duplicates().tolist() if not average_matches.empty and "round_label" in average_matches.columns else [],
+        "regular_heatmap_round_labels": heatmap_matches["round_label"].dropna().astype(str).drop_duplicates().tolist() if not heatmap_matches.empty and "round_label" in heatmap_matches.columns else [],
     }
 
 
@@ -947,7 +1008,10 @@ def build_player_profile(
         filters,
         player_id=player_id,
     )
-    visual_coverage = _build_player_visual_coverage(available_visual_matches)
+    visual_coverage = {
+        **_build_player_visual_coverage(available_visual_matches),
+        **_build_player_accumulated_visual_coverage(bundle, filters, player_id=player_id),
+    }
     default_visual_mode, default_visual_scope = _resolve_player_visual_defaults(
         contextual_average_position_row=contextual_average_position_row,
         contextual_heatmap_points=contextual_heatmap_points,
