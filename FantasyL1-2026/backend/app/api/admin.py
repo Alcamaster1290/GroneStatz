@@ -344,47 +344,56 @@ def _parse_kickoff(value: Optional[str | datetime]) -> Optional[datetime]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_kickoff_at")
 
 
-def _remove_team_from_league(db: Session, team_id: int) -> None:
-    row = (
-        db.execute(
-            select(League, LeagueMember)
-            .join(LeagueMember, LeagueMember.league_id == League.id)
-            .where(LeagueMember.fantasy_team_id == team_id)
-        )
-        .first()
-    )
-    if not row:
+def _remove_teams_from_leagues_bulk(db: Session, team_ids: list[int]) -> None:
+    if not team_ids:
         return
-    league, _ = row
 
-    db.execute(
-        delete(LeagueMember).where(
-            LeagueMember.league_id == league.id,
-            LeagueMember.fantasy_team_id == team_id,
+    # 1. Identify all leagues where these teams are members.
+    leagues_to_process = (
+        db.execute(
+            select(League)
+            .join(LeagueMember, LeagueMember.league_id == League.id)
+            .where(LeagueMember.fantasy_team_id.in_(team_ids))
+            .distinct()
         )
+        .scalars()
+        .all()
     )
 
-    if league.owner_fantasy_team_id == team_id:
-        members = (
-            db.execute(
-                select(LeagueMember)
-                .where(LeagueMember.league_id == league.id)
-                .order_by(LeagueMember.joined_at)
+    if not leagues_to_process:
+        return
+
+    # 2. Delete memberships for these teams from those leagues.
+    db.execute(
+        delete(LeagueMember).where(LeagueMember.fantasy_team_id.in_(team_ids))
+    )
+
+    # 3. Handle ownership transfers or league deletions.
+    for league in leagues_to_process:
+        if league.owner_fantasy_team_id in team_ids:
+            # Current owner is being deleted, find a new one.
+            members = (
+                db.execute(
+                    select(LeagueMember)
+                    .where(LeagueMember.league_id == league.id)
+                    .order_by(LeagueMember.joined_at)
+                )
+                .scalars()
+                .all()
             )
-            .scalars()
-            .all()
-        )
-        if not members:
-            db.execute(
-                update(ActionLog).where(ActionLog.league_id == league.id).values(league_id=None)
-            )
-            db.execute(delete(League).where(League.id == league.id))
-        else:
-            db.execute(
-                update(League)
-                .where(League.id == league.id)
-                .values(owner_fantasy_team_id=members[0].fantasy_team_id)
-            )
+            if not members:
+                # No members left, delete the league.
+                db.execute(
+                    update(ActionLog).where(ActionLog.league_id == league.id).values(league_id=None)
+                )
+                db.execute(delete(League).where(League.id == league.id))
+            else:
+                # Assign to the oldest remaining member.
+                db.execute(
+                    update(League)
+                    .where(League.id == league.id)
+                    .values(owner_fantasy_team_id=members[0].fantasy_team_id)
+                )
 
 
 def _delete_user_data(db: Session, user: User) -> None:
@@ -395,33 +404,39 @@ def _delete_user_data(db: Session, user: User) -> None:
         update(ActionLog).where(ActionLog.target_user_id == user.id).values(target_user_id=None)
     )
     db.execute(delete(PasswordResetToken).where(PasswordResetToken.user_id == user.id))
-    teams = (
-        db.execute(select(FantasyTeam).where(FantasyTeam.user_id == user.id)).scalars().all()
+
+    team_ids = (
+        db.execute(select(FantasyTeam.id).where(FantasyTeam.user_id == user.id))
+        .scalars()
+        .all()
     )
-    for team in teams:
+    if team_ids:
         db.execute(
             update(ActionLog)
-            .where(ActionLog.fantasy_team_id == team.id)
+            .where(ActionLog.fantasy_team_id.in_(team_ids))
             .values(fantasy_team_id=None)
         )
         db.execute(
             update(ActionLog)
-            .where(ActionLog.target_fantasy_team_id == team.id)
+            .where(ActionLog.target_fantasy_team_id.in_(team_ids))
             .values(target_fantasy_team_id=None)
         )
-        _remove_team_from_league(db, team.id)
+
+        _remove_teams_from_leagues_bulk(db, team_ids)
+
         db.execute(
             delete(FantasyLineupSlot).where(
                 FantasyLineupSlot.lineup_id.in_(
-                    select(FantasyLineup.id).where(FantasyLineup.fantasy_team_id == team.id)
+                    select(FantasyLineup.id).where(FantasyLineup.fantasy_team_id.in_(team_ids))
                 )
             )
         )
-        db.execute(delete(FantasyLineup).where(FantasyLineup.fantasy_team_id == team.id))
-        db.execute(delete(FantasyTeamPlayer).where(FantasyTeamPlayer.fantasy_team_id == team.id))
-        db.execute(delete(FantasyTransfer).where(FantasyTransfer.fantasy_team_id == team.id))
-        db.execute(delete(LeagueMember).where(LeagueMember.fantasy_team_id == team.id))
-        db.execute(delete(FantasyTeam).where(FantasyTeam.id == team.id))
+        db.execute(delete(FantasyLineup).where(FantasyLineup.fantasy_team_id.in_(team_ids)))
+        db.execute(delete(FantasyTeamPlayer).where(FantasyTeamPlayer.fantasy_team_id.in_(team_ids)))
+        db.execute(delete(FantasyTransfer).where(FantasyTransfer.fantasy_team_id.in_(team_ids)))
+        db.execute(delete(LeagueMember).where(LeagueMember.fantasy_team_id.in_(team_ids)))
+        db.execute(delete(FantasyTeam).where(FantasyTeam.id.in_(team_ids)))
+
     db.execute(delete(User).where(User.id == user.id))
 
 
