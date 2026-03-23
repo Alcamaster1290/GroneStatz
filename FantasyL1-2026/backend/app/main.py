@@ -78,12 +78,8 @@ def handle_db_unavailable(request: Request, exc: OperationalError) -> JSONRespon
 
 @app.exception_handler(IntegrityError)
 def handle_integrity_error(request: Request, exc: IntegrityError) -> JSONResponse:
-    detail = "db_integrity_error"
-    orig = getattr(exc, "orig", None)
-    constraint = getattr(getattr(orig, "diag", None), "constraint_name", None)
-    if constraint:
-        detail = f"db_integrity_error:{constraint}"
-    return JSONResponse(status_code=400, content={"detail": detail})
+    logger.exception("db_integrity_error")
+    return JSONResponse(status_code=400, content={"detail": "db_integrity_error"})
 
 
 @app.exception_handler(Exception)
