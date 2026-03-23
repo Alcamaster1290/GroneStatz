@@ -100,7 +100,7 @@ def request_password_reset(
 
     settings = get_settings()
     if settings.APP_ENV != "prod":
-        logging.info(f"Password reset code for {user.email}: {code}")
+        logging.info(f"Password reset requested for {user.email}")
 
     return PasswordResetOut(ok=True)
 
