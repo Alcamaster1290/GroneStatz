@@ -8,7 +8,28 @@ sys.modules["app.models"] = MagicMock()
 sys.modules["app.services.fantasy"] = MagicMock()
 
 import pytest
-from app.services.scoring import _clamp_price
+from app.services.scoring import _clamp_price, _price_delta
+
+def test_price_delta_positive():
+    """Test price delta for positive points."""
+    assert _price_delta(1.0) == 0.0
+    assert _price_delta(2.0) == 0.0
+    assert _price_delta(3.0) == pytest.approx(0.1)
+    assert _price_delta(5.9) == pytest.approx(0.1)
+    assert _price_delta(6.0) == pytest.approx(0.2)
+    assert _price_delta(9.0) == pytest.approx(0.3)
+
+def test_price_delta_zero():
+    """Test price delta for zero points."""
+    assert _price_delta(0.0) == pytest.approx(-0.2)
+
+def test_price_delta_negative():
+    """Test price delta for negative points."""
+    assert _price_delta(-1.0) == pytest.approx(-0.2)
+    assert _price_delta(-1.9) == pytest.approx(-0.2)
+    assert _price_delta(-2.0) == pytest.approx(-0.3)
+    assert _price_delta(-3.0) == pytest.approx(-0.3)
+    assert _price_delta(-4.0) == pytest.approx(-0.4)
 
 def test_clamp_price_within_range():
     """Test that value is returned as-is when within range."""
