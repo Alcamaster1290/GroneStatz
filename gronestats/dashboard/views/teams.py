@@ -21,7 +21,7 @@ from gronestats.dashboard.views.shared import (
 )
 
 
-def render_team_view(profile: TeamProfile | None) -> dict[str, object] | None:
+def render_team_view(profile: TeamProfile | None, *, player_layer_available: bool = True) -> dict[str, object] | None:
     if profile is None:
         render_empty_state("Selecciona un club con partidos dentro del rango filtrado.")
         return None
@@ -51,13 +51,19 @@ def render_team_view(profile: TeamProfile | None) -> dict[str, object] | None:
     with action_cols[0]:
         if action is None and render_navigation_surface(
             title="Plantilla y perfiles",
-            note="Filtra la exploracion de jugadores al club actual para bajar a rendimiento individual.",
+            note=(
+                "Filtra la exploracion de jugadores al club actual para bajar a rendimiento individual."
+                if player_layer_available
+                else "La capa de jugadores aun no esta publicada para esta temporada."
+            ),
             key=f"team_go_players_{profile.team_id}",
-            button_label="Ver plantilla del equipo",
+            button_label="Ver plantilla del equipo" if player_layer_available else "Jugadores pendientes",
             eyebrow="Siguiente capa",
-            metadata=[profile.team_name, "Jugadores"],
+            metadata=[profile.team_name, "Jugadores" if player_layer_available else "Sin player_match"],
             variant="primary",
             accent_color=profile.team_color,
+            disabled=not player_layer_available,
+            help=None if player_layer_available else "Se habilita cuando exista `player_match` publicado para esta temporada.",
         ):
             action = build_action("players_filter", team_id=int(profile.team_id), position="Todas")
     with action_cols[1]:
@@ -130,7 +136,11 @@ def render_team_view(profile: TeamProfile | None) -> dict[str, object] | None:
     with bottom_left:
         render_section_title("Top contribuyentes", "Selecciona un jugador para abrir su perfil.")
         if profile.top_players.empty:
-            render_empty_state("No hay jugadores con minutos registrados para este equipo.")
+            render_empty_state(
+                "Todavia no hay `player_match` publicado para este equipo."
+                if not player_layer_available
+                else "No hay jugadores con minutos registrados para este equipo."
+            )
         else:
             render_selection_note("Selecciona una fila para saltar al perfil del jugador dentro del contexto del equipo.")
             players_event = st.dataframe(

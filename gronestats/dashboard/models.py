@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -15,6 +17,9 @@ class FilterState:
 
 @dataclass(frozen=True)
 class DatasetBundle:
+    season_year: int
+    season_label: str
+    data_dir: Path
     matches: pd.DataFrame
     teams: pd.DataFrame
     players: pd.DataFrame
@@ -23,7 +28,83 @@ class DatasetBundle:
     team_stats: pd.DataFrame
     average_positions: pd.DataFrame
     heatmap_points: pd.DataFrame
+    validation_status: str
+    validation_warnings: tuple[str, ...]
+    manifest: dict[str, Any]
+    validation: dict[str, Any]
     loaded_at: datetime
+
+    @property
+    def has_schedule(self) -> bool:
+        return not self.matches.empty
+
+    @property
+    def has_team_layer(self) -> bool:
+        return not self.teams.empty
+
+    @property
+    def has_player_layer(self) -> bool:
+        return not self.player_match.empty
+
+    @property
+    def has_match_stats_layer(self) -> bool:
+        return not self.team_stats.empty
+
+    @property
+    def has_positional_layer(self) -> bool:
+        return not self.average_positions.empty or not self.heatmap_points.empty
+
+    @property
+    def warning_count(self) -> int:
+        return len(self.validation_warnings)
+
+    @property
+    def coverage_label(self) -> str:
+        if self.validation_status == "passed" and self.warning_count == 0:
+            return "Validacion passed"
+        if self.validation_status == "passed":
+            return f"Validacion passed | {self.warning_count} warnings"
+        if self.validation_status:
+            return f"Validacion {self.validation_status}"
+        return "Validacion no disponible"
+
+
+@dataclass(frozen=True)
+class SeasonDataset:
+    season_year: int
+    season_label: str
+    data_dir: Path
+    manifest: dict[str, Any]
+    validation: dict[str, Any]
+
+    @property
+    def validation_status(self) -> str:
+        return str(self.validation.get("status", "unknown"))
+
+    @property
+    def warning_count(self) -> int:
+        warnings = self.validation.get("warnings", [])
+        return len(warnings) if isinstance(warnings, list) else 0
+
+    @property
+    def coverage_label(self) -> str:
+        if self.validation_status == "passed" and self.warning_count == 0:
+            return "Validacion passed"
+        if self.validation_status == "passed":
+            return f"Validacion passed | {self.warning_count} warnings"
+        return f"Validacion {self.validation_status}"
+
+
+@dataclass(frozen=True)
+class ConsolidatedSeasonOverview:
+    total_seasons: int
+    total_matches: int
+    total_players: int
+    total_goals: int
+    goals_per_match: float
+    passed_seasons: int
+    warning_seasons: int
+    seasons_table: pd.DataFrame
 
 
 @dataclass(frozen=True)

@@ -2,26 +2,66 @@ from __future__ import annotations
 
 import streamlit as st
 
-from gronestats.dashboard.config import APP_SUBTITLE, APP_TITLE, DATA_DIR, DEFAULT_DASHBOARD_TOURNAMENTS, SEASON_LABEL
-from gronestats.dashboard.data import describe_active_scope, load_dashboard_data, parquet_signature, tournament_display_label, tournament_sort_key
+from gronestats.dashboard.config import APP_SUBTITLE, APP_TITLE, DEFAULT_DASHBOARD_TOURNAMENTS
+from gronestats.dashboard.data import (
+    build_team_options,
+    describe_active_scope,
+    describe_bundle_gaps,
+    load_consolidated_season_overview,
+    load_dashboard_data,
+    load_season_catalog,
+    resolve_default_season_year,
+    resolve_season_dataset,
+    season_catalog_signature,
+    season_parquet_signature,
+    tournament_display_label,
+    tournament_sort_key,
+)
 from gronestats.dashboard.models import FilterState
 from gronestats.dashboard.pages import build_team_lookup, clamp_round_range, derive_round_bounds, render_page
-from gronestats.dashboard.state import PAGES, apply_navigation_action, init_dashboard_state
-from gronestats.dashboard.views.shared import inject_base_styles, render_action_button
+from gronestats.dashboard.state import PAGES, apply_navigation_action, init_dashboard_state, reset_dashboard_context
+from gronestats.dashboard.views.shared import inject_base_styles, render_action_button, render_selection_note
 
 
-st.set_page_config(page_title=f"{APP_TITLE} | {SEASON_LABEL}", page_icon=":soccer:", layout="wide")
+st.set_page_config(page_title=f"{APP_TITLE} | Dashboard", page_icon=":soccer:", layout="wide")
 inject_base_styles()
 
-bundle = load_dashboard_data(parquet_signature())
-if bundle.matches.empty or bundle.teams.empty or bundle.players.empty or bundle.player_match.empty:
-    st.error(f"No se pudieron cargar los parquets requeridos desde {DATA_DIR}.")
+catalog_signature = season_catalog_signature()
+season_catalog = load_season_catalog(catalog_signature)
+if not season_catalog:
+    st.error("No se encontraron temporadas publicadas en `gronestats/data/Liga 1 Peru/*/dashboard/current`.")
     st.stop()
 
-team_options = bundle.teams[["team_id", "team_name"]].dropna().sort_values("team_name")
+season_options = [dataset.season_year for dataset in season_catalog]
+season_lookup = {dataset.season_year: dataset for dataset in season_catalog}
+init_dashboard_state([])
+if st.session_state.get("selected_season_year") not in season_options:
+    st.session_state["selected_season_year"] = resolve_default_season_year(season_catalog)
+
+selected_season_year = int(st.session_state["selected_season_year"])
+bundle = load_dashboard_data(selected_season_year, season_parquet_signature(selected_season_year))
+if not bundle.has_schedule:
+    st.error(f"No se pudieron cargar los parquets base de partidos desde {bundle.data_dir}.")
+    st.stop()
+
+consolidated_overview = load_consolidated_season_overview(catalog_signature)
+team_options = build_team_options(bundle)
 team_ids = team_options["team_id"].astype(int).tolist()
 team_lookup = build_team_lookup(team_options)
+coverage_notes = describe_bundle_gaps(bundle)
 init_dashboard_state(team_ids)
+if st.session_state.get("active_season_year") != bundle.season_year:
+    reset_dashboard_context(team_ids, nav_page=st.session_state.get("nav_page", "Overview"))
+    st.session_state["active_season_year"] = bundle.season_year
+
+
+def _season_option_label(season_year: int) -> str:
+    dataset = resolve_season_dataset(season_year, season_catalog)
+    if dataset is None:
+        return str(season_year)
+    suffix = f"{dataset.warning_count} warnings" if dataset.warning_count else dataset.validation_status
+    return f"{dataset.season_label} | {suffix}"
+
 
 tournament_values = []
 if "tournament" in bundle.matches.columns:
@@ -36,7 +76,20 @@ else:
 
 with st.sidebar:
     st.markdown(f"## {APP_TITLE}")
-    st.caption(f"{APP_SUBTITLE} | {SEASON_LABEL}")
+    selected_season_year = st.selectbox(
+        "Temporada",
+        options=season_options,
+        key="selected_season_year",
+        format_func=_season_option_label,
+    )
+    selected_dataset = season_lookup.get(int(selected_season_year))
+    st.caption(f"{APP_SUBTITLE} | {bundle.season_label}")
+    if selected_dataset is not None:
+        st.caption(selected_dataset.coverage_label)
+    if coverage_notes:
+        st.caption("Cobertura parcial")
+        for note in coverage_notes:
+            st.caption(f"- {note}")
     st.caption("Filtra por torneo y rango de rondas. El dashboard abre combinado en Apertura + Clausura y deja Grand Final como capa opcional.")
     st.divider()
     selected_tournaments = st.multiselect(
@@ -70,11 +123,28 @@ with st.sidebar:
         value=180,
     )
     st.divider()
-    st.caption(f"Parquets: `{DATA_DIR}`")
+    st.caption(f"Parquets: `{bundle.data_dir}`")
+    st.caption(f"Release: `{bundle.manifest.get('release_id', '-')}`")
     st.caption(f"Cargado: {bundle.loaded_at.strftime('%d/%m/%Y %H:%M:%S')}")
 
 filters = FilterState(round_range=round_range, min_minutes=min_minutes, tournaments=tuple(selected_tournaments))
 scope_summary = describe_active_scope(bundle.matches, filters)
+page_enabled = {
+    "Temporadas": True,
+    "Overview": bundle.has_schedule,
+    "Equipos": bool(team_ids),
+    "Jugadores": bundle.has_player_layer,
+    "Partidos": bundle.has_schedule,
+}
+page_help = {
+    "Equipos": "Se habilita cuando exista un catalogo de equipos o IDs reutilizables desde los fixtures.",
+    "Jugadores": "Se habilita cuando exista `player_match` publicado para la temporada activa.",
+}
+if not page_enabled.get(st.session_state["nav_page"], True):
+    st.session_state["nav_page"] = "Overview"
+
+if coverage_notes:
+    render_selection_note("Cobertura parcial activa: algunas capas analiticas todavia no estan publicadas para esta temporada.")
 
 st.caption("Navega con botones, tablas y cards contextuales. El sidebar queda solo para filtros globales.")
 nav_cols = st.columns(len(PAGES), gap="small")
@@ -85,6 +155,8 @@ for column, label in zip(nav_cols, PAGES):
             key=f"nav_button_{label}",
             width="stretch",
             variant="active" if st.session_state["nav_page"] == label else "secondary",
+            disabled=not page_enabled.get(label, True),
+            help=page_help.get(label),
         ):
             if st.session_state["nav_page"] != label:
                 st.session_state["nav_page"] = label
@@ -97,6 +169,8 @@ page_action = render_page(
     filters,
     team_ids,
     team_lookup,
+    season_catalog,
+    consolidated_overview,
     scope_summary=scope_summary,
 )
 apply_navigation_action(page_action)

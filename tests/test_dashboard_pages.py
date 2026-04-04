@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 
 from gronestats.dashboard import pages
-from gronestats.dashboard.data import describe_active_scope
-from gronestats.dashboard.models import DatasetBundle, FilterState
+from gronestats.dashboard.data import build_team_options, describe_active_scope
+from gronestats.dashboard.models import ConsolidatedSeasonOverview, DatasetBundle, FilterState, SeasonDataset
 
 
 class _DummyContext:
@@ -79,6 +80,9 @@ def _make_bundle() -> DatasetBundle:
         }
     )
     return DatasetBundle(
+        season_year=2025,
+        season_label="Liga 1 2025",
+        data_dir=Path("gronestats/data/Liga 1 Peru/2025/dashboard/current"),
         matches=matches,
         teams=teams,
         players=players,
@@ -87,6 +91,10 @@ def _make_bundle() -> DatasetBundle:
         team_stats=pd.DataFrame(),
         average_positions=pd.DataFrame(),
         heatmap_points=pd.DataFrame(),
+        validation_status="passed",
+        validation_warnings=tuple(),
+        manifest={},
+        validation={},
         loaded_at=datetime(2026, 3, 15, 12, 0, 0),
     )
 
@@ -143,12 +151,44 @@ def test_render_overview_page_smoke(monkeypatch) -> None:
     assert captured["header"]["scope_summary"] == "Apertura | R1-R19"
 
 
+def test_render_seasons_page_smoke(monkeypatch) -> None:
+    bundle = _make_bundle()
+    season_catalog = (
+        SeasonDataset(
+            season_year=2025,
+            season_label="Liga 1 2025",
+            data_dir=Path("gronestats/data/Liga 1 Peru/2025/dashboard/current"),
+            manifest={"release_id": "20260403_233333"},
+            validation={"status": "passed", "warnings": []},
+        ),
+    )
+    overview = ConsolidatedSeasonOverview(
+        total_seasons=1,
+        total_matches=2,
+        total_players=2,
+        total_goals=3,
+        goals_per_match=1.5,
+        passed_seasons=1,
+        warning_seasons=0,
+        seasons_table=pd.DataFrame({"season_year": [2025], "season_label": ["Liga 1 2025"]}),
+    )
+    captured = {}
+    monkeypatch.setattr(pages, "render_app_header", lambda **kwargs: captured.setdefault("header", kwargs))
+    monkeypatch.setattr(pages, "render_seasons_overview", lambda *args, **kwargs: {"type": "season"})
+
+    action = pages.render_seasons_page(bundle, season_catalog, overview)
+
+    assert action == {"type": "season"}
+    assert captured["header"]["season_label"] == "Liga 1 2025"
+    assert captured["header"]["coverage_label"] == bundle.coverage_label
+
+
 def test_render_teams_page_smoke_clamps_invalid_focus(monkeypatch) -> None:
     bundle = _make_bundle()
     session_state = {"focus_team_id": 999}
     _install_streamlit_stubs(monkeypatch, session_state)
     monkeypatch.setattr(pages, "render_app_header", lambda **kwargs: None)
-    monkeypatch.setattr(pages, "render_team_view", lambda profile: profile)
+    monkeypatch.setattr(pages, "render_team_view", lambda profile, **kwargs: profile)
     captured = {}
     monkeypatch.setattr(
         pages,
@@ -166,6 +206,51 @@ def test_render_teams_page_smoke_clamps_invalid_focus(monkeypatch) -> None:
 
     assert session_state["focus_team_id"] == 10
     assert captured["team_id"] == 10
+
+
+def test_render_teams_page_passes_player_layer_flag(monkeypatch) -> None:
+    bundle = _make_bundle()
+    bundle = DatasetBundle(
+        season_year=bundle.season_year,
+        season_label=bundle.season_label,
+        data_dir=bundle.data_dir,
+        matches=bundle.matches,
+        teams=bundle.teams,
+        players=bundle.players.iloc[0:0].copy(),
+        player_match=bundle.player_match.iloc[0:0].copy(),
+        player_totals=bundle.player_totals,
+        team_stats=bundle.team_stats,
+        average_positions=bundle.average_positions,
+        heatmap_points=bundle.heatmap_points,
+        validation_status=bundle.validation_status,
+        validation_warnings=bundle.validation_warnings,
+        manifest=bundle.manifest,
+        validation=bundle.validation,
+        loaded_at=bundle.loaded_at,
+    )
+    session_state = {"focus_team_id": 10}
+    _install_streamlit_stubs(monkeypatch, session_state)
+    monkeypatch.setattr(pages, "render_app_header", lambda **kwargs: None)
+    monkeypatch.setattr(pages, "build_team_profile", lambda *_args, **_kwargs: {"team_id": 10})
+    captured: dict[str, object] = {}
+
+    def _render_team_view(profile, **kwargs):
+        captured["profile"] = profile
+        captured.update(kwargs)
+        return {"type": "team"}
+
+    monkeypatch.setattr(pages, "render_team_view", _render_team_view)
+
+    action = pages.render_teams_page(
+        bundle,
+        FilterState(round_range=(1, 19), min_minutes=0),
+        [10, 20],
+        {10: "Alianza", 20: "Melgar"},
+        scope_summary="Apertura | R1-R19",
+    )
+
+    assert action == {"type": "team"}
+    assert captured["player_layer_available"] is False
 
 
 def test_render_players_page_smoke_handles_empty_table(monkeypatch) -> None:
@@ -194,6 +279,78 @@ def test_render_players_page_smoke_handles_empty_table(monkeypatch) -> None:
 
     assert action is None
     assert empty_messages == ["Amplia filtros o reduce el minimo de minutos para ver perfiles."]
+
+
+def test_render_players_page_reports_partial_season_without_player_match(monkeypatch) -> None:
+    bundle = _make_bundle()
+    bundle = DatasetBundle(
+        season_year=bundle.season_year,
+        season_label=bundle.season_label,
+        data_dir=bundle.data_dir,
+        matches=bundle.matches,
+        teams=bundle.teams,
+        players=bundle.players.iloc[0:0].copy(),
+        player_match=bundle.player_match.iloc[0:0].copy(),
+        player_totals=bundle.player_totals,
+        team_stats=bundle.team_stats,
+        average_positions=bundle.average_positions,
+        heatmap_points=bundle.heatmap_points,
+        validation_status=bundle.validation_status,
+        validation_warnings=bundle.validation_warnings,
+        manifest=bundle.manifest,
+        validation=bundle.validation,
+        loaded_at=bundle.loaded_at,
+    )
+    session_state = {
+        "players_team_filter": None,
+        "players_position_filter": "Todas",
+        "players_search": "",
+        "focus_player_id": None,
+    }
+    _install_streamlit_stubs(monkeypatch, session_state)
+    monkeypatch.setattr(pages, "render_app_header", lambda **kwargs: None)
+    empty_messages: list[str] = []
+    monkeypatch.setattr(pages, "render_empty_state", lambda message: empty_messages.append(message))
+
+    action = pages.render_players_page(
+        bundle,
+        FilterState(round_range=(1, 19), min_minutes=0),
+        [10, 20],
+        {10: "Alianza", 20: "Melgar"},
+        scope_summary="Apertura | R1-R19",
+    )
+
+    assert action is None
+    assert empty_messages == [
+        "Esta temporada aun no publica `player_match`. El ranking y los perfiles se habilitan cuando entren estadisticas individuales."
+    ]
+
+
+def test_build_team_options_falls_back_to_match_labels_when_team_table_is_empty() -> None:
+    bundle = _make_bundle()
+    bundle = DatasetBundle(
+        season_year=bundle.season_year,
+        season_label=bundle.season_label,
+        data_dir=bundle.data_dir,
+        matches=bundle.matches,
+        teams=bundle.teams.iloc[0:0].copy(),
+        players=bundle.players,
+        player_match=bundle.player_match,
+        player_totals=bundle.player_totals,
+        team_stats=bundle.team_stats,
+        average_positions=bundle.average_positions,
+        heatmap_points=bundle.heatmap_points,
+        validation_status=bundle.validation_status,
+        validation_warnings=bundle.validation_warnings,
+        manifest=bundle.manifest,
+        validation=bundle.validation,
+        loaded_at=bundle.loaded_at,
+    )
+
+    team_options = build_team_options(bundle)
+
+    assert team_options["team_id"].astype(int).tolist() == [10, 20]
+    assert team_options["team_name"].tolist() == ["Alianza", "Melgar"]
 
 
 def test_render_players_page_smoke_clamps_focus_before_profile(monkeypatch) -> None:

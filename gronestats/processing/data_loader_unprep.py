@@ -2,6 +2,7 @@ import os
 import glob
 import zipfile
 import traceback
+import re
 from pathlib import Path
 import argparse
 import threading
@@ -9,6 +10,8 @@ import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import pandas as pd
 import ScraperFC as sfc
+import ScraperFC.sofascore as sofascore_module
+from botasaurus_driver.driver import Driver
 
 # Valores por defecto (sobrescribibles por CLI o env)
 DEFAULT_YEAR = os.getenv("GRONESTATS_YEAR", "2024")
@@ -30,6 +33,38 @@ COMPS = {
     "Women's World Cup": 290,
 }
 
+_PRE_TAG_RE = re.compile(r"^<pre[^>]*>(.*)</pre>$", re.IGNORECASE | re.DOTALL)
+
+
+def _normalize_json_like_text(payload: str) -> str:
+    text = payload.strip()
+    match = _PRE_TAG_RE.match(text)
+    if match:
+        text = match.group(1).strip()
+    return text
+
+
+def botasaurus_browser_get_json_compat(url: str) -> dict:
+    driver = Driver(headless=True, block_images_and_css=True)
+    try:
+        driver.get(url)
+        page_source = _normalize_json_like_text(driver.page_text)
+        return json.loads(page_source)
+    finally:
+        try:
+            driver.close()
+        except Exception:
+            pass
+
+
+def patch_scraperfc_sofascore_transport() -> None:
+    current = getattr(sofascore_module, "botasaurus_browser_get_json", None)
+    if current is botasaurus_browser_get_json_compat:
+        return
+    sofascore_module.botasaurus_browser_get_json = botasaurus_browser_get_json_compat
+
+
+patch_scraperfc_sofascore_transport()
 sofascore = sfc.Sofascore()
 
 
@@ -336,7 +371,7 @@ def scrape_match_details(df_matches: pd.DataFrame, out_dir: Path, min_file_kb: i
                 msg = (
                     f"[{i+1}/{total}] error {match_id}: "
                     f"archivo menor a {min_file_kb} KB ({size_kb:.1f} KB). "
-                    "Se elimina y se detiene el proceso."
+                    "Se elimina y se continua con el resto."
                 )
                 try:
                     out_xlsx.unlink(missing_ok=True)
@@ -347,7 +382,7 @@ def scrape_match_details(df_matches: pd.DataFrame, out_dir: Path, min_file_kb: i
                     f.write(msg + "\n")
                 print(msg)
                 STATE.error = msg
-                raise SystemExit(msg)
+                continue
 
             print(f"[{i+1}/{total}] ok {match_id}")
             STATE.done_details = i + 1

@@ -70,7 +70,11 @@ def render_overview(overview: LeagueOverview) -> dict[str, object] | None:
             ) and scorer_player_id is not None:
                 action = build_action("player", player_id=scorer_player_id, team_id=scorer_team_id)
         else:
-            render_empty_state("Sin lider de goles disponible.")
+            render_empty_state(
+                "Sin `player_match` publicado en el rango activo."
+                if overview.total_players == 0
+                else "Sin lider de goles disponible."
+            )
     with quick_cols[2]:
         if top_match is not None:
             top_match_id = safe_optional_int(top_match.get("match_id"))
@@ -113,7 +117,11 @@ def render_overview(overview: LeagueOverview) -> dict[str, object] | None:
     with right:
         render_section_title("Lideres", "Selecciona una fila para abrir el perfil del jugador.")
         if not overview.leaders:
-            render_empty_state("No hay datos suficientes para construir liderazgos.")
+            render_empty_state(
+                "No hay `player_match` publicado para construir liderazgos."
+                if overview.total_players == 0
+                else "No hay datos suficientes para construir liderazgos."
+            )
         else:
             render_selection_note("Cada tabla de lideres es navegable: la fila seleccionada abre el perfil del jugador.")
             tabs = st.tabs(list(overview.leaders.keys()))

@@ -1,27 +1,49 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import streamlit as st
 
 from gronestats.dashboard.config import (
-    DATA_DIR,
+    DATA_ROOT,
+    DEFAULT_SEASON_YEAR,
     DEFAULT_DASHBOARD_TOURNAMENTS,
     PLAYER_IMAGES_DIR,
     REGULAR_SEASON_MAX_ROUND,
     TEAM_IMAGES_DIR,
     TOURNAMENT_LABELS,
     TOURNAMENT_ORDER,
+    build_season_label,
 )
-from gronestats.dashboard.models import DatasetBundle, FilterState
+from gronestats.dashboard.models import ConsolidatedSeasonOverview, DatasetBundle, FilterState, SeasonDataset
 
 
-def read_parquet(path: Path) -> pd.DataFrame:
+DASHBOARD_TABLES = (
+    "matches.parquet",
+    "teams.parquet",
+    "players.parquet",
+    "player_match.parquet",
+    "player_totals_full_season.parquet",
+    "team_stats.parquet",
+    "average_positions.parquet",
+    "heatmap_points.parquet",
+)
+
+
+def read_parquet(path: Path, *, columns: list[str] | None = None) -> pd.DataFrame:
     if not path.exists():
         return pd.DataFrame()
-    return pd.read_parquet(path)
+    return pd.read_parquet(path, columns=columns)
+
+
+def read_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def coalesce_columns(df: pd.DataFrame, target: str, candidates: list[str]) -> pd.DataFrame:
@@ -289,46 +311,259 @@ def filter_by_match_ids(frame: pd.DataFrame, match_ids: set[int]) -> pd.DataFram
     return frame.loc[frame["match_id"].isin(match_ids)].reset_index(drop=True)
 
 
-def parquet_signature() -> tuple[tuple[str, float], ...]:
+def build_team_options(bundle: DatasetBundle) -> pd.DataFrame:
+    frames: list[pd.DataFrame] = []
+    if not bundle.teams.empty and {"team_id", "team_name"}.issubset(bundle.teams.columns):
+        frames.append(bundle.teams[["team_id", "team_name"]].copy())
+    if not bundle.matches.empty:
+        if {"home_id", "home"}.issubset(bundle.matches.columns):
+            frames.append(
+                bundle.matches[["home_id", "home"]]
+                .rename(columns={"home_id": "team_id", "home": "team_name"})
+                .copy()
+            )
+        if {"away_id", "away"}.issubset(bundle.matches.columns):
+            frames.append(
+                bundle.matches[["away_id", "away"]]
+                .rename(columns={"away_id": "team_id", "away": "team_name"})
+                .copy()
+            )
+    if not frames:
+        return pd.DataFrame(columns=["team_id", "team_name"])
+
+    options = pd.concat(frames, ignore_index=True)
+    options["team_id"] = pd.to_numeric(options.get("team_id"), errors="coerce").astype("Int64")
+    options["team_name"] = options.get("team_name", pd.Series(index=options.index, dtype="object")).astype("string").str.strip()
+    options = options.loc[options["team_id"].notna() & options["team_name"].notna() & (options["team_name"] != "")]
+    if options.empty:
+        return pd.DataFrame(columns=["team_id", "team_name"])
+    return options.drop_duplicates(subset=["team_id"], keep="first").sort_values("team_name").reset_index(drop=True)
+
+
+def describe_bundle_gaps(bundle: DatasetBundle) -> tuple[str, ...]:
+    gaps: list[str] = []
+    if not bundle.has_player_layer:
+        gaps.append(
+            "Sin player_match publicado: Overview, Equipos y Partidos siguen activos; Jugadores se habilita cuando entren stats individuales."
+        )
+    if not bundle.has_match_stats_layer:
+        gaps.append(
+            "Sin team_stats ampliado: el detalle de partidos se apoya en marcador, contexto y planillas cuando existan."
+        )
+    if not bundle.has_positional_layer:
+        gaps.append(
+            "Sin average_positions ni heatmaps: los mapas posicionales quedan ocultos hasta completar el backfill analitico."
+        )
+    return tuple(gaps)
+
+
+def season_current_dir(season_year: int) -> Path:
+    return DATA_ROOT / str(season_year) / "dashboard" / "current"
+
+
+def season_parquet_signature(season_year: int) -> tuple[tuple[str, float], ...]:
+    data_dir = season_current_dir(season_year)
     files = []
-    for name in [
-        "matches.parquet",
-        "teams.parquet",
-        "players.parquet",
-        "player_match.parquet",
-        "player_totals.parquet",
-        "team_stats.parquet",
-        "average_positions.parquet",
-        "heatmap_points.parquet",
-    ]:
-        path = DATA_DIR / name
+    for name in ("manifest.json", "validation.json", *DASHBOARD_TABLES):
+        path = data_dir / name
         files.append((name, path.stat().st_mtime if path.exists() else -1.0))
     return tuple(files)
 
 
+def season_catalog_signature() -> tuple[tuple[int, tuple[tuple[str, float], ...]], ...]:
+    if not DATA_ROOT.exists():
+        return tuple()
+
+    signatures: list[tuple[int, tuple[tuple[str, float], ...]]] = []
+    for season_dir in DATA_ROOT.iterdir():
+        if not season_dir.is_dir() or not season_dir.name.isdigit():
+            continue
+        season_year = int(season_dir.name)
+        signatures.append((season_year, season_parquet_signature(season_year)))
+    return tuple(sorted(signatures, key=lambda item: item[0], reverse=True))
+
+
+def _discover_available_seasons() -> list[SeasonDataset]:
+    seasons: list[SeasonDataset] = []
+    if not DATA_ROOT.exists():
+        return seasons
+
+    for season_dir in DATA_ROOT.iterdir():
+        if not season_dir.is_dir() or not season_dir.name.isdigit():
+            continue
+        season_year = int(season_dir.name)
+        current_dir = season_current_dir(season_year)
+        if not (current_dir / "matches.parquet").exists():
+            continue
+        manifest = read_json(current_dir / "manifest.json")
+        validation = read_json(current_dir / "validation.json")
+        seasons.append(
+            SeasonDataset(
+                season_year=season_year,
+                season_label=build_season_label(season_year),
+                data_dir=current_dir,
+                manifest=manifest,
+                validation=validation,
+            )
+        )
+    return sorted(seasons, key=lambda item: item.season_year, reverse=True)
+
+
 @st.cache_data(show_spinner=False)
-def load_dashboard_data(_signature: tuple[tuple[str, float], ...]) -> DatasetBundle:
-    matches = normalize_matches(read_parquet(DATA_DIR / "matches.parquet"))
+def load_season_catalog(_signature: tuple[tuple[int, tuple[tuple[str, float], ...]], ...]) -> tuple[SeasonDataset, ...]:
+    return tuple(_discover_available_seasons())
+
+
+def resolve_default_season_year(seasons: tuple[SeasonDataset, ...] | list[SeasonDataset]) -> int:
+    if seasons:
+        return max(dataset.season_year for dataset in seasons)
+    return DEFAULT_SEASON_YEAR
+
+
+def resolve_season_dataset(
+    season_year: int,
+    seasons: tuple[SeasonDataset, ...] | list[SeasonDataset],
+) -> SeasonDataset | None:
+    for dataset in seasons:
+        if dataset.season_year == season_year:
+            return dataset
+    return None
+
+
+def _top_scorer(player_match: pd.DataFrame) -> tuple[str, int]:
+    if player_match.empty:
+        return ("Sin datos", 0)
+
+    work = player_match.copy()
+    if "player_id" in work.columns:
+        work["player_id"] = pd.to_numeric(work["player_id"], errors="coerce").astype("Int64")
+    if "goals" not in work.columns:
+        work["goals"] = 0
+    work["goals"] = pd.to_numeric(work["goals"], errors="coerce").fillna(0)
+    if "name" not in work.columns:
+        work["name"] = pd.NA
+    work["name"] = work["name"].astype("string").str.strip()
+    work = work.loc[work["player_id"].notna() & work["name"].notna()].copy()
+    if work.empty:
+        return ("Sin datos", 0)
+
+    scorers = (
+        work.groupby(["player_id", "name"], dropna=False)["goals"]
+        .sum()
+        .reset_index()
+        .sort_values(["goals", "name"], ascending=[False, True], kind="mergesort")
+        .reset_index(drop=True)
+    )
+    leader = scorers.iloc[0]
+    return (str(leader["name"]), int(leader["goals"]))
+
+
+@st.cache_data(show_spinner=False)
+def load_consolidated_season_overview(
+    _signature: tuple[tuple[int, tuple[tuple[str, float], ...]], ...],
+) -> ConsolidatedSeasonOverview:
+    seasons = load_season_catalog(_signature)
+    rows: list[dict[str, Any]] = []
+    unique_player_ids: set[int] = set()
+    total_matches = 0
+    total_goals = 0
+    passed_seasons = 0
+    warning_seasons = 0
+
+    for dataset in seasons:
+        matches = read_parquet(dataset.data_dir / "matches.parquet", columns=["match_id", "home_score", "away_score"])
+        teams = read_parquet(dataset.data_dir / "teams.parquet", columns=["team_id"])
+        players = read_parquet(dataset.data_dir / "players.parquet", columns=["player_id"])
+        player_match = read_parquet(dataset.data_dir / "player_match.parquet", columns=["player_id", "name", "goals"])
+
+        if "player_id" in players.columns:
+            unique_player_ids.update(
+                pd.to_numeric(players["player_id"], errors="coerce").dropna().astype(int).tolist()
+            )
+
+        match_count = int(matches["match_id"].nunique()) if "match_id" in matches.columns else 0
+        team_count = int(teams["team_id"].nunique()) if "team_id" in teams.columns else 0
+        player_count = int(players["player_id"].nunique()) if "player_id" in players.columns else 0
+        goals = 0
+        if not matches.empty:
+            home_goals = pd.to_numeric(matches.get("home_score"), errors="coerce").fillna(0)
+            away_goals = pd.to_numeric(matches.get("away_score"), errors="coerce").fillna(0)
+            goals = int((home_goals + away_goals).sum())
+        goals_per_match = round(goals / match_count, 2) if match_count else 0.0
+        top_scorer_name, top_scorer_goals = _top_scorer(player_match)
+        validated_at = dataset.validation.get("validated_at") or dataset.manifest.get("ended_at")
+
+        total_matches += match_count
+        total_goals += goals
+        if dataset.validation_status == "passed":
+            passed_seasons += 1
+        if dataset.warning_count:
+            warning_seasons += 1
+
+        rows.append(
+            {
+                "season_year": dataset.season_year,
+                "season_label": dataset.season_label,
+                "matches": match_count,
+                "teams": team_count,
+                "players": player_count,
+                "goals": goals,
+                "goals_per_match": goals_per_match,
+                "validation_status": dataset.validation_status,
+                "warning_count": dataset.warning_count,
+                "coverage_label": dataset.coverage_label,
+                "release_id": dataset.manifest.get("release_id", "-"),
+                "validated_at": validated_at,
+                "top_scorer": top_scorer_name,
+                "top_scorer_goals": top_scorer_goals,
+            }
+        )
+
+    seasons_table = pd.DataFrame(rows)
+    if not seasons_table.empty:
+        seasons_table = seasons_table.sort_values("season_year", ascending=False).reset_index(drop=True)
+    goals_per_match = round(total_goals / total_matches, 2) if total_matches else 0.0
+    return ConsolidatedSeasonOverview(
+        total_seasons=len(seasons),
+        total_matches=total_matches,
+        total_players=len(unique_player_ids),
+        total_goals=total_goals,
+        goals_per_match=goals_per_match,
+        passed_seasons=passed_seasons,
+        warning_seasons=warning_seasons,
+        seasons_table=seasons_table,
+    )
+
+
+@st.cache_data(show_spinner=False)
+def load_dashboard_data(season_year: int, _signature: tuple[tuple[str, float], ...]) -> DatasetBundle:
+    data_dir = season_current_dir(season_year)
+    manifest = read_json(data_dir / "manifest.json")
+    validation = read_json(data_dir / "validation.json")
+    matches = normalize_matches(read_parquet(data_dir / "matches.parquet"))
     allowed_match_ids = set(matches["match_id"].dropna().astype(int).tolist())
-    teams = normalize_teams(read_parquet(DATA_DIR / "teams.parquet"))
-    players = normalize_players(read_parquet(DATA_DIR / "players.parquet"))
+    teams = normalize_teams(read_parquet(data_dir / "teams.parquet"))
+    players = normalize_players(read_parquet(data_dir / "players.parquet"))
     player_match = filter_by_match_ids(
-        normalize_player_match(read_parquet(DATA_DIR / "player_match.parquet"), matches),
+        normalize_player_match(read_parquet(data_dir / "player_match.parquet"), matches),
         allowed_match_ids,
     )
-    # Season totals are not reliable once playoff rounds are excluded, so we force
-    # player metrics to be rebuilt from player_match inside the active regular-season scope.
+    # Full-season totals are exported for lineage, but dashboard metrics still rebuild
+    # active-scope player totals from player_match to avoid mixing in excluded rounds.
     player_totals = pd.DataFrame()
-    team_stats = filter_by_match_ids(normalize_team_stats(read_parquet(DATA_DIR / "team_stats.parquet")), allowed_match_ids)
+    team_stats = filter_by_match_ids(normalize_team_stats(read_parquet(data_dir / "team_stats.parquet")), allowed_match_ids)
     average_positions = filter_by_match_ids(
-        normalize_average_positions(read_parquet(DATA_DIR / "average_positions.parquet")),
+        normalize_average_positions(read_parquet(data_dir / "average_positions.parquet")),
         allowed_match_ids,
     )
     heatmap_points = filter_by_match_ids(
-        normalize_heatmap_points(read_parquet(DATA_DIR / "heatmap_points.parquet")),
+        normalize_heatmap_points(read_parquet(data_dir / "heatmap_points.parquet")),
         allowed_match_ids,
     )
     return DatasetBundle(
+        season_year=season_year,
+        season_label=build_season_label(season_year),
+        data_dir=data_dir,
         matches=matches,
         teams=teams,
         players=players,
@@ -337,6 +572,10 @@ def load_dashboard_data(_signature: tuple[tuple[str, float], ...]) -> DatasetBun
         team_stats=team_stats,
         average_positions=average_positions,
         heatmap_points=heatmap_points,
+        validation_status=str(validation.get("status", "unknown")),
+        validation_warnings=tuple(validation.get("warnings", [])),
+        manifest=manifest,
+        validation=validation,
         loaded_at=datetime.now(),
     )
 

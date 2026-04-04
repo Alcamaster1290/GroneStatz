@@ -12,11 +12,12 @@ from gronestats.dashboard.metrics import (
     build_players_table,
     build_team_profile,
 )
-from gronestats.dashboard.models import DatasetBundle, FilterState
+from gronestats.dashboard.models import ConsolidatedSeasonOverview, DatasetBundle, FilterState, SeasonDataset
 from gronestats.dashboard.state import get_origin_context, pick_valid_option
 from gronestats.dashboard.views.matches import render_match_catalog, render_match_detail
 from gronestats.dashboard.views.overview import render_overview
 from gronestats.dashboard.views.players import render_player_profile, render_players_table
+from gronestats.dashboard.views.seasons import render_seasons_overview
 from gronestats.dashboard.views.shared import (
     render_app_header,
     render_empty_state,
@@ -72,11 +73,32 @@ def derive_round_bounds(matches: pd.DataFrame, selected_tournaments: list[str]) 
     return (int(tournament_scope["round_number"].min()), int(tournament_scope["round_number"].max()))
 
 
+def render_seasons_page(
+    bundle: DatasetBundle,
+    season_catalog: tuple[SeasonDataset, ...],
+    consolidated_overview: ConsolidatedSeasonOverview,
+) -> dict[str, object] | None:
+    render_app_header(
+        page_title="Resumen consolidado por temporada",
+        subtitle="Compara cobertura, volumen y publicacion entre temporadas sin salir del dashboard. Desde aqui puedes saltar directo al overview anual activo.",
+        loaded_at=bundle.loaded_at,
+        season_label=bundle.season_label,
+        coverage_label=bundle.coverage_label,
+    )
+    return render_seasons_overview(
+        consolidated_overview,
+        season_catalog=season_catalog,
+        active_season_year=bundle.season_year,
+    )
+
+
 def render_overview_page(bundle: DatasetBundle, filters: FilterState, *, scope_summary: str) -> dict[str, object] | None:
     render_app_header(
-        page_title="Panorama general de Liga 1 2025",
+        page_title=f"Panorama general de {bundle.season_label}",
         subtitle="El overview funciona como centro de mando de los filtros activos: tabla, lideres, partidos destacados y forma reciente con saltos directos a cada capa del analisis.",
         loaded_at=bundle.loaded_at,
+        season_label=bundle.season_label,
+        coverage_label=bundle.coverage_label,
         scope_summary=scope_summary,
     )
     return render_overview(build_league_overview(bundle, filters))
@@ -94,10 +116,12 @@ def render_teams_page(
         page_title="Explorador de equipos",
         subtitle="Sigue el hilo desde la tabla a cada club, y desde cada club baja a partidos y jugadores sin perder los filtros activos.",
         loaded_at=bundle.loaded_at,
+        season_label=bundle.season_label,
+        coverage_label=bundle.coverage_label,
         scope_summary=scope_summary,
     )
     if not team_ids:
-        render_empty_state("No hay equipos disponibles con la carga actual.")
+        render_empty_state("No hay equipos disponibles con la release activa. Se requieren fixtures con IDs de equipo reutilizables.")
         return None
 
     st.session_state["focus_team_id"] = pick_valid_option(st.session_state.get("focus_team_id"), team_ids, team_ids[0])
@@ -107,7 +131,10 @@ def render_teams_page(
         key="focus_team_id",
         format_func=lambda value: team_option_label(team_lookup, value),
     )
-    return render_team_view(build_team_profile(bundle, filters, int(team_id)))
+    return render_team_view(
+        build_team_profile(bundle, filters, int(team_id)),
+        player_layer_available=bundle.has_player_layer,
+    )
 
 
 def render_players_page(
@@ -122,8 +149,16 @@ def render_players_page(
         page_title="Ranking y perfiles de jugadores",
         subtitle="Cruza volumen, produccion por 90, heatmap acumulado y forma reciente. Desde aqui puedes volver al club o saltar al partido asociado.",
         loaded_at=bundle.loaded_at,
+        season_label=bundle.season_label,
+        coverage_label=bundle.coverage_label,
         scope_summary=scope_summary,
     )
+    if not bundle.has_player_layer:
+        render_empty_state(
+            "Esta temporada aun no publica `player_match`. El ranking y los perfiles se habilitan cuando entren estadisticas individuales."
+        )
+        return None
+
     player_team_options = [None] + team_ids
     st.session_state["players_team_filter"] = pick_valid_option(st.session_state.get("players_team_filter"), player_team_options, None)
     col_a, col_b, col_c = st.columns([1.15, 0.85, 1.15], gap="medium")
@@ -190,6 +225,8 @@ def render_matches_page(
         page_title="Explorador de partidos",
         subtitle="La vista de partidos prioriza el detalle focal. El catalogo queda oculto bajo demanda para que el analisis gane ancho sin perder navegacion contextual.",
         loaded_at=bundle.loaded_at,
+        season_label=bundle.season_label,
+        coverage_label=bundle.coverage_label,
         scope_summary=scope_summary,
     )
     match_team_options = [None] + team_ids
@@ -266,9 +303,13 @@ def render_page(
     filters: FilterState,
     team_ids: list[int],
     team_lookup: dict[int, str],
+    season_catalog: tuple[SeasonDataset, ...],
+    consolidated_overview: ConsolidatedSeasonOverview,
     *,
     scope_summary: str,
 ) -> dict[str, object] | None:
+    if page == "Temporadas":
+        return render_seasons_page(bundle, season_catalog, consolidated_overview)
     if page == "Overview":
         return render_overview_page(bundle, filters, scope_summary=scope_summary)
     if page == "Equipos":

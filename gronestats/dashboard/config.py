@@ -4,10 +4,15 @@ from pathlib import Path
 
 APP_TITLE = "GroneStatz"
 APP_SUBTITLE = "Dashboard analitico de Liga 1"
-SEASON_LABEL = "Liga 1 2025"
+LEAGUE_NAME = "Liga 1 Peru"
+DEFAULT_SEASON_YEAR = 2025
+
+
+def build_season_label(season_year: int) -> str:
+    return f"Liga 1 {season_year}"
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-DATA_DIR = BASE_DIR / "gronestats" / "data" / "Liga 1 Peru" / "2025" / "parquets" / "normalized"
+DATA_ROOT = BASE_DIR / "gronestats" / "data" / LEAGUE_NAME
 PLAYER_IMAGES_DIR = BASE_DIR / "gronestats" / "images" / "players"
 TEAM_IMAGES_DIR = BASE_DIR / "gronestats" / "images" / "teams"
 

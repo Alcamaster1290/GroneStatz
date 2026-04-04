@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 
@@ -45,6 +46,9 @@ def _make_dashboard_bundle(
             player_match_work[column] = default
 
     return DatasetBundle(
+        season_year=2025,
+        season_label="Liga 1 2025",
+        data_dir=Path("gronestats/data/Liga 1 Peru/2025/dashboard/current"),
         matches=matches
         if matches is not None
         else pd.DataFrame(
@@ -81,6 +85,10 @@ def _make_dashboard_bundle(
         team_stats=pd.DataFrame(),
         average_positions=average_positions if average_positions is not None else pd.DataFrame(),
         heatmap_points=heatmap_points if heatmap_points is not None else pd.DataFrame(),
+        validation_status="passed",
+        validation_warnings=tuple(),
+        manifest={},
+        validation={},
         loaded_at=datetime(2026, 3, 12, 12, 0, 0),
     )
 

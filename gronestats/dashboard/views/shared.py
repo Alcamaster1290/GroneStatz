@@ -9,7 +9,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from gronestats.dashboard.config import APP_TITLE, BASE_CSS, COLORS, SEASON_LABEL
+from gronestats.dashboard.config import APP_TITLE, BASE_CSS, COLORS
 
 
 HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
@@ -88,18 +88,27 @@ def build_team_palette(primary: object, fallback: str = COLORS["accent"]) -> dic
     }
 
 
-def render_app_header(page_title: str, subtitle: str, loaded_at: datetime, *, scope_summary: str | None = None) -> None:
+def render_app_header(
+    page_title: str,
+    subtitle: str,
+    loaded_at: datetime,
+    *,
+    season_label: str,
+    coverage_label: str | None = None,
+    scope_summary: str | None = None,
+) -> None:
     formatted_timestamp = loaded_at.strftime("%d/%m/%Y %H:%M:%S")
     scope_chip = f"<span class=\"gs-chip\">Filtros activos: {scope_summary}</span>" if scope_summary else ""
+    coverage_chip = f"<span class=\"gs-chip\">{coverage_label}</span>" if coverage_label else ""
     html = f"""
     <section class="gs-shell">
       <header class="gs-header">
-        <span class="gs-header__eyebrow">{APP_TITLE} | {SEASON_LABEL}</span>
+        <span class="gs-header__eyebrow">{APP_TITLE} | {season_label}</span>
         <h1 class="gs-header__title">{page_title}</h1>
         <p class="gs-header__subtitle">{subtitle}</p>
         <div class="gs-chip-row">
           {scope_chip}
-          <span class="gs-chip">Cobertura verificada 2025</span>
+          {coverage_chip}
           <span class="gs-chip">Parquets normalizados</span>
           <span class="gs-chip">Actualizado en carga: {formatted_timestamp}</span>
         </div>

@@ -5,11 +5,13 @@ from typing import Any
 import streamlit as st
 
 
-PAGES = ["Overview", "Equipos", "Jugadores", "Partidos"]
+PAGES = ["Temporadas", "Overview", "Equipos", "Jugadores", "Partidos"]
 
 
 def init_dashboard_state(team_ids: list[int]) -> None:
     defaults: dict[str, Any] = {
+        "selected_season_year": None,
+        "active_season_year": None,
         "nav_page": "Overview",
         "tournament_filter": None,
         "round_range_filter": None,
@@ -38,6 +40,31 @@ def init_dashboard_state(team_ids: list[int]) -> None:
             st.session_state[key] = value
 
 
+def reset_dashboard_context(team_ids: list[int], *, nav_page: str | None = None) -> None:
+    st.session_state["tournament_filter"] = None
+    st.session_state["round_range_filter"] = None
+    st.session_state["focus_team_id"] = team_ids[0] if team_ids else None
+    st.session_state["focus_player_id"] = None
+    st.session_state["focus_match_id"] = None
+    st.session_state["player_context_match_id"] = None
+    st.session_state["player_visual_mode"] = None
+    st.session_state["player_visual_scope"] = None
+    st.session_state["player_visual_match_id"] = None
+    st.session_state["player_visual_owner_id"] = None
+    st.session_state["players_team_filter"] = None
+    st.session_state["players_position_filter"] = "Todas"
+    st.session_state["players_search"] = ""
+    st.session_state["matches_team_filter"] = None
+    st.session_state["matches_venue_filter"] = "Todos"
+    st.session_state["matches_result_filter"] = "Todos"
+    st.session_state["nav_origin_page"] = None
+    st.session_state["nav_origin_label"] = None
+    st.session_state["nav_origin_state"] = {}
+    st.session_state["match_catalog_ids"] = []
+    st.session_state["focus_match_index"] = 0
+    st.session_state["nav_page"] = nav_page if nav_page in PAGES else st.session_state.get("nav_page", "Overview")
+
+
 def pick_valid_option(value: Any, options: list[Any], fallback: Any | None = None) -> Any | None:
     if value in options:
         return value
@@ -53,6 +80,8 @@ def build_action(action_type: str, **payload: Any) -> dict[str, Any]:
 
 
 def _default_origin_label(page: str | None) -> str:
+    if page == "Temporadas":
+        return "Resumen de temporadas"
     if page == "Overview":
         return "Overview"
     if page == "Equipos":
@@ -160,6 +189,9 @@ def apply_navigation_action(action: dict[str, Any] | None) -> None:
         _restore_page_state(origin_page, st.session_state.get("nav_origin_state") or {})
     elif action_type == "page":
         st.session_state["nav_page"] = action["page"]
+    elif action_type == "season":
+        st.session_state["selected_season_year"] = int(action["season_year"])
+        st.session_state["nav_page"] = action.get("page", "Overview")
     else:
         return
 
