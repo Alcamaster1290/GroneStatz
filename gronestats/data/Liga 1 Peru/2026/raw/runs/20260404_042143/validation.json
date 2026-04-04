@@ -1,0 +1,17 @@
+{
+  "status": "failed",
+  "validated_at": "2026-04-04T04:21:46.422408+00:00",
+  "blocking_errors": [
+    "Fantasy admin bridge has no curated matches yet; publish is blocked until fixtures exist."
+  ],
+  "warnings": [],
+  "stats": {
+    "expected_finished_matches": 0,
+    "expected_curated_matches": 0,
+    "curated_matches": 0,
+    "curated_players": 0,
+    "curated_player_match_rows": 0,
+    "timestamp_span_seconds": 0.018957853317260742
+  },
+  "diff": {}
+}

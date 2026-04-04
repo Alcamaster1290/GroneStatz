@@ -1,0 +1,1 @@
+[7/44] error 10097788: archivo menor a 15 KB (6.9 KB). Se elimina y se detiene el proceso.

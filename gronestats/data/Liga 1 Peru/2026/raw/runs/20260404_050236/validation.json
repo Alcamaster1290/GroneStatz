@@ -1,0 +1,31 @@
+{
+  "status": "failed",
+  "validated_at": "2026-04-04T05:02:49.067014+00:00",
+  "blocking_errors": [
+    "Missing required sheet 'player_stats' for 57 matches (15362077, 15362080, 15362081, 15362082, 15362084, 15362086, 15362090, 15362094, 15371229, 15438840)",
+    "Missing required sheet 'team_stats' for 57 matches (15362077, 15362080, 15362081, 15362082, 15362084, 15362086, 15362090, 15362094, 15371229, 15438840)",
+    "Missing required sheet 'average_positions' for 57 matches (15362077, 15362080, 15362081, 15362082, 15362084, 15362086, 15362090, 15362094, 15371229, 15438840)"
+  ],
+  "warnings": [
+    "Missing warning-only sheet 'heatmaps' for 57 matches (15362077, 15362080, 15362081, 15362082, 15362084, 15362086, 15362090, 15362094, 15371229, 15438840)",
+    "Missing warning-only sheet 'shotmap' for 57 matches (15362077, 15362080, 15362081, 15362082, 15362084, 15362086, 15362090, 15362094, 15371229, 15438840)",
+    "Missing warning-only sheet 'momentum' for 57 matches (15362077, 15362080, 15362081, 15362082, 15362084, 15362086, 15362090, 15362094, 15371229, 15438840)"
+  ],
+  "stats": {
+    "expected_finished_matches": 72,
+    "expected_curated_matches": 72,
+    "curated_matches": 72,
+    "curated_players": 383,
+    "curated_player_match_rows": 600,
+    "timestamp_span_seconds": 0.06524276733398438
+  },
+  "diff": {
+    "matches": {
+      "rows_before": 0,
+      "rows_after": 72,
+      "delta_rows": 72,
+      "home_goals_delta": 120,
+      "away_goals_delta": 70
+    }
+  }
+}

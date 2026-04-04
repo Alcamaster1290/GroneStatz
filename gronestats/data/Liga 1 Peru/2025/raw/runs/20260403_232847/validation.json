@@ -1,0 +1,24 @@
+{
+  "status": "failed",
+  "validated_at": "2026-04-03T23:30:27.129051+00:00",
+  "blocking_errors": [
+    "player_match has unresolved team_id rows: 1430 ([{'match_id': '13679386', 'player_id': '1479165', 'team_id': None}, {'match_id': '13679386', 'player_id': '1016972', 'team_id': None}, {'match_id': '13679386', 'player_id': '176159', 'team_id': None}, {'match_id': '13679386', 'player_id': '345773', 'team_id': None}, {'match_id': '13679386', 'player_id': '1148272', 'team_id': None}, {'match_id': '13679386', 'player_id': '874072', 'team_id': None}, {'match_id': '13679386', 'player_id': '1107870', 'team_id': None}, {'match_id': '13679386', 'player_id': '1170640', 'team_id': None}, {'match_id': '13679386', 'player_id': '1847531', 'team_id': None}, {'match_id': '13679386', 'player_id': '249137', 'team_id': None}])"
+  ],
+  "warnings": [
+    "Missing warning-only sheet 'momentum' for 6 matches (13596389, 13803195, 13943943, 14199319, 14199322, 14935675)"
+  ],
+  "stats": {
+    "expected_finished_matches": 333,
+    "curated_matches": 333,
+    "curated_players": 597,
+    "curated_player_match_rows": 13193,
+    "timestamp_span_seconds": 0.14607977867126465
+  },
+  "diff": {
+    "players": {
+      "rows_before": 684,
+      "rows_after": 597,
+      "delta_rows": -87
+    }
+  }
+}
