@@ -28,6 +28,6 @@ ENV NEXT_PUBLIC_MOBILE_WEB_URL=$NEXT_PUBLIC_MOBILE_WEB_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/public ./public
-COPY --from=build /app/.next ./ .next
+COPY --from=build /app/.next ./.next
 EXPOSE 3000
-CMD ["npm", "run", "start", "--", "-p", "3000", "-H", "0.0.0.0"]
+CMD ["sh", "-c", "npm run start -- -p ${PORT:-3000} -H 0.0.0.0"]

@@ -29,6 +29,13 @@ if not env_path.exists():
     env_path = BASE_DIR / ".env"
 
 
+def _normalize_database_url(url: str) -> str:
+    """Ensure the URL uses the psycopg driver prefix required by SQLAlchemy."""
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return url
+
+
 class Settings(BaseSettings):
     APP_ENV: str = app_env
     DATABASE_URL: str
@@ -72,6 +79,7 @@ class Settings(BaseSettings):
     )
 
     def model_post_init(self, __context) -> None:  # type: ignore[override]
+        self.DATABASE_URL = _normalize_database_url(self.DATABASE_URL)
         for key in ("DUCKDB_PATH", "PARQUET_DIR"):
             raw = getattr(self, key, None)
             if not raw:
