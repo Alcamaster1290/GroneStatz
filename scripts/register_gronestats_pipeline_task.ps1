@@ -1,37 +1,16 @@
 param(
-    [string]$TaskName = "GroneStatz Pipeline",
-    [string]$League = "Liga 1 Peru",
-    [int]$Season = 2025,
-    [string]$At = "06:00",
-    [switch]$Force
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$PassthroughArgs
 )
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$wrapper = Join-Path $repoRoot "scripts\run_gronestats_pipeline.ps1"
+$target = Join-Path $repoRoot "scripts\gronestats\register_gronestats_pipeline_task.ps1"
 
-if (-not (Test-Path $wrapper)) {
-    throw "No se encontró el wrapper: $wrapper"
+if (-not (Test-Path $target)) {
+    throw "No se encontró el wrapper nuevo: $target"
 }
 
-$arguments = @(
-    "-NoProfile",
-    "-ExecutionPolicy", "Bypass",
-    "-File", "`"$wrapper`"",
-    "-League", "`"$League`"",
-    "-Season", "$Season",
-    "-Mode", "incremental",
-    "-OnlyMissing"
-)
-if ($Force) {
-    $arguments += "-Force"
-}
-$argumentText = $arguments -join " "
+Write-Warning "scripts\\register_gronestats_pipeline_task.ps1 está deprecado. Usa scripts\\gronestats\\register_gronestats_pipeline_task.ps1."
+& $target @PassthroughArgs
+exit $LASTEXITCODE
 
-$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $argumentText -WorkingDirectory $repoRoot
-$trigger = New-ScheduledTaskTrigger -Daily -At $At
-$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew
-
-Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Force | Out-Null
-
-Write-Host "Tarea registrada: $TaskName"
-Write-Host "Ejecuta: powershell.exe $argumentText"

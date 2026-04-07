@@ -56,11 +56,13 @@ def coalesce_columns(df: pd.DataFrame, target: str, candidates: list[str]) -> pd
         return df
     work = df.copy()
     if target not in work.columns:
-        work[target] = pd.NA
+        work[target] = pd.Series(pd.NA, index=work.index, dtype="object")
     for column in existing:
         if column == target:
             continue
-        work[target] = work[target].combine_first(work[column])
+        missing_mask = work[target].isna()
+        if missing_mask.any():
+            work.loc[missing_mask, target] = work.loc[missing_mask, column]
     drop_columns = [column for column in existing if column != target]
     return work.drop(columns=drop_columns, errors="ignore")
 
@@ -129,12 +131,15 @@ def normalize_matches(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return df
     work = df.copy()
-    for column in ["match_id", "round_number", "home_id", "away_id", "home_score", "away_score"]:
+    for column in ["match_id", "round_number", "season", "home_id", "away_id", "home_score", "away_score"]:
         if column in work.columns:
             work[column] = pd.to_numeric(work[column], errors="coerce").astype("Int64")
     if "tournament" not in work.columns:
         work["tournament"] = pd.NA
+    if "status" not in work.columns:
+        work["status"] = pd.NA
     work["tournament"] = work["tournament"].astype("string").str.strip()
+    work["status"] = work["status"].astype("string").str.strip()
     if "fecha" in work.columns:
         work["fecha_dt"] = pd.to_datetime(work["fecha"], format="%d/%m/%Y %H:%M", errors="coerce")
     work["round_number"] = work["round_number"].fillna(0).astype(int)
@@ -159,11 +164,38 @@ def normalize_teams(df: pd.DataFrame) -> pd.DataFrame:
         work["short_name"] = work["shortName"]
     if "full_name" not in work.columns and "fullName" in work.columns:
         work["full_name"] = work["fullName"]
-    work["team_name"] = work.get("short_name", pd.Series(index=work.index, dtype="object")).combine_first(
-        work.get("full_name", pd.Series(index=work.index, dtype="object"))
-    )
+    for column in [
+        "short_name",
+        "full_name",
+        "team_colors",
+        "competitiveness_level",
+        "stadium_name_city",
+        "province",
+        "department",
+        "region",
+    ]:
+        if column not in work.columns:
+            work[column] = pd.NA
+        work[column] = work[column].astype("string").str.strip()
+    preferred_name = work.get("short_name", pd.Series(index=work.index, dtype="string"))
+    fallback_name = work.get("full_name", pd.Series(index=work.index, dtype="string"))
+    work["team_name"] = preferred_name.where(preferred_name.notna(), fallback_name)
     if "is_altitude_team" in work.columns:
-        work["is_altitude_team"] = work["is_altitude_team"].fillna(0).astype(int)
+        raw = work["is_altitude_team"]
+        work["is_altitude_team"] = (
+            raw.astype("string")
+            .str.strip()
+            .str.lower()
+            .map({"true": True, "false": False, "1": True, "0": False, "yes": True, "no": False})
+            .astype("boolean")
+        )
+        numeric = pd.to_numeric(raw, errors="coerce")
+        work.loc[numeric.notna(), "is_altitude_team"] = numeric.loc[numeric.notna()].astype(int).astype(bool)
+    else:
+        work["is_altitude_team"] = pd.Series(pd.NA, index=work.index, dtype="boolean")
+    if "stadium_id" not in work.columns:
+        work["stadium_id"] = pd.NA
+    work["stadium_id"] = pd.to_numeric(work["stadium_id"], errors="coerce").astype("Int64")
     return work.sort_values("team_name").reset_index(drop=True)
 
 
@@ -177,6 +209,8 @@ def normalize_players(df: pd.DataFrame) -> pd.DataFrame:
     work = coalesce_columns(work, "position", ["position", "POSITION", "pos"])
     work["player_id"] = pd.to_numeric(work["player_id"], errors="coerce").astype("Int64")
     work["team_id"] = pd.to_numeric(work["team_id"], errors="coerce").astype("Int64")
+    if "dateofbirth" in work.columns:
+        work["dateofbirth"] = work["dateofbirth"].astype("string").str.strip()
     work["position"] = work["position"].astype(str).str.strip().str.upper().replace({"NAN": pd.NA})
     return work.sort_values("name").reset_index(drop=True)
 
@@ -251,7 +285,7 @@ def normalize_team_stats(df: pd.DataFrame) -> pd.DataFrame:
     work["match_id"] = pd.to_numeric(work["match_id"], errors="coerce").astype("Int64")
     for column in ["HOMEVALUE", "AWAYVALUE", "HOMETOTAL", "AWAYTOTAL"]:
         if column in work.columns:
-            work[column] = pd.to_numeric(work[column], errors="coerce")
+            work[column] = pd.to_numeric(work[column], errors="coerce").astype("float64")
     return work
 
 
@@ -305,10 +339,10 @@ def normalize_shot_events(df: pd.DataFrame) -> pd.DataFrame:
     work = coalesce_columns(work, "team_id", ["team_id", "TEAM_ID", "teamId", "teamid"])
     work = coalesce_columns(work, "player_id", ["player_id", "PLAYER_ID", "playerId", "playerid"])
     work = coalesce_columns(work, "name", ["name", "NAME", "player", "player_name"])
-    for column in ["match_id", "team_id", "player_id", "shot_id", "time", "added_time", "time_seconds", "x", "y", "z"]:
+    for column in ["match_id", "team_id", "player_id", "shot_id", "time", "added_time", "time_seconds", "jersey_number", "x", "y", "z"]:
         if column in work.columns:
             work[column] = pd.to_numeric(work[column], errors="coerce")
-    for column in ["match_id", "team_id", "player_id", "shot_id"]:
+    for column in ["match_id", "team_id", "player_id", "shot_id", "time", "time_seconds", "jersey_number"]:
         if column in work.columns:
             work[column] = work[column].astype("Int64")
     if "is_home" in work.columns:
@@ -340,7 +374,7 @@ def normalize_match_momentum(df: pd.DataFrame) -> pd.DataFrame:
         work["match_id"] = pd.to_numeric(work["match_id"], errors="coerce").astype("Int64")
     for column in ["minute", "value"]:
         if column in work.columns:
-            work[column] = pd.to_numeric(work[column], errors="coerce")
+            work[column] = pd.to_numeric(work[column], errors="coerce").astype("float64")
     if "dominant_side" in work.columns:
         work["dominant_side"] = work["dominant_side"].astype("string").str.strip().str.lower()
     sort_columns = [column for column in ["match_id", "minute"] if column in work.columns]

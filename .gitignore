@@ -228,3 +228,11 @@ FantasyL1-2026/frontend/www/
 FantasyL1-2026/frontend/cypress/screenshots/
 FantasyL1-2026/frontend/cypress/videos/
 FantasyL1-2026/frontend/.percy/
+
+# Published data policy
+gronestats/data/**/raw/
+gronestats/data/**/staging/
+gronestats/data/**/curated/
+gronestats/data/Liga 1 Peru/Partidos_*.xlsx
+gronestats/data/master_data/Partidos_Liga 1 Peru_*_limpio.xlsx
+gronestats/data/Liga 1 Peru/warehouse/*.duckdb

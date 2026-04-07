@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
+from gronestats.data_layout import league_data_root, repository_root
 
 APP_TITLE = "GroneStatz"
 APP_SUBTITLE = "Dashboard analitico de Liga 1"
@@ -11,8 +11,8 @@ DEFAULT_SEASON_YEAR = 2025
 def build_season_label(season_year: int) -> str:
     return f"Liga 1 {season_year}"
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-DATA_ROOT = BASE_DIR / "gronestats" / "data" / LEAGUE_NAME
+BASE_DIR = repository_root()
+DATA_ROOT = league_data_root(LEAGUE_NAME, repo_root=BASE_DIR)
 PLAYER_IMAGES_DIR = BASE_DIR / "gronestats" / "images" / "players"
 TEAM_IMAGES_DIR = BASE_DIR / "gronestats" / "images" / "teams"
 

@@ -1,86 +1,87 @@
-# GroneStatz
+# GroneStatz Monorepo
 
-GroneStatz es un repositorio de analisis de datos para la Liga 1 de Peru. El foco actual del repo es un dashboard en Streamlit para explorar temporada, equipos, jugadores y partidos usando parquets normalizados.
+Monorepo de datos y producto para Liga 1 Perú. El repositorio concentra dos aplicaciones conectadas por bundles publicados por temporada:
+
+- `gronestats/`: pipeline analítico y dashboard Streamlit.
+- `FantasyL1-2026/`: backend FastAPI y frontend Next.js del fantasy.
 
 ## Estado actual
 
-El MVP analitico vive en `gronestats/dashboard/` y trabaja sobre la temporada 2025.
+- El pipeline productivo es `python -m gronestats.processing.pipeline`.
+- El dashboard consume solo `gronestats/data/Liga 1 Peru/<season>/dashboard/current`.
+- Fantasy consume solo `gronestats/data/Liga 1 Peru/<season>/fantasy/current`.
+- `raw`, `staging` y `curated` siguen existiendo para operación local, pero ya no forman parte del contrato publicado del repo.
+- El código reemplazado por el pipeline vive en `gronestats/processing/legacy/`.
 
-Incluye:
+## Layout de datos
 
-- `Overview`: panorama general de la liga, standings, lideres y partidos destacados.
-- `Equipos`: resumen por club, forma reciente y contribuyentes principales.
-- `Jugadores`: ranking, perfil individual, posicion promedio y heatmap.
-- `Partidos`: explorador con contexto, protagonistas y posicion promedio de ambos equipos.
+Por temporada:
 
-El dashboard ya distingue:
+- `gronestats/data/Liga 1 Peru/<season>/raw/`
+- `gronestats/data/Liga 1 Peru/<season>/staging/`
+- `gronestats/data/Liga 1 Peru/<season>/curated/`
+- `gronestats/data/Liga 1 Peru/<season>/dashboard/current|releases/`
+- `gronestats/data/Liga 1 Peru/<season>/fantasy/current|releases/`
 
-- `Liga 1, Apertura`
-- `Liga 1, Clausura`
-- `Primera Division, Grand Final`
+Bundles publicados:
 
-Por defecto abre con `Apertura + Clausura`. La `Grand Final` queda disponible como filtro explicito.
+- `dashboard/current`: `matches`, `teams`, `players`, `player_match`, `player_totals_full_season`, `team_stats`, `average_positions`, `heatmap_points`, `shot_events`, `match_momentum`, `player_identity`
+- `fantasy/current`: `matches`, `teams`, `players`, `players_fantasy`, `player_match`, `player_totals`, `player_team`, `player_transfer`, `team_stats`
 
-## Estructura relevante
+## Flujo operativo
 
-- `gronestats/dashboard/`
-  Aplicacion Streamlit, estado de filtros, modelos, metricas y vistas.
-- `gronestats/processing/st_create_parquets.py`
-  Construccion de parquets base a partir de la fuente limpia de partidos y tablas principales.
-- `gronestats/processing/build_positional_parquets.py`
-  Generacion de `average_positions.parquet` y `heatmap_points.parquet` desde los workbooks de Sofascore.
-- `gronestats/data/Liga 1 Peru/2025/parquets/normalized/`
-  Fuente principal consumida por el dashboard.
-- `tests/test_dashboard_metrics.py`
-  Cobertura de standings, filtros, leaders, heatmaps, average positions y contratos principales del dashboard.
-
-## Ejecutar el dashboard
+Pipeline completo:
 
 ```powershell
-cd "C:\Users\Alvaro\Proyectos\Proyecto Gronestats\GroneStatz"
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-.venv\Scripts\python.exe -m streamlit run gronestats/dashboard/app.py
+py -3.11 -m gronestats.processing.pipeline run --league "Liga 1 Peru" --season 2026 --mode full --publish-target all
 ```
 
-## Regenerar datos
-
-### Parquets base
-
-El script de procesamiento principal es `gronestats/processing/st_create_parquets.py`. Asegura que `matches.parquet` preserve `tournament` y que la normalizacion genere `tournament_label` y `round_label`.
-
-### Datos posicionales
-
-Para reconstruir posiciones promedio y heatmaps:
+Validación de una temporada publicada:
 
 ```powershell
-cd "C:\Users\Alvaro\Proyectos\Proyecto Gronestats\GroneStatz"
-.venv\Scripts\python.exe gronestats/processing/build_positional_parquets.py
+py -3.11 -m gronestats.processing.pipeline validate --league "Liga 1 Peru" --season 2026 --target all
 ```
 
-Esto genera:
+Wrapper PowerShell:
 
-- `gronestats/data/Liga 1 Peru/2025/parquets/normalized/average_positions.parquet`
-- `gronestats/data/Liga 1 Peru/2025/parquets/normalized/heatmap_points.parquet`
+```powershell
+.\scripts\gronestats\run_gronestats_pipeline.ps1 -Season 2026 -Mode incremental -OnlyMissing
+```
 
-## Criterios del dashboard
+## Dashboard
 
-- La capa de producto ya no usa `Rating` de Sofascore.
-- Los filtros globales se apoyan en `tournament` y `round_range`.
-- Los mapas de jugador soportan dos alcances:
-  - `Partido contextual`
-  - `Acumulado del tramo regular`
-- El explorador de partidos muestra el torneo de forma explicita para evitar colisiones entre rondas de Apertura y Clausura.
+Entry point:
+
+- `gronestats/dashboard/app.py`
+
+Ejecutar:
+
+```powershell
+py -3.11 -m streamlit run gronestats/dashboard/app.py
+```
+
+El dashboard descubre automáticamente las temporadas publicadas y navega sobre `dashboard/current`.
+
+## Fantasy
+
+El backend usa por defecto el bundle publicado en:
+
+- `gronestats/data/Liga 1 Peru/<SEASON_YEAR>/fantasy/current`
+
+Documentación específica:
+
+- `docs/gronestats/data_pipeline_plan.md`
+- `docs/fantasy/README.md`
+- `FantasyL1-2026/README.md`
+
+## Legacy y compatibilidad
+
+- `gronestats/processing/legacy/` contiene scripts históricos que siguen disponibles por compatibilidad.
+- Las rutas antiguas en `gronestats/processing/*.py` quedaron como wrappers con aviso de deprecación.
+- `scripts/run_etl_liga1_2025.py` también quedó como wrapper y redirige al pipeline.
 
 ## Tests
 
 ```powershell
-cd "C:\Users\Alvaro\Proyectos\Proyecto Gronestats\GroneStatz"
-.venv\Scripts\python.exe -m pytest tests/test_dashboard_metrics.py
+py -3.11 -m pytest tests
 ```
-
-## Notas
-
-- El repo contiene otras lineas de trabajo, por ejemplo `FantasyL1-2026/`, pero no forman parte del MVP Streamlit documentado aqui.
-- Si actualizas la fuente de partidos o los workbooks de Sofascore, vuelve a generar los parquets antes de revisar el dashboard.

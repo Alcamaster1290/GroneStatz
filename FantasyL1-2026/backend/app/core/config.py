@@ -44,16 +44,16 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
     ADMIN_TOKEN: str
     DUCKDB_PATH: str = str(BASE_DIR / "data" / "fantasy.duckdb")
+    SEASON_YEAR: int = 2026
     PARQUET_DIR: str = str(
         REPO_ROOT
         / "gronestats"
         / "data"
         / "Liga 1 Peru"
-        / "2025"
-        / "parquets"
-        / "normalized"
+        / str(SEASON_YEAR)
+        / "fantasy"
+        / "current"
     )
-    SEASON_YEAR: int = 2026
     SEASON_NAME: str = "2026 Apertura"
     CORS_ORIGINS: str = "http://localhost:3000"
     CORS_ORIGIN_REGEX: str = r"^http://(localhost|127\.0\.0\.1)(:3000)?$"

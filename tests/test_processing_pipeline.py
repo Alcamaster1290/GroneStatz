@@ -9,6 +9,7 @@ from gronestats.processing.pipeline import (
     FANTASY_SOURCE_MODE,
     PipelinePaths,
     REQUIRED_CURATED_TABLES,
+    build_parser,
     build_average_positions_curated,
     build_heatmap_points_curated,
     build_player_totals_full_season,
@@ -153,6 +154,17 @@ def test_source_mode_prefers_sofascore_when_fantasy_bridge_is_empty(tmp_path: Pa
 
     assert source_mode_from_paths(paths) == "sofascore"
     assert should_refresh_fantasy_bridge(paths) is False
+
+
+def test_parser_supports_publish_and_validate_targets() -> None:
+    parser = build_parser()
+
+    run_args = parser.parse_args(["run", "--publish-target", "fantasy", "--from-phase", "build-warehouse"])
+    validate_args = parser.parse_args(["validate", "--target", "all"])
+
+    assert run_args.publish_target == "fantasy"
+    assert run_args.from_phase == "build-warehouse"
+    assert validate_args.target == "all"
 
 
 def test_validate_dataset_contract_flags_orphans_and_missing_required_sheets(tmp_path: Path) -> None:

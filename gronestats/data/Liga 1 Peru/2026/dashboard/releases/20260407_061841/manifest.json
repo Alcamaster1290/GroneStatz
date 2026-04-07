@@ -1,0 +1,152 @@
+{
+  "run_id": "20260407_061841",
+  "release_id": "20260407_061841",
+  "league": "Liga 1 Peru",
+  "season": 2026,
+  "mode": "full",
+  "publish_target": "all",
+  "dry_run": false,
+  "from_phase": "build-curated",
+  "to_phase": "publish",
+  "selected_phases": [
+    "build-curated",
+    "validate",
+    "publish"
+  ],
+  "started_at": "2026-04-07T06:18:41.993809+00:00",
+  "status": "completed",
+  "paths": {
+    "season_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026",
+    "raw_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026\\raw",
+    "staging_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026\\staging",
+    "curated_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026\\curated",
+    "dashboard_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026\\dashboard",
+    "dashboard_release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026\\dashboard\\releases\\20260407_061841",
+    "dashboard_current_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026\\dashboard\\current",
+    "fantasy_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026\\fantasy",
+    "fantasy_release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026\\fantasy\\releases\\20260407_061841",
+    "fantasy_current_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026\\fantasy\\current"
+  },
+  "phases": [
+    {
+      "phase": "build-curated",
+      "started_at": "2026-04-07T06:18:42.002851+00:00",
+      "ended_at": "2026-04-07T06:19:03.481439+00:00",
+      "status": "completed",
+      "details": {
+        "curated_rows": {
+          "matches": 72,
+          "teams": 21,
+          "players": 456,
+          "player_match": 2877,
+          "player_totals_full_season": 456,
+          "team_stats": 8620,
+          "average_positions": 2227,
+          "heatmap_points": 0,
+          "shot_events": 1797,
+          "match_momentum": 6532,
+          "player_identity": 456
+        }
+      }
+    },
+    {
+      "phase": "validate",
+      "started_at": "2026-04-07T06:19:03.485771+00:00",
+      "ended_at": "2026-04-07T06:19:06.109272+00:00",
+      "status": "completed",
+      "details": {
+        "status": "passed",
+        "validated_at": "2026-04-07T06:19:06.089249+00:00",
+        "blocking_errors": [],
+        "warnings": [
+          "dashboard: Current-season partial validation mode enabled for season 2026: player_stats, team_stats and average_positions gaps are warning-only while the backfill is still in progress.",
+          "dashboard: Missing warning-only sheet 'momentum' for 1 matches (15362086)"
+        ],
+        "targets": {
+          "dashboard": {
+            "status": "passed",
+            "validated_at": "2026-04-07T06:19:04.317846+00:00",
+            "blocking_errors": [],
+            "warnings": [
+              "Current-season partial validation mode enabled for season 2026: player_stats, team_stats and average_positions gaps are warning-only while the backfill is still in progress.",
+              "Missing warning-only sheet 'momentum' for 1 matches (15362086)"
+            ],
+            "stats": {
+              "expected_finished_matches": 72,
+              "expected_curated_matches": 72,
+              "curated_matches": 72,
+              "curated_players": 456,
+              "curated_player_match_rows": 2877,
+              "timestamp_span_seconds": 0.36603307723999023
+            },
+            "diff": {}
+          },
+          "fantasy": {
+            "status": "passed",
+            "validated_at": "2026-04-07T06:19:06.088264+00:00",
+            "blocking_errors": [],
+            "warnings": [],
+            "stats": {
+              "row_counts": {
+                "matches": 72,
+                "teams": 21,
+                "players": 456,
+                "players_fantasy": 454,
+                "player_match": 2877,
+                "player_totals": 456,
+                "player_team": 456,
+                "player_transfer": 0,
+                "team_stats": 8620
+              },
+              "timestamp_span_seconds": 0.32857227325439453
+            }
+          }
+        }
+      }
+    },
+    {
+      "phase": "publish",
+      "started_at": "2026-04-07T06:19:06.115675+00:00",
+      "ended_at": "2026-04-07T06:19:08.660092+00:00",
+      "status": "completed",
+      "details": {
+        "targets": {
+          "dashboard": {
+            "release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026\\dashboard\\releases\\20260407_061841",
+            "current_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026\\dashboard\\current",
+            "published_tables": [
+              "matches",
+              "teams",
+              "players",
+              "player_match",
+              "player_totals_full_season",
+              "team_stats",
+              "average_positions",
+              "heatmap_points",
+              "shot_events",
+              "match_momentum",
+              "player_identity"
+            ]
+          },
+          "fantasy": {
+            "release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026\\fantasy\\releases\\20260407_061841",
+            "current_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2026\\fantasy\\current",
+            "published_tables": [
+              "matches",
+              "teams",
+              "players",
+              "players_fantasy",
+              "player_match",
+              "player_totals",
+              "player_team",
+              "player_transfer",
+              "team_stats"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "artifacts": {},
+  "ended_at": "2026-04-07T06:19:08.663646+00:00"
+}

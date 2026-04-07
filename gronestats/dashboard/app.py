@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import streamlit as st
 
-from gronestats.dashboard.config import APP_SUBTITLE, APP_TITLE, DEFAULT_DASHBOARD_TOURNAMENTS
+from gronestats.data_layout import season_layout
+from gronestats.dashboard.config import APP_SUBTITLE, APP_TITLE, DEFAULT_DASHBOARD_TOURNAMENTS, LEAGUE_NAME
 from gronestats.dashboard.data import (
     build_team_options,
     describe_active_scope,
@@ -29,7 +30,8 @@ inject_base_styles()
 catalog_signature = season_catalog_signature()
 season_catalog = load_season_catalog(catalog_signature)
 if not season_catalog:
-    st.error("No se encontraron temporadas publicadas en `gronestats/data/Liga 1 Peru/*/dashboard/current`.")
+    sample_dir = season_layout(2026, league=LEAGUE_NAME).dashboard.current_dir
+    st.error(f"No se encontraron temporadas publicadas en `{sample_dir.parent.parent.parent}/*/dashboard/current`.")
     st.stop()
 
 season_options = [dataset.season_year for dataset in season_catalog]

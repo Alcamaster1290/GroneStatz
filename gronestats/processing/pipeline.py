@@ -13,15 +13,30 @@ from typing import Any
 
 import pandas as pd
 
+from gronestats.data_layout import SeasonDataLayout, season_layout
+from gronestats.processing.canonical_warehouse import (
+    build_canonical_tables,
+    build_dashboard_bundle_from_canonical,
+    build_fantasy_bundle_from_canonical,
+    load_canonical_tables_for_season,
+    upsert_canonical_tables,
+    validate_warehouse_contract,
+)
+from gronestats.processing.fantasy_export import (
+    FANTASY_EXPORT_TABLES,
+    validate_fantasy_export_bundle,
+)
 
 PROVIDER_NAME = "SofaScore (Opta-backed)"
 FANTASY_PROVIDER_NAME = "Fantasy Liga 1 Admin"
 FANTASY_SOURCE_MODE = "fantasy_admin"
+PUBLISH_TARGET_CHOICES = ("dashboard", "fantasy", "all")
 PHASES = (
     "extract-master",
     "bootstrap-raw",
     "build-staging",
     "build-curated",
+    "build-warehouse",
     "validate",
     "publish",
 )
@@ -75,7 +90,7 @@ LEGACY_SPLIT_FILE_TO_SHEET = {
     "Shotmap": "Shotmap",
     "Momentum": "Match Momentum",
 }
-PIPELINE_ARTIFACT_DIRS = {"raw", "staging", "curated", "dashboard", "parquets"}
+PIPELINE_ARTIFACT_DIRS = {"raw", "staging", "curated", "dashboard", "fantasy", "parquets"}
 
 
 @dataclass(frozen=True)
@@ -87,16 +102,20 @@ class PipelinePaths:
     release_id: str
 
     @property
+    def layout(self) -> SeasonDataLayout:
+        return season_layout(self.season, league=self.league, repo_root=self.base_dir)
+
+    @property
     def legacy_league_dir(self) -> Path:
-        return self.base_dir / "gronestats" / "data" / self.league
+        return self.layout.league_dir
 
     @property
     def season_dir(self) -> Path:
-        return self.legacy_league_dir / str(self.season)
+        return self.layout.season_dir
 
     @property
     def raw_dir(self) -> Path:
-        return self.season_dir / "raw"
+        return self.layout.raw_dir
 
     @property
     def raw_master_raw_dir(self) -> Path:
@@ -116,27 +135,63 @@ class PipelinePaths:
 
     @property
     def staging_dir(self) -> Path:
-        return self.season_dir / "staging"
+        return self.layout.staging_dir
 
     @property
     def curated_dir(self) -> Path:
-        return self.season_dir / "curated"
+        return self.layout.curated_dir
+
+    @property
+    def warehouse_dir(self) -> Path:
+        return self.layout.warehouse_dir
+
+    @property
+    def warehouse_db_path(self) -> Path:
+        return self.layout.warehouse_db_path
 
     @property
     def dashboard_dir(self) -> Path:
-        return self.season_dir / "dashboard"
+        return self.layout.dashboard.root_dir
+
+    @property
+    def dashboard_releases_dir(self) -> Path:
+        return self.layout.dashboard.releases_dir
+
+    @property
+    def dashboard_current_dir(self) -> Path:
+        return self.layout.dashboard.current_dir
+
+    @property
+    def dashboard_release_dir(self) -> Path:
+        return self.layout.dashboard.release_dir(self.release_id)
+
+    @property
+    def fantasy_dir(self) -> Path:
+        return self.layout.fantasy.root_dir
+
+    @property
+    def fantasy_releases_dir(self) -> Path:
+        return self.layout.fantasy.releases_dir
+
+    @property
+    def fantasy_current_dir(self) -> Path:
+        return self.layout.fantasy.current_dir
+
+    @property
+    def fantasy_release_dir(self) -> Path:
+        return self.layout.fantasy.release_dir(self.release_id)
 
     @property
     def releases_dir(self) -> Path:
-        return self.dashboard_dir / "releases"
+        return self.dashboard_releases_dir
 
     @property
     def current_dir(self) -> Path:
-        return self.dashboard_dir / "current"
+        return self.dashboard_current_dir
 
     @property
     def release_dir(self) -> Path:
-        return self.releases_dir / self.release_id
+        return self.dashboard_release_dir
 
     @property
     def run_dir(self) -> Path:
@@ -153,6 +208,18 @@ class PipelinePaths:
     @property
     def log_path(self) -> Path:
         return self.run_dir / "run.log"
+
+    @property
+    def validation_candidates_dir(self) -> Path:
+        return self.run_dir / "validation_candidates"
+
+    @property
+    def dashboard_validation_candidate_dir(self) -> Path:
+        return self.validation_candidates_dir / "dashboard"
+
+    @property
+    def fantasy_validation_candidate_dir(self) -> Path:
+        return self.validation_candidates_dir / "fantasy"
 
     @property
     def raw_inventory_path(self) -> Path:
@@ -180,7 +247,7 @@ class PipelinePaths:
 
     @property
     def legacy_normalized_dir(self) -> Path:
-        return self.season_dir / "parquets" / "normalized"
+        return self.layout.legacy_normalized_dir
 
     @property
     def legacy_zero_matches_path(self) -> Path:
@@ -214,6 +281,7 @@ class RunContext:
     only_missing: bool
     force: bool
     dry_run: bool
+    publish_target: str
     logger: "PipelineLogger"
     manifest: dict[str, Any]
 
@@ -260,6 +328,47 @@ def json_default(value: Any) -> Any:
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False, default=json_default), encoding="utf-8")
+
+
+def selected_publish_targets(target: str) -> tuple[str, ...]:
+    if target == "all":
+        return ("dashboard", "fantasy")
+    if target not in {"dashboard", "fantasy"}:
+        raise ValueError(f"Unsupported publish target: {target}")
+    return (target,)
+
+
+def load_curated_tables(curated_dir: Path) -> dict[str, pd.DataFrame]:
+    return {
+        table_name: read_parquet_safe(curated_dir / f"{table_name}.parquet")
+        for table_name in REQUIRED_CURATED_TABLES
+    }
+
+
+def write_table_bundle(dataset_dir: Path, tables: dict[str, pd.DataFrame]) -> None:
+    ensure_dir(dataset_dir)
+    for table_name, frame in tables.items():
+        stringify_if_mixed_objects(frame).to_parquet(dataset_dir / f"{table_name}.parquet", index=False)
+
+
+def combine_target_validations(target_validations: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    target_errors = [
+        f"{target}: {message}"
+        for target, payload in target_validations.items()
+        for message in payload.get("blocking_errors", [])
+    ]
+    target_warnings = [
+        f"{target}: {message}"
+        for target, payload in target_validations.items()
+        for message in payload.get("warnings", [])
+    ]
+    return {
+        "status": "passed" if not target_errors else "failed",
+        "validated_at": utc_now().isoformat(),
+        "blocking_errors": target_errors,
+        "warnings": target_warnings,
+        "targets": target_validations,
+    }
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -1945,6 +2054,7 @@ def build_base_manifest(args: argparse.Namespace, paths: PipelinePaths, selected
         "league": paths.league,
         "season": paths.season,
         "mode": args.mode if hasattr(args, "mode") else "validate",
+        "publish_target": getattr(args, "publish_target", getattr(args, "target", "dashboard")),
         "dry_run": bool(getattr(args, "dry_run", False)),
         "from_phase": getattr(args, "from_phase", None),
         "to_phase": getattr(args, "to_phase", None),
@@ -1956,9 +2066,14 @@ def build_base_manifest(args: argparse.Namespace, paths: PipelinePaths, selected
             "raw_dir": str(paths.raw_dir),
             "staging_dir": str(paths.staging_dir),
             "curated_dir": str(paths.curated_dir),
+            "warehouse_dir": str(paths.warehouse_dir),
+            "warehouse_db_path": str(paths.warehouse_db_path),
             "dashboard_dir": str(paths.dashboard_dir),
-            "release_dir": str(paths.release_dir),
-            "current_dir": str(paths.current_dir),
+            "dashboard_release_dir": str(paths.dashboard_release_dir),
+            "dashboard_current_dir": str(paths.dashboard_current_dir),
+            "fantasy_dir": str(paths.fantasy_dir),
+            "fantasy_release_dir": str(paths.fantasy_release_dir),
+            "fantasy_current_dir": str(paths.fantasy_current_dir),
         },
         "phases": [],
         "artifacts": {},
@@ -2288,15 +2403,47 @@ def phase_build_curated(ctx: RunContext) -> dict[str, Any]:
     }
 
 
+def phase_build_warehouse(ctx: RunContext) -> dict[str, Any]:
+    ensure_dir(ctx.paths.warehouse_dir)
+    curated_tables = load_curated_tables(ctx.paths.curated_dir)
+    canonical_tables = build_canonical_tables(curated_tables, ctx.paths.season)
+    row_counts = upsert_canonical_tables(ctx.paths.warehouse_db_path, canonical_tables, ctx.paths.season)
+    return {
+        "warehouse_path": str(ctx.paths.warehouse_db_path),
+        "canonical_rows": row_counts,
+    }
+
+
 def phase_validate(ctx: RunContext) -> dict[str, Any]:
-    validation = validate_dataset_contract(
-        dataset_dir=ctx.paths.curated_dir,
-        master_matches=pd.read_excel(latest_master_clean_path(ctx.paths)),
-        staging_dir=ctx.paths.staging_dir,
-        reference_dir=reference_dataset_dir(ctx.paths),
-        season=ctx.paths.season,
-        source_mode=source_mode_from_paths(ctx.paths),
-    )
+    master_matches = pd.read_excel(latest_master_clean_path(ctx.paths))
+    source_mode = source_mode_from_paths(ctx.paths)
+    target_validations: dict[str, dict[str, Any]] = {
+        "warehouse": validate_warehouse_contract(ctx.paths.warehouse_db_path, ctx.paths.season)
+    }
+    canonical_tables = load_canonical_tables_for_season(ctx.paths.warehouse_db_path, ctx.paths.season)
+
+    if "dashboard" in selected_publish_targets(ctx.publish_target):
+        dashboard_bundle = build_dashboard_bundle_from_canonical(canonical_tables)
+        if not ctx.dry_run:
+            reset_dir(ctx.paths.dashboard_validation_candidate_dir, ctx.paths.run_dir)
+            write_table_bundle(ctx.paths.dashboard_validation_candidate_dir, dashboard_bundle)
+        target_validations["dashboard"] = validate_dataset_contract(
+            dataset_dir=ctx.paths.dashboard_validation_candidate_dir,
+            master_matches=master_matches,
+            staging_dir=ctx.paths.staging_dir,
+            reference_dir=reference_dataset_dir(ctx.paths),
+            season=ctx.paths.season,
+            source_mode=source_mode,
+        )
+
+    if "fantasy" in selected_publish_targets(ctx.publish_target):
+        fantasy_bundle = build_fantasy_bundle_from_canonical(canonical_tables)
+        if not ctx.dry_run:
+            reset_dir(ctx.paths.fantasy_validation_candidate_dir, ctx.paths.run_dir)
+            write_table_bundle(ctx.paths.fantasy_validation_candidate_dir, fantasy_bundle)
+        target_validations["fantasy"] = validate_fantasy_export_bundle(ctx.paths.fantasy_validation_candidate_dir)
+
+    validation = combine_target_validations(target_validations)
     if not ctx.dry_run:
         write_json(ctx.paths.validation_path, validation)
     return validation
@@ -2305,21 +2452,50 @@ def phase_validate(ctx: RunContext) -> dict[str, Any]:
 def phase_publish(ctx: RunContext) -> dict[str, Any]:
     validation_payload = read_json(ctx.paths.validation_path)
     if validation_payload.get("status") != "passed":
-        raise RuntimeError("Validation failed. Publish aborted and dashboard/current left unchanged.")
+        raise RuntimeError("Validation failed. Publish aborted and published targets were left unchanged.")
 
-    reset_dir(ctx.paths.release_dir, ctx.paths.season_dir)
-    for table_name in REQUIRED_CURATED_TABLES:
-        source = ctx.paths.curated_dir / f"{table_name}.parquet"
-        if source.exists():
-            shutil.copy2(source, ctx.paths.release_dir / source.name)
-    shutil.copy2(ctx.paths.manifest_path, ctx.paths.release_dir / "manifest.json")
-    shutil.copy2(ctx.paths.validation_path, ctx.paths.release_dir / "validation.json")
-    publish_release_atomically(ctx.paths.release_dir, ctx.paths.current_dir)
-    return {
-        "release_dir": str(ctx.paths.release_dir),
-        "current_dir": str(ctx.paths.current_dir),
-        "published_tables": [table_name for table_name in REQUIRED_CURATED_TABLES if (ctx.paths.release_dir / f"{table_name}.parquet").exists()],
-    }
+    selected_targets = selected_publish_targets(ctx.publish_target)
+    published: dict[str, dict[str, Any]] = {}
+    canonical_tables = load_canonical_tables_for_season(ctx.paths.warehouse_db_path, ctx.paths.season)
+
+    if "dashboard" in selected_targets:
+        reset_dir(ctx.paths.dashboard_release_dir, ctx.paths.season_dir)
+        dashboard_bundle = build_dashboard_bundle_from_canonical(canonical_tables)
+        write_table_bundle(ctx.paths.dashboard_release_dir, dashboard_bundle)
+        shutil.copy2(ctx.paths.manifest_path, ctx.paths.dashboard_release_dir / "manifest.json")
+        shutil.copy2(ctx.paths.validation_path, ctx.paths.dashboard_release_dir / "validation.json")
+        published["dashboard"] = {
+            "release_dir": str(ctx.paths.dashboard_release_dir),
+            "current_dir": str(ctx.paths.dashboard_current_dir),
+            "published_tables": [
+                table_name
+                for table_name in REQUIRED_CURATED_TABLES
+                if (ctx.paths.dashboard_release_dir / f"{table_name}.parquet").exists()
+            ],
+        }
+
+    if "fantasy" in selected_targets:
+        reset_dir(ctx.paths.fantasy_release_dir, ctx.paths.season_dir)
+        fantasy_bundle = build_fantasy_bundle_from_canonical(canonical_tables)
+        write_table_bundle(ctx.paths.fantasy_release_dir, fantasy_bundle)
+        shutil.copy2(ctx.paths.manifest_path, ctx.paths.fantasy_release_dir / "manifest.json")
+        shutil.copy2(ctx.paths.validation_path, ctx.paths.fantasy_release_dir / "validation.json")
+        published["fantasy"] = {
+            "release_dir": str(ctx.paths.fantasy_release_dir),
+            "current_dir": str(ctx.paths.fantasy_current_dir),
+            "published_tables": [
+                table_name
+                for table_name in FANTASY_EXPORT_TABLES
+                if (ctx.paths.fantasy_release_dir / f"{table_name}.parquet").exists()
+            ],
+        }
+
+    if "dashboard" in selected_targets:
+        publish_release_atomically(ctx.paths.dashboard_release_dir, ctx.paths.dashboard_current_dir)
+    if "fantasy" in selected_targets:
+        publish_release_atomically(ctx.paths.fantasy_release_dir, ctx.paths.fantasy_current_dir)
+
+    return {"targets": published}
 
 
 def resolve_phase_range(from_phase: str, to_phase: str) -> list[str]:
@@ -2344,6 +2520,7 @@ def run_pipeline(args: argparse.Namespace) -> int:
         only_missing=args.only_missing,
         force=args.force,
         dry_run=args.dry_run,
+        publish_target=args.publish_target,
         logger=logger,
         manifest=manifest,
     )
@@ -2360,6 +2537,7 @@ def run_pipeline(args: argparse.Namespace) -> int:
         "bootstrap-raw": phase_bootstrap_raw,
         "build-staging": phase_build_staging,
         "build-curated": phase_build_curated,
+        "build-warehouse": phase_build_warehouse,
         "validate": phase_validate,
         "publish": phase_publish,
     }
@@ -2376,14 +2554,18 @@ def run_pipeline(args: argparse.Namespace) -> int:
         ctx.manifest["status"] = "completed"
         ctx.manifest["ended_at"] = utc_now().isoformat()
         persist_manifest(ctx)
-        if "publish" in selected_phases and paths.release_dir.exists():
-            shutil.copy2(paths.manifest_path, paths.release_dir / "manifest.json")
-            if paths.validation_path.exists():
-                shutil.copy2(paths.validation_path, paths.release_dir / "validation.json")
-            if paths.current_dir.exists():
-                shutil.copy2(paths.manifest_path, paths.current_dir / "manifest.json")
-                if paths.validation_path.exists():
-                    shutil.copy2(paths.validation_path, paths.current_dir / "validation.json")
+        if "publish" in selected_phases:
+            for target in selected_publish_targets(args.publish_target):
+                release_dir = paths.dashboard_release_dir if target == "dashboard" else paths.fantasy_release_dir
+                current_dir = paths.dashboard_current_dir if target == "dashboard" else paths.fantasy_current_dir
+                if release_dir.exists():
+                    shutil.copy2(paths.manifest_path, release_dir / "manifest.json")
+                    if paths.validation_path.exists():
+                        shutil.copy2(paths.validation_path, release_dir / "validation.json")
+                if current_dir.exists():
+                    shutil.copy2(paths.manifest_path, current_dir / "manifest.json")
+                    if paths.validation_path.exists():
+                        shutil.copy2(paths.validation_path, current_dir / "validation.json")
         return 0
     except Exception as exc:
         logger.log(f"Pipeline failed: {exc}")
@@ -2404,33 +2586,61 @@ def validate_release(args: argparse.Namespace) -> int:
         run_id=timestamp_id(),
         release_id=release_id if release_id != "current" else timestamp_id(),
     )
-    if release_id == "current":
-        dataset_dir = paths.current_dir
-        manifest_path = dataset_dir / "manifest.json"
-    else:
-        dataset_dir = paths.releases_dir / release_id
-        manifest_path = dataset_dir / "manifest.json"
-    if not dataset_dir.exists():
-        raise FileNotFoundError(f"Dataset directory not found: {dataset_dir}")
+    master_matches = pd.read_excel(latest_master_clean_path(paths))
+    source_mode = source_mode_from_paths(paths)
+    target_validations: dict[str, dict[str, Any]] = {
+        "warehouse": validate_warehouse_contract(paths.warehouse_db_path, paths.season)
+    }
 
-    manifest = read_json(manifest_path) if manifest_path.exists() else {}
-    run_id = manifest.get("run_id")
-    staging_dir = paths.staging_dir
-    if run_id:
-        candidate_run_dir = paths.raw_runs_dir / run_id
-        if not candidate_run_dir.exists():
-            staging_dir = None
-    validation = validate_dataset_contract(
-        dataset_dir=dataset_dir,
-        master_matches=pd.read_excel(latest_master_clean_path(paths)),
-        staging_dir=staging_dir if staging_dir and staging_dir.exists() else None,
-        reference_dir=reference_dataset_dir(paths),
-        season=paths.season,
-        source_mode=source_mode_from_paths(paths),
-    )
+    for target in selected_publish_targets(args.target):
+        if target == "dashboard":
+            dataset_dir = paths.dashboard_current_dir if release_id == "current" else paths.dashboard_releases_dir / release_id
+            manifest_path = dataset_dir / "manifest.json"
+            if not dataset_dir.exists():
+                target_validations[target] = {
+                    "status": "failed",
+                    "validated_at": utc_now().isoformat(),
+                    "blocking_errors": [f"Dataset directory not found: {dataset_dir}"],
+                    "warnings": [],
+                    "stats": {},
+                }
+                continue
+
+            manifest = read_json(manifest_path) if manifest_path.exists() else {}
+            run_id = manifest.get("run_id")
+            staging_dir = paths.staging_dir
+            if run_id:
+                candidate_run_dir = paths.raw_runs_dir / run_id
+                if not candidate_run_dir.exists():
+                    staging_dir = None
+            target_validations[target] = validate_dataset_contract(
+                dataset_dir=dataset_dir,
+                master_matches=master_matches,
+                staging_dir=staging_dir if staging_dir and staging_dir.exists() else None,
+                reference_dir=reference_dataset_dir(paths),
+                season=paths.season,
+                source_mode=source_mode,
+            )
+            if release_id != "current":
+                write_json(dataset_dir / "validation.json", target_validations[target])
+            continue
+
+        dataset_dir = paths.fantasy_current_dir if release_id == "current" else paths.fantasy_releases_dir / release_id
+        if not dataset_dir.exists():
+            target_validations[target] = {
+                "status": "failed",
+                "validated_at": utc_now().isoformat(),
+                "blocking_errors": [f"Dataset directory not found: {dataset_dir}"],
+                "warnings": [],
+                "stats": {},
+            }
+            continue
+        target_validations[target] = validate_fantasy_export_bundle(dataset_dir)
+        if release_id != "current":
+            write_json(dataset_dir / "validation.json", target_validations[target])
+
+    validation = combine_target_validations(target_validations)
     print(json.dumps(validation, indent=2, ensure_ascii=False, default=json_default))
-    if release_id != "current":
-        write_json(dataset_dir / "validation.json", validation)
     return 0 if validation.get("status") == "passed" else 1
 
 
@@ -2446,12 +2656,14 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--to-phase", choices=PHASES, default=PHASES[-1])
     run_parser.add_argument("--only-missing", action="store_true")
     run_parser.add_argument("--force", action="store_true")
+    run_parser.add_argument("--publish-target", choices=PUBLISH_TARGET_CHOICES, default="all")
     run_parser.add_argument("--dry-run", action="store_true")
 
     validate_parser = subparsers.add_parser("validate", help="Validate a published release or dashboard/current.")
     validate_parser.add_argument("--league", default="Liga 1 Peru")
     validate_parser.add_argument("--season", type=int, default=2025)
     validate_parser.add_argument("--release-id", default=None)
+    validate_parser.add_argument("--target", choices=PUBLISH_TARGET_CHOICES, default="all")
     return parser
 
 

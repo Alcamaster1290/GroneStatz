@@ -1,0 +1,49 @@
+{
+  "status": "passed",
+  "validated_at": "2026-04-07T06:19:06.089249+00:00",
+  "blocking_errors": [],
+  "warnings": [
+    "dashboard: Current-season partial validation mode enabled for season 2026: player_stats, team_stats and average_positions gaps are warning-only while the backfill is still in progress.",
+    "dashboard: Missing warning-only sheet 'momentum' for 1 matches (15362086)"
+  ],
+  "targets": {
+    "dashboard": {
+      "status": "passed",
+      "validated_at": "2026-04-07T06:19:04.317846+00:00",
+      "blocking_errors": [],
+      "warnings": [
+        "Current-season partial validation mode enabled for season 2026: player_stats, team_stats and average_positions gaps are warning-only while the backfill is still in progress.",
+        "Missing warning-only sheet 'momentum' for 1 matches (15362086)"
+      ],
+      "stats": {
+        "expected_finished_matches": 72,
+        "expected_curated_matches": 72,
+        "curated_matches": 72,
+        "curated_players": 456,
+        "curated_player_match_rows": 2877,
+        "timestamp_span_seconds": 0.36603307723999023
+      },
+      "diff": {}
+    },
+    "fantasy": {
+      "status": "passed",
+      "validated_at": "2026-04-07T06:19:06.088264+00:00",
+      "blocking_errors": [],
+      "warnings": [],
+      "stats": {
+        "row_counts": {
+          "matches": 72,
+          "teams": 21,
+          "players": 456,
+          "players_fantasy": 454,
+          "player_match": 2877,
+          "player_totals": 456,
+          "player_team": 456,
+          "player_transfer": 0,
+          "team_stats": 8620
+        },
+        "timestamp_span_seconds": 0.32857227325439453
+      }
+    }
+  }
+}
