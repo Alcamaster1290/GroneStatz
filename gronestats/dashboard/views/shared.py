@@ -99,7 +99,6 @@ def render_app_header(
 ) -> None:
     formatted_timestamp = loaded_at.strftime("%d/%m/%Y %H:%M:%S")
     scope_chip = f"<span class=\"gs-chip\">Filtros activos: {scope_summary}</span>" if scope_summary else ""
-    coverage_chip = f"<span class=\"gs-chip\">{coverage_label}</span>" if coverage_label else ""
     html = f"""
     <section class="gs-shell">
       <header class="gs-header">
@@ -108,8 +107,6 @@ def render_app_header(
         <p class="gs-header__subtitle">{subtitle}</p>
         <div class="gs-chip-row">
           {scope_chip}
-          {coverage_chip}
-          <span class="gs-chip">Parquets normalizados</span>
           <span class="gs-chip">Actualizado en carga: {formatted_timestamp}</span>
         </div>
       </header>

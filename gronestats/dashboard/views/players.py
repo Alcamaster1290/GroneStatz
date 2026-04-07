@@ -17,7 +17,6 @@ from gronestats.dashboard.views.shared import (
     get_selected_row_index,
     render_empty_state,
     render_identity_panel,
-    render_metric_cards,
     render_navigation_surface,
     render_panel_close,
     render_panel_open,
@@ -147,23 +146,6 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
                 accent_color=profile.team_color,
             ):
                 action = build_action("matches_filter", team_id=int(team_id), venue="Todos", result="Todos")
-
-        extra_metric_label = "Atajadas / 90" if safe_text(profile.summary.get("Posicion"), "-") == "G" else "G+A / 90"
-        extra_metric_value = (
-            profile.percentiles.loc[profile.percentiles["Metric"] == "Atajadas / 90", "value"].iloc[0]
-            if extra_metric_label == "Atajadas / 90" and "Atajadas / 90" in profile.percentiles["Metric"].values
-            else profile.percentiles.loc[profile.percentiles["Metric"] == "Acciones de gol / 90", "value"].iloc[0]
-            if extra_metric_label == "G+A / 90" and "Acciones de gol / 90" in profile.percentiles["Metric"].values
-            else 0.0
-        )
-        cards = [
-            {"label": "Minutos", "value": str(profile.summary["Minutos"]), "help": "Carga de juego."},
-            {"label": "Partidos", "value": str(profile.summary["Partidos"]), "help": "Apariciones."},
-            {"label": "Goles", "value": str(profile.summary["Goles"]), "help": "Produccion."},
-            {"label": "Asistencias", "value": str(profile.summary["Asistencias"]), "help": "Creacion."},
-            {"label": extra_metric_label, "value": str(extra_metric_value), "help": "Senal oficial del rendimiento individual."},
-        ]
-        render_metric_cards(cards)
 
     with top_right:
         render_section_title(

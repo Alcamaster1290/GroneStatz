@@ -254,7 +254,6 @@ def test_validate_dataset_contract_relaxes_required_sheet_gaps_for_legacy_season
 
     assert validation["status"] == "passed"
     assert not validation["blocking_errors"]
-    assert any("Legacy validation mode enabled for season 2023" in message for message in validation["warnings"])
     assert any("Missing legacy non-blocking sheet 'player_stats'" in message for message in validation["warnings"])
 
 
@@ -295,7 +294,7 @@ def test_validate_dataset_contract_requires_finished_player_stats_for_fantasy_br
 
     assert validation["status"] == "failed"
     assert any("Missing required finished-match sheet 'player_stats'" in message for message in validation["blocking_errors"])
-    assert any("Fantasy admin bridge validation mode enabled for season 2026" in message for message in validation["warnings"])
+    assert not any("Fantasy admin bridge validation mode enabled for season 2026" in message for message in validation["warnings"])
 
 
 def test_validate_dataset_contract_allows_schedule_only_fantasy_bridge_release(tmp_path: Path) -> None:
@@ -419,7 +418,6 @@ def test_validate_dataset_contract_allows_current_season_partial_sofascore(tmp_p
 
     assert validation["status"] == "passed"
     assert not validation["blocking_errors"]
-    assert any("Current-season partial validation mode enabled for season 2026" in message for message in validation["warnings"])
     assert any("Missing current-season non-blocking sheet 'player_stats'" in message for message in validation["warnings"])
 
 

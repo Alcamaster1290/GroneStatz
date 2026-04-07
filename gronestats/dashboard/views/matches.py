@@ -17,7 +17,6 @@ from gronestats.dashboard.views.shared import (
     render_action_button,
     render_empty_state,
     render_form_chips,
-    render_metric_cards,
     render_navigation_surface,
     render_player_spotlight_card,
     render_selection_note,
@@ -240,12 +239,6 @@ def render_match_detail(summary: MatchSummary | None) -> dict[str, object] | Non
     header_action = _render_match_header(summary)
     if action is None:
         action = header_action
-
-    render_section_title(
-        "Insight strip",
-        "Lectura rapida de control, amenaza y protagonistas del partido.",
-    )
-    render_metric_cards(summary.insight_cards)
 
     tabs = st.tabs(["Lectura rapida", "Estadisticas", "Eventos Opta", "Jugadores", "Contexto"])
 

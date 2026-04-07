@@ -7,7 +7,6 @@ from gronestats.dashboard.config import APP_SUBTITLE, APP_TITLE, DEFAULT_DASHBOA
 from gronestats.dashboard.data import (
     build_team_options,
     describe_active_scope,
-    describe_bundle_gaps,
     load_consolidated_season_overview,
     load_dashboard_data,
     load_season_catalog,
@@ -20,8 +19,14 @@ from gronestats.dashboard.data import (
 )
 from gronestats.dashboard.models import FilterState
 from gronestats.dashboard.pages import build_team_lookup, clamp_round_range, derive_round_bounds, render_page
-from gronestats.dashboard.state import PAGES, apply_navigation_action, init_dashboard_state, reset_dashboard_context
-from gronestats.dashboard.views.shared import inject_base_styles, render_action_button, render_selection_note
+from gronestats.dashboard.state import (
+    PAGES,
+    apply_navigation_action,
+    consume_navigation_action,
+    init_dashboard_state,
+    reset_dashboard_context,
+)
+from gronestats.dashboard.views.shared import inject_base_styles, render_action_button
 
 
 st.set_page_config(page_title=f"{APP_TITLE} | Dashboard", page_icon=":soccer:", layout="wide")
@@ -37,6 +42,7 @@ if not season_catalog:
 season_options = [dataset.season_year for dataset in season_catalog]
 season_lookup = {dataset.season_year: dataset for dataset in season_catalog}
 init_dashboard_state([])
+consume_navigation_action()
 if st.session_state.get("selected_season_year") not in season_options:
     st.session_state["selected_season_year"] = resolve_default_season_year(season_catalog)
 
@@ -50,7 +56,6 @@ consolidated_overview = load_consolidated_season_overview(catalog_signature)
 team_options = build_team_options(bundle)
 team_ids = team_options["team_id"].astype(int).tolist()
 team_lookup = build_team_lookup(team_options)
-coverage_notes = describe_bundle_gaps(bundle)
 init_dashboard_state(team_ids)
 if st.session_state.get("active_season_year") != bundle.season_year:
     reset_dashboard_context(team_ids, nav_page=st.session_state.get("nav_page", "Overview"))
@@ -61,8 +66,7 @@ def _season_option_label(season_year: int) -> str:
     dataset = resolve_season_dataset(season_year, season_catalog)
     if dataset is None:
         return str(season_year)
-    suffix = f"{dataset.warning_count} warnings" if dataset.warning_count else dataset.validation_status
-    return f"{dataset.season_label} | {suffix}"
+    return dataset.season_label
 
 
 tournament_values = []
@@ -84,14 +88,7 @@ with st.sidebar:
         key="selected_season_year",
         format_func=_season_option_label,
     )
-    selected_dataset = season_lookup.get(int(selected_season_year))
     st.caption(f"{APP_SUBTITLE} | {bundle.season_label}")
-    if selected_dataset is not None:
-        st.caption(selected_dataset.coverage_label)
-    if coverage_notes:
-        st.caption("Cobertura parcial")
-        for note in coverage_notes:
-            st.caption(f"- {note}")
     st.caption("Filtra por torneo y rango de rondas. El dashboard abre combinado en Apertura + Clausura y deja Grand Final como capa opcional.")
     st.divider()
     selected_tournaments = st.multiselect(
@@ -144,9 +141,6 @@ page_help = {
 }
 if not page_enabled.get(st.session_state["nav_page"], True):
     st.session_state["nav_page"] = "Overview"
-
-if coverage_notes:
-    render_selection_note("Cobertura parcial activa: algunas capas analiticas todavia no estan publicadas para esta temporada.")
 
 st.caption("Navega con botones, tablas y cards contextuales. El sidebar queda solo para filtros globales.")
 nav_cols = st.columns(len(PAGES), gap="small")

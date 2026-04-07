@@ -1,9 +1,8 @@
 {
   "status": "passed",
-  "validated_at": "2026-04-07T19:19:01.812526+00:00",
+  "validated_at": "2026-04-07T21:19:51.986909+00:00",
   "blocking_errors": [],
   "warnings": [
-    "dashboard: Legacy validation mode enabled for season 2023: player_stats, team_stats, average_positions gaps are warning-only.",
     "dashboard: Missing legacy non-blocking sheet 'player_stats' for 6 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403)",
     "dashboard: Missing legacy non-blocking sheet 'team_stats' for 8 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044774, 11118014)",
     "dashboard: Missing legacy non-blocking sheet 'average_positions' for 10 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044785, 11044788, 11044790, 11118014)",
@@ -14,7 +13,7 @@
   "targets": {
     "warehouse": {
       "status": "passed",
-      "validated_at": "2026-04-07T19:18:45.549967+00:00",
+      "validated_at": "2026-04-07T21:19:46.051370+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
@@ -35,10 +34,9 @@
     },
     "dashboard": {
       "status": "passed",
-      "validated_at": "2026-04-07T19:18:56.339885+00:00",
+      "validated_at": "2026-04-07T21:19:49.786368+00:00",
       "blocking_errors": [],
       "warnings": [
-        "Legacy validation mode enabled for season 2023: player_stats, team_stats, average_positions gaps are warning-only.",
         "Missing legacy non-blocking sheet 'player_stats' for 6 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403)",
         "Missing legacy non-blocking sheet 'team_stats' for 8 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044774, 11118014)",
         "Missing legacy non-blocking sheet 'average_positions' for 10 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044785, 11044788, 11044790, 11118014)",
@@ -52,13 +50,13 @@
         "curated_matches": 342,
         "curated_players": 593,
         "curated_player_match_rows": 13222,
-        "timestamp_span_seconds": 0.8152451515197754
+        "timestamp_span_seconds": 0.425825834274292
       },
       "diff": {}
     },
     "fantasy": {
       "status": "passed",
-      "validated_at": "2026-04-07T19:19:01.803901+00:00",
+      "validated_at": "2026-04-07T21:19:51.984915+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
@@ -73,7 +71,7 @@
           "player_transfer": 56,
           "team_stats": 37189
         },
-        "timestamp_span_seconds": 0.6762607097625732
+        "timestamp_span_seconds": 0.17166972160339355
       }
     }
   }

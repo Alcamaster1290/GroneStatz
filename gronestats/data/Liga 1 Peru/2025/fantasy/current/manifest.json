@@ -1,19 +1,18 @@
 {
-  "run_id": "20260407_191951",
-  "release_id": "20260407_191951",
+  "run_id": "20260407_212009",
+  "release_id": "20260407_212009",
   "league": "Liga 1 Peru",
   "season": 2025,
   "mode": "full",
   "publish_target": "all",
   "dry_run": false,
-  "from_phase": "build-warehouse",
+  "from_phase": "validate",
   "to_phase": "publish",
   "selected_phases": [
-    "build-warehouse",
     "validate",
     "publish"
   ],
-  "started_at": "2026-04-07T19:19:51.005702+00:00",
+  "started_at": "2026-04-07T21:20:09.290184+00:00",
   "status": "completed",
   "paths": {
     "season_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025",
@@ -23,43 +22,21 @@
     "warehouse_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\warehouse",
     "warehouse_db_path": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\warehouse\\gronestats.duckdb",
     "dashboard_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\dashboard",
-    "dashboard_release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\dashboard\\releases\\20260407_191951",
+    "dashboard_release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\dashboard\\releases\\20260407_212009",
     "dashboard_current_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\dashboard\\current",
     "fantasy_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\fantasy",
-    "fantasy_release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\fantasy\\releases\\20260407_191951",
+    "fantasy_release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\fantasy\\releases\\20260407_212009",
     "fantasy_current_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\fantasy\\current"
   },
   "phases": [
     {
-      "phase": "build-warehouse",
-      "started_at": "2026-04-07T19:19:51.007258+00:00",
-      "ended_at": "2026-04-07T19:19:53.745095+00:00",
-      "status": "completed",
-      "details": {
-        "warehouse_path": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\warehouse\\gronestats.duckdb",
-        "canonical_rows": {
-          "matches_canonical": 333,
-          "teams_canonical": 21,
-          "players_canonical": 597,
-          "player_identity_canonical": 597,
-          "player_match_canonical": 13193,
-          "player_totals_season_canonical": 597,
-          "team_stats_canonical": 39674,
-          "average_positions_canonical": 10219,
-          "heatmap_points_canonical": 72629,
-          "shot_events_canonical": 8532,
-          "match_momentum_canonical": 30082
-        }
-      }
-    },
-    {
       "phase": "validate",
-      "started_at": "2026-04-07T19:19:53.752022+00:00",
-      "ended_at": "2026-04-07T19:20:04.444558+00:00",
+      "started_at": "2026-04-07T21:20:09.291183+00:00",
+      "ended_at": "2026-04-07T21:20:13.396183+00:00",
       "status": "completed",
       "details": {
         "status": "passed",
-        "validated_at": "2026-04-07T19:20:04.370297+00:00",
+        "validated_at": "2026-04-07T21:20:13.362098+00:00",
         "blocking_errors": [],
         "warnings": [
           "dashboard: Missing warning-only sheet 'momentum' for 6 matches (13596389, 13803195, 13943943, 14199319, 14199322, 14935675)"
@@ -67,7 +44,7 @@
         "targets": {
           "warehouse": {
             "status": "passed",
-            "validated_at": "2026-04-07T19:19:56.214789+00:00",
+            "validated_at": "2026-04-07T21:20:09.860762+00:00",
             "blocking_errors": [],
             "warnings": [],
             "stats": {
@@ -88,7 +65,7 @@
           },
           "dashboard": {
             "status": "passed",
-            "validated_at": "2026-04-07T19:20:00.641966+00:00",
+            "validated_at": "2026-04-07T21:20:11.882939+00:00",
             "blocking_errors": [],
             "warnings": [
               "Missing warning-only sheet 'momentum' for 6 matches (13596389, 13803195, 13943943, 14199319, 14199322, 14935675)"
@@ -99,13 +76,13 @@
               "curated_matches": 333,
               "curated_players": 597,
               "curated_player_match_rows": 13193,
-              "timestamp_span_seconds": 0.44092559814453125
+              "timestamp_span_seconds": 0.18998336791992188
             },
             "diff": {}
           },
           "fantasy": {
             "status": "passed",
-            "validated_at": "2026-04-07T19:20:04.359689+00:00",
+            "validated_at": "2026-04-07T21:20:13.358505+00:00",
             "blocking_errors": [],
             "warnings": [],
             "stats": {
@@ -120,7 +97,7 @@
                 "player_transfer": 96,
                 "team_stats": 39674
               },
-              "timestamp_span_seconds": 0.26691555976867676
+              "timestamp_span_seconds": 0.16478395462036133
             }
           }
         }
@@ -128,13 +105,13 @@
     },
     {
       "phase": "publish",
-      "started_at": "2026-04-07T19:20:04.448609+00:00",
-      "ended_at": "2026-04-07T19:20:12.121161+00:00",
+      "started_at": "2026-04-07T21:20:13.398391+00:00",
+      "ended_at": "2026-04-07T21:20:16.446335+00:00",
       "status": "completed",
       "details": {
         "targets": {
           "dashboard": {
-            "release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\dashboard\\releases\\20260407_191951",
+            "release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\dashboard\\releases\\20260407_212009",
             "current_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\dashboard\\current",
             "published_tables": [
               "matches",
@@ -151,7 +128,7 @@
             ]
           },
           "fantasy": {
-            "release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\fantasy\\releases\\20260407_191951",
+            "release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\fantasy\\releases\\20260407_212009",
             "current_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2025\\fantasy\\current",
             "published_tables": [
               "matches",
@@ -170,5 +147,5 @@
     }
   ],
   "artifacts": {},
-  "ended_at": "2026-04-07T19:20:12.124347+00:00"
+  "ended_at": "2026-04-07T21:20:16.448346+00:00"
 }

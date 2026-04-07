@@ -12,7 +12,6 @@ from gronestats.dashboard.views.shared import (
     render_empty_state,
     render_form_chips,
     render_identity_panel,
-    render_metric_cards,
     render_navigation_surface,
     render_section_title,
     render_selection_note,
@@ -78,15 +77,6 @@ def render_team_view(profile: TeamProfile | None, *, player_layer_available: boo
             accent_color=profile.team_color,
         ):
             action = build_action("matches_filter", team_id=int(profile.team_id), venue="Todos", result="Todos")
-
-    cards = [
-        {"label": "Puntos", "value": str(profile.summary["Pts"]), "help": f"PPG {profile.summary['PPG']}"},
-        {"label": "PJ", "value": str(profile.summary["PJ"]), "help": f"G {profile.summary['G']} | E {profile.summary['E']} | P {profile.summary['P']}"},
-        {"label": "GF", "value": str(profile.summary["GF"]), "help": "Goles a favor en el rango actual."},
-        {"label": "GC", "value": str(profile.summary["GC"]), "help": "Goles en contra en el rango actual."},
-        {"label": "DG", "value": str(profile.summary["DG"]), "help": "Diferencia de gol acumulada."},
-    ]
-    render_metric_cards(cards)
 
     left, right = st.columns([1.1, 1.25], gap="large")
     with left:

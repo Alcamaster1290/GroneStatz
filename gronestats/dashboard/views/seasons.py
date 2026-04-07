@@ -9,7 +9,6 @@ from gronestats.dashboard.views.shared import (
     build_bar_figure,
     get_selected_row_index,
     render_empty_state,
-    render_metric_cards,
     render_navigation_surface,
     render_section_title,
     render_selection_note,
@@ -33,23 +32,6 @@ def render_seasons_overview(
     active_season_year: int,
 ) -> dict[str, object] | None:
     action: dict[str, object] | None = None
-    published_years = sorted(dataset.season_year for dataset in season_catalog)
-    if published_years:
-        coverage_span = (
-            str(published_years[0])
-            if len(published_years) == 1
-            else f"{published_years[0]}-{published_years[-1]}"
-        )
-    else:
-        coverage_span = "temporadas publicadas"
-    cards = [
-        {"label": "Temporadas", "value": f"{overview.total_seasons}", "help": "Releases disponibles para navegar desde el dashboard."},
-        {"label": "Partidos", "value": f"{overview.total_matches}", "help": "Suma de partidos publicados entre todas las temporadas."},
-        {"label": "Jugadores unicos", "value": f"{overview.total_players}", "help": f"Pool unico detectado al consolidar {coverage_span}."},
-        {"label": "Goles", "value": f"{overview.total_goals}", "help": "Produccion ofensiva total de todas las temporadas publicadas."},
-        {"label": "Promedio global", "value": f"{overview.goals_per_match:.2f}", "help": "Goles por partido sobre el consolidado completo."},
-    ]
-    render_metric_cards(cards)
 
     if overview.seasons_table.empty:
         render_empty_state("No hay temporadas publicadas para consolidar.")

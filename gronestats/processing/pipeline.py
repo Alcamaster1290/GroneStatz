@@ -1941,10 +1941,6 @@ def validate_dataset_contract(
         if source_mode == FANTASY_SOURCE_MODE:
             strict_required_sheet_keys: tuple[str, ...] = ()
             relaxed_required_sheet_keys = ("team_stats", "average_positions")
-            warnings.append(
-                f"Fantasy admin bridge validation mode enabled for season {season}: "
-                "team_stats, average_positions, heatmaps, shotmap and momentum are warning-only until SofaScore backfill."
-            )
             if finished_match_ids:
                 finished_coverage = coverage.loc[pd.to_numeric(coverage.get("match_id"), errors="coerce").isin(finished_match_ids)].copy()
                 missing_player_stats_finished = (
@@ -1960,19 +1956,10 @@ def validate_dataset_contract(
         elif current_season_partial_mode:
             strict_required_sheet_keys = ()
             relaxed_required_sheet_keys = REQUIRED_SHEET_KEYS
-            warnings.append(
-                f"Current-season partial validation mode enabled for season {season}: "
-                "player_stats, team_stats and average_positions gaps are warning-only while the backfill is still in progress."
-            )
         else:
             strict_required_sheet_keys = REQUIRED_SHEET_KEYS if season is None or season >= 2024 else ()
             relaxed_required_sheet_keys = tuple(
                 sheet_key for sheet_key in REQUIRED_SHEET_KEYS if sheet_key not in strict_required_sheet_keys
-            )
-        if relaxed_required_sheet_keys and source_mode != FANTASY_SOURCE_MODE and not current_season_partial_mode:
-            warnings.append(
-                f"Legacy validation mode enabled for season {season}: "
-                f"{', '.join(relaxed_required_sheet_keys)} gaps are warning-only."
             )
         for sheet_key in strict_required_sheet_keys:
             missing_sheet_matches = coverage.loc[~coverage[f"has_{sheet_key}"], "match_id"].dropna().astype(int).tolist()

@@ -11,7 +11,6 @@ from gronestats.dashboard.views.shared import (
     render_empty_state,
     render_form_chips,
     render_navigation_surface,
-    render_metric_cards,
     render_section_title,
     render_selection_note,
     safe_float,
@@ -23,15 +22,6 @@ from gronestats.dashboard.views.shared import (
 
 def render_overview(overview: LeagueOverview) -> dict[str, object] | None:
     action: dict[str, object] | None = None
-
-    cards = [
-        {"label": "Partidos", "value": f"{overview.total_matches}", "help": "Fixtures con marcador procesado en el rango actual."},
-        {"label": "Equipos", "value": f"{overview.total_teams}", "help": "Clubes con presencia en la muestra activa."},
-        {"label": "Jugadores", "value": f"{overview.total_players}", "help": "Futbolistas con minutos registrados."},
-        {"label": "Goles", "value": f"{overview.total_goals}", "help": "Suma de goles locales y visitantes."},
-        {"label": "Promedio", "value": f"{overview.goals_per_match:.2f}", "help": "Goles por partido dentro del rango seleccionado."},
-    ]
-    render_metric_cards(cards)
 
     render_section_title("Acciones rapidas", "Abre los puntos mas relevantes del analisis sin salir del overview.")
     quick_cols = st.columns(3)

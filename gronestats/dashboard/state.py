@@ -11,6 +11,7 @@ PAGES = ["Temporadas", "Overview", "Equipos", "Jugadores", "Partidos"]
 def init_dashboard_state(team_ids: list[int]) -> None:
     defaults: dict[str, Any] = {
         "selected_season_year": None,
+        "pending_navigation_action": None,
         "active_season_year": None,
         "nav_page": "Overview",
         "tournament_filter": None,
@@ -138,7 +139,21 @@ def get_origin_context() -> dict[str, Any]:
     }
 
 
-def apply_navigation_action(action: dict[str, Any] | None) -> None:
+def _prepare_navigation_action(action: dict[str, Any]) -> dict[str, Any]:
+    prepared = dict(action)
+    action_type = prepared["type"]
+    current_page = st.session_state.get("nav_page", "Overview")
+    if action_type == "match":
+        should_capture_origin = bool(prepared.get("update_origin", current_page != "Partidos"))
+        if should_capture_origin:
+            origin_page = prepared.get("origin_page") or current_page
+            prepared["origin_page"] = origin_page
+            prepared["origin_label"] = prepared.get("origin_label") or _default_origin_label(origin_page)
+            prepared["origin_state"] = prepared.get("origin_state") or _snapshot_page_state(origin_page)
+    return prepared
+
+
+def _apply_navigation_action(action: dict[str, Any]) -> None:
     if not action:
         return
 
@@ -195,4 +210,17 @@ def apply_navigation_action(action: dict[str, Any] | None) -> None:
     else:
         return
 
+
+def consume_navigation_action() -> None:
+    action = st.session_state.get("pending_navigation_action")
+    if not action:
+        return
+    st.session_state["pending_navigation_action"] = None
+    _apply_navigation_action(action)
+
+
+def apply_navigation_action(action: dict[str, Any] | None) -> None:
+    if not action:
+        return
+    st.session_state["pending_navigation_action"] = _prepare_navigation_action(action)
     st.rerun()
