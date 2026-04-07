@@ -1268,6 +1268,152 @@ def build_match_player_rows(player_match: pd.DataFrame, match_row: pd.Series) ->
     return subset.drop(columns="_side_order").reset_index(drop=True)
 
 
+def _resolve_event_side(value: object) -> str:
+    if pd.isna(value):
+        return "Sin lado"
+    if isinstance(value, bool):
+        return "Local" if value else "Visita"
+    text = str(value).strip().lower()
+    if text in {"true", "1", "home", "local"}:
+        return "Local"
+    if text in {"false", "0", "away", "visita"}:
+        return "Visita"
+    return "Sin lado"
+
+
+def build_match_shot_events(shot_events: pd.DataFrame, match_row: pd.Series) -> tuple[pd.DataFrame, dict[str, object]]:
+    if shot_events.empty:
+        return pd.DataFrame(), {}
+
+    match_id = int(match_row["match_id"])
+    subset = shot_events.loc[shot_events["match_id"] == match_id].copy()
+    if subset.empty:
+        return pd.DataFrame(), {}
+
+    for column in ["x", "y", "z", "time", "added_time", "time_seconds"]:
+        if column in subset.columns:
+            subset[column] = pd.to_numeric(subset[column], errors="coerce")
+    subset["shot_type_norm"] = subset.get("shot_type", pd.Series(index=subset.index, dtype="object")).astype("string").str.strip().str.lower()
+
+    subset["side"] = subset.get("is_home", pd.Series(index=subset.index, dtype="object")).map(_resolve_event_side)
+    home_id = _safe_optional_int(match_row.get("home_id"))
+    away_id = _safe_optional_int(match_row.get("away_id"))
+    if "team_id" in subset.columns:
+        team_ids = pd.to_numeric(subset["team_id"], errors="coerce").astype("Int64")
+        subset.loc[subset["side"] == "Sin lado", "side"] = team_ids.map(
+            lambda value: "Local"
+            if pd.notna(value) and home_id is not None and int(value) == home_id
+            else "Visita"
+            if pd.notna(value) and away_id is not None and int(value) == away_id
+            else "Sin lado"
+        )
+
+    subset["display_x"] = subset.get("x")
+    subset["display_y"] = subset.get("y")
+    # Opta events are normalized in attacking direction (x: 0->100), so we mirror
+    # away shots to compare both teams against the same attacking goal in one chart.
+    away_mask = subset["side"] == "Visita"
+    subset.loc[away_mask, "display_x"] = 100 - subset.loc[away_mask, "x"]
+    subset.loc[away_mask, "display_y"] = 100 - subset.loc[away_mask, "y"]
+    subset["team_name"] = subset.get("team_name", pd.Series(index=subset.index, dtype="object")).astype("string")
+    subset.loc[subset["side"] == "Local", "team_name"] = subset.loc[subset["side"] == "Local", "team_name"].fillna(str(match_row.get("home", "Local")))
+    subset.loc[subset["side"] == "Visita", "team_name"] = subset.loc[subset["side"] == "Visita", "team_name"].fillna(str(match_row.get("away", "Visita")))
+
+    subset["is_on_target"] = subset["shot_type_norm"].isin({"goal", "save"})
+    subset["minute_label"] = subset["time"].fillna(0).astype(int).astype(str)
+    if "added_time" in subset.columns:
+        added = subset["added_time"].fillna(0)
+        subset.loc[added > 0, "minute_label"] = (
+            subset.loc[added > 0, "time"].fillna(0).astype(int).astype(str) + "+" + added.loc[added > 0].astype(int).astype(str)
+        )
+
+    sort_columns = [column for column in ["time_seconds", "time", "shot_id"] if column in subset.columns]
+    if sort_columns:
+        subset = subset.sort_values(sort_columns, kind="mergesort")
+    subset = subset.reset_index(drop=True)
+
+    home_subset = subset[subset["side"] == "Local"]
+    away_subset = subset[subset["side"] == "Visita"]
+    metadata = {
+        "home_shots": int(len(home_subset)),
+        "away_shots": int(len(away_subset)),
+        "home_goals": int((home_subset["shot_type_norm"] == "goal").sum()),
+        "away_goals": int((away_subset["shot_type_norm"] == "goal").sum()),
+        "home_on_target": int(home_subset["is_on_target"].sum()),
+        "away_on_target": int(away_subset["is_on_target"].sum()),
+        "orientation_note": "Opta base: la visita se refleja para comparar ambos ataques hacia la misma porteria.",
+    }
+    return subset, metadata
+
+
+def build_match_momentum_series(match_momentum: pd.DataFrame, match_id: int) -> tuple[pd.DataFrame, dict[str, object]]:
+    if match_momentum.empty:
+        return pd.DataFrame(), {}
+    subset = match_momentum.loc[match_momentum["match_id"] == match_id].copy()
+    if subset.empty:
+        return pd.DataFrame(), {}
+    subset["minute"] = pd.to_numeric(subset.get("minute"), errors="coerce")
+    subset["value"] = pd.to_numeric(subset.get("value"), errors="coerce")
+    subset = subset.dropna(subset=["minute", "value"]).copy()
+    if subset.empty:
+        return pd.DataFrame(), {}
+
+    subset["minute"] = subset["minute"].round(1)
+    if "dominant_side" in subset.columns:
+        subset["dominant_side"] = subset["dominant_side"].astype("string").str.strip().str.lower()
+    else:
+        subset["dominant_side"] = pd.Series("neutral", index=subset.index, dtype="string")
+
+    grouped = (
+        subset.groupby("minute", as_index=False)
+        .agg(
+            value=("value", "mean"),
+            dominant_side=("dominant_side", lambda values: values.mode().iloc[0] if not values.mode().empty else "neutral"),
+        )
+        .sort_values("minute", kind="mergesort")
+        .reset_index(drop=True)
+    )
+    grouped["rolling_value"] = grouped["value"].rolling(window=5, min_periods=1, center=True).mean()
+    metadata = {
+        "max_value": float(grouped["value"].max()),
+        "min_value": float(grouped["value"].min()),
+        "max_abs": float(grouped["value"].abs().max()),
+        "points": int(len(grouped)),
+    }
+    return grouped, metadata
+
+
+def build_match_goalkeeper_saves(player_rows: pd.DataFrame, match_row: pd.Series) -> pd.DataFrame:
+    if player_rows.empty:
+        return pd.DataFrame()
+
+    work = player_rows.copy()
+    work["position_norm"] = work.get("position", pd.Series(index=work.index, dtype="object")).astype("string").str.strip().str.upper()
+    work["saves"] = pd.to_numeric(work.get("saves"), errors="coerce").fillna(0)
+    work["minutesplayed"] = pd.to_numeric(work.get("minutesplayed"), errors="coerce").fillna(0)
+
+    keepers = work[work["position_norm"].isin({"G", "GK", "GOALKEEPER", "PORTERO"})].copy()
+    if keepers.empty:
+        keepers = work[work["saves"] > 0].copy()
+    if keepers.empty:
+        return pd.DataFrame()
+
+    side_team_lookup = {
+        "Local": _safe_text(match_row.get("home"), "Local"),
+        "Visita": _safe_text(match_row.get("away"), "Visita"),
+    }
+    keepers["team_name"] = keepers.get("team_name", pd.Series(index=keepers.index, dtype="object"))
+    keepers["team_name"] = keepers["team_name"].fillna(keepers["side"].map(side_team_lookup)).fillna("Sin equipo")
+    side_order = pd.Categorical(keepers["side"], categories=["Local", "Visita", "Sin lado"], ordered=True)
+    keepers = (
+        keepers.assign(_side_order=side_order)
+        .sort_values(["_side_order", "saves", "minutesplayed", "name"], ascending=[True, False, False, True], kind="mergesort")
+        .drop(columns="_side_order")
+    )
+    columns = [column for column in ["side", "team_name", "name", "position", "saves", "minutesplayed", "player_id", "team_id"] if column in keepers.columns]
+    return keepers[columns].reset_index(drop=True)
+
+
 def build_match_standout_players(player_rows: pd.DataFrame) -> pd.DataFrame:
     if player_rows.empty:
         return pd.DataFrame(columns=["side", "player_id", "team_id", "name", "position", "goals", "assists", "minutesplayed"])
@@ -1436,6 +1582,9 @@ def build_match_summary(
     grouped_stats = build_grouped_match_stats(bundle.team_stats, int(match_row["match_id"]))
     player_rows = build_match_player_rows(bundle.player_match, match_row)
     standout_players = build_match_standout_players(player_rows)
+    shot_events, shot_events_metadata = build_match_shot_events(bundle.shot_events, match_row)
+    momentum_series, momentum_metadata = build_match_momentum_series(bundle.match_momentum, int(match_row["match_id"]))
+    goalkeeper_saves = build_match_goalkeeper_saves(player_rows, match_row)
     team_average_positions, average_position_metadata = build_match_team_average_positions(bundle, match_row, player_rows)
     filtered_matches = apply_match_filters(bundle.matches, filters)
     home_team_id = _safe_optional_int(match_row.get("home_id"))
@@ -1460,4 +1609,9 @@ def build_match_summary(
         origin_context=origin_context or {},
         team_average_positions=team_average_positions,
         average_position_metadata=average_position_metadata,
+        shot_events=shot_events,
+        shot_events_metadata=shot_events_metadata,
+        momentum_series=momentum_series,
+        momentum_metadata=momentum_metadata,
+        goalkeeper_saves=goalkeeper_saves,
     )

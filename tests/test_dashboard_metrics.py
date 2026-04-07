@@ -10,9 +10,12 @@ from gronestats.dashboard.metrics import (
     PLAYER_ACCUMULATED_SCOPE,
     add_per90_metrics,
     build_catalog_neighbors,
+    build_match_goalkeeper_saves,
     build_league_overview,
     build_match_insight_cards,
     build_match_player_rows,
+    build_match_momentum_series,
+    build_match_shot_events,
     build_match_standout_players,
     build_match_team_average_positions,
     build_leaderboards,
@@ -317,6 +320,76 @@ def test_build_match_standout_players_ignores_non_navigable_candidates() -> None
 
     assert standout["name"].tolist() == ["Valido", "Visita"]
     assert standout["player_id"].tolist() == [1, 3]
+
+
+def test_build_match_shot_events_reflects_away_coordinates_and_builds_counts() -> None:
+    shot_events = pd.DataFrame(
+        {
+            "match_id": [1, 1, 1],
+            "shot_id": [10, 11, 12],
+            "is_home": [True, False, False],
+            "shot_type": ["goal", "save", "miss"],
+            "time": [12, 33, 41],
+            "time_seconds": [720, 1980, 2460],
+            "x": [84.0, 79.0, 61.0],
+            "y": [52.0, 44.0, 70.0],
+            "team_id": [10, 20, 20],
+        }
+    )
+    match_row = pd.Series({"match_id": 1, "home_id": 10, "away_id": 20, "home": "Alianza", "away": "Melgar"})
+
+    events, metadata = build_match_shot_events(shot_events, match_row)
+
+    assert len(events) == 3
+    assert events["side"].tolist() == ["Local", "Visita", "Visita"]
+    away_shot = events.iloc[1]
+    assert round(float(away_shot["display_x"]), 1) == 21.0
+    assert round(float(away_shot["display_y"]), 1) == 56.0
+    assert metadata["home_shots"] == 1
+    assert metadata["away_shots"] == 2
+    assert metadata["home_on_target"] == 1
+    assert metadata["away_on_target"] == 1
+
+
+def test_build_match_momentum_series_sorts_minutes_and_computes_rolling() -> None:
+    momentum = pd.DataFrame(
+        {
+            "match_id": [1, 1, 1, 1],
+            "minute": [3, 1, 2, 2],
+            "value": [8, -6, 4, 6],
+            "dominant_side": ["home", "away", "home", "home"],
+        }
+    )
+
+    series, metadata = build_match_momentum_series(momentum, match_id=1)
+
+    assert series["minute"].tolist() == [1, 2, 3]
+    assert series["value"].round(2).tolist() == [-6.0, 5.0, 8.0]
+    assert "rolling_value" in series.columns
+    assert metadata["points"] == 3
+    assert metadata["max_abs"] == 8.0
+
+
+def test_build_match_goalkeeper_saves_uses_keeper_rows_by_position() -> None:
+    player_rows = pd.DataFrame(
+        {
+            "side": ["Local", "Visita", "Local"],
+            "team_name": ["Alianza", "Melgar", "Alianza"],
+            "name": ["Arquero A", "Arquero B", "Volante C"],
+            "position": ["G", "GK", "M"],
+            "saves": [4, 3, 7],
+            "minutesplayed": [90, 90, 90],
+            "player_id": [1, 2, 3],
+            "team_id": [10, 20, 10],
+        }
+    )
+    match_row = pd.Series({"home": "Alianza", "away": "Melgar"})
+
+    keepers = build_match_goalkeeper_saves(player_rows, match_row)
+
+    assert keepers["name"].tolist() == ["Arquero A", "Arquero B"]
+    assert keepers["side"].tolist() == ["Local", "Visita"]
+    assert keepers["saves"].tolist() == [4, 3]
 
 
 def test_build_match_insight_cards_degrades_without_standout_players() -> None:

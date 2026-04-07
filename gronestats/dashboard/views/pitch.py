@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.lines import Line2D
 from mplsoccer import VerticalPitch
 import pandas as pd
 
@@ -215,4 +216,227 @@ def build_match_average_positions_figure(
             fontsize=9,
         )
     ax.set_title("Posiciones promedio de ambos equipos", color=COLORS["text"], fontsize=14, pad=14)
+    return fig
+
+
+def _shot_marker(outcome: str) -> str:
+    marker_map = {
+        "goal": "*",
+        "save": "o",
+        "block": "X",
+        "post": "P",
+        "miss": "^",
+    }
+    return marker_map.get(outcome, "o")
+
+
+def _shot_size(outcome: str) -> int:
+    if outcome == "goal":
+        return 290
+    if outcome in {"save", "post"}:
+        return 145
+    if outcome == "block":
+        return 135
+    return 120
+
+
+def build_match_shotmap_figure(
+    shot_events: pd.DataFrame,
+    *,
+    home_team: str,
+    away_team: str,
+    metadata: dict[str, object] | None = None,
+    home_color: str | None = None,
+    away_color: str | None = None,
+):
+    pitch, fig, ax = _base_pitch((6.9, 10.4))
+    home_palette = build_team_palette(home_color or COLORS["accent"])
+    away_palette = build_team_palette(away_color or COLORS["accent_alt"])
+
+    plotted = False
+    side_series = shot_events.get("side", pd.Series(index=shot_events.index, dtype="object"))
+    for side, team_label, side_color in [
+        ("Local", home_team, home_palette["primary"]),
+        ("Visita", away_team, away_palette["primary"]),
+    ]:
+        subset = shot_events[side_series == side].copy()
+        if subset.empty:
+            continue
+        subset = subset.dropna(subset=["display_x", "display_y"])
+        if subset.empty:
+            continue
+        plotted = True
+        shot_type_series = subset.get("shot_type_norm", pd.Series(index=subset.index, dtype="object"))
+        for outcome in ["goal", "save", "block", "post", "miss"]:
+            event_subset = subset[shot_type_series == outcome]
+            if event_subset.empty:
+                continue
+            pitch.scatter(
+                event_subset["display_x"],
+                event_subset["display_y"],
+                ax=ax,
+                marker=_shot_marker(outcome),
+                s=_shot_size(outcome),
+                color=side_color,
+                edgecolors="#f6f4ef",
+                linewidth=1.1,
+                alpha=0.92 if outcome == "goal" else 0.78,
+                zorder=3 if outcome == "goal" else 2,
+            )
+
+    ax.text(0.03, 0.98, home_team, transform=ax.transAxes, ha="left", va="top", color=home_palette["primary"], fontsize=11, fontweight="bold")
+    ax.text(0.97, 0.98, away_team, transform=ax.transAxes, ha="right", va="top", color=away_palette["primary"], fontsize=11, fontweight="bold")
+    ax.set_title("Shotmap comparativo (Opta)", color=COLORS["text"], fontsize=14, pad=14)
+
+    if plotted:
+        handles = [
+            Line2D([0], [0], marker="o", linestyle="none", markerfacecolor=home_palette["primary"], markeredgecolor="#f6f4ef", label="Local"),
+            Line2D([0], [0], marker="o", linestyle="none", markerfacecolor=away_palette["primary"], markeredgecolor="#f6f4ef", label="Visita"),
+            Line2D([0], [0], marker="*", linestyle="none", color="#f6f4ef", label="Gol"),
+            Line2D([0], [0], marker="o", linestyle="none", color="#f6f4ef", label="Atajada"),
+            Line2D([0], [0], marker="X", linestyle="none", color="#f6f4ef", label="Bloqueado"),
+            Line2D([0], [0], marker="^", linestyle="none", color="#f6f4ef", label="Desviado"),
+        ]
+        legend = ax.legend(
+            handles=handles,
+            loc="upper center",
+            bbox_to_anchor=(0.5, -0.03),
+            ncol=3,
+            fontsize=8,
+            frameon=True,
+            facecolor=COLORS["surface_alt"],
+            edgecolor=COLORS["border"],
+        )
+        legend.get_frame().set_alpha(0.95)
+    else:
+        ax.text(
+            0.5,
+            0.5,
+            "No hay eventos de tiro con coordenadas",
+            transform=ax.transAxes,
+            ha="center",
+            va="center",
+            color=COLORS["muted"],
+            fontsize=10,
+        )
+
+    if metadata:
+        footer = (
+            f"{home_team}: {safe_int(metadata.get('home_shots'))} tiros | "
+            f"{safe_int(metadata.get('home_on_target'))} al arco | "
+            f"{safe_int(metadata.get('home_goals'))} goles\n"
+            f"{away_team}: {safe_int(metadata.get('away_shots'))} tiros | "
+            f"{safe_int(metadata.get('away_on_target'))} al arco | "
+            f"{safe_int(metadata.get('away_goals'))} goles"
+        )
+        ax.text(0.03, 0.02, footer, transform=ax.transAxes, color=COLORS["muted"], fontsize=8.6, va="bottom")
+    return fig
+
+
+def build_match_momentum_figure(
+    momentum_series: pd.DataFrame,
+    *,
+    home_team: str,
+    away_team: str,
+    home_color: str | None = None,
+    away_color: str | None = None,
+):
+    home_palette = build_team_palette(home_color or COLORS["accent"])
+    away_palette = build_team_palette(away_color or COLORS["accent_alt"])
+    fig, ax = plt.subplots(figsize=(7.6, 3.8))
+    fig.patch.set_facecolor(COLORS["surface"])
+    ax.set_facecolor(COLORS["surface"])
+
+    if momentum_series.empty:
+        ax.text(0.5, 0.5, "No hay serie de momentum para este partido", ha="center", va="center", color=COLORS["muted"], transform=ax.transAxes, fontsize=10)
+        ax.set_axis_off()
+        return fig
+
+    series = momentum_series.copy()
+    series["minute"] = pd.to_numeric(series.get("minute"), errors="coerce")
+    series["value"] = pd.to_numeric(series.get("value"), errors="coerce")
+    series = series.dropna(subset=["minute", "value"]).sort_values("minute", kind="mergesort")
+    if series.empty:
+        ax.text(0.5, 0.5, "No hay serie de momentum valida para este partido", ha="center", va="center", color=COLORS["muted"], transform=ax.transAxes, fontsize=10)
+        ax.set_axis_off()
+        return fig
+
+    minutes = series["minute"]
+    values = series["value"]
+    smoothed = series["rolling_value"] if "rolling_value" in series.columns else values.rolling(window=5, min_periods=1, center=True).mean()
+
+    ax.axhline(0, color=COLORS["border"], linewidth=1.1, alpha=0.8)
+    ax.fill_between(minutes, 0, values.clip(lower=0), color=home_palette["primary"], alpha=0.35, step="mid", label=home_team)
+    ax.fill_between(minutes, 0, values.clip(upper=0), color=away_palette["primary"], alpha=0.35, step="mid", label=away_team)
+    ax.plot(minutes, values, color="#dfe6f0", linewidth=0.95, alpha=0.65)
+    ax.plot(minutes, smoothed, color=COLORS["accent"], linewidth=2.1, alpha=0.95, label="Tendencia")
+
+    max_minute = max(float(minutes.max()), 90.0)
+    ax.set_xlim(0, max_minute + 1)
+    max_abs = max(float(values.abs().max()), 10.0)
+    ax.set_ylim(-max_abs * 1.16, max_abs * 1.16)
+
+    for milestone in [45, 90]:
+        if milestone <= max_minute + 1:
+            ax.axvline(milestone, color=COLORS["border"], linewidth=0.8, linestyle="--", alpha=0.55)
+
+    ax.set_title("Momentum del partido (Opta)", color=COLORS["text"], fontsize=13, pad=10)
+    ax.set_xlabel("Minuto", color=COLORS["muted"], fontsize=9)
+    ax.set_ylabel("Impulso", color=COLORS["muted"], fontsize=9)
+    ax.tick_params(colors=COLORS["muted"], labelsize=8.5)
+    ax.grid(axis="y", color=COLORS["border"], alpha=0.26, linewidth=0.7)
+    ax.legend(loc="upper right", fontsize=8, frameon=False, labelcolor=COLORS["text"])
+    return fig
+
+
+def build_goalkeeper_saves_figure(
+    goalkeeper_saves: pd.DataFrame,
+    *,
+    home_team: str,
+    away_team: str,
+    home_color: str | None = None,
+    away_color: str | None = None,
+):
+    home_palette = build_team_palette(home_color or COLORS["accent"])
+    away_palette = build_team_palette(away_color or COLORS["accent_alt"])
+    fig, ax = plt.subplots(figsize=(7.4, 3.6))
+    fig.patch.set_facecolor(COLORS["surface"])
+    ax.set_facecolor(COLORS["surface"])
+
+    if goalkeeper_saves.empty:
+        ax.text(0.5, 0.5, "No hay atajadas de arquero registradas en este partido", ha="center", va="center", color=COLORS["muted"], transform=ax.transAxes, fontsize=10)
+        ax.set_axis_off()
+        return fig
+
+    frame = goalkeeper_saves.copy()
+    frame["saves"] = pd.to_numeric(frame.get("saves"), errors="coerce").fillna(0)
+    frame["minutesplayed"] = pd.to_numeric(frame.get("minutesplayed"), errors="coerce").fillna(0)
+    frame["label"] = frame.apply(
+        lambda row: f"{safe_text(row.get('name'), 'Arquero')} ({safe_text(row.get('team_name'), 'Sin equipo')})",
+        axis=1,
+    )
+    frame = frame.sort_values(["side", "saves", "minutesplayed"], ascending=[True, False, False], kind="mergesort").reset_index(drop=True)
+    colors = frame["side"].map({"Local": home_palette["primary"], "Visita": away_palette["primary"]}).fillna(COLORS["muted"]).tolist()
+
+    bars = ax.barh(frame["label"], frame["saves"], color=colors, edgecolor="#f6f4ef", linewidth=0.9, alpha=0.88)
+    ax.invert_yaxis()
+    for bar, value in zip(bars, frame["saves"].tolist()):
+        ax.text(
+            float(bar.get_width()) + 0.08,
+            bar.get_y() + bar.get_height() / 2,
+            str(int(value)),
+            va="center",
+            ha="left",
+            color=COLORS["text"],
+            fontsize=9,
+            fontweight="bold",
+        )
+
+    max_saves = max(frame["saves"].max(), 1)
+    ax.set_xlim(0, max_saves + 1.3)
+    ax.set_xlabel("Atajadas", color=COLORS["muted"], fontsize=9)
+    ax.set_title(f"Atajadas de arquero | {home_team} vs {away_team}", color=COLORS["text"], fontsize=13, pad=10)
+    ax.tick_params(axis="x", colors=COLORS["muted"], labelsize=8.5)
+    ax.tick_params(axis="y", colors=COLORS["text"], labelsize=8.7)
+    ax.grid(axis="x", color=COLORS["border"], alpha=0.25, linewidth=0.7)
     return fig

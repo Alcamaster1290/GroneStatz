@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -33,6 +33,8 @@ class DatasetBundle:
     manifest: dict[str, Any]
     validation: dict[str, Any]
     loaded_at: datetime
+    shot_events: pd.DataFrame = field(default_factory=pd.DataFrame)
+    match_momentum: pd.DataFrame = field(default_factory=pd.DataFrame)
 
     @property
     def has_schedule(self) -> bool:
@@ -53,6 +55,14 @@ class DatasetBundle:
     @property
     def has_positional_layer(self) -> bool:
         return not self.average_positions.empty or not self.heatmap_points.empty
+
+    @property
+    def has_shot_layer(self) -> bool:
+        return not self.shot_events.empty
+
+    @property
+    def has_momentum_layer(self) -> bool:
+        return not self.match_momentum.empty
 
     @property
     def warning_count(self) -> int:
@@ -171,3 +181,8 @@ class MatchSummary:
     origin_context: dict[str, object]
     team_average_positions: pd.DataFrame
     average_position_metadata: dict[str, object]
+    shot_events: pd.DataFrame = field(default_factory=pd.DataFrame)
+    shot_events_metadata: dict[str, object] = field(default_factory=dict)
+    momentum_series: pd.DataFrame = field(default_factory=pd.DataFrame)
+    momentum_metadata: dict[str, object] = field(default_factory=dict)
+    goalkeeper_saves: pd.DataFrame = field(default_factory=pd.DataFrame)

@@ -8,10 +8,12 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
+from gronestats.data_layout import season_layout
 from gronestats.dashboard.config import (
     DATA_ROOT,
     DEFAULT_SEASON_YEAR,
     DEFAULT_DASHBOARD_TOURNAMENTS,
+    LEAGUE_NAME,
     PLAYER_IMAGES_DIR,
     REGULAR_SEASON_MAX_ROUND,
     TEAM_IMAGES_DIR,
@@ -31,6 +33,8 @@ DASHBOARD_TABLES = (
     "team_stats.parquet",
     "average_positions.parquet",
     "heatmap_points.parquet",
+    "shot_events.parquet",
+    "match_momentum.parquet",
 )
 
 
@@ -293,6 +297,58 @@ def normalize_heatmap_points(df: pd.DataFrame) -> pd.DataFrame:
     return work.sort_values(["match_id", "player_id"], kind="mergesort").reset_index(drop=True)
 
 
+def normalize_shot_events(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return df
+    work = df.copy()
+    work = coalesce_columns(work, "match_id", ["match_id", "MATCH_ID", "matchId", "matchid"])
+    work = coalesce_columns(work, "team_id", ["team_id", "TEAM_ID", "teamId", "teamid"])
+    work = coalesce_columns(work, "player_id", ["player_id", "PLAYER_ID", "playerId", "playerid"])
+    work = coalesce_columns(work, "name", ["name", "NAME", "player", "player_name"])
+    for column in ["match_id", "team_id", "player_id", "shot_id", "time", "added_time", "time_seconds", "x", "y", "z"]:
+        if column in work.columns:
+            work[column] = pd.to_numeric(work[column], errors="coerce")
+    for column in ["match_id", "team_id", "player_id", "shot_id"]:
+        if column in work.columns:
+            work[column] = work[column].astype("Int64")
+    if "is_home" in work.columns:
+        raw = work["is_home"]
+        if raw.dtype == bool:
+            work["is_home"] = raw
+        else:
+            work["is_home"] = (
+                raw.astype("string")
+                .str.strip()
+                .str.lower()
+                .map({"true": True, "false": False, "1": True, "0": False, "home": True, "away": False})
+            )
+    for column in ["shot_type", "incident_type", "goal_type", "situation", "body_part", "team_name", "name"]:
+        if column in work.columns:
+            work[column] = work[column].astype("string").str.strip()
+    sort_columns = [column for column in ["match_id", "time_seconds", "time", "shot_id"] if column in work.columns]
+    if sort_columns:
+        work = work.sort_values(sort_columns, kind="mergesort")
+    return work.reset_index(drop=True)
+
+
+def normalize_match_momentum(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return df
+    work = df.copy()
+    work = coalesce_columns(work, "match_id", ["match_id", "MATCH_ID", "matchId", "matchid"])
+    if "match_id" in work.columns:
+        work["match_id"] = pd.to_numeric(work["match_id"], errors="coerce").astype("Int64")
+    for column in ["minute", "value"]:
+        if column in work.columns:
+            work[column] = pd.to_numeric(work[column], errors="coerce")
+    if "dominant_side" in work.columns:
+        work["dominant_side"] = work["dominant_side"].astype("string").str.strip().str.lower()
+    sort_columns = [column for column in ["match_id", "minute"] if column in work.columns]
+    if sort_columns:
+        work = work.sort_values(sort_columns, kind="mergesort")
+    return work.reset_index(drop=True)
+
+
 def filter_regular_season_matches(matches: pd.DataFrame) -> pd.DataFrame:
     if matches.empty:
         return matches
@@ -354,11 +410,19 @@ def describe_bundle_gaps(bundle: DatasetBundle) -> tuple[str, ...]:
         gaps.append(
             "Sin average_positions ni heatmaps: los mapas posicionales quedan ocultos hasta completar el backfill analitico."
         )
+    if not bundle.has_shot_layer:
+        gaps.append(
+            "Sin shot_events: el shotmap Opta del partido se oculta hasta publicar la capa de tiros."
+        )
+    if not bundle.has_momentum_layer:
+        gaps.append(
+            "Sin match_momentum: la curva de impulso por minuto no estara disponible para esta temporada."
+        )
     return tuple(gaps)
 
 
 def season_current_dir(season_year: int) -> Path:
-    return DATA_ROOT / str(season_year) / "dashboard" / "current"
+    return season_layout(season_year, league=LEAGUE_NAME).dashboard.current_dir
 
 
 def season_parquet_signature(season_year: int) -> tuple[tuple[str, float], ...]:
@@ -392,7 +456,7 @@ def _discover_available_seasons() -> list[SeasonDataset]:
         if not season_dir.is_dir() or not season_dir.name.isdigit():
             continue
         season_year = int(season_dir.name)
-        current_dir = season_current_dir(season_year)
+        current_dir = season_layout(season_year, league=LEAGUE_NAME).dashboard.current_dir
         if not (current_dir / "matches.parquet").exists():
             continue
         manifest = read_json(current_dir / "manifest.json")
@@ -560,6 +624,14 @@ def load_dashboard_data(season_year: int, _signature: tuple[tuple[str, float], .
         normalize_heatmap_points(read_parquet(data_dir / "heatmap_points.parquet")),
         allowed_match_ids,
     )
+    shot_events = filter_by_match_ids(
+        normalize_shot_events(read_parquet(data_dir / "shot_events.parquet")),
+        allowed_match_ids,
+    )
+    match_momentum = filter_by_match_ids(
+        normalize_match_momentum(read_parquet(data_dir / "match_momentum.parquet")),
+        allowed_match_ids,
+    )
     return DatasetBundle(
         season_year=season_year,
         season_label=build_season_label(season_year),
@@ -577,6 +649,8 @@ def load_dashboard_data(season_year: int, _signature: tuple[tuple[str, float], .
         manifest=manifest,
         validation=validation,
         loaded_at=datetime.now(),
+        shot_events=shot_events,
+        match_momentum=match_momentum,
     )
 
 
