@@ -207,7 +207,7 @@ def _render_context_table(frame, key_prefix: str) -> int | None:
         return None
     event = st.dataframe(
         frame[["Relacion", "round_label", "Partido", "venue", "Resultado"]],
-        width="stretch",
+        use_container_width=True,
         hide_index=True,
         key=key_prefix,
         on_select="rerun",
@@ -260,7 +260,7 @@ def render_match_detail(summary: MatchSummary | None) -> dict[str, object] | Non
                 render_empty_state("No hay comparacion confiable para este partido. Se mantiene metadata y score.")
             else:
                 render_selection_note("Tabla comparativa: lectura rapida de las ventajas del partido por metrica clave.")
-                st.dataframe(summary.curated_stats, width="stretch", hide_index=True)
+                st.dataframe(summary.curated_stats, use_container_width=True, hide_index=True)
 
         with right:
             render_section_title("Protagonistas", "Figuras mas influyentes del partido.")
@@ -329,7 +329,7 @@ def render_match_detail(summary: MatchSummary | None) -> dict[str, object] | Non
             render_selection_note("Abre solo el grupo estadistico que quieras revisar.")
             for group, frame in summary.grouped_stats.items():
                 with st.expander(f"{group} ({len(frame)})", expanded=group in {"Match overview", "Shots"}):
-                    st.dataframe(frame[["Metrica", "Local", "Visita"]], width="stretch", hide_index=True)
+                    st.dataframe(frame[["Metrica", "Local", "Visita"]], use_container_width=True, hide_index=True)
 
     with tabs[2]:
         render_section_title(
@@ -397,7 +397,7 @@ def render_match_detail(summary: MatchSummary | None) -> dict[str, object] | Non
                 )
                 st.dataframe(
                     summary.goalkeeper_saves[["side", "name", "team_name", "saves", "minutesplayed"]],
-                    width="stretch",
+                    use_container_width=True,
                     hide_index=True,
                     column_config={
                         "side": "Lado",
@@ -487,7 +487,7 @@ def render_match_detail(summary: MatchSummary | None) -> dict[str, object] | Non
                     render_selection_note("Selecciona una fila para abrir el perfil local.")
                     local_event = st.dataframe(
                         local_players[["name", "position", "minutesplayed", "goals", "assists", "saves", "fouls"]],
-                        width="stretch",
+                        use_container_width=True,
                         hide_index=True,
                         key=f"match_local_players_{summary.match_id}",
                         on_select="rerun",
@@ -526,7 +526,7 @@ def render_match_detail(summary: MatchSummary | None) -> dict[str, object] | Non
                     render_selection_note("Selecciona una fila para abrir el perfil visitante.")
                     away_event = st.dataframe(
                         away_players[["name", "position", "minutesplayed", "goals", "assists", "saves", "fouls"]],
-                        width="stretch",
+                        use_container_width=True,
                         hide_index=True,
                         key=f"match_away_players_{summary.match_id}",
                         on_select="rerun",

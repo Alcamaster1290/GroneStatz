@@ -118,7 +118,7 @@ def render_seasons_overview(
                     "top_scorer_goals",
                 ]
             ],
-            width="stretch",
+            use_container_width=True,
             hide_index=True,
             key="season_summary_table",
             on_select="rerun",
@@ -169,9 +169,15 @@ def render_seasons_overview(
     chart_frame["season"] = chart_frame["season_year"].astype(int).astype(str)
     with bottom_cols[0]:
         render_section_title("Partidos publicados", "Lectura del volumen publicado por temporada.")
-        st.plotly_chart(build_bar_figure(chart_frame, "season", "matches", "#c6b170"), width="stretch")
+        st.plotly_chart(
+            build_bar_figure(chart_frame, "season", "matches", "#c6b170"),
+            use_container_width=True,
+        )
     with bottom_cols[1]:
         render_section_title("Promedio de gol", "Compara densidad ofensiva entre temporadas.")
-        st.plotly_chart(build_bar_figure(chart_frame, "season", "goals_per_match", "#7ec4b8"), width="stretch")
+        st.plotly_chart(
+            build_bar_figure(chart_frame, "season", "goals_per_match", "#7ec4b8"),
+            use_container_width=True,
+        )
 
     return action

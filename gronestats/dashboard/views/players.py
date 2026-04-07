@@ -79,7 +79,7 @@ def render_players_table(table) -> int | None:
                 "goal_actions_per90",
             ]
         ],
-        width="stretch",
+        use_container_width=True,
         hide_index=True,
         key="players_table",
         on_select="rerun",
@@ -333,10 +333,10 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
         if profile.percentiles.empty:
             render_empty_state("No hay percentiles suficientes para este jugador.")
         else:
-            st.plotly_chart(build_percentile_figure(profile.percentiles), width="stretch")
+            st.plotly_chart(build_percentile_figure(profile.percentiles), use_container_width=True)
             st.dataframe(
                 profile.percentiles,
-                width="stretch",
+                use_container_width=True,
                 hide_index=True,
                 column_config={"Metric": "Metrica", "value": "Valor", "percentile": "Percentil"},
             )
@@ -349,7 +349,7 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
             render_selection_note("Cada fila abre el match y conserva el origen del perfil.")
             recent_event = st.dataframe(
                 profile.recent_matches[["round_label", "partido", "minutesplayed", "goals", "assists", "goal_actions_per90"]],
-                width="stretch",
+                use_container_width=True,
                 hide_index=True,
                 key=f"player_recent_{profile.player_id}",
                 on_select="rerun",

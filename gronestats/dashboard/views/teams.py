@@ -98,7 +98,7 @@ def render_team_view(profile: TeamProfile | None, *, player_layer_available: boo
             render_selection_note("Tabla navegable: una fila abre el partido y conserva el foco en este equipo.")
             recent_event = st.dataframe(
                 profile.recent_matches[["round_label", "opponent_name", "venue", "marcador", "resultado"]],
-                width="stretch",
+                use_container_width=True,
                 hide_index=True,
                 key=f"team_recent_{profile.team_id}",
                 on_select="rerun",
@@ -129,8 +129,16 @@ def render_team_view(profile: TeamProfile | None, *, player_layer_available: boo
         if profile.splits.empty:
             render_empty_state("Sin datos para comparar local y visita.")
         else:
-            st.plotly_chart(build_bar_figure(profile.splits, "venue", "points", profile.team_color), width="stretch")
-            st.dataframe(profile.splits, width="stretch", hide_index=True, column_config={"venue": "Condicion"})
+            st.plotly_chart(
+                build_bar_figure(profile.splits, "venue", "points", profile.team_color),
+                use_container_width=True,
+            )
+            st.dataframe(
+                profile.splits,
+                use_container_width=True,
+                hide_index=True,
+                column_config={"venue": "Condicion"},
+            )
 
     bottom_left, bottom_right = st.columns([1.15, 1.2], gap="large")
     with bottom_left:
@@ -145,7 +153,7 @@ def render_team_view(profile: TeamProfile | None, *, player_layer_available: boo
             render_selection_note("Selecciona una fila para saltar al perfil del jugador dentro del contexto del equipo.")
             players_event = st.dataframe(
                 profile.top_players[["name", "position", "minutesplayed", "goals", "assists", "goal_actions_per90"]],
-                width="stretch",
+                use_container_width=True,
                 hide_index=True,
                 key=f"team_top_players_{profile.team_id}",
                 on_select="rerun",
@@ -179,8 +187,8 @@ def render_team_view(profile: TeamProfile | None, *, player_layer_available: boo
                     "Liga",
                     left_color=profile.team_color,
                 ),
-                width="stretch",
+                use_container_width=True,
             )
-            st.dataframe(profile.comparison, width="stretch", hide_index=True)
+            st.dataframe(profile.comparison, use_container_width=True, hide_index=True)
 
     return action

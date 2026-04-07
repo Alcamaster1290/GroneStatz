@@ -261,7 +261,7 @@ def render_identity_panel(
     palette = build_team_palette(accent_color or COLORS["accent"])
     with left:
         if image_path and image_path.exists():
-            st.image(str(image_path), width="stretch")
+            st.image(str(image_path), use_container_width=True)
         else:
             st.markdown(
                 """
@@ -313,7 +313,7 @@ def render_player_spotlight_card(
     image_col, body_col = st.columns([0.5, 1.55], gap="small", vertical_alignment="center")
     with image_col:
         if image_path and image_path.exists():
-            st.image(str(image_path), width="stretch")
+            st.image(str(image_path), use_container_width=True)
         else:
             st.markdown(
                 """

@@ -101,7 +101,7 @@ def render_overview(overview: LeagueOverview) -> dict[str, object] | None:
             render_selection_note("Tabla navegable: haz click en una fila para abrir el club y mantener el rango activo.")
             standings_event = st.dataframe(
                 overview.standings[["Pos", "team_name", "PJ", "Pts", "G", "E", "P", "GF", "GC", "DG", "PPG"]],
-                width="stretch",
+                use_container_width=True,
                 hide_index=True,
                 column_config={"team_name": "Equipo"},
                 key="overview_standings",
@@ -129,7 +129,7 @@ def render_overview(overview: LeagueOverview) -> dict[str, object] | None:
                 with tab:
                     leader_event = st.dataframe(
                         frame[["Jugador", "Equipo", "Valor"]],
-                        width="stretch",
+                        use_container_width=True,
                         hide_index=True,
                         key=f"overview_leader_{label}",
                         on_select="rerun",
@@ -150,14 +150,20 @@ def render_overview(overview: LeagueOverview) -> dict[str, object] | None:
         if overview.goals_by_round.empty:
             render_empty_state("Sin goles por ronda en el filtro actual.")
         else:
-            st.plotly_chart(build_line_figure(overview.goals_by_round, "round_label", "goals"), width="stretch")
+            st.plotly_chart(
+                build_line_figure(overview.goals_by_round, "round_label", "goals"),
+                use_container_width=True,
+            )
 
     with bottom_right:
         render_section_title("Goles local vs visita", "Balance de produccion segun condicion.")
         if overview.venue_goals.empty:
             render_empty_state("No hay goles disponibles.")
         else:
-            st.plotly_chart(build_bar_figure(overview.venue_goals, "context", "goals", "#7ec4b8"), width="stretch")
+            st.plotly_chart(
+                build_bar_figure(overview.venue_goals, "context", "goals", "#7ec4b8"),
+                use_container_width=True,
+            )
 
     match_col, form_col = st.columns([1.1, 1], gap="large")
     with match_col:
@@ -168,7 +174,7 @@ def render_overview(overview: LeagueOverview) -> dict[str, object] | None:
             render_selection_note("Haz click en una fila para abrir el detalle del partido sin perder el contexto del overview.")
             matches_event = st.dataframe(
                 overview.top_matches[["round_label", "partido", "total_goals", "estadio", "ciudad"]],
-                width="stretch",
+                use_container_width=True,
                 hide_index=True,
                 key="overview_top_matches",
                 on_select="rerun",
