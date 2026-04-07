@@ -5,7 +5,7 @@ import LandingTabs from "@/components/LandingTabs";
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   process.env.NEXT_PUBLIC_MOBILE_WEB_URL ||
-  "https://fantasyliga1peru.com";
+  "https://www.fantasyliga1peru.com";
 
 const title = "Fantasy Liga 1 Peru 2026 | Ranking y fixtures de la Liga 1 Peru";
 const description =

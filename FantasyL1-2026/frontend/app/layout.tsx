@@ -25,7 +25,7 @@ const bodyFont = Source_Sans_3({
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   process.env.NEXT_PUBLIC_MOBILE_WEB_URL ||
-  "https://fantasyliga1peru.com";
+  "https://www.fantasyliga1peru.com";
 const siteTitle = "Fantasy Liga 1 Peru 2026 | Fantasy oficial de la Liga 1 Peru";
 const siteDescription =
   "Liga 1 Peru 2026 en formato fantasy: arma tu equipo, juega ranking general y ligas privadas con datos reales de cada fecha del futbol peruano.";
