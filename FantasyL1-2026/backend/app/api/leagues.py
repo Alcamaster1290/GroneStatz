@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
-from app.models import ActionLog, FantasyTeam, League, LeagueMember
+from app.models import ActionLog, League, LeagueMember
 from app.schemas.ranking import LeagueCreateIn, LeagueJoinIn, LeagueOut
 from app.services.action_log import log_action
 from app.services.fantasy import get_or_create_fantasy_team, get_or_create_season
