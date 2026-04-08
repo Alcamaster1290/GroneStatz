@@ -138,6 +138,25 @@ def test_describe_active_scope_formats_tournaments_and_rounds() -> None:
     assert summary == "Apertura + Clausura | R1-R7"
 
 
+def test_describe_active_scope_maps_legacy_clausura_label() -> None:
+    summary = describe_active_scope(
+        pd.DataFrame(
+            {
+                "match_id": [1, 2],
+                "round_number": [1, 7],
+                "tournament": ["Liga 1, Apertura", "Primera Division, Clausura"],
+            }
+        ),
+        FilterState(
+            round_range=(1, 7),
+            min_minutes=0,
+            tournaments=("Liga 1, Apertura", "Primera Division, Clausura"),
+        ),
+    )
+
+    assert summary == "Apertura + Clausura | R1-R7"
+
+
 def test_render_overview_page_smoke(monkeypatch) -> None:
     bundle = _make_bundle()
     captured = {}

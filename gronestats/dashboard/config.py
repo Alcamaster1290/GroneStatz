@@ -23,19 +23,25 @@ RECENT_FORM_MATCHES = 5
 
 TOURNAMENT_LABELS = {
     "Liga 1, Apertura": "Apertura",
+    "Primera Division, Apertura": "Apertura",
     "Liga 1, Clausura": "Clausura",
+    "Primera Division, Clausura": "Clausura",
     "Primera Division, Grand Final": "Grand Final",
 }
 
 TOURNAMENT_ORDER = {
     "Liga 1, Apertura": 0,
+    "Primera Division, Apertura": 0,
     "Liga 1, Clausura": 1,
+    "Primera Division, Clausura": 1,
     "Primera Division, Grand Final": 2,
 }
 
 DEFAULT_DASHBOARD_TOURNAMENTS = (
     "Liga 1, Apertura",
+    "Primera Division, Apertura",
     "Liga 1, Clausura",
+    "Primera Division, Clausura",
 )
 
 COLORS = {

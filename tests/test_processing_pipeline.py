@@ -421,6 +421,55 @@ def test_validate_dataset_contract_allows_current_season_partial_sofascore(tmp_p
     assert any("Missing current-season non-blocking sheet 'player_stats'" in message for message in validation["warnings"])
 
 
+def test_validate_dataset_contract_appends_optional_backfill_classification(tmp_path: Path) -> None:
+    dataset_dir = tmp_path / "curated"
+    staging_dir = tmp_path / "staging"
+    raw_dir = tmp_path / "raw" / "optional_backfill"
+    staging_dir.mkdir(parents=True, exist_ok=True)
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    _write_required_contract_tables(dataset_dir)
+
+    pd.DataFrame({"match_id": [1], "home_score": [1], "away_score": [0]}).to_parquet(dataset_dir / "matches.parquet", index=False)
+    pd.DataFrame({"team_id": [10], "short_name": ["Equipo A"]}).to_parquet(dataset_dir / "teams.parquet", index=False)
+    pd.DataFrame({"player_id": [100], "name": ["Jugador Uno"]}).to_parquet(dataset_dir / "players.parquet", index=False)
+    pd.DataFrame({"match_id": [1], "player_id": [100], "team_id": [10]}).to_parquet(dataset_dir / "player_match.parquet", index=False)
+
+    pd.DataFrame(
+        {
+            "match_id": [1],
+            "has_player_stats": [True],
+            "has_team_stats": [True],
+            "has_average_positions": [True],
+            "has_heatmaps": [True],
+            "has_shotmap": [False],
+            "has_momentum": [False],
+        }
+    ).to_parquet(staging_dir / "sheet_coverage.parquet", index=False)
+
+    (raw_dir / "latest_report.json").write_text(
+        json.dumps(
+            {
+                "results": [
+                    {"sheet_key": "shotmap", "match_id": 1, "classification": "missing_from_source"},
+                    {"sheet_key": "momentum", "match_id": 1, "classification": "retryable_error"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    validation = validate_dataset_contract(
+        dataset_dir=dataset_dir,
+        master_matches=pd.DataFrame({"match_id": [1]}),
+        staging_dir=staging_dir,
+        reference_dir=None,
+        season=2025,
+    )
+
+    assert any("backfill: missing_from_source=1" in message for message in validation["warnings"])
+    assert any("backfill: retryable_error=1" in message for message in validation["warnings"])
+
+
 def test_stringify_if_mixed_objects_normalizes_numeric_and_mixed_id_columns() -> None:
     frame = pd.DataFrame(
         {

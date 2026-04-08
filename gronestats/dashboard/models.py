@@ -130,6 +130,9 @@ class LeagueOverview:
     form_table: pd.DataFrame
     leaders: dict[str, pd.DataFrame]
     top_matches: pd.DataFrame
+    standings_tables: tuple[tuple[str, pd.DataFrame], ...] = field(default_factory=tuple)
+    grand_final_results: pd.DataFrame = field(default_factory=pd.DataFrame)
+    grand_final_only: bool = False
 
 
 @dataclass(frozen=True)
@@ -186,3 +189,5 @@ class MatchSummary:
     momentum_series: pd.DataFrame = field(default_factory=pd.DataFrame)
     momentum_metadata: dict[str, object] = field(default_factory=dict)
     goalkeeper_saves: pd.DataFrame = field(default_factory=pd.DataFrame)
+    season_has_shot_layer: bool = False
+    season_has_momentum_layer: bool = False

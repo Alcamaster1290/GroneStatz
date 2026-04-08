@@ -1,14 +1,14 @@
 {
   "status": "passed",
-  "validated_at": "2026-04-07T21:20:13.362098+00:00",
+  "validated_at": "2026-04-07T22:38:53.469795+00:00",
   "blocking_errors": [],
   "warnings": [
-    "dashboard: Missing warning-only sheet 'momentum' for 6 matches (13596389, 13803195, 13943943, 14199319, 14199322, 14935675)"
+    "dashboard: Missing warning-only sheet 'momentum' for 6 matches (13596389, 13803195, 13943943, 14199319, 14199322, 14935675) | backfill: missing_from_source=6"
   ],
   "targets": {
     "warehouse": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:20:09.860762+00:00",
+      "validated_at": "2026-04-07T22:38:48.300477+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
@@ -29,10 +29,10 @@
     },
     "dashboard": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:20:11.882939+00:00",
+      "validated_at": "2026-04-07T22:38:51.914942+00:00",
       "blocking_errors": [],
       "warnings": [
-        "Missing warning-only sheet 'momentum' for 6 matches (13596389, 13803195, 13943943, 14199319, 14199322, 14935675)"
+        "Missing warning-only sheet 'momentum' for 6 matches (13596389, 13803195, 13943943, 14199319, 14199322, 14935675) | backfill: missing_from_source=6"
       ],
       "stats": {
         "expected_finished_matches": 333,
@@ -40,13 +40,13 @@
         "curated_matches": 333,
         "curated_players": 597,
         "curated_player_match_rows": 13193,
-        "timestamp_span_seconds": 0.18998336791992188
+        "timestamp_span_seconds": 0.5650575160980225
       },
       "diff": {}
     },
     "fantasy": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:20:13.358505+00:00",
+      "validated_at": "2026-04-07T22:38:53.465021+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
@@ -61,7 +61,7 @@
           "player_transfer": 96,
           "team_stats": 39674
         },
-        "timestamp_span_seconds": 0.16478395462036133
+        "timestamp_span_seconds": 0.17529559135437012
       }
     }
   }

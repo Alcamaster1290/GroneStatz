@@ -26,6 +26,10 @@ from gronestats.processing.fantasy_export import (
     FANTASY_EXPORT_TABLES,
     validate_fantasy_export_bundle,
 )
+from gronestats.processing.optional_sheet_backfill import (
+    load_optional_backfill_report_for_staging,
+    warning_suffix_from_backfill_report,
+)
 
 PROVIDER_NAME = "SofaScore (Opta-backed)"
 FANTASY_PROVIDER_NAME = "Fantasy Liga 1 Admin"
@@ -1932,6 +1936,7 @@ def validate_dataset_contract(
         timestamp_span_seconds = None
 
     coverage = read_parquet_safe(staging_dir / "sheet_coverage.parquet") if staging_dir is not None else pd.DataFrame()
+    optional_backfill_report = load_optional_backfill_report_for_staging(staging_dir)
     if not coverage.empty:
         current_season_partial_mode = (
             source_mode != FANTASY_SOURCE_MODE
@@ -1964,29 +1969,49 @@ def validate_dataset_contract(
         for sheet_key in strict_required_sheet_keys:
             missing_sheet_matches = coverage.loc[~coverage[f"has_{sheet_key}"], "match_id"].dropna().astype(int).tolist()
             if missing_sheet_matches:
+                suffix = warning_suffix_from_backfill_report(
+                    optional_backfill_report,
+                    sheet_key=sheet_key,
+                    missing_match_ids=missing_sheet_matches,
+                )
                 blocking_errors.append(
-                    f"Missing required sheet '{sheet_key}' for {len(missing_sheet_matches)} matches ({', '.join(map(str, missing_sheet_matches[:10]))})"
+                    f"Missing required sheet '{sheet_key}' for {len(missing_sheet_matches)} matches "
+                    f"({', '.join(map(str, missing_sheet_matches[:10]))}){suffix}"
                 )
         for sheet_key in relaxed_required_sheet_keys:
             missing_sheet_matches = coverage.loc[~coverage[f"has_{sheet_key}"], "match_id"].dropna().astype(int).tolist()
             if missing_sheet_matches:
+                suffix = warning_suffix_from_backfill_report(
+                    optional_backfill_report,
+                    sheet_key=sheet_key,
+                    missing_match_ids=missing_sheet_matches,
+                )
                 if source_mode == FANTASY_SOURCE_MODE:
                     warnings.append(
-                        f"Missing bridge non-blocking sheet '{sheet_key}' for {len(missing_sheet_matches)} matches ({', '.join(map(str, missing_sheet_matches[:10]))})"
+                        f"Missing bridge non-blocking sheet '{sheet_key}' for {len(missing_sheet_matches)} matches "
+                        f"({', '.join(map(str, missing_sheet_matches[:10]))}){suffix}"
                     )
                 elif current_season_partial_mode:
                     warnings.append(
-                        f"Missing current-season non-blocking sheet '{sheet_key}' for {len(missing_sheet_matches)} matches ({', '.join(map(str, missing_sheet_matches[:10]))})"
+                        f"Missing current-season non-blocking sheet '{sheet_key}' for {len(missing_sheet_matches)} matches "
+                        f"({', '.join(map(str, missing_sheet_matches[:10]))}){suffix}"
                     )
                 else:
                     warnings.append(
-                        f"Missing legacy non-blocking sheet '{sheet_key}' for {len(missing_sheet_matches)} matches ({', '.join(map(str, missing_sheet_matches[:10]))})"
+                        f"Missing legacy non-blocking sheet '{sheet_key}' for {len(missing_sheet_matches)} matches "
+                        f"({', '.join(map(str, missing_sheet_matches[:10]))}){suffix}"
                     )
         for sheet_key in WARNING_SHEET_KEYS:
             missing_sheet_matches = coverage.loc[~coverage[f"has_{sheet_key}"], "match_id"].dropna().astype(int).tolist()
             if missing_sheet_matches:
+                suffix = warning_suffix_from_backfill_report(
+                    optional_backfill_report,
+                    sheet_key=sheet_key,
+                    missing_match_ids=missing_sheet_matches,
+                )
                 warnings.append(
-                    f"Missing warning-only sheet '{sheet_key}' for {len(missing_sheet_matches)} matches ({', '.join(map(str, missing_sheet_matches[:10]))})"
+                    f"Missing warning-only sheet '{sheet_key}' for {len(missing_sheet_matches)} matches "
+                    f"({', '.join(map(str, missing_sheet_matches[:10]))}){suffix}"
                 )
 
     diff = build_dataset_diff(reference_dir, dataset_dir)

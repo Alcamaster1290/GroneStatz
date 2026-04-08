@@ -89,7 +89,7 @@ with st.sidebar:
         format_func=_season_option_label,
     )
     st.caption(f"{APP_SUBTITLE} | {bundle.season_label}")
-    st.caption("Filtra por torneo y rango de rondas. El dashboard abre combinado en Apertura + Clausura y deja Grand Final como capa opcional.")
+    st.caption("Filtra por torneo y rango de rondas. El dashboard abre combinado en Apertura + Clausura, respetando las variantes historicas del nombre del torneo.")
     st.divider()
     selected_tournaments = st.multiselect(
         "Torneos",

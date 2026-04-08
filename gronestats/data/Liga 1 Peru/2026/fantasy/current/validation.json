@@ -1,14 +1,14 @@
 {
   "status": "passed",
-  "validated_at": "2026-04-07T21:20:19.449327+00:00",
+  "validated_at": "2026-04-07T22:35:32.379416+00:00",
   "blocking_errors": [],
   "warnings": [
-    "dashboard: Missing warning-only sheet 'momentum' for 1 matches (15362086)"
+    "dashboard: Missing warning-only sheet 'momentum' for 1 matches (15362086) | backfill: missing_from_source=1"
   ],
   "targets": {
     "warehouse": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:20:18.041735+00:00",
+      "validated_at": "2026-04-07T22:35:31.055956+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
@@ -29,10 +29,10 @@
     },
     "dashboard": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:20:18.793125+00:00",
+      "validated_at": "2026-04-07T22:35:31.740902+00:00",
       "blocking_errors": [],
       "warnings": [
-        "Missing warning-only sheet 'momentum' for 1 matches (15362086)"
+        "Missing warning-only sheet 'momentum' for 1 matches (15362086) | backfill: missing_from_source=1"
       ],
       "stats": {
         "expected_finished_matches": 72,
@@ -40,13 +40,13 @@
         "curated_matches": 72,
         "curated_players": 456,
         "curated_player_match_rows": 2877,
-        "timestamp_span_seconds": 0.06562924385070801
+        "timestamp_span_seconds": 0.07387351989746094
       },
       "diff": {}
     },
     "fantasy": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:20:19.447693+00:00",
+      "validated_at": "2026-04-07T22:35:32.377385+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
@@ -61,7 +61,7 @@
           "player_transfer": 0,
           "team_stats": 8620
         },
-        "timestamp_span_seconds": 0.07721590995788574
+        "timestamp_span_seconds": 0.06390619277954102
       }
     }
   }

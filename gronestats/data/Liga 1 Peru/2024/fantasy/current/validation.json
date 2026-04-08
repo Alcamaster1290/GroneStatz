@@ -1,20 +1,20 @@
 {
   "status": "passed",
-  "validated_at": "2026-04-07T21:20:03.733803+00:00",
+  "validated_at": "2026-04-07T22:43:06.011800+00:00",
   "blocking_errors": [],
   "warnings": [
-    "dashboard: Missing warning-only sheet 'momentum' for 1 matches (12831489)"
+    "dashboard: Missing warning-only sheet 'momentum' for 1 matches (12831489) | backfill: missing_from_source=1"
   ],
   "targets": {
     "warehouse": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:19:58.615526+00:00",
+      "validated_at": "2026-04-07T22:42:54.041320+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
         "row_counts": {
           "matches_canonical": 306,
-          "teams_canonical": 18,
+          "teams_canonical": 24,
           "players_canonical": 564,
           "player_identity_canonical": 564,
           "player_match_canonical": 12106,
@@ -29,10 +29,10 @@
     },
     "dashboard": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:20:02.051795+00:00",
+      "validated_at": "2026-04-07T22:43:02.617828+00:00",
       "blocking_errors": [],
       "warnings": [
-        "Missing warning-only sheet 'momentum' for 1 matches (12831489)"
+        "Missing warning-only sheet 'momentum' for 1 matches (12831489) | backfill: missing_from_source=1"
       ],
       "stats": {
         "expected_finished_matches": 306,
@@ -40,19 +40,19 @@
         "curated_matches": 306,
         "curated_players": 564,
         "curated_player_match_rows": 12106,
-        "timestamp_span_seconds": 0.3986492156982422
+        "timestamp_span_seconds": 0.6719329357147217
       },
       "diff": {}
     },
     "fantasy": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:20:03.731700+00:00",
+      "validated_at": "2026-04-07T22:43:05.998668+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
         "row_counts": {
           "matches": 306,
-          "teams": 18,
+          "teams": 24,
           "players": 564,
           "players_fantasy": 561,
           "player_match": 12106,
@@ -61,7 +61,7 @@
           "player_transfer": 84,
           "team_stats": 34840
         },
-        "timestamp_span_seconds": 0.13300085067749023
+        "timestamp_span_seconds": 0.3026258945465088
       }
     }
   }
