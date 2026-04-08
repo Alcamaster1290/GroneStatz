@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import ast
 from collections import OrderedDict
+import json
 import re
 
 import pandas as pd
@@ -163,6 +165,35 @@ def apply_regular_season_filters(matches: pd.DataFrame, filters: FilterState) ->
     if "round_number" in work.columns:
         work = work[work["round_number"].between(start_round, end_round)]
     return work.copy()
+
+
+def _canonical_tournament_group(value: object) -> str:
+    if value is None or pd.isna(value):
+        return "Sin torneo"
+    text = str(value).strip().lower()
+    if not text:
+        return "Sin torneo"
+    if "grand final" in text:
+        return "Grand Final"
+    if "apertura" in text:
+        return "Apertura"
+    if "clausura" in text:
+        return "Clausura"
+    return str(value).strip()
+
+
+def _with_tournament_groups(matches: pd.DataFrame) -> pd.DataFrame:
+    if matches.empty:
+        return matches.copy()
+    work = matches.copy()
+    if "tournament_label" in work.columns:
+        source = work["tournament_label"]
+    elif "tournament" in work.columns:
+        source = work["tournament"]
+    else:
+        source = pd.Series(pd.NA, index=work.index, dtype="object")
+    work["tournament_group"] = source.map(_canonical_tournament_group)
+    return work
 
 
 def _format_pair(home_value: object, away_value: object, is_percent: bool = False) -> str:
@@ -503,13 +534,42 @@ def build_top_matches(matches: pd.DataFrame) -> pd.DataFrame:
     ).head(8).reset_index(drop=True)
 
 
+def build_match_results(matches: pd.DataFrame) -> pd.DataFrame:
+    if matches.empty:
+        return pd.DataFrame()
+
+    work = _build_match_label(matches.copy())
+    if "fecha_dt" in work.columns:
+        work = work.sort_values(["fecha_dt", "match_id"], ascending=[False, False], kind="mergesort")
+    elif "match_id" in work.columns:
+        work = work.sort_values(["match_id"], ascending=[False], kind="mergesort")
+    return work.reset_index(drop=True)
+
+
 def build_league_overview(bundle: DatasetBundle, filters: FilterState) -> LeagueOverview:
     matches = apply_match_filters(bundle.matches, filters)
-    standings = calculate_standings(matches)
+    grouped_matches = _with_tournament_groups(matches)
+    standings_tables: list[tuple[str, pd.DataFrame]] = []
+    for tournament_group in ("Apertura", "Clausura"):
+        subset = grouped_matches[grouped_matches["tournament_group"] == tournament_group].copy()
+        standings_frame = calculate_standings(subset)
+        if not standings_frame.empty:
+            standings_tables.append((tournament_group, standings_frame))
+    standings = standings_tables[0][1] if standings_tables else pd.DataFrame()
+    grand_final_results = build_match_results(grouped_matches[grouped_matches["tournament_group"] == "Grand Final"].copy())
+    grand_final_only = bool(not grand_final_results.empty and not standings_tables)
     player_stats = _filter_presentable_players(build_base_player_stats(bundle, filters))
     total_goals = int(matches["home_score"].fillna(0).sum() + matches["away_score"].fillna(0).sum()) if not matches.empty else 0
     total_matches = int(matches["match_id"].nunique()) if not matches.empty else 0
-    total_teams = int(standings["team_id"].nunique()) if not standings.empty else 0
+    if not matches.empty:
+        team_ids = set()
+        if "home_id" in matches.columns:
+            team_ids.update(matches["home_id"].dropna().astype(int).tolist())
+        if "away_id" in matches.columns:
+            team_ids.update(matches["away_id"].dropna().astype(int).tolist())
+        total_teams = len(team_ids)
+    else:
+        total_teams = 0
     total_players = int(player_stats["player_id"].nunique()) if not player_stats.empty else 0
     goals_per_match = round(total_goals / total_matches, 2) if total_matches else 0.0
 
@@ -546,6 +606,9 @@ def build_league_overview(bundle: DatasetBundle, filters: FilterState) -> League
         form_table=build_top_team_form(matches),
         leaders=build_leaderboards(player_stats),
         top_matches=build_top_matches(matches),
+        standings_tables=tuple(standings_tables),
+        grand_final_results=grand_final_results,
+        grand_final_only=grand_final_only,
     )
 
 
@@ -1281,6 +1344,46 @@ def _resolve_event_side(value: object) -> str:
     return "Sin lado"
 
 
+def _parse_goal_mouth_coordinates(value: object) -> tuple[float | None, float | None]:
+    if value is None:
+        return (None, None)
+
+    payload = value
+    if isinstance(value, str):
+        text = value.strip()
+        if not text or text.lower() in {"nan", "none", "<na>"}:
+            return (None, None)
+        payload = None
+        for parser in (ast.literal_eval, json.loads):
+            try:
+                payload = parser(text)
+                break
+            except Exception:
+                continue
+        if payload is None:
+            return (None, None)
+    elif not isinstance(value, (dict, list, tuple)):
+        try:
+            if pd.isna(value):
+                return (None, None)
+        except Exception:
+            return (None, None)
+
+    if isinstance(payload, dict):
+        y_value = payload.get("y")
+        z_value = payload.get("z")
+    elif isinstance(payload, (list, tuple)) and len(payload) >= 2:
+        y_value, z_value = payload[0], payload[1]
+    else:
+        return (None, None)
+
+    y_numeric = pd.to_numeric(pd.Series([y_value]), errors="coerce").iloc[0]
+    z_numeric = pd.to_numeric(pd.Series([z_value]), errors="coerce").iloc[0]
+    if pd.isna(y_numeric) or pd.isna(z_numeric):
+        return (None, None)
+    return (float(y_numeric), float(z_numeric))
+
+
 def build_match_shot_events(shot_events: pd.DataFrame, match_row: pd.Series) -> tuple[pd.DataFrame, dict[str, object]]:
     if shot_events.empty:
         return pd.DataFrame(), {}
@@ -1308,13 +1411,29 @@ def build_match_shot_events(shot_events: pd.DataFrame, match_row: pd.Series) -> 
             else "Sin lado"
         )
 
-    subset["display_x"] = subset.get("x")
-    subset["display_y"] = subset.get("y")
-    # Opta events are normalized in attacking direction (x: 0->100), so we mirror
+    goal_mouth_pairs = subset.get(
+        "goal_mouth_coordinates",
+        pd.Series(index=subset.index, dtype="object"),
+    ).map(_parse_goal_mouth_coordinates)
+    goal_mouth_frame = pd.DataFrame(
+        goal_mouth_pairs.tolist(),
+        index=subset.index,
+        columns=["goal_mouth_y", "goal_mouth_z"],
+    )
+    subset["goal_mouth_y"] = pd.to_numeric(goal_mouth_frame["goal_mouth_y"], errors="coerce")
+    subset["goal_mouth_z"] = pd.to_numeric(goal_mouth_frame["goal_mouth_z"], errors="coerce")
+
+    raw_x = pd.to_numeric(subset.get("x", pd.Series(index=subset.index, dtype="float64")), errors="coerce")
+    raw_y = pd.to_numeric(subset.get("y", pd.Series(index=subset.index, dtype="float64")), errors="coerce")
+    subset["display_x"] = raw_x
+    subset["display_y"] = raw_y
+    # Events are normalized in attacking direction (x: 0->100), so we mirror
     # away shots to compare both teams against the same attacking goal in one chart.
     away_mask = subset["side"] == "Visita"
-    subset.loc[away_mask, "display_x"] = 100 - subset.loc[away_mask, "x"]
-    subset.loc[away_mask, "display_y"] = 100 - subset.loc[away_mask, "y"]
+    subset.loc[away_mask, "display_x"] = 100 - raw_x.loc[away_mask]
+    subset.loc[away_mask, "display_y"] = 100 - raw_y.loc[away_mask]
+    subset["has_pitch_coordinates"] = subset["display_x"].notna() & subset["display_y"].notna()
+    subset["has_goal_mouth_coordinates"] = subset["goal_mouth_y"].notna() & subset["goal_mouth_z"].notna()
     subset["team_name"] = subset.get("team_name", pd.Series(index=subset.index, dtype="object")).astype("string")
     subset.loc[subset["side"] == "Local", "team_name"] = subset.loc[subset["side"] == "Local", "team_name"].fillna(str(match_row.get("home", "Local")))
     subset.loc[subset["side"] == "Visita", "team_name"] = subset.loc[subset["side"] == "Visita", "team_name"].fillna(str(match_row.get("away", "Visita")))
@@ -1341,7 +1460,11 @@ def build_match_shot_events(shot_events: pd.DataFrame, match_row: pd.Series) -> 
         "away_goals": int((away_subset["shot_type_norm"] == "goal").sum()),
         "home_on_target": int(home_subset["is_on_target"].sum()),
         "away_on_target": int(away_subset["is_on_target"].sum()),
-        "orientation_note": "Opta base: la visita se refleja para comparar ambos ataques hacia la misma porteria.",
+        "has_pitch_map": bool(subset["has_pitch_coordinates"].any()),
+        "has_goal_mouth_map": bool(subset["has_goal_mouth_coordinates"].any()),
+        "pitch_event_count": int(subset["has_pitch_coordinates"].sum()),
+        "goal_mouth_event_count": int(subset["has_goal_mouth_coordinates"].sum()),
+        "orientation_note": "La visita se refleja para comparar ambos ataques hacia la misma porteria.",
     }
     return subset, metadata
 
@@ -1614,4 +1737,6 @@ def build_match_summary(
         momentum_series=momentum_series,
         momentum_metadata=momentum_metadata,
         goalkeeper_saves=goalkeeper_saves,
+        season_has_shot_layer=bundle.has_shot_layer,
+        season_has_momentum_layer=bundle.has_momentum_layer,
     )

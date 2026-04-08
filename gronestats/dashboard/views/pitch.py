@@ -5,6 +5,8 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.lines import Line2D
 from mplsoccer import VerticalPitch
 import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from gronestats.dashboard.config import COLORS
 from gronestats.dashboard.views.shared import build_team_palette, safe_int, safe_text
@@ -240,6 +242,28 @@ def _shot_size(outcome: str) -> int:
     return 120
 
 
+def _legacy_shot_color(outcome: str) -> str:
+    color_map = {
+        "block": "coral",
+        "miss": "darkred",
+        "goal": "darkgreen",
+        "save": "darkgoldenrod",
+        "post": "darkgoldenrod",
+    }
+    return color_map.get(outcome, "gray")
+
+
+def _legacy_shot_symbol(outcome: str) -> str:
+    symbol_map = {
+        "goal": "star",
+        "save": "circle",
+        "post": "diamond",
+        "block": "x",
+        "miss": "triangle-up",
+    }
+    return symbol_map.get(outcome, "circle")
+
+
 def build_match_shotmap_figure(
     shot_events: pd.DataFrame,
     *,
@@ -262,6 +286,8 @@ def build_match_shotmap_figure(
         subset = shot_events[side_series == side].copy()
         if subset.empty:
             continue
+        if "has_pitch_coordinates" in subset.columns:
+            subset = subset[subset["has_pitch_coordinates"] == True].copy()  # noqa: E712
         subset = subset.dropna(subset=["display_x", "display_y"])
         if subset.empty:
             continue
@@ -286,7 +312,7 @@ def build_match_shotmap_figure(
 
     ax.text(0.03, 0.98, home_team, transform=ax.transAxes, ha="left", va="top", color=home_palette["primary"], fontsize=11, fontweight="bold")
     ax.text(0.97, 0.98, away_team, transform=ax.transAxes, ha="right", va="top", color=away_palette["primary"], fontsize=11, fontweight="bold")
-    ax.set_title("Shotmap comparativo (Opta)", color=COLORS["text"], fontsize=14, pad=14)
+    ax.set_title("Mapa de tiros comparativo", color=COLORS["text"], fontsize=14, pad=14)
 
     if plotted:
         handles = [
@@ -331,6 +357,181 @@ def build_match_shotmap_figure(
         )
         ax.text(0.03, 0.02, footer, transform=ax.transAxes, color=COLORS["muted"], fontsize=8.6, va="bottom")
     return fig
+
+
+def _add_goal_mouth_shapes(fig: go.Figure, *, xref: str, yref: str) -> None:
+    palo_exterior = 45.4
+    palo_interior = 45.6
+    travesano_inferior = 0
+    travesano_superior = 35.5
+    palo_opuesto_exterior = 54.6
+    palo_opuesto_interior = 54.4
+
+    for shape in [
+        dict(type="line", x0=palo_exterior, y0=travesano_inferior, x1=palo_exterior, y1=travesano_superior, line=dict(color="black", width=4)),
+        dict(type="line", x0=palo_opuesto_exterior, y0=travesano_inferior, x1=palo_opuesto_exterior, y1=travesano_superior, line=dict(color="black", width=4)),
+        dict(type="line", x0=palo_exterior, y0=travesano_superior, x1=palo_opuesto_exterior, y1=travesano_superior, line=dict(color="black", width=8)),
+        dict(type="line", x0=palo_interior, y0=travesano_inferior, x1=palo_interior, y1=travesano_superior, line=dict(color="black", width=4)),
+        dict(type="line", x0=palo_opuesto_interior, y0=travesano_inferior, x1=palo_opuesto_interior, y1=travesano_superior, line=dict(color="black", width=4)),
+        dict(type="line", x0=palo_interior, y0=travesano_superior, x1=palo_opuesto_interior, y1=travesano_superior, line=dict(color="black", width=4)),
+        dict(type="rect", x0=palo_exterior, y0=travesano_inferior, x1=palo_interior, y1=travesano_superior, fillcolor="white", line=dict(width=0)),
+        dict(type="rect", x0=palo_opuesto_interior, y0=travesano_inferior, x1=palo_opuesto_exterior, y1=travesano_superior, fillcolor="white", line=dict(width=0)),
+        dict(type="line", x0=palo_exterior, y0=travesano_superior, x1=palo_opuesto_exterior, y1=travesano_superior, line=dict(color="white", width=10)),
+    ]:
+        fig.add_shape(xref=xref, yref=yref, **shape)
+
+
+def build_match_goalmouth_figure(
+    shot_events: pd.DataFrame,
+    *,
+    home_team: str,
+    away_team: str,
+    metadata: dict[str, object] | None = None,
+) -> go.Figure:
+    figure = make_subplots(
+        rows=1,
+        cols=2,
+        subplot_titles=(home_team, away_team),
+        horizontal_spacing=0.08,
+    )
+    figure.update_layout(
+        height=430,
+        margin=dict(l=20, r=20, t=64, b=20),
+        paper_bgcolor=COLORS["surface"],
+        plot_bgcolor=COLORS["surface"],
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="center",
+            x=0.5,
+            bgcolor=COLORS["surface_alt"],
+            bordercolor=COLORS["border"],
+            borderwidth=1,
+            font=dict(color=COLORS["text"], size=11),
+        ),
+        title=dict(text="Definiciones sobre el arco", font=dict(color=COLORS["text"], size=15)),
+    )
+
+    plotted = False
+    outcome_order = ["goal", "save", "post", "block", "miss"]
+    side_series = shot_events.get("side", pd.Series(index=shot_events.index, dtype="object"))
+    for col_index, side in enumerate(["Local", "Visita"], start=1):
+        subset = shot_events[side_series == side].copy()
+        if "has_goal_mouth_coordinates" in subset.columns:
+            subset = subset[subset["has_goal_mouth_coordinates"] == True].copy()  # noqa: E712
+        subset = subset.dropna(subset=["goal_mouth_y", "goal_mouth_z"])
+        if not subset.empty:
+            plotted = True
+
+        for outcome in outcome_order:
+            event_subset = subset[subset.get("shot_type_norm", pd.Series(index=subset.index, dtype="object")) == outcome]
+            if event_subset.empty:
+                continue
+            customdata = pd.DataFrame(
+                {
+                    "name": event_subset.get("name", pd.Series(index=event_subset.index, dtype="object")).fillna("Sin nombre"),
+                    "team_name": event_subset.get("team_name", pd.Series(index=event_subset.index, dtype="object")).fillna(
+                        home_team if side == "Local" else away_team
+                    ),
+                    "shot_type": event_subset.get("shot_type", pd.Series(index=event_subset.index, dtype="object")).fillna(outcome),
+                    "minute_label": event_subset.get("minute_label", pd.Series(index=event_subset.index, dtype="object")).fillna("-"),
+                    "situation": event_subset.get("situation", pd.Series(index=event_subset.index, dtype="object")).fillna("Sin situacion"),
+                    "body_part": event_subset.get("body_part", pd.Series(index=event_subset.index, dtype="object")).fillna("Sin perfil"),
+                    "goal_mouth_location": event_subset.get(
+                        "goal_mouth_location",
+                        pd.Series(index=event_subset.index, dtype="object"),
+                    ).fillna("Sin zona"),
+                }
+            )
+            figure.add_trace(
+                go.Scatter(
+                    x=event_subset["goal_mouth_y"],
+                    y=event_subset["goal_mouth_z"],
+                    mode="markers",
+                    name=outcome.capitalize(),
+                    legendgroup=outcome,
+                    showlegend=col_index == 1,
+                    customdata=customdata,
+                    marker=dict(
+                        size=12,
+                        color=_legacy_shot_color(outcome),
+                        symbol=_legacy_shot_symbol(outcome),
+                        line=dict(width=1.8, color="black"),
+                        opacity=0.9,
+                    ),
+                    hovertemplate=(
+                        "<b>%{customdata[1]}</b><br>"
+                        "Jugador: %{customdata[0]}<br>"
+                        "Tiro: %{customdata[2]}<br>"
+                        "Minuto: %{customdata[3]}<br>"
+                        "Situacion: %{customdata[4]}<br>"
+                        "Perfil: %{customdata[5]}<br>"
+                        "Zona de arco: %{customdata[6]}<extra></extra>"
+                    ),
+                ),
+                row=1,
+                col=col_index,
+            )
+
+        axis_suffix = "" if col_index == 1 else str(col_index)
+        figure.update_xaxes(
+            range=[60, 40],
+            showgrid=False,
+            visible=False,
+            row=1,
+            col=col_index,
+        )
+        figure.update_yaxes(
+            range=[0, 85],
+            showgrid=False,
+            visible=False,
+            row=1,
+            col=col_index,
+        )
+        _add_goal_mouth_shapes(figure, xref=f"x{axis_suffix}", yref=f"y{axis_suffix}")
+
+        if subset.empty:
+            figure.add_annotation(
+                x=50,
+                y=42,
+                xref=f"x{axis_suffix}",
+                yref=f"y{axis_suffix}",
+                text="Sin tiros con<br>coordenadas de arco",
+                showarrow=False,
+                font=dict(color=COLORS["muted"], size=12),
+                align="center",
+            )
+
+    if metadata:
+        figure.add_annotation(
+            x=0.5,
+            y=-0.14,
+            xref="paper",
+            yref="paper",
+            text=(
+                f"{home_team}: {safe_int(metadata.get('home_shots'))} tiros | "
+                f"{safe_int(metadata.get('home_on_target'))} al arco | "
+                f"{safe_int(metadata.get('home_goals'))} goles &nbsp;&nbsp;|&nbsp;&nbsp; "
+                f"{away_team}: {safe_int(metadata.get('away_shots'))} tiros | "
+                f"{safe_int(metadata.get('away_on_target'))} al arco | "
+                f"{safe_int(metadata.get('away_goals'))} goles"
+            ),
+            showarrow=False,
+            font=dict(color=COLORS["muted"], size=11),
+        )
+
+    if not plotted:
+        figure.add_annotation(
+            x=0.5,
+            y=0.5,
+            xref="paper",
+            yref="paper",
+            text="No hay coordenadas de arco para este partido",
+            showarrow=False,
+            font=dict(color=COLORS["muted"], size=12),
+        )
+    return figure
 
 
 def build_match_momentum_figure(
@@ -380,7 +581,7 @@ def build_match_momentum_figure(
         if milestone <= max_minute + 1:
             ax.axvline(milestone, color=COLORS["border"], linewidth=0.8, linestyle="--", alpha=0.55)
 
-    ax.set_title("Momentum del partido (Opta)", color=COLORS["text"], fontsize=13, pad=10)
+    ax.set_title("Momentum del partido", color=COLORS["text"], fontsize=13, pad=10)
     ax.set_xlabel("Minuto", color=COLORS["muted"], fontsize=9)
     ax.set_ylabel("Impulso", color=COLORS["muted"], fontsize=9)
     ax.tick_params(colors=COLORS["muted"], labelsize=8.5)

@@ -122,7 +122,8 @@ def describe_active_scope(matches: pd.DataFrame, filters: FilterState) -> str:
     else:
         min_round, max_round = start_round, end_round
 
-    tournament_label = _join_tournament_labels([tournament_display_label(value) for value in tournament_values])
+    display_labels = list(dict.fromkeys(tournament_display_label(value) for value in tournament_values))
+    tournament_label = _join_tournament_labels(display_labels)
     round_label = f"R{min_round}" if min_round == max_round else f"R{min_round}-R{max_round}"
     return f"{tournament_label} | {round_label}"
 
@@ -446,7 +447,7 @@ def describe_bundle_gaps(bundle: DatasetBundle) -> tuple[str, ...]:
         )
     if not bundle.has_shot_layer:
         gaps.append(
-            "Sin shot_events: el shotmap Opta del partido se oculta hasta publicar la capa de tiros."
+            "Sin shot_events: el mapa de tiros del partido se oculta hasta publicar la capa de tiros."
         )
     if not bundle.has_momentum_layer:
         gaps.append(

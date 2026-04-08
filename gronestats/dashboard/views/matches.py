@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
 from gronestats.dashboard.data import find_player_image
@@ -7,6 +8,7 @@ from gronestats.dashboard.models import MatchSummary
 from gronestats.dashboard.state import build_action
 from gronestats.dashboard.views.pitch import (
     build_goalkeeper_saves_figure,
+    build_match_goalmouth_figure,
     build_match_average_positions_figure,
     build_match_momentum_figure,
     build_match_shotmap_figure,
@@ -26,6 +28,85 @@ from gronestats.dashboard.views.shared import (
     safe_optional_int,
     safe_text,
 )
+
+
+def build_optional_layer_empty_state(summary: MatchSummary, layer: str) -> tuple[str, str | None]:
+    if layer == "shotmap":
+        if summary.season_has_shot_layer:
+            return (
+                "No hay `shot_events` publicados para este match_id.",
+                "La temporada si publica `shot_events`, pero este partido aun no tiene eventos de tiro disponibles.",
+            )
+        return ("La temporada activa aun no publica `shot_events`.", None)
+
+    if layer == "momentum":
+        if summary.season_has_momentum_layer:
+            return (
+                "No hay `match_momentum` publicado para este partido.",
+                "La temporada si publica `match_momentum`, pero este match_id sigue sin una serie de impulso disponible.",
+            )
+        return ("La temporada activa aun no publica `match_momentum`.", None)
+
+    raise ValueError(f"Unsupported optional layer: {layer}")
+
+
+def build_shotmap_panel_state(summary: MatchSummary) -> dict[str, object]:
+    metadata = summary.shot_events_metadata or {}
+    has_pitch_map = bool(metadata.get("has_pitch_map"))
+    has_goal_mouth_map = bool(metadata.get("has_goal_mouth_map"))
+    pitch_event_count = safe_int(metadata.get("pitch_event_count"))
+    goal_mouth_event_count = safe_int(metadata.get("goal_mouth_event_count"))
+
+    if summary.shot_events.empty:
+        message, note = build_optional_layer_empty_state(summary, "shotmap")
+        return {
+            "show_empty": True,
+            "message": message,
+            "note": note,
+            "has_pitch_map": False,
+            "has_goal_mouth_map": False,
+        }
+
+    if has_pitch_map and has_goal_mouth_map:
+        return {
+            "show_empty": False,
+            "message": None,
+            "note": (
+                f"Cobertura de tiros: cancha completa disponible ({pitch_event_count}) y visual de arco disponible ({goal_mouth_event_count}). "
+                "La visita se refleja en cancha para comparar ambas secuencias de ataque."
+            ),
+            "has_pitch_map": True,
+            "has_goal_mouth_map": True,
+        }
+
+    if has_pitch_map:
+        return {
+            "show_empty": False,
+            "message": None,
+            "note": f"Cobertura de tiros: solo cancha completa disponible ({pitch_event_count}).",
+            "has_pitch_map": True,
+            "has_goal_mouth_map": False,
+        }
+
+    if has_goal_mouth_map:
+        return {
+            "show_empty": False,
+            "message": None,
+            "note": (
+                f"Cobertura de tiros: solo visual de arco disponible ({goal_mouth_event_count}); "
+                "este match_id no trae `x/y` utilizables, pero si `goalMouthCoordinates`."
+            ),
+            "has_pitch_map": False,
+            "has_goal_mouth_map": True,
+        }
+
+    return {
+        "show_empty": True,
+        "message": "El match_id tiene `shot_events`, pero no trae coordenadas utilizables en `x/y` ni `goal_mouth_coordinates`.",
+        "note": "La temporada publica `shot_events`, pero este partido no expone una geometria usable para el mapa de tiros.",
+        "has_pitch_map": False,
+        "has_goal_mouth_map": False,
+    }
 
 
 def render_match_catalog(frame, selected_match_id: int | None = None) -> int | None:
@@ -225,6 +306,113 @@ def _render_context_table(frame, key_prefix: str) -> int | None:
     return safe_optional_int(frame.iloc[row_index].get("match_id"))
 
 
+def _render_match_event_summary(summary: MatchSummary, row: pd.Series) -> None:
+    render_section_title(
+        "Eventos del partido",
+        "Tiros, impulso y trabajo de arqueros integrados dentro del resumen.",
+    )
+
+    render_section_title(
+        "Mapa de tiros",
+        "Secuencia comparativa de finalizaciones del partido.",
+    )
+    shotmap_state = build_shotmap_panel_state(summary)
+    if shotmap_state["show_empty"]:
+        if shotmap_state["note"]:
+            render_selection_note(str(shotmap_state["note"]))
+        render_empty_state(str(shotmap_state["message"]))
+    else:
+        note_parts = [str(shotmap_state["note"])]
+        if shotmap_state["has_pitch_map"]:
+            orientation_note = safe_text(
+                summary.shot_events_metadata.get("orientation_note"),
+                "Las coordenadas se reflejan para comparar ambos ataques hacia el mismo arco de referencia.",
+            )
+            if orientation_note:
+                note_parts.append(orientation_note)
+        render_selection_note(" ".join(part for part in note_parts if part))
+        if shotmap_state["has_pitch_map"]:
+            st.pyplot(
+                build_match_shotmap_figure(
+                    summary.shot_events,
+                    home_team=safe_text(row.get("home"), "Local"),
+                    away_team=safe_text(row.get("away"), "Visita"),
+                    metadata=summary.shot_events_metadata,
+                    home_color=summary.home_team_color,
+                    away_color=summary.away_team_color,
+                ),
+                use_container_width=True,
+            )
+        if shotmap_state["has_goal_mouth_map"]:
+            render_section_title(
+                "Definiciones sobre el arco",
+                "Complementa el mapa de tiros cuando la geometria publicada viene concentrada sobre el arco.",
+            )
+            st.plotly_chart(
+                build_match_goalmouth_figure(
+                    summary.shot_events,
+                    home_team=safe_text(row.get("home"), "Local"),
+                    away_team=safe_text(row.get("away"), "Visita"),
+                    metadata=summary.shot_events_metadata,
+                ),
+                use_container_width=True,
+            )
+
+    event_cols = st.columns([1.15, 0.85], gap="medium")
+    with event_cols[0]:
+        render_section_title(
+            "Momentum por minuto",
+            "Curva de impulso del partido: valores positivos favorecen al local y negativos a la visita.",
+        )
+        if summary.momentum_series.empty:
+            message, note = build_optional_layer_empty_state(summary, "momentum")
+            if note:
+                render_selection_note(note)
+            render_empty_state(message)
+        else:
+            st.pyplot(
+                build_match_momentum_figure(
+                    summary.momentum_series,
+                    home_team=safe_text(row.get("home"), "Local"),
+                    away_team=safe_text(row.get("away"), "Visita"),
+                    home_color=summary.home_team_color,
+                    away_color=summary.away_team_color,
+                ),
+                use_container_width=True,
+            )
+
+    with event_cols[1]:
+        render_section_title(
+            "Atajadas de arquero",
+            "Lectura rapida del trabajo de los arqueros en el partido.",
+        )
+        if summary.goalkeeper_saves.empty:
+            render_empty_state("Sin registros de atajadas de arquero en player_match para este match_id.")
+        else:
+            st.pyplot(
+                build_goalkeeper_saves_figure(
+                    summary.goalkeeper_saves,
+                    home_team=safe_text(row.get("home"), "Local"),
+                    away_team=safe_text(row.get("away"), "Visita"),
+                    home_color=summary.home_team_color,
+                    away_color=summary.away_team_color,
+                ),
+                use_container_width=True,
+            )
+            st.dataframe(
+                summary.goalkeeper_saves[["side", "name", "team_name", "saves", "minutesplayed"]],
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "side": "Lado",
+                    "name": "Arquero",
+                    "team_name": "Equipo",
+                    "saves": "Atajadas",
+                    "minutesplayed": "Min",
+                },
+            )
+
+
 def render_match_detail(summary: MatchSummary | None) -> dict[str, object] | None:
     if summary is None:
         render_empty_state("Selecciona un partido para inspeccionar detalle.")
@@ -240,7 +428,7 @@ def render_match_detail(summary: MatchSummary | None) -> dict[str, object] | Non
     if action is None:
         action = header_action
 
-    tabs = st.tabs(["Lectura rapida", "Estadisticas", "Eventos Opta", "Jugadores", "Contexto"])
+    tabs = st.tabs(["Resumen", "Estadisticas", "Jugadores", "Contexto"])
 
     with tabs[0]:
         left, right = st.columns([1.32, 0.9], gap="medium")
@@ -311,6 +499,8 @@ def render_match_detail(summary: MatchSummary | None) -> dict[str, object] | Non
                 use_container_width=True,
             )
 
+        _render_match_event_summary(summary, row)
+
     with tabs[1]:
         render_section_title(
             "Metricas completas por grupo",
@@ -325,83 +515,6 @@ def render_match_detail(summary: MatchSummary | None) -> dict[str, object] | Non
                     st.dataframe(frame[["Metrica", "Local", "Visita"]], use_container_width=True, hide_index=True)
 
     with tabs[2]:
-        render_section_title(
-            "Shotmap comparativo",
-            "Eventos de tiro Opta por tipo de finalizacion. La visita se refleja para comparar patron de ataque en el mismo arco de referencia.",
-        )
-        if summary.shot_events.empty:
-            render_empty_state("No hay `shot_events` publicados para este match_id.")
-        else:
-            render_selection_note(
-                safe_text(
-                    summary.shot_events_metadata.get("orientation_note"),
-                    "Coordenadas Opta normalizadas; visual comparativa con espejo de visita.",
-                )
-            )
-            st.pyplot(
-                build_match_shotmap_figure(
-                    summary.shot_events,
-                    home_team=safe_text(row.get("home"), "Local"),
-                    away_team=safe_text(row.get("away"), "Visita"),
-                    metadata=summary.shot_events_metadata,
-                    home_color=summary.home_team_color,
-                    away_color=summary.away_team_color,
-                ),
-                use_container_width=True,
-            )
-
-        momentum_cols = st.columns([1.15, 0.85], gap="medium")
-        with momentum_cols[0]:
-            render_section_title(
-                "Momentum por minuto",
-                "Curva de impulso del partido: valores positivos favorecen al local y negativos a la visita.",
-            )
-            if summary.momentum_series.empty:
-                render_empty_state("No hay `match_momentum` publicado para este partido.")
-            else:
-                st.pyplot(
-                    build_match_momentum_figure(
-                        summary.momentum_series,
-                        home_team=safe_text(row.get("home"), "Local"),
-                        away_team=safe_text(row.get("away"), "Visita"),
-                        home_color=summary.home_team_color,
-                        away_color=summary.away_team_color,
-                    ),
-                    use_container_width=True,
-                )
-
-        with momentum_cols[1]:
-            render_section_title(
-                "Atajadas de arquero",
-                "Lectura rapida del trabajo de los arqueros en el partido.",
-            )
-            if summary.goalkeeper_saves.empty:
-                render_empty_state("Sin registros de atajadas de arquero en player_match para este match_id.")
-            else:
-                st.pyplot(
-                    build_goalkeeper_saves_figure(
-                        summary.goalkeeper_saves,
-                        home_team=safe_text(row.get("home"), "Local"),
-                        away_team=safe_text(row.get("away"), "Visita"),
-                        home_color=summary.home_team_color,
-                        away_color=summary.away_team_color,
-                    ),
-                    use_container_width=True,
-                )
-                st.dataframe(
-                    summary.goalkeeper_saves[["side", "name", "team_name", "saves", "minutesplayed"]],
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config={
-                        "side": "Lado",
-                        "name": "Arquero",
-                        "team_name": "Equipo",
-                        "saves": "Atajadas",
-                        "minutesplayed": "Min",
-                    },
-                )
-
-    with tabs[3]:
         render_section_title(
             "Jugadores del partido",
             "Planillas por lado ordenadas por impacto, minutos y produccion.",
@@ -550,7 +663,7 @@ def render_match_detail(summary: MatchSummary | None) -> dict[str, object] | Non
                         else:
                             st.caption("Este registro no tiene identidad completa; se muestra solo como dato del partido.")
 
-    with tabs[4]:
+    with tabs[3]:
         render_section_title(
             "Contexto alrededor del partido",
             "Que traian ambos equipos antes y despues del encuentro.",

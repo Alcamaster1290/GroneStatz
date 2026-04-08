@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from gronestats.dashboard.data import filter_regular_season_matches, normalize_matches
 from gronestats.dashboard.metrics import (
@@ -333,6 +334,11 @@ def test_build_match_shot_events_reflects_away_coordinates_and_builds_counts() -
             "time_seconds": [720, 1980, 2460],
             "x": [84.0, 79.0, 61.0],
             "y": [52.0, 44.0, 70.0],
+            "goal_mouth_coordinates": [
+                "{'x': 0, 'y': 51.2, 'z': 9.1}",
+                "{'x': 0, 'y': 47.5, 'z': 4.8}",
+                "{'x': 0, 'y': 59.0, 'z': 63.0}",
+            ],
             "team_id": [10, 20, 20],
         }
     )
@@ -349,6 +355,45 @@ def test_build_match_shot_events_reflects_away_coordinates_and_builds_counts() -
     assert metadata["away_shots"] == 2
     assert metadata["home_on_target"] == 1
     assert metadata["away_on_target"] == 1
+    assert metadata["has_pitch_map"] is True
+    assert metadata["has_goal_mouth_map"] is True
+    assert metadata["pitch_event_count"] == 3
+    assert metadata["goal_mouth_event_count"] == 3
+    assert round(float(events.iloc[0]["goal_mouth_y"]), 1) == 51.2
+    assert round(float(events.iloc[0]["goal_mouth_z"]), 1) == 9.1
+
+
+def test_build_match_shot_events_parses_goal_mouth_only_payloads_and_invalid_values() -> None:
+    shot_events = pd.DataFrame(
+        {
+            "match_id": [1, 1, 1],
+            "shot_id": [20, 21, 22],
+            "is_home": [True, False, False],
+            "shot_type": ["save", "goal", "miss"],
+            "time": [11, 20, 31],
+            "time_seconds": [660, 1200, 1860],
+            "goal_mouth_coordinates": [
+                "{'x': 0, 'y': 48.4, 'z': 19}",
+                {"x": 0, "y": 54.0, "z": 2.5},
+                "not-a-payload",
+            ],
+            "team_id": [10, 20, 20],
+        }
+    )
+    match_row = pd.Series({"match_id": 1, "home_id": 10, "away_id": 20, "home": "Alianza", "away": "Melgar"})
+
+    events, metadata = build_match_shot_events(shot_events, match_row)
+
+    assert metadata["has_pitch_map"] is False
+    assert metadata["has_goal_mouth_map"] is True
+    assert metadata["pitch_event_count"] == 0
+    assert metadata["goal_mouth_event_count"] == 2
+    assert bool(events.iloc[0]["has_goal_mouth_coordinates"]) is True
+    assert bool(events.iloc[1]["has_goal_mouth_coordinates"]) is True
+    assert bool(events.iloc[2]["has_goal_mouth_coordinates"]) is False
+    assert events["display_x"].isna().all()
+    assert round(float(events.iloc[1]["goal_mouth_y"]), 1) == 54.0
+    assert round(float(events.iloc[1]["goal_mouth_z"]), 1) == 2.5
 
 
 def test_build_match_momentum_series_sorts_minutes_and_computes_rolling() -> None:
@@ -390,6 +435,29 @@ def test_build_match_goalkeeper_saves_uses_keeper_rows_by_position() -> None:
     assert keepers["name"].tolist() == ["Arquero A", "Arquero B"]
     assert keepers["side"].tolist() == ["Local", "Visita"]
     assert keepers["saves"].tolist() == [4, 3]
+
+
+def test_published_2026_shot_events_support_goal_mouth_only_mode() -> None:
+    season_dir = Path("gronestats/data/Liga 1 Peru/2026/dashboard/current")
+    shot_events_path = season_dir / "shot_events.parquet"
+    matches_path = season_dir / "matches.parquet"
+    if not shot_events_path.exists() or not matches_path.exists():
+        pytest.skip("Temporada 2026 sin release publicada en el workspace actual.")
+
+    shot_events = pd.read_parquet(shot_events_path)
+    matches = pd.read_parquet(matches_path)
+    if shot_events.empty or matches.empty:
+        pytest.skip("Release 2026 sin datos suficientes para smoke del shotmap.")
+
+    match_id = int(shot_events["match_id"].iloc[0])
+    match_row = matches.loc[matches["match_id"] == match_id].iloc[0]
+
+    events, metadata = build_match_shot_events(shot_events, match_row)
+
+    assert not events.empty
+    assert metadata["has_goal_mouth_map"] is True
+    assert metadata["goal_mouth_event_count"] > 0
+    assert metadata["has_pitch_map"] is False
 
 
 def test_build_match_insight_cards_degrades_without_standout_players() -> None:
@@ -774,6 +842,101 @@ def test_build_league_overview_does_not_collapse_duplicate_rounds_between_tourna
 
     assert overview.goals_by_round["round_label"].tolist() == ["Apertura · R1", "Clausura · R1"]
     assert overview.goals_by_round["goals"].tolist() == [1, 3]
+
+
+def test_build_league_overview_splits_regular_standings_by_tournament() -> None:
+    matches = normalize_matches(
+        pd.DataFrame(
+            {
+                "match_id": [1, 2, 3, 4],
+                "round_number": [1, 2, 1, 2],
+                "tournament": [
+                    "Liga 1, Apertura",
+                    "Liga 1, Apertura",
+                    "Primera Division, Clausura",
+                    "Primera Division, Clausura",
+                ],
+                "fecha": ["01/01/2025 15:00", "08/01/2025 15:00", "01/07/2025 19:00", "08/07/2025 19:00"],
+                "home_id": [10, 20, 10, 20],
+                "away_id": [20, 10, 20, 10],
+                "home": ["Alianza", "Melgar", "Alianza", "Melgar"],
+                "away": ["Melgar", "Alianza", "Melgar", "Alianza"],
+                "home_score": [1, 0, 0, 2],
+                "away_score": [0, 2, 1, 0],
+                "estadio": ["A", "B", "A", "B"],
+                "ciudad": ["Lima", "Arequipa", "Lima", "Arequipa"],
+                "arbitro": ["X", "Y", "X", "Y"],
+            }
+        )
+    )
+    bundle = _make_dashboard_bundle(player_match=pd.DataFrame(), matches=matches)
+
+    overview = build_league_overview(
+        bundle,
+        FilterState(
+            round_range=(1, 2),
+            min_minutes=0,
+            tournaments=("Liga 1, Apertura", "Primera Division, Clausura"),
+        ),
+    )
+
+    assert [label for label, _ in overview.standings_tables] == ["Apertura", "Clausura"]
+    assert overview.standings_tables[0][1].iloc[0]["team_name"] == "Alianza"
+    assert overview.standings_tables[1][1].iloc[0]["team_name"] == "Melgar"
+    assert overview.standings.equals(overview.standings_tables[0][1])
+    assert overview.grand_final_only is False
+
+
+def test_build_league_overview_treats_grand_final_as_results_only() -> None:
+    matches = normalize_matches(
+        pd.DataFrame(
+            {
+                "match_id": [10, 20],
+                "round_number": [28, 29],
+                "tournament": ["Primera Division, Grand Final", "Primera Division, Grand Final"],
+                "fecha": ["20/12/2025 20:00", "23/12/2025 20:00"],
+                "home_id": [10, 20],
+                "away_id": [20, 10],
+                "home": ["Alianza", "Melgar"],
+                "away": ["Melgar", "Alianza"],
+                "home_score": [2, 1],
+                "away_score": [1, 1],
+                "estadio": ["Matute", "Monumental UNSA"],
+                "ciudad": ["Lima", "Arequipa"],
+                "arbitro": ["A", "B"],
+            }
+        )
+    )
+    player_match = pd.DataFrame(
+        {
+            "match_id": [10, 10, 20],
+            "player_id": [11, 12, 11],
+            "team_id": [10, 20, 10],
+            "name": ["Jugador A", "Jugador B", "Jugador A"],
+            "position": ["F", "F", "F"],
+            "minutesplayed": [90, 90, 90],
+            "goals": [1, 1, 1],
+            "assists": [0, 0, 0],
+            "saves": [0, 0, 0],
+            "fouls": [1, 1, 1],
+            "penaltywon": [0, 0, 0],
+            "penaltysave": [0, 0, 0],
+            "penaltyconceded": [0, 0, 0],
+            "fecha_dt": pd.to_datetime(["2025-12-20", "2025-12-20", "2025-12-23"]),
+        }
+    )
+    bundle = _make_dashboard_bundle(player_match=player_match, matches=matches)
+
+    overview = build_league_overview(
+        bundle,
+        FilterState(round_range=(28, 29), min_minutes=0, tournaments=("Primera Division, Grand Final",)),
+    )
+
+    assert overview.grand_final_only is True
+    assert overview.standings.empty
+    assert overview.standings_tables == ()
+    assert overview.grand_final_results["match_id"].tolist() == [20, 10]
+    assert overview.leaders["Goles"].iloc[0]["Jugador"] == "Jugador A"
 
 
 def test_build_match_team_average_positions_falls_back_to_minutes_when_starter_flag_missing() -> None:
