@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Optional
@@ -62,11 +63,18 @@ from app.schemas.admin import (
 )
 from app.services.app_config import get_premium_badge_config, update_premium_badge_config
 from app.services.data_pipeline import ingest_parquets_to_duckdb, sync_duckdb_to_postgres
-from app.services.fantasy import ensure_round, get_or_create_season, get_round_by_number
+from app.services.fantasy import (
+    ensure_round,
+    get_or_create_season,
+    get_round_by_number,
+    get_transfer_count_for_round,
+)
 from app.services.action_log import log_action
 from app.services.push_notifications import run_round_deadline_reminders
 from app.services.round_recovery import recover_round_lineups_from_market
 from app.services.scoring import calc_match_points, recalc_round_points
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
@@ -152,20 +160,6 @@ def _get_team_player_ids_for_delta(db: Session, fantasy_team_id: int) -> list[in
     return [player_id for player_id, _ in rows_sorted[:15]]
 
 
-def _get_transfer_count_for_round(db: Session, fantasy_team_id: int, round_id: int) -> int:
-    return int(
-        db.execute(
-            select(func.count())
-            .select_from(FantasyTransfer)
-            .where(
-                FantasyTransfer.fantasy_team_id == fantasy_team_id,
-                FantasyTransfer.round_id == round_id,
-            )
-        ).scalar()
-        or 0
-    )
-
-
 def _get_transfer_fee_total_for_count(transfer_count: int) -> Decimal:
     _ = transfer_count
     return Decimal("0.0")
@@ -233,7 +227,7 @@ def _recompute_team_budget_cap_for_round(
             )
             market_delta_total = _round_price(delta_total)
 
-    transfer_count = _get_transfer_count_for_round(db, team.id, round_obj.id)
+    transfer_count = get_transfer_count_for_round(db, team.id, round_obj.id)
     fee_total = _get_transfer_fee_total_for_count(transfer_count)
     effective_cap = _round_price(Decimal("100.0") + market_delta_total - fee_total)
     team.budget_cap = effective_cap
@@ -958,16 +952,16 @@ def upsert_fixture(
             next_id = db.execute(select(func.coalesce(func.max(Fixture.id), 0) + 1)).scalar_one()
             db.execute(insert(Fixture).values(id=next_id, **values))
         db.commit()
-    except IntegrityError as exc:
+    except IntegrityError:
         db.rollback()
-        detail = "db_integrity_error"
-        if exc.orig:
-            detail = f"db_integrity_error: {exc.orig}"
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
-    except SQLAlchemyError as exc:
+        logger.exception("db_integrity_error in upsert_fixture")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="db_integrity_error"
+        )
+    except SQLAlchemyError:
         db.rollback()
-        detail = f"db_error: {exc}"
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+        logger.exception("db_error in upsert_fixture")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="db_error")
 
     fixture = db.execute(select(Fixture).where(Fixture.match_id == payload.match_id)).scalar_one()
 
@@ -1592,7 +1586,7 @@ def revert_transfer_by_id(
     if team is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="team_not_found")
 
-    before_count = _get_transfer_count_for_round(db, team.id, round_obj.id)
+    before_count = get_transfer_count_for_round(db, team.id, round_obj.id)
     status_label, reason = _revert_transfer_row(
         db,
         transfer,

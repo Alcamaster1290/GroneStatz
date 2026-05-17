@@ -33,17 +33,25 @@ async def _scheduler_loop(interval_seconds: int) -> None:
                     .scalars()
                     .all()
                 )
-                for round_obj in rounds:
-                    fixtures = (
-                        db.execute(
-                            select(Fixture.status).where(
-                                Fixture.season_id == season.id,
-                                Fixture.round_id == round_obj.id,
-                            )
+                if not rounds:
+                    continue
+
+                round_ids = [r.id for r in rounds]
+                all_fixtures = (
+                    db.execute(
+                        select(Fixture.round_id, Fixture.status).where(
+                            Fixture.season_id == season.id,
+                            Fixture.round_id.in_(round_ids),
                         )
-                        .scalars()
-                        .all()
                     )
+                    .all()
+                )
+                fixtures_by_round: dict[int, list[str]] = {}
+                for r_id, status in all_fixtures:
+                    fixtures_by_round.setdefault(r_id, []).append(status)
+
+                for round_obj in rounds:
+                    fixtures = fixtures_by_round.get(round_obj.id, [])
                     if not fixtures:
                         continue
                     if any(status != "Finalizado" for status in fixtures):

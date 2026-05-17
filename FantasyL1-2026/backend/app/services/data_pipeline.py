@@ -41,6 +41,17 @@ def _pick_column(columns: Iterable[str], candidates: List[str]) -> Optional[str]
     return None
 
 
+def _quote_ident(ident: str) -> str:
+    """Double-quotes a DuckDB identifier and escapes embedded quotes."""
+    return '"' + ident.replace('"', '""') + '"'
+
+
+def _safe_ident_or_null(ident: Optional[str]) -> str:
+    if ident is None:
+        return "NULL"
+    return _quote_ident(ident)
+
+
 def ingest_parquets_to_duckdb(settings: Settings) -> None:
     parquet_dir = Path(settings.PARQUET_DIR)
     if not parquet_dir.exists():
@@ -72,7 +83,8 @@ def ingest_parquets_to_duckdb(settings: Settings) -> None:
                 raise ValueError(f"players_fantasy_missing_columns: {sorted(missing)}")
 
         con.execute(
-            f"CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM read_parquet('{parquet_path.as_posix()}')"
+            f"CREATE OR REPLACE TABLE {_quote_ident(table_name)} AS SELECT * FROM read_parquet(?)",
+            [parquet_path.as_posix()],
         )
         logger.info("ingested %s", parquet_name)
 
@@ -256,11 +268,12 @@ def sync_duckdb_to_postgres(settings: Settings | None = None) -> None:
         name_short_col = _pick_column(team_cols, ["name_short", "short_name", "abbr", "code", "name"])
         name_full_col = _pick_column(team_cols, ["name_full", "name", "team_name"])
 
-        name_short_expr = name_short_col or "NULL"
-        name_full_expr = name_full_col or name_short_col or "NULL"
+        team_id_expr = _quote_ident(team_id_col)
+        name_short_expr = _safe_ident_or_null(name_short_col)
+        name_full_expr = _quote_ident(name_full_col) if name_full_col else name_short_expr
 
         team_rows = con.execute(
-            f"SELECT {team_id_col} as id, {name_short_expr} as name_short, {name_full_expr} as name_full FROM teams"
+            f"SELECT {team_id_expr} as id, {name_short_expr} as name_short, {name_full_expr} as name_full FROM teams"
         ).fetchall()
         teams_payload = [
             {"id": row[0], "name_short": row[1], "name_full": row[2]} for row in team_rows
@@ -290,7 +303,7 @@ def sync_duckdb_to_postgres(settings: Settings | None = None) -> None:
         short_name_col = _pick_column(
             player_cols, ["short_name", "shortName", "shortname", "SHORT_NAME", "SHORTNAME"]
         )
-        short_name_expr = short_name_col or "NULL"
+        short_name_expr = _safe_ident_or_null(short_name_col)
 
         player_rows = con.execute(
             f"SELECT player_id, name, position, team_id, price, {short_name_expr} as short_name FROM players_fantasy"

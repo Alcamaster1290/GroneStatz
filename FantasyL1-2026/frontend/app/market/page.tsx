@@ -1066,9 +1066,17 @@ export default function MarketPage() {
     [draftSquad, outPlayerId]
   );
 
+  const playersBaseById = useMemo(() => {
+    const map = new Map<number, Player>();
+    for (const player of playersBase) {
+      map.set(player.player_id, player);
+    }
+    return map;
+  }, [playersBase]);
+
   const inPlayer = useMemo(
-    () => playersBase.find((player) => player.player_id === inPlayerId),
-    [playersBase, inPlayerId]
+    () => (inPlayerId ? playersBaseById.get(inPlayerId) : undefined),
+    [playersBaseById, inPlayerId]
   );
 
   const playersByPosition = useMemo(() => {
@@ -1268,7 +1276,7 @@ export default function MarketPage() {
 
   const handleConfirmPlayer = async () => {
     if (!inPlayerId) return;
-    const incoming = playersBase.find((player) => player.player_id === inPlayerId);
+    const incoming = playersBaseById.get(inPlayerId);
     if (!incoming) return;
 
     setActionError(null);
@@ -1431,18 +1439,20 @@ export default function MarketPage() {
         F: baseF.length
       };
 
+      const squadIds = new Set(squad.map((p) => p.player_id));
       const remainingSlots = 15 - squad.length;
       const fillers = [...pool.D, ...pool.M, ...pool.F].sort(
         (a, b) => a.price_current - b.price_current
       );
       for (const player of fillers) {
-        if (squad.find((p) => p.player_id === player.player_id)) continue;
+        if (squadIds.has(player.player_id)) continue;
         const current = teamCounts[player.team_id] || 0;
         if (current >= 3) continue;
         if (player.position === "D" && counts.D >= 6) continue;
         if (player.position === "M" && counts.M >= 6) continue;
         if (player.position === "F" && counts.F >= 3) continue;
         squad.push(player);
+        squadIds.add(player.player_id);
         teamCounts[player.team_id] = current + 1;
         if (player.position === "D") counts.D += 1;
         if (player.position === "M") counts.M += 1;

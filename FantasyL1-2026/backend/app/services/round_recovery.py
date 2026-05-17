@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
@@ -138,8 +137,8 @@ def _choose_next_player(
     available_ids: set[int],
     *,
     role: str | None,
-    position_map: Dict[int, str],
-    points_map: Dict[int, float],
+    position_map: dict[int, str],
+    points_map: dict[int, float],
 ) -> int | None:
     if not available_ids:
         return None
