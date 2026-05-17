@@ -11,7 +11,7 @@ export default function Badge({ label, color }) {
         padding: '2px 7px',
         fontSize: 10,
         fontWeight: 800,
-        letterSpacing: 0.5,
+        letterSpacing: 0,
         textTransform: 'uppercase',
       }}
     >
