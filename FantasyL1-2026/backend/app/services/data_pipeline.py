@@ -37,8 +37,14 @@ def _pick_column(columns: Iterable[str], candidates: List[str]) -> Optional[str]
 
 
 def _quote_ident(ident: str) -> str:
-    """Double-quotes an identifier for SQL (DuckDB)."""
-    return f'"{ident}"'
+    """Double-quotes a DuckDB identifier and escapes embedded quotes."""
+    return '"' + ident.replace('"', '""') + '"'
+
+
+def _safe_ident_or_null(ident: Optional[str]) -> str:
+    if ident is None:
+        return "NULL"
+    return _quote_ident(ident)
 
 
 def ingest_parquets_to_duckdb(settings: Settings) -> None:
@@ -72,7 +78,7 @@ def ingest_parquets_to_duckdb(settings: Settings) -> None:
                 raise ValueError(f"players_fantasy_missing_columns: {sorted(missing)}")
 
         con.execute(
-            f"CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM read_parquet(?)",
+            f"CREATE OR REPLACE TABLE {_quote_ident(table_name)} AS SELECT * FROM read_parquet(?)",
             [parquet_path.as_posix()],
         )
         logger.info("ingested %s", parquet_name)
@@ -258,7 +264,7 @@ def sync_duckdb_to_postgres(settings: Settings | None = None) -> None:
         name_full_col = _pick_column(team_cols, ["name_full", "name", "team_name"])
 
         team_id_expr = _quote_ident(team_id_col)
-        name_short_expr = _quote_ident(name_short_col) if name_short_col else "NULL"
+        name_short_expr = _safe_ident_or_null(name_short_col)
         name_full_expr = _quote_ident(name_full_col) if name_full_col else name_short_expr
 
         team_rows = con.execute(
@@ -292,7 +298,7 @@ def sync_duckdb_to_postgres(settings: Settings | None = None) -> None:
         short_name_col = _pick_column(
             player_cols, ["short_name", "shortName", "shortname", "SHORT_NAME", "SHORTNAME"]
         )
-        short_name_expr = _quote_ident(short_name_col) if short_name_col else "NULL"
+        short_name_expr = _safe_ident_or_null(short_name_col)
 
         player_rows = con.execute(
             f"SELECT player_id, name, position, team_id, price, {short_name_expr} as short_name FROM players_fantasy"
