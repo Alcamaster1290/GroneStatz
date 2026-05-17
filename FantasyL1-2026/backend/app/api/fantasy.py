@@ -45,6 +45,7 @@ from app.services.fantasy import (
     get_or_create_season,
     get_next_open_round,
     get_round_by_number,
+    get_transfer_count_for_round,
     replace_squad,
     upsert_lineup_slots,
 )
@@ -104,24 +105,6 @@ def _canonicalize_team_player_ids(
         key=lambda row: _sort_key_by_bought_round(row.bought_round_id, row.player_id),
     )
     return [player_id for player_id, _ in rows_sorted[:15]]
-
-
-def _get_transfer_count_for_round(
-    db: Session,
-    fantasy_team_id: int,
-    round_id: int,
-) -> int:
-    return int(
-        db.execute(
-            select(func.count())
-            .select_from(FantasyTransfer)
-            .where(
-                FantasyTransfer.fantasy_team_id == fantasy_team_id,
-                FantasyTransfer.round_id == round_id,
-            )
-        ).scalar()
-        or 0
-    )
 
 
 def _get_transfer_fee_total_for_count(transfer_count: int) -> Decimal:
@@ -485,7 +468,7 @@ def _build_team_response(
     )
     transfer_fee_total = 0.0
     if round_obj and not round_obj.is_closed and round_obj.round_number > 1:
-        transfer_count = _get_transfer_count_for_round(
+        transfer_count = get_transfer_count_for_round(
             db,
             team.id,
             round_obj.id,
@@ -609,7 +592,7 @@ def update_squad(
                 detail="squad_diff_mismatch",
             )
 
-    existing_transfer_count = _get_transfer_count_for_round(db, team.id, round_id)
+    existing_transfer_count = get_transfer_count_for_round(db, team.id, round_id)
     new_transfer_count = (
         len(removed) if (current_round.round_number > 1 and existing_ids) else 0
     )
@@ -926,7 +909,7 @@ def transfer_player(
                     payload.in_player_id,
                 )
 
-    existing_count = _get_transfer_count_for_round(db, team.id, round_obj.id)
+    existing_count = get_transfer_count_for_round(db, team.id, round_obj.id)
     if restored_transfer is None:
         transfer_count_after = existing_count + 1
     else:
@@ -1031,17 +1014,7 @@ def get_transfer_count(
     if not round_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="round_not_found")
 
-    transfers_used = (
-        db.execute(
-            select(func.count())
-            .select_from(FantasyTransfer)
-            .where(
-                FantasyTransfer.fantasy_team_id == team.id,
-                FantasyTransfer.round_id == round_obj.id,
-            )
-        ).scalar()
-        or 0
-    )
+    transfers_used = get_transfer_count_for_round(db, team.id, round_obj.id)
     return TransferCountOut(
         round_number=round_obj.round_number,
         transfers_used=int(transfers_used),

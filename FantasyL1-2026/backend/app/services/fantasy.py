@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -11,6 +11,7 @@ from app.models import (
     FantasyLineupSlot,
     FantasyTeam,
     FantasyTeamPlayer,
+    FantasyTransfer,
     PlayerCatalog,
     Round,
     Season,
@@ -205,6 +206,20 @@ def replace_squad(
             )
         )
     db.commit()
+
+
+def get_transfer_count_for_round(db: Session, fantasy_team_id: int, round_id: int) -> int:
+    return int(
+        db.execute(
+            select(func.count())
+            .select_from(FantasyTransfer)
+            .where(
+                FantasyTransfer.fantasy_team_id == fantasy_team_id,
+                FantasyTransfer.round_id == round_id,
+            )
+        ).scalar()
+        or 0
+    )
 
 
 def ensure_lineup(db: Session, fantasy_team_id: int, round_id: int) -> FantasyLineup:
