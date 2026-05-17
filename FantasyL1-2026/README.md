@@ -105,9 +105,9 @@ Notas:
 - Backend rechaza activacion de `PREMIUM_APERTURA` fuera de ventana aunque frontend lo oculte.
 - No desplegar a PROD sin validar el checklist anterior.
 
-## Parquets
-Ruta esperada (datos base):
-`gronestats/data/Liga 1 Peru/2025/parquets/normalized/`
+## Bundle publicado
+Ruta esperada:
+`gronestats/data/Liga 1 Peru/<season>/fantasy/current/`
 
 Parquets usados:
 - matches.parquet
@@ -120,10 +120,11 @@ Parquets usados:
 - player_transfer.parquet
 - team_stats.parquet
 
-**Importante:** la app usa `players_fantasy.parquet` como catálogo. Fixtures 2026 se cargan desde Admin (no desde matches 2025).
+**Importante:** la app usa `players_fantasy.parquet` como catálogo base publicado. Fixtures y stats oficiales 2026 se siguen cargando desde Admin.
 
 ### Ingesta post-lanzamiento (sin alterar precios/puntos cargados)
-- Updater UI: `gronestats/processing/st_parquets_updater.py`
+- Exportador productivo: `python -m gronestats.processing.pipeline run --league "Liga 1 Peru" --season 2026 --publish-target fantasy`
+- Updater UI legacy: `gronestats/processing/legacy/st_parquets_updater.py`
 - Modo recomendado en temporada: `Post-Lanzamiento` (default).
 - En ese modo:
   - no se recalculan precios globales;
@@ -140,7 +141,7 @@ Con estos flags, el sync DuckDB -> Postgres mantiene para jugadores existentes:
 - `minutesplayed`, `matches_played`, `goals`, `assists`, `saves`, `fouls`
 
 Flujo operativo:
-1) actualizar parquets en Streamlit (modo Post-Lanzamiento),
+1) publicar bundle fantasy desde el pipeline,
 2) ejecutar ingest/sync en TEST,
 3) validar,
 4) repetir en PROD.
@@ -313,7 +314,7 @@ docker run --rm --network gronestatz_internal \
   -e PARQUET_DIR="/data/parquets" \
   -e DUCKDB_PATH="/data/fantasy.duckdb" \
   -e PYTHONPATH=/app \
-  -v "/opt/GroneStatz/gronestats/data/Liga 1 Peru/2025/parquets/normalized:/data/parquets" \
+  -v "/opt/GroneStatz/gronestats/data/Liga 1 Peru/2026/fantasy/current:/data/parquets" \
   -v "/opt/GroneStatz/FantasyL1-2026:/repo" \
   gronestatz-api sh -lc "python /repo/scripts/ingest_to_duckdb.py && python /repo/scripts/sync_duckdb_to_postgres.py"
 ```

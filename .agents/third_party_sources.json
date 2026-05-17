@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-04-17",
+  "notes": [
+    "These vendored skills/plugins are committed so this workspace can rediscover them without re-running the installer.",
+    "Update by replacing the committed directories from the upstream repo and revising the pinned commit."
+  ],
+  "skills": [
+    {
+      "name": "banner-design",
+      "source_repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "source_commit": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
+      "source_path": ".claude/skills/banner-design"
+    },
+    {
+      "name": "brand",
+      "source_repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "source_commit": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
+      "source_path": ".claude/skills/brand"
+    },
+    {
+      "name": "design",
+      "source_repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "source_commit": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
+      "source_path": ".claude/skills/design"
+    },
+    {
+      "name": "design-system",
+      "source_repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "source_commit": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
+      "source_path": ".claude/skills/design-system"
+    },
+    {
+      "name": "slides",
+      "source_repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "source_commit": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
+      "source_path": ".claude/skills/slides"
+    },
+    {
+      "name": "ui-styling",
+      "source_repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "source_commit": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
+      "source_path": ".claude/skills/ui-styling"
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "source_repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "source_commit": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
+      "source_path": ".claude/skills/ui-ux-pro-max"
+    }
+  ],
+  "plugins": [
+    {
+      "name": "superpowers",
+      "source_repo": "https://github.com/obra/superpowers",
+      "source_commit": "b55764852ac78870e65c6565fb585b6cd8b3c5c9",
+      "source_path": "plugins/superpowers"
+    }
+  ]
+}

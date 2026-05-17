@@ -1,67 +1,87 @@
-﻿# ⚽ GroneStatz
+# GroneStatz Monorepo
 
-**GroneStatz** es la base técnica de análisis y datos para el fútbol peruano (Liga 1), con foco en Alianza Lima. Incluye scraping, procesamiento, visualización y la app Fantasy Liga 1 2026.
+Monorepo de datos y producto para Liga 1 Perú. El repositorio concentra dos aplicaciones conectadas por bundles publicados por temporada:
 
-## ✅ Qué incluye
-- Pipeline de datos (SofaScore + parquets) y procesamiento.
-- Scripts de análisis y visualizaciones.
-- Estructura reutilizable para dashboards y reportes.
-- App Fantasy completa en `FantasyL1-2026/` (API + PWA).
+- `gronestats/`: pipeline analítico y dashboard Streamlit.
+- `FantasyL1-2026/`: backend FastAPI y frontend Next.js del fantasy.
 
-## 🎮 Fantasy Liga 1 2026
-La app vive en `FantasyL1-2026/`.
+## Estado actual
 
-- Guía local/test: `FantasyL1-2026/README.md`
-- Deploy prod (VPS + TLS): `FantasyL1-2026/DEPLOYMENT_PROD.md`
+- El pipeline productivo es `python -m gronestats.processing.pipeline`.
+- El dashboard consume solo `gronestats/data/Liga 1 Peru/<season>/dashboard/current`.
+- Fantasy consume solo `gronestats/data/Liga 1 Peru/<season>/fantasy/current`.
+- `raw`, `staging` y `curated` siguen existiendo para operación local, pero ya no forman parte del contrato publicado del repo.
+- El código reemplazado por el pipeline vive en `gronestats/processing/legacy/`.
 
-## 🧰 Instalación rápida (core GroneStatz)
-```bash
-git clone https://github.com/tu_usuario/GroneStatz.git
-cd GroneStatz
-python -m venv venv
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Linux/macOS
-pip install -e .
+## Layout de datos
+
+Por temporada:
+
+- `gronestats/data/Liga 1 Peru/<season>/raw/`
+- `gronestats/data/Liga 1 Peru/<season>/staging/`
+- `gronestats/data/Liga 1 Peru/<season>/curated/`
+- `gronestats/data/Liga 1 Peru/<season>/dashboard/current|releases/`
+- `gronestats/data/Liga 1 Peru/<season>/fantasy/current|releases/`
+
+Bundles publicados:
+
+- `dashboard/current`: `matches`, `teams`, `players`, `player_match`, `player_totals_full_season`, `team_stats`, `average_positions`, `heatmap_points`, `shot_events`, `match_momentum`, `player_identity`
+- `fantasy/current`: `matches`, `teams`, `players`, `players_fantasy`, `player_match`, `player_totals`, `player_team`, `player_transfer`, `team_stats`
+
+## Flujo operativo
+
+Pipeline completo:
+
+```powershell
+py -3.11 -m gronestats.processing.pipeline run --league "Liga 1 Peru" --season 2026 --mode full --publish-target all
 ```
 
-Opcional (dependencias adicionales):
-```bash
-pip install -r requirements.txt
+Validación de una temporada publicada:
+
+```powershell
+py -3.11 -m gronestats.processing.pipeline validate --league "Liga 1 Peru" --season 2026 --target all
 ```
 
-## 🧪 Tests
-```bash
-pytest -v tests/
+Wrapper PowerShell:
+
+```powershell
+.\scripts\gronestats\run_gronestats_pipeline.ps1 -Season 2026 -Mode incremental -OnlyMissing
 ```
 
-## 📁 Estructura (resumen)
+## Dashboard
+
+Entry point:
+
+- `gronestats/dashboard/app.py`
+
+Ejecutar:
+
+```powershell
+py -3.11 -m streamlit run gronestats/dashboard/app.py
 ```
-GroneStatz/
-|-- gronestats/               # Código fuente (ETL, análisis, utilidades)
-|-- FantasyL1-2026/            # App Fantasy (FastAPI + Next.js)
-|-- scripts/                   # Scripts varios
-|-- tests/                     # Pruebas pytest
-|-- logs/
-|-- notebooks/
-|-- README.md
+
+El dashboard descubre automáticamente las temporadas publicadas y navega sobre `dashboard/current`.
+
+## Fantasy
+
+El backend usa por defecto el bundle publicado en:
+
+- `gronestats/data/Liga 1 Peru/<SEASON_YEAR>/fantasy/current`
+
+Documentación específica:
+
+- `docs/gronestats/data_pipeline_plan.md`
+- `docs/fantasy/README.md`
+- `FantasyL1-2026/README.md`
+
+## Legacy y compatibilidad
+
+- `gronestats/processing/legacy/` contiene scripts históricos que siguen disponibles por compatibilidad.
+- Las rutas antiguas en `gronestats/processing/*.py` quedaron como wrappers con aviso de deprecación.
+- `scripts/run_etl_liga1_2025.py` también quedó como wrapper y redirige al pipeline.
+
+## Tests
+
+```powershell
+py -3.11 -m pytest tests
 ```
-
-## 🔍 Datos y fuentes
-El pipeline usa información pública y scrapers open-source. Créditos:
-- ScraperFC: https://github.com/oseymour/ScraperFC
-- LanusStats: https://github.com/federicorabanos/LanusStats
-- football_analytics: https://github.com/eddwebster/football_analytics
-
-## 🤝 Contribuciones
-1) Fork
-2) Nueva rama
-3) PR con descripción clara
-
-## 📣 Contacto
-- YouTube: https://www.youtube.com/@Gronestats
-- X (Twitter): https://twitter.com/Gronestats
-
-## 📄 Licencia
-MIT.
-
-**Hecho en Perú 🇵🇪 con datos, fútbol y pasión.**

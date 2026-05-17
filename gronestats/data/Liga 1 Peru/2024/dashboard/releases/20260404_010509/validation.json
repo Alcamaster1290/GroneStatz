@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "validated_at": "2026-04-04T01:07:17.655515+00:00",
+  "blocking_errors": [],
+  "warnings": [
+    "Missing warning-only sheet 'momentum' for 1 matches (12831489)"
+  ],
+  "stats": {
+    "expected_finished_matches": 306,
+    "curated_matches": 306,
+    "curated_players": 564,
+    "curated_player_match_rows": 12106,
+    "timestamp_span_seconds": 0.4055483341217041
+  },
+  "diff": {}
+}

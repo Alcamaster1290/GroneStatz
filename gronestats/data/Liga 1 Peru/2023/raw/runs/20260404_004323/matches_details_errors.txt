@@ -1,0 +1,11 @@
+[6/11] error 11118014: archivo menor a 15 KB (6.9 KB). Se elimina y se continua con el resto.
+[37/11] error 11018862: archivo menor a 15 KB (6.9 KB). Se elimina y se continua con el resto.
+[38/11] error 11018863: archivo menor a 15 KB (6.9 KB). Se elimina y se continua con el resto.
+[40/11] error 11018866: archivo menor a 15 KB (6.9 KB). Se elimina y se continua con el resto.
+[42/11] error 11018869: archivo menor a 15 KB (6.9 KB). Se elimina y se continua con el resto.
+[43/11] error 11018870: archivo menor a 15 KB (6.9 KB). Se elimina y se continua con el resto.
+[44/11] error 11034403: archivo menor a 15 KB (6.9 KB). Se elimina y se continua con el resto.
+[54/11] error 11044774: archivo menor a 15 KB (6.9 KB). Se elimina y se continua con el resto.
+[57/11] error 11044785: archivo menor a 15 KB (6.9 KB). Se elimina y se continua con el resto.
+[59/11] error 11044788: archivo menor a 15 KB (6.9 KB). Se elimina y se continua con el resto.
+[60/11] error 11044790: archivo menor a 15 KB (6.9 KB). Se elimina y se continua con el resto.

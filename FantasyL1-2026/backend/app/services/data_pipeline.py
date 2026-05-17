@@ -29,16 +29,16 @@ EXPECTED_PARQUETS = {
 REQUIRED_PLAYERS_FANTASY_COLS = {"player_id", "name", "position", "team_id", "price"}
 
 
-def _get_columns(con: duckdb.DuckDBPyConnection, source: str) -> List[str]:
-    rows = con.execute(f"DESCRIBE {source}").fetchall()
-    return [row[0] for row in rows]
-
-
 def _pick_column(columns: Iterable[str], candidates: List[str]) -> Optional[str]:
     for candidate in candidates:
         if candidate in columns:
             return candidate
     return None
+
+
+def _quote_ident(ident: str) -> str:
+    """Double-quotes an identifier for SQL (DuckDB)."""
+    return f'"{ident}"'
 
 
 def ingest_parquets_to_duckdb(settings: Settings) -> None:
@@ -66,13 +66,14 @@ def ingest_parquets_to_duckdb(settings: Settings) -> None:
             continue
 
         if parquet_name == "players_fantasy.parquet":
-            columns = _get_columns(con, f"SELECT * FROM read_parquet('{parquet_path.as_posix()}')")
+            columns = con.read_parquet(parquet_path.as_posix()).columns
             missing = REQUIRED_PLAYERS_FANTASY_COLS - set(columns)
             if missing:
                 raise ValueError(f"players_fantasy_missing_columns: {sorted(missing)}")
 
         con.execute(
-            f"CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM read_parquet('{parquet_path.as_posix()}')"
+            f"CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM read_parquet(?)",
+            [parquet_path.as_posix()],
         )
         logger.info("ingested %s", parquet_name)
 
@@ -249,18 +250,19 @@ def sync_duckdb_to_postgres(settings: Settings | None = None) -> None:
         season = get_or_create_season(db)
 
         # Teams
-        team_cols = _get_columns(con, "teams")
+        team_cols = con.table("teams").columns
         team_id_col = _pick_column(team_cols, ["team_id", "id"])
         if not team_id_col:
             raise ValueError("teams_missing_team_id")
         name_short_col = _pick_column(team_cols, ["name_short", "short_name", "abbr", "code", "name"])
         name_full_col = _pick_column(team_cols, ["name_full", "name", "team_name"])
 
-        name_short_expr = name_short_col or "NULL"
-        name_full_expr = name_full_col or name_short_col or "NULL"
+        team_id_expr = _quote_ident(team_id_col)
+        name_short_expr = _quote_ident(name_short_col) if name_short_col else "NULL"
+        name_full_expr = _quote_ident(name_full_col) if name_full_col else name_short_expr
 
         team_rows = con.execute(
-            f"SELECT {team_id_col} as id, {name_short_expr} as name_short, {name_full_expr} as name_full FROM teams"
+            f"SELECT {team_id_expr} as id, {name_short_expr} as name_short, {name_full_expr} as name_full FROM teams"
         ).fetchall()
         teams_payload = [
             {"id": row[0], "name_short": row[1], "name_full": row[2]} for row in team_rows
@@ -282,7 +284,7 @@ def sync_duckdb_to_postgres(settings: Settings | None = None) -> None:
             )
 
         # Players catalog
-        player_cols = _get_columns(con, "players_fantasy")
+        player_cols = con.table("players_fantasy").columns
         missing = REQUIRED_PLAYERS_FANTASY_COLS - set(player_cols)
         if missing:
             raise ValueError(f"players_fantasy_missing_columns: {sorted(missing)}")
@@ -290,7 +292,7 @@ def sync_duckdb_to_postgres(settings: Settings | None = None) -> None:
         short_name_col = _pick_column(
             player_cols, ["short_name", "shortName", "shortname", "SHORT_NAME", "SHORTNAME"]
         )
-        short_name_expr = short_name_col or "NULL"
+        short_name_expr = _quote_ident(short_name_col) if short_name_col else "NULL"
 
         player_rows = con.execute(
             f"SELECT player_id, name, position, team_id, price, {short_name_expr} as short_name FROM players_fantasy"
