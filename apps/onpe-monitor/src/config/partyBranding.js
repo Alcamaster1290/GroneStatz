@@ -1,0 +1,82 @@
+export const partyBranding = {
+  FP: {
+    key: 'FP',
+    name: 'Fuerza Popular',
+    shortName: 'FP',
+    officialHex: '#e63946',
+    textOnColor: '#ffffff',
+    logoPath: '/images/parties/fuerza-popular.png',
+  },
+  RP: {
+    key: 'RP',
+    name: 'Renovación Popular',
+    shortName: 'RP',
+    officialHex: '#0077b6',
+    textOnColor: '#ffffff',
+    logoPath: '/images/parties/renovacion-popular.png',
+  },
+  PPT: {
+    key: 'PPT',
+    name: 'País para Todos',
+    shortName: 'PPT',
+    officialHex: '#f4a261',
+    textOnColor: '#1a1a1a',
+    logoPath: '/images/parties/pais-para-todos.png',
+  },
+  JPP: {
+    key: 'JPP',
+    name: 'Juntos por el Perú',
+    shortName: 'JPP',
+    officialHex: '#2a9d8f',
+    textOnColor: '#ffffff',
+    logoPath: '/images/parties/juntos-por-el-peru.png',
+  },
+  PBG: {
+    key: 'PBG',
+    name: 'Partido del Buen Gobierno',
+    shortName: 'PBG',
+    officialHex: '#457b9d',
+    textOnColor: '#ffffff',
+    logoPath: '/images/parties/buen-gobierno.png',
+  },
+  APP: {
+    key: 'APP',
+    name: 'Alianza para el Progreso',
+    shortName: 'APP',
+    officialHex: '#6a4c93',
+    textOnColor: '#ffffff',
+    logoPath: '/images/parties/app.png',
+  },
+  AN: {
+    key: 'AN',
+    name: 'Ahora Nación',
+    shortName: 'AN',
+    officialHex: '#f59e0b',
+    textOnColor: '#1a1a1a',
+    logoPath: '/images/parties/ahora-nacion.png',
+  },
+  NONE: {
+    key: 'NONE',
+    name: 'Blanco / ninguno / indeciso',
+    shortName: 'NONE',
+    officialHex: '#6b7280',
+    textOnColor: '#ffffff',
+    logoPath: '/images/ui/placeholder-party.png',
+  },
+};
+
+export const palette = {
+  bg: '#0b1220',
+  panel: '#121a2b',
+  panel2: '#172133',
+  border: '#22324d',
+  text: '#e5edf7',
+  muted: '#8ea0b8',
+  accent: '#00d4aa',
+  accentB: '#4cc9f0',
+  accentR: '#ff4d6d',
+  white: '#d9dee7',
+  yellow: '#f59e0b',
+};
+
+export const getPartyColor = (key) => partyBranding[key]?.officialHex || palette.muted;
