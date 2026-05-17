@@ -1,32 +1,18 @@
-from __future__ import annotations
-
 import subprocess
 import sys
-import warnings
+
+
+def run(cmd: list[str]) -> None:
+    print(f"==> {' '.join(cmd)}")
+    result = subprocess.run(cmd)
+    if result.returncode != 0:
+        sys.exit(result.returncode)
 
 
 def main() -> None:
-    warnings.warn(
-        "scripts.run_etl_liga1_2025 is deprecated. Use `python -m gronestats.processing.pipeline run "
-        "--league \"Liga 1 Peru\" --season 2025 --publish-target all` instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    command = [
-        sys.executable,
-        "-m",
-        "gronestats.processing.pipeline",
-        "run",
-        "--league",
-        "Liga 1 Peru",
-        "--season",
-        "2025",
-        "--mode",
-        "full",
-        "--publish-target",
-        "all",
-    ]
-    raise SystemExit(subprocess.run(command).returncode)
+    py = sys.executable
+    run([py, "-m", "gronestats.processing.data_loader_unprep_liga1_2025"])
+    run([py, "-m", "gronestats.processing.prep_and_test_data_liga1_2025"])
 
 
 if __name__ == "__main__":
