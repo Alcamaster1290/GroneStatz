@@ -229,25 +229,20 @@ def run_round_deadline_reminders(
     now = datetime.now(timezone.utc)
     reminder_delta = timedelta(hours=max(1, int(settings.PUSH_REMINDER_HOURS_BEFORE)))
 
-    rounds = (
+    eligible_rounds = (
         db.execute(
             select(Round)
-            .where(Round.is_closed.is_(False), Round.ends_at.is_not(None))
+            .where(
+                Round.is_closed.is_(False),
+                Round.ends_at > now,
+                Round.ends_at <= now + reminder_delta,
+            )
             .order_by(Round.round_number)
         )
         .scalars()
         .all()
     )
-    stats.scanned_rounds = len(rounds)
-    eligible_rounds = []
-    for round_obj in rounds:
-        if round_obj.ends_at is None:
-            continue
-        ends_at = _to_utc(round_obj.ends_at)
-        if now >= ends_at:
-            continue
-        if now >= (ends_at - reminder_delta):
-            eligible_rounds.append(round_obj)
+    stats.scanned_rounds = len(eligible_rounds)  # Simplified as we only fetch eligible
     stats.eligible_rounds = len(eligible_rounds)
     if not eligible_rounds:
         return stats.as_dict()
@@ -275,8 +270,14 @@ def run_round_deadline_reminders(
     if settings.PUSH_ENABLED and not dry_run:
         fcm_client = _build_fcm_client(settings)
 
+    invalid_device_ids = set()
+
     for round_obj in eligible_rounds:
         for device in devices:
+            if device.id in invalid_device_ids:
+                stats.skipped += 1
+                continue
+
             stats.candidates += 1
             if not dry_run and not settings.PUSH_ENABLED:
                 stats.skipped += 1
@@ -296,12 +297,10 @@ def run_round_deadline_reminders(
                 status="pending",
             )
             db.add(row)
-            db.flush()
 
             if fcm_client is None:
                 row.status = "error"
                 row.error = "fcm_client_unavailable"
-                db.commit()
                 stats.errors += 1
                 continue
 
@@ -334,6 +333,9 @@ def run_round_deadline_reminders(
                 if invalid_token:
                     device.is_active = False
                     device.updated_at = datetime.now(timezone.utc)
-            db.commit()
+                    invalid_device_ids.add(device.id)
+
+    if not dry_run:
+        db.commit()
 
     return stats.as_dict()

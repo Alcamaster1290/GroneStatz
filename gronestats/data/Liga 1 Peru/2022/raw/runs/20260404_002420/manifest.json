@@ -1,0 +1,30 @@
+{
+  "run_id": "20260404_002420",
+  "release_id": "20260404_002420",
+  "league": "Liga 1 Peru",
+  "season": 2022,
+  "mode": "full",
+  "dry_run": false,
+  "from_phase": "bootstrap-raw",
+  "to_phase": "publish",
+  "selected_phases": [
+    "bootstrap-raw",
+    "build-staging",
+    "build-curated",
+    "validate",
+    "publish"
+  ],
+  "started_at": "2026-04-04T00:24:20.745067+00:00",
+  "status": "running",
+  "paths": {
+    "season_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2022",
+    "raw_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2022\\raw",
+    "staging_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2022\\staging",
+    "curated_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2022\\curated",
+    "dashboard_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2022\\dashboard",
+    "release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2022\\dashboard\\releases\\20260404_002420",
+    "current_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2022\\dashboard\\current"
+  },
+  "phases": [],
+  "artifacts": {}
+}

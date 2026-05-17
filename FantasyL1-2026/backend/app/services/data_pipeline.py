@@ -29,11 +29,6 @@ EXPECTED_PARQUETS = {
 REQUIRED_PLAYERS_FANTASY_COLS = {"player_id", "name", "position", "team_id", "price"}
 
 
-def _get_columns(con: duckdb.DuckDBPyConnection, source: str) -> List[str]:
-    rows = con.execute(f"DESCRIBE {source}").fetchall()
-    return [row[0] for row in rows]
-
-
 def _pick_column(columns: Iterable[str], candidates: List[str]) -> Optional[str]:
     for candidate in candidates:
         if candidate in columns:
@@ -77,7 +72,7 @@ def ingest_parquets_to_duckdb(settings: Settings) -> None:
             continue
 
         if parquet_name == "players_fantasy.parquet":
-            columns = _get_columns(con, f"SELECT * FROM read_parquet('{parquet_path.as_posix()}')")
+            columns = con.read_parquet(parquet_path.as_posix()).columns
             missing = REQUIRED_PLAYERS_FANTASY_COLS - set(columns)
             if missing:
                 raise ValueError(f"players_fantasy_missing_columns: {sorted(missing)}")
@@ -261,7 +256,7 @@ def sync_duckdb_to_postgres(settings: Settings | None = None) -> None:
         season = get_or_create_season(db)
 
         # Teams
-        team_cols = _get_columns(con, "teams")
+        team_cols = con.table("teams").columns
         team_id_col = _pick_column(team_cols, ["team_id", "id"])
         if not team_id_col:
             raise ValueError("teams_missing_team_id")
@@ -295,7 +290,7 @@ def sync_duckdb_to_postgres(settings: Settings | None = None) -> None:
             )
 
         # Players catalog
-        player_cols = _get_columns(con, "players_fantasy")
+        player_cols = con.table("players_fantasy").columns
         missing = REQUIRED_PLAYERS_FANTASY_COLS - set(player_cols)
         if missing:
             raise ValueError(f"players_fantasy_missing_columns: {sorted(missing)}")

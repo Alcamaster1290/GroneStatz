@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "validated_at": "2026-04-04T00:43:12.042322+00:00",
+  "blocking_errors": [],
+  "warnings": [
+    "Legacy validation mode enabled for season 2022: team_stats, average_positions gaps are warning-only.",
+    "Missing legacy non-blocking sheet 'team_stats' for 1 matches (10858201)",
+    "Missing legacy non-blocking sheet 'average_positions' for 44 matches (10097645, 10097663, 10097670, 10097677, 10097687, 10097690, 10097707, 10097723, 10097724, 10097727)",
+    "Missing warning-only sheet 'shotmap' for 47 matches (10097645, 10097663, 10097666, 10097670, 10097677, 10097687, 10097690, 10097698, 10097704, 10097707)",
+    "Missing warning-only sheet 'momentum' for 39 matches (10097663, 10097670, 10097677, 10097687, 10097690, 10097707, 10097723, 10097724, 10097727, 10097743)"
+  ],
+  "stats": {
+    "expected_finished_matches": 348,
+    "curated_matches": 348,
+    "curated_players": 617,
+    "curated_player_match_rows": 12519,
+    "timestamp_span_seconds": 0.3887491226196289
+  },
+  "diff": {}
+}
