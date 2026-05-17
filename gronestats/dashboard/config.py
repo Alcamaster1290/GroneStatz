@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
+from gronestats.data_layout import league_data_root, repository_root
 
 APP_TITLE = "GroneStatz"
 APP_SUBTITLE = "Dashboard analitico de Liga 1"
@@ -11,8 +11,8 @@ DEFAULT_SEASON_YEAR = 2025
 def build_season_label(season_year: int) -> str:
     return f"Liga 1 {season_year}"
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-DATA_ROOT = BASE_DIR / "gronestats" / "data" / LEAGUE_NAME
+BASE_DIR = repository_root()
+DATA_ROOT = league_data_root(LEAGUE_NAME, repo_root=BASE_DIR)
 PLAYER_IMAGES_DIR = BASE_DIR / "gronestats" / "images" / "players"
 TEAM_IMAGES_DIR = BASE_DIR / "gronestats" / "images" / "teams"
 
@@ -23,19 +23,25 @@ RECENT_FORM_MATCHES = 5
 
 TOURNAMENT_LABELS = {
     "Liga 1, Apertura": "Apertura",
+    "Primera Division, Apertura": "Apertura",
     "Liga 1, Clausura": "Clausura",
+    "Primera Division, Clausura": "Clausura",
     "Primera Division, Grand Final": "Grand Final",
 }
 
 TOURNAMENT_ORDER = {
     "Liga 1, Apertura": 0,
+    "Primera Division, Apertura": 0,
     "Liga 1, Clausura": 1,
+    "Primera Division, Clausura": 1,
     "Primera Division, Grand Final": 2,
 }
 
 DEFAULT_DASHBOARD_TOURNAMENTS = (
     "Liga 1, Apertura",
+    "Primera Division, Apertura",
     "Liga 1, Clausura",
+    "Primera Division, Clausura",
 )
 
 COLORS = {

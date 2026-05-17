@@ -17,7 +17,6 @@ from gronestats.dashboard.views.shared import (
     get_selected_row_index,
     render_empty_state,
     render_identity_panel,
-    render_metric_cards,
     render_navigation_surface,
     render_panel_close,
     render_panel_open,
@@ -79,7 +78,7 @@ def render_players_table(table) -> int | None:
                 "goal_actions_per90",
             ]
         ],
-        width="stretch",
+        use_container_width=True,
         hide_index=True,
         key="players_table",
         on_select="rerun",
@@ -147,23 +146,6 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
                 accent_color=profile.team_color,
             ):
                 action = build_action("matches_filter", team_id=int(team_id), venue="Todos", result="Todos")
-
-        extra_metric_label = "Atajadas / 90" if safe_text(profile.summary.get("Posicion"), "-") == "G" else "G+A / 90"
-        extra_metric_value = (
-            profile.percentiles.loc[profile.percentiles["Metric"] == "Atajadas / 90", "value"].iloc[0]
-            if extra_metric_label == "Atajadas / 90" and "Atajadas / 90" in profile.percentiles["Metric"].values
-            else profile.percentiles.loc[profile.percentiles["Metric"] == "Acciones de gol / 90", "value"].iloc[0]
-            if extra_metric_label == "G+A / 90" and "Acciones de gol / 90" in profile.percentiles["Metric"].values
-            else 0.0
-        )
-        cards = [
-            {"label": "Minutos", "value": str(profile.summary["Minutos"]), "help": "Carga de juego."},
-            {"label": "Partidos", "value": str(profile.summary["Partidos"]), "help": "Apariciones."},
-            {"label": "Goles", "value": str(profile.summary["Goles"]), "help": "Produccion."},
-            {"label": "Asistencias", "value": str(profile.summary["Asistencias"]), "help": "Creacion."},
-            {"label": extra_metric_label, "value": str(extra_metric_value), "help": "Senal oficial del rendimiento individual."},
-        ]
-        render_metric_cards(cards)
 
     with top_right:
         render_section_title(
@@ -333,10 +315,10 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
         if profile.percentiles.empty:
             render_empty_state("No hay percentiles suficientes para este jugador.")
         else:
-            st.plotly_chart(build_percentile_figure(profile.percentiles), width="stretch")
+            st.plotly_chart(build_percentile_figure(profile.percentiles), use_container_width=True)
             st.dataframe(
                 profile.percentiles,
-                width="stretch",
+                use_container_width=True,
                 hide_index=True,
                 column_config={"Metric": "Metrica", "value": "Valor", "percentile": "Percentil"},
             )
@@ -349,7 +331,7 @@ def render_player_profile(profile: PlayerProfile | None) -> dict[str, object] | 
             render_selection_note("Cada fila abre el match y conserva el origen del perfil.")
             recent_event = st.dataframe(
                 profile.recent_matches[["round_label", "partido", "minutesplayed", "goals", "assists", "goal_actions_per90"]],
-                width="stretch",
+                use_container_width=True,
                 hide_index=True,
                 key=f"player_recent_{profile.player_id}",
                 on_select="rerun",
