@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, List, Optional
@@ -67,6 +68,8 @@ from app.services.action_log import log_action
 from app.services.push_notifications import run_round_deadline_reminders
 from app.services.round_recovery import recover_round_lineups_from_market
 from app.services.scoring import calc_match_points, recalc_round_points
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
@@ -972,16 +975,16 @@ def upsert_fixture(
             next_id = db.execute(select(func.coalesce(func.max(Fixture.id), 0) + 1)).scalar_one()
             db.execute(insert(Fixture).values(id=next_id, **values))
         db.commit()
-    except IntegrityError as exc:
+    except IntegrityError:
         db.rollback()
-        detail = "db_integrity_error"
-        if exc.orig:
-            detail = f"db_integrity_error: {exc.orig}"
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
-    except SQLAlchemyError as exc:
+        logger.exception("db_integrity_error in upsert_fixture")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="db_integrity_error"
+        )
+    except SQLAlchemyError:
         db.rollback()
-        detail = f"db_error: {exc}"
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+        logger.exception("db_error in upsert_fixture")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="db_error")
 
     fixture = db.execute(select(Fixture).where(Fixture.match_id == payload.match_id)).scalar_one()
 
