@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "validated_at": "2026-04-04T00:53:37.299572+00:00",
+  "blocking_errors": [],
+  "warnings": [
+    "Legacy validation mode enabled for season 2023: player_stats, team_stats, average_positions gaps are warning-only.",
+    "Missing legacy non-blocking sheet 'player_stats' for 6 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403)",
+    "Missing legacy non-blocking sheet 'team_stats' for 8 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044774, 11118014)",
+    "Missing legacy non-blocking sheet 'average_positions' for 10 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044785, 11044788, 11044790, 11118014)",
+    "Missing warning-only sheet 'heatmaps' for 6 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403)",
+    "Missing warning-only sheet 'shotmap' for 10 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044785, 11044788, 11044790, 11118014)",
+    "Missing warning-only sheet 'momentum' for 9 matches (11018862, 11018863, 11018866, 11018867, 11018869, 11018870, 11034403, 11044788, 11118014)"
+  ],
+  "stats": {
+    "expected_finished_matches": 342,
+    "curated_matches": 342,
+    "curated_players": 593,
+    "curated_player_match_rows": 13222,
+    "timestamp_span_seconds": 0.281294584274292
+  },
+  "diff": {}
+}

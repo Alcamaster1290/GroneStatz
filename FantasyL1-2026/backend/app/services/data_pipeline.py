@@ -29,23 +29,22 @@ EXPECTED_PARQUETS = {
 REQUIRED_PLAYERS_FANTASY_COLS = {"player_id", "name", "position", "team_id", "price"}
 
 
-def _quote_ident(ident: str) -> str:
-    """Safely quote a SQL identifier by wrapping it in double quotes and escaping existing double quotes."""
-    return '"' + ident.replace('"', '""') + '"'
-
-
-def _safe_ident_or_null(ident: Optional[str]) -> str:
-    """Return a safely quoted identifier, or 'NULL' if the identifier is None."""
-    if ident is None:
-        return "NULL"
-    return _quote_ident(ident)
-
-
 def _pick_column(columns: Iterable[str], candidates: List[str]) -> Optional[str]:
     for candidate in candidates:
         if candidate in columns:
             return candidate
     return None
+
+
+def _quote_ident(ident: str) -> str:
+    """Double-quotes a DuckDB identifier and escapes embedded quotes."""
+    return '"' + ident.replace('"', '""') + '"'
+
+
+def _safe_ident_or_null(ident: Optional[str]) -> str:
+    if ident is None:
+        return "NULL"
+    return _quote_ident(ident)
 
 
 def ingest_parquets_to_duckdb(settings: Settings) -> None:
