@@ -1,6 +1,6 @@
 # GroneStats web: diseño
 
-**Estado:** borrador. Secciones 1 a 5 aprobadas por Alvaro (2026-11-26); sección 6 presentada, a la espera de su OK; sección 7 pendiente. Reemplaza el borrador de octubre (`2026-10-26-reingenieria-gronestats-borrador.md`).
+**Estado:** borrador. Secciones 1 a 6 aprobadas por Alvaro (2026-11-26); sección 7 presentada, a la espera de su OK. Reemplaza el borrador de octubre (`2026-10-26-reingenieria-gronestats-borrador.md`).
 
 ## Alcance y decisiones previas
 
@@ -145,7 +145,7 @@ Se conservan los últimos 5 releases; revertir es apuntar `current` a uno anteri
 
 **Proveedor del VPS: abierto.** Oracle quedó como opción débil, Hetzner se descartó por soporte en Latinoamérica y Vultr está cerrado. Criterios: ≥ 1 vCPU, ≥ 1 GB de RAM, ≥ 10 GB de disco, IPv4 fija, snapshots y pago con tarjeta desde Perú. Con Cloudflare delante la región casi no importa.
 
-## 6. Monitor de estado de datos (presentada, pendiente de OK)
+## 6. Monitor de estado de datos (aprobada)
 
 **Para qué:** responder «¿puedo confiar en este número y qué falta?» a dos públicos: Alvaro (¿corrió la actualización?, ¿qué quedó bloqueado?) y los usuarios (¿qué tan al día y qué tan completo está?).
 
@@ -172,12 +172,34 @@ Cada celda de cobertura tiene un estado: `complete`, `missing_from_source` (404 
 - Para Alvaro: `python -m gronestats.processing.status` imprime pendientes, bloqueados y huecos sin explicar al terminar cada corrida. No hay cuentas en v1, así que no hay vista privada.
 - Alertas: sin notificaciones propias en v1. El chequeo externo de la sección 5 vigila `/v1/status` (caída o `stale: true`) y avisa por correo.
 
-## 7. Transversal y pruebas (pendiente)
+## 7. Transversal y pruebas (presentada, pendiente de OK)
+
+**Pruebas, de abajo hacia arriba:**
+1. **Python (pytest):** pipeline, análisis y API. Hoy son 213 pruebas (3 omitidas) y pasan en un clon limpio. Las nuevas usan un **bundle de juguete**: dos temporadas, cuatro equipos y una docena de partidos, generado por un script determinista a partir del esquema de la sección 2 y versionado en `tests/fixtures/`. Ninguna prueba nueva depende de los datos reales del repo. Las pruebas heredadas que leen bundles publicados se pasan al bundle de juguete o se omiten cuando faltan.
+2. **Analítica con resultados fijos:** sobre el bundle de juguete, `build-analytics` da siempre los mismos números (semilla fija) y se compara contra archivos de referencia. Con datos reales, `validate` ya cubre campeones y tablas (secciones 1 y 6).
+3. **API:** `httpx` contra el bundle de juguete. El `openapi.json` se versiona y una prueba falla si cambia sin querer. Hay pruebas de recarga (un release válido cambia el activo; uno inválido deja el anterior) y de `missing_reason`.
+4. **Web:** Jest para funciones y componentes, y Playwright como prueba de humo (tabla de la liga, tira de un equipo, ficha, `/estado` y tarjeta OG) contra la API sobre el bundle de juguete, con capturas comparadas en local. Se descarta Percy porque es un servicio externo.
+5. **Release real:** una prueba contra el release candidato antes de activarlo; queda fuera de `scripts/check`.
+
+**Una orden:** `scripts/check` corre linter, pruebas de Python, comprobaciones de la web (lint, tipos, Jest y build) y el contrato OpenAPI. Un hook de pre-push la ejecuta.
+
+**Calidad de código:** `ruff` (lint y formato), TypeScript estricto y `mypy` solo en los módulos nuevos, no en el legado. Hoy no hay linters ni cobertura configurados: la línea base de cobertura se mide al empezar el plan y la regla es no bajarla. Commits convencionales y un PR por cambio, como hasta ahora.
+
+**Secretos.** `FantasyL1-2026/.env.qa` y `.env.test` están versionados en un repo público, con contraseña de Postgres de 7 caracteres y `JWT_SECRET` y `ADMIN_TOKEN` de 9. Las credenciales de Firebase están vacías, así que no se filtró ninguna cuenta de servicio. Propuesta: dejar de versionarlos (`git rm --cached`, `.gitignore` y un `.env.example`) y **rotar** los valores que estén desplegados. No se reescribe el historial: es un repo público con PR ya fusionados y rotar basta para invalidar los valores.
+
+**Datos en git, propuesta.** Desde ahora no se versionan las salidas generadas (`current`, releases, `staging`, `curated` y libros por partido). Sí se versionan el código, los CSV de correcciones y de referencia, el esquema, el bundle de juguete y los docs. Los bundles viajan por SSH (sección 5) y `raw/` se respalda fuera de la PC. Lo ya publicado queda en el historial.
+
+**Fotos y escudos, propuesta.** La v1 no usa fotos de jugadores (dorsales y color del equipo, como en las pantallas aprobadas), porque su origen y derechos no están verificados. Los escudos se mantienen (29 PNG ya en el repo, hasta 150 px) y queda anotado verificar sus derechos antes del lanzamiento público.
+
+**Riesgo antes del lanzamiento público: la licencia de los datos.** Los partidos, tiros y posiciones vienen de SofaScore. No revisé sus términos de uso; antes de publicar hay que leerlos (extracción automática y republicación) y decidir atribución o una fuente con licencia. Hasta entonces el producto puede probarse en privado.
+
+**Fuera de la v1 (ya acordado):** cuentas, Fantasy, app móvil y los paneles «próximamente».
 
 ## Decisiones abiertas
 
-- Qué cuenta como «tras la fecha N» en `standings` cuando hay partidos aplazados.
-- Política de datos en git: el repo es público y ya versiona libros de Excel y parquet generados. La rama sube solo los bundles publicados (`current` y el release al que apuntan) y los maestros de temporada. Quedan fuera, sin decidir, los libros por partido de 2022-2023 regenerados (unos 49 MB), `staging`, `curated` y los releases intermedios de cada corrida.
-- Rotar los secretos de `.env.qa` y `.env.test`, versionados en un repo público.
-- Política de fotos y escudos (derechos sin verificar).
+- Qué cuenta como «tras la fecha N» en `standings` cuando hay partidos aplazados (se fija en el plan).
+- Proveedor del VPS (sección 5).
+- Datos en git, secretos y fotos y escudos: propuestas en la sección 7, pendientes de OK.
+- Licencia de los datos de SofaScore para un producto público: leer sus términos antes del lanzamiento.
+- Umbrales que se fijan en el plan: horas para `stale` y desvío del xG que avisa.
 - Definición de percentiles por rol, similitud, sinergia, densidad de heatmap y métricas de estilo (plan de implementación).
