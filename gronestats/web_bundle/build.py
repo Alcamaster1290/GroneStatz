@@ -104,6 +104,20 @@ def build_players(data_dir: Path, seasons: Iterable[int], images_dir: Path | Non
     return _typed(pd.DataFrame(rows), "players").sort_values("player_id").reset_index(drop=True)
 
 
+ZERO_WHEN_PLAYED = ("goals", "assists", "saves")
+
+
+def fill_omitted_zeros(player_match: pd.DataFrame) -> pd.DataFrame:
+    """SofaScore omite las estadísticas en cero de quien jugó: ahí un nulo es 0 (los goles suman unos 20 menos que el marcador por
+    temporada, los autogoles). Las tarjetas no se rellenan: vienen nulas en todas las filas y eso es un dato ausente, no un cero."""
+    result = player_match.copy()
+    played = pd.to_numeric(result["minutesplayed"], errors="coerce") > 0
+    for column in ZERO_WHEN_PLAYED:
+        values = pd.to_numeric(result[column], errors="coerce")
+        result[column] = values.where(~(played & values.isna()), 0)
+    return result
+
+
 def _concat_seasons(data_dir: Path, seasons: Iterable[int], name: str, columns: list[str]) -> pd.DataFrame:
     frames = []
     for season in seasons:
@@ -230,7 +244,7 @@ def build_web_bundle(data_dir: Path, analytics_dir: Path, reference_dir: Path, o
         "matches": matches,
         "teams": build_teams(data_dir, seasons, reference_dir),
         "players": build_players(data_dir, seasons, images_dir),
-        "player_match": _typed(_concat_seasons(data_dir, seasons, "player_match", ["match_id", "player_id", "team_id", "position", "minutesplayed", "goals", "assists", "yellowcards", "redcards", "saves", "rating"]), "player_match"),
+        "player_match": _typed(fill_omitted_zeros(_concat_seasons(data_dir, seasons, "player_match", ["match_id", "player_id", "team_id", "position", "minutesplayed", "goals", "assists", "yellowcards", "redcards", "saves", "rating"])), "player_match"),
         "shot_events": _typed(xg_shots, "shot_events"),
         "heatmap_points": _typed(_concat_seasons(data_dir, seasons, "heatmap_points", ["match_id", "player_id", "team_id", "x", "y"]), "heatmap_points"),
         "lineups": _typed(lineups[lineups["season"].isin(seasons)], "lineups"),

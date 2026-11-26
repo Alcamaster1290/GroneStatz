@@ -202,3 +202,12 @@ def test_a_second_build_keeps_the_release_log_and_replaces_current(tmp_path: Pat
     log = pd.read_parquet(out / "current" / "release_log.parquet")
     assert log["release_id"].tolist() == [first.name, second.name]
     assert json.loads((out / "current" / "manifest.json").read_text(encoding="utf-8"))["release_id"] == second.name
+
+
+def test_stats_that_sofascore_omits_for_players_who_played_become_zero_but_cards_stay_missing(built) -> None:
+    _, _, release = built
+    player_match = _table(release, "player_match")
+    played = player_match[player_match["minutesplayed"] > 0]
+
+    assert played[["goals", "assists", "saves"]].notna().all().all()  # un nulo de quien jugó es un cero omitido
+    assert player_match["yellowcards"].isna().all() and player_match["redcards"].isna().all()  # las tarjetas no se inventan

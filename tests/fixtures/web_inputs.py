@@ -76,9 +76,10 @@ def make_web_inputs(root: Path) -> WebInputs:
         for row in normal.itertuples():
             for team in (row.home_id, row.away_id):
                 for n in (1, 2):
+                    omitted = n == 2  # SofaScore omite las estadísticas en cero: el suplente llega con goles, asistencias y paradas nulos
                     pm_rows.append({"match_id": row.match_id, "player_id": team * 10 + n, "name": f"Jugador {team}{n}", "team_id": team, "position": "F", "minutesplayed": 90 if n == 1 else 20,
-                                    "goals": int(n == 1 and team == row.home_id and row.home_score > 0), "assists": 0, "yellowcards": 0, "redcards": 0, "saves": 0, "fouls": 1,
-                                    "penaltywon": 0, "penaltysave": 0, "penaltyconceded": 0, "rating": 6.5 + n / 10})
+                                    "goals": None if omitted else int(team == row.home_id and row.home_score > 0), "assists": None if omitted else 0, "yellowcards": None, "redcards": None,
+                                    "saves": None if omitted else 0, "fouls": 1, "penaltywon": 0, "penaltysave": 0, "penaltyconceded": 0, "rating": 6.5 + n / 10})
         for match_id in played[season][:2]:
             hm_rows += [{"match_id": match_id, "player_id": 11, "team_id": 1, "team_name": "Alfa", "name": "Jugador 11", "x": 40 + i * 5, "y": 30 + i * 8} for i in range(5)]
         for match_id in played[season][::2]:
@@ -112,9 +113,10 @@ def make_web_inputs(root: Path) -> WebInputs:
                                        "points_before": before * 1.0, "matches_remaining": 3 - before, "threshold_used": 40.0 if before < 2 else 37.0, "points_needed": 40.0 - before,
                                        "lives": 3 - before, "band": 1, "band_name": "Baja", "team_name": TEAMS[team][0]})
                     seen[team] = before + 1
-            for k in range(4):
-                for team in TEAMS:
-                    probability.append({"season": season, "tour": tournament, "match_id": float("nan") if k == 0 else float(names["match_id"].iloc[k - 1]), "team_id": team, "k": k, "p_title": 0.25,
+            for team in TEAMS:  # probabilidad tras cada partido del equipo (k = partidos jugados); 0,1 · (k + 1) basta para probar el antes y el después
+                own = [row.match_id for row in names.sort_values(["round_number", "match_id"]).itertuples() if row.match_id in played[season] and team in (row.home_id, row.away_id)]
+                for k in range(len(own) + 1):
+                    probability.append({"season": season, "tour": tournament, "match_id": float("nan") if k == 0 else float(own[k - 1]), "team_id": team, "k": k, "p_title": round(0.1 * (k + 1), 2),
                                         "points": k, "rating": 1450.0, "team_name": TEAMS[team][0]})
 
     for folder_name, frame, filename in (("xg-prototipo", pd.DataFrame(shots), "xg_tiros.parquet"), ("title-race", pd.DataFrame(importance), "importancia_equipo_partido.parquet"),
