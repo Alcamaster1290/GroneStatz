@@ -1,0 +1,2438 @@
+﻿season,player_id,name,team_name,partidos,tiros,xG,goles,xG_sin_penales,xG_por_tiro,goles_menos_xG
+2022,2511,Jefferson Farfán,Alianza Lima,1,1,0.0859,0,0.0859,0.0859,-0.0859
+2022,13532,Luis Ramírez,Sport Boys,17,23,3.3804,2,3.3804,0.147,-1.3804
+2022,15388,John Jairo Mosquera,Club Sporting Cristal,4,8,1.3806,0,1.3806,0.1726,-1.3806
+2022,26172,Jair Céspedes,Deportivo Binacional,6,7,0.402,1,0.402,0.0574,0.598
+2022,26176,Damian Ismodes,FC Carlos Stein,4,7,0.455,0,0.455,0.065,-0.455
+2022,26884,Wilmer Aguirre,Alianza Lima,10,20,3.6237,3,3.6237,0.1812,-0.6237
+2022,31175,Hernán Barcos,Alianza Lima,30,93,15.4072,16,12.3099,0.1657,0.5928
+2022,33979,Diego Penny,Sport Huancayo,1,1,0.0,1,0.0,0.0,1.0
+2022,33984,Eduardo Uribe,Sport Boys,3,3,0.1198,0,0.1198,0.0399,-0.1198
+2022,33989,Renzo Revoredo,Sport Boys,7,8,0.5162,0,0.5162,0.0645,-0.5162
+2022,33993,Jesus Chavez,Sport Boys,14,23,2.9855,2,2.9855,0.1298,-0.9855
+2022,34016,Josepmir Ballón,Alianza Lima,16,18,0.6052,1,0.6052,0.0336,0.3948
+2022,34025,Ronald Quinteros,Universidad César Vallejo,6,9,0.2719,1,0.2719,0.0302,0.7281
+2022,34031,Mauricio Montes,Alianza Atlético de Sullana,4,10,1.1583,0,1.1583,0.1158,-1.1583
+2022,34033,Roberto Ovelar,Deportivo Municipal,23,74,7.7529,9,5.43,0.1048,1.2471
+2022,34115,Diego Buonanotte,Club Sporting Cristal,12,25,2.4325,4,2.4325,0.0973,1.5675
+2022,34134,Omar Merlo,Club Sporting Cristal,17,28,3.8413,3,3.8413,0.1372,-0.8413
+2022,35621,Hernán Rengifo,Asociación Deportiva Tarma,15,23,3.1254,5,3.1254,0.1359,1.8746
+2022,38013,Minzun Quina,Ayacucho,15,20,2.1302,3,1.3559,0.1065,0.8698
+2022,38020,Giancarlo Carmona,AD Cantolao,18,23,1.3228,2,1.3228,0.0575,0.6772
+2022,38023,Victor Balta,Sport Huancayo,13,18,1.8275,4,1.8275,0.1015,2.1725
+2022,38024,Julio Landauri,FC Carlos Stein,4,5,0.363,2,0.363,0.0726,1.637
+2022,38516,Herve Kambou,Asociación Deportiva Tarma,6,9,1.8775,1,1.8775,0.2086,-0.8775
+2022,38516,Herve Kambou,Deportivo Municipal,1,1,0.0,1,0.0,0.0,1.0
+2022,43148,Edgar Benítez,Alianza Lima,8,12,1.2415,1,1.2415,0.1035,-0.2415
+2022,45882,Jose Carlos Fernandez,Carlos A. Mannucci,12,22,3.786,0,3.0117,0.1721,-3.786
+2022,46980,Alejandro González,Deportivo USMP,3,3,0.1599,1,0.1599,0.0533,0.8401
+2022,46988,Yoshimar Yotún,Club Sporting Cristal,10,20,2.8129,2,1.2642,0.1406,-0.8129
+2022,46992,Juan Diego Lojas,Alianza Atlético de Sullana,4,5,0.4897,0,0.4897,0.0979,-0.4897
+2022,47401,Aldo Corzo,Universitario,10,14,1.3126,1,1.3126,0.0938,-0.3126
+2022,47413,Luis Trujillo,Universidad Técnica de Cajamarca,14,26,1.172,2,1.172,0.0451,0.828
+2022,47439,Christian Ramos,Alianza Lima,7,8,0.5483,0,0.5483,0.0685,-0.5483
+2022,47449,Luis Garcia,Universidad Técnica de Cajamarca,9,10,1.0021,2,1.0021,0.1002,0.9979
+2022,73331,Dahwling Leudo,Club Atlético Grau,1,1,0.0139,0,0.0139,0.0139,-0.0139
+2022,73666,Marcio Valverde,Alianza Atlético de Sullana,18,34,3.2036,3,2.4293,0.0942,-0.2036
+2022,76607,Fernando Guerrero,Cienciano,17,28,2.2705,4,2.2705,0.0811,1.7295
+2022,83951,Alberto Quintero,Universitario,20,33,2.7328,4,2.7328,0.0828,1.2672
+2022,106371,Jersson Vásquez,Universidad César Vallejo,16,21,1.97,1,1.1957,0.0938,-0.97
+2022,107293,Joel Sánchez,Melgar,10,15,0.9007,0,0.9007,0.06,-0.9007
+2022,107315,Paolo Hurtado,Alianza Lima,1,1,0.0462,0,0.0462,0.0462,-0.0462
+2022,107388,Óscar Vílchez,FC Carlos Stein,4,4,0.1332,0,0.1332,0.0333,-0.1332
+2022,107596,John Narváez,Carlos A. Mannucci,10,12,0.7588,1,0.7588,0.0632,0.2412
+2022,108462,Danilo Carando,Cienciano,26,76,10.7124,15,9.1638,0.141,4.2876
+2022,110856,Róger Torres,Alianza Atlético de Sullana,19,29,3.8729,7,1.55,0.1335,3.1271
+2022,115187,Joyce Conde,Alianza Atlético de Sullana,10,20,3.4323,3,3.4323,0.1716,-0.4323
+2022,122618,Leonel Galeano,Melgar,12,24,2.0642,1,2.0642,0.086,-1.0642
+2022,123238,Luis Alvarez,Club Atlético Grau,9,11,0.6735,1,0.6735,0.0612,0.3265
+2022,123239,Manuel Tejada,Club Atlético Grau,5,6,0.5416,0,0.5416,0.0903,-0.5416
+2022,123239,Manuel Tejada,Sport Huancayo,1,1,0.0,1,0.0,0.0,1.0
+2022,123245,Arquímedes Figuera,Universidad César Vallejo,11,12,0.2484,0,0.2484,0.0207,-0.2484
+2022,123904,Othoniel Arce,Ayacucho,10,21,2.6798,2,2.6798,0.1276,-0.6798
+2022,125100,Jesus Arismendi,Alianza Atlético de Sullana,6,6,0.7286,1,0.7286,0.1214,0.2714
+2022,125122,Alejandro Ramirez,Universidad César Vallejo,10,23,1.3739,2,1.3739,0.0597,0.6261
+2022,129520,Gino Peruzzi,Alianza Lima,6,6,0.5798,1,0.5798,0.0966,0.4202
+2022,130393,Jean Tragodara,Club Atlético Grau,3,4,0.1866,0,0.1866,0.0466,-0.1866
+2022,133862,Irven Ávila,Club Sporting Cristal,29,66,10.5549,9,8.2319,0.1599,-1.5549
+2022,147517,Josue Rodriguez,Deportivo USMP,5,8,0.9365,2,0.9365,0.1171,1.0635
+2022,151037,Claudio Yacob,Universitario,3,3,0.3121,0,0.3121,0.104,-0.3121
+2022,153654,Rodrigo Pastorini,AD Cantolao,25,47,6.8288,7,5.2802,0.1453,0.1712
+2022,158613,Ángel Cayetano,Universitario,8,16,0.8275,1,0.8275,0.0517,0.1725
+2022,162601,Andres Lopez,FC Carlos Stein,1,1,0.0444,0,0.0444,0.0444,-0.0444
+2022,162603,Juan Morales,Ayacucho,5,5,0.4318,0,0.4318,0.0864,-0.4318
+2022,166107,Hernán Novick,Universitario,15,23,3.7149,3,2.1663,0.1615,-0.7149
+2022,169899,Alfredo Rojas,Sport Huancayo,10,12,0.2309,0,0.2309,0.0192,-0.2309
+2022,169935,Osnar Noronha,Universidad César Vallejo,23,45,7.3835,9,7.3835,0.1641,1.6165
+2022,175977,Alvaro Ampuero,Deportivo USMP,11,15,1.0941,1,1.0941,0.0729,-0.0941
+2022,176159,Andy Polo,Universitario,21,46,3.4272,1,3.4272,0.0745,-2.4272
+2022,176285,Werner Schuler,Universidad Técnica de Cajamarca,11,13,0.9576,0,0.9576,0.0737,-0.9576
+2022,176289,Ángel Romero,Cienciano,7,8,0.1571,0,0.1571,0.0196,-0.1571
+2022,189207,Jean Deza,Asociación Deportiva Tarma,11,26,2.283,3,0.7344,0.0878,0.717
+2022,220921,Carlos Ascues,Universidad César Vallejo,11,14,1.0393,0,1.0393,0.0742,-1.0393
+2022,220929,Carlos Beltran,Cienciano,21,35,2.3413,4,2.3413,0.0669,1.6587
+2022,220931,Jorge Bazan,Deportivo Municipal,13,24,1.6833,1,1.6833,0.0701,-0.6833
+2022,220935,Edson Aubert,Deportivo Binacional,28,93,3.2649,3,2.4906,0.0351,-0.2649
+2022,221736,Santiago Silva,Deportivo Binacional,8,9,1.5746,0,1.5746,0.175,-1.5746
+2022,221736,Santiago Silva,Universidad César Vallejo,3,4,0.7688,0,0.7688,0.1922,-0.7688
+2022,246695,Sebastián Ramírez,Asociación Deportiva Tarma,6,12,1.7065,0,0.9322,0.1422,-1.7065
+2022,247071,Carlos Ross,Sport Huancayo,28,55,4.6356,4,3.0869,0.0843,-0.6356
+2022,248229,Jean Pierre Fuentes,Carlos A. Mannucci,5,9,1.1982,0,1.1982,0.1331,-1.1982
+2022,248243,Charles Monsalvo,Sport Huancayo,11,18,2.3908,4,2.3908,0.1328,1.6092
+2022,249069,Fernando Márquez,Club Atlético Grau,6,15,1.7024,2,1.7024,0.1135,0.2976
+2022,249305,Pablo Míguez,Alianza Lima,8,10,0.817,4,0.817,0.0817,3.183
+2022,249305,Pablo Míguez,Universitario,1,1,0.0,1,0.0,0.0,1.0
+2022,249403,Martín Pérez Guedes,Melgar,29,55,5.8267,8,5.8267,0.1059,2.1733
+2022,249599,Donald Millán,Universidad Técnica de Cajamarca,21,39,6.3118,6,1.6659,0.1618,-0.3118
+2022,249875,Facundo Curuchet,Cienciano,17,38,3.3312,2,3.3312,0.0877,-1.3312
+2022,250017,Horacio Orzan,Melgar,9,9,0.9756,0,0.2013,0.1084,-0.9756
+2022,255997,Cristian Benavente,Alianza Lima,17,31,2.9145,5,2.9145,0.094,2.0855
+2022,257619,Gonzalo Verón,Cienciano,1,1,0.0,1,0.0,0.0,1.0
+2022,257619,Gonzalo Verón,Deportivo USMP,22,55,6.6498,2,5.8754,0.1209,-4.6498
+2022,268425,Diego Morales,AD Cantolao,16,31,2.0488,2,2.0488,0.0661,-0.0488
+2022,285757,Edy Renteria,Sport Boys,5,15,0.9366,1,0.9366,0.0624,0.0634
+2022,286881,Nicolás Royón,Ayacucho,18,49,5.4045,5,4.6302,0.1103,-0.4045
+2022,311524,Iván Santillán,Universitario,10,14,0.5603,0,0.5603,0.04,-0.5603
+2022,311734,Marcos Delgado,Deportivo USMP,12,16,1.1777,3,1.1777,0.0736,1.8223
+2022,312264,Horacio Calcaterra,Club Sporting Cristal,17,34,1.9383,1,1.9383,0.057,-0.9383
+2022,312270,Edinson Chavez,Ayacucho,6,8,0.2588,0,0.2588,0.0323,-0.2588
+2022,312274,Christian Adrianzen,AD Cantolao,3,3,0.2226,0,0.2226,0.0742,-0.2226
+2022,312276,Marcos Ortiz,Deportivo Binacional,5,6,0.4366,0,0.4366,0.0728,-0.4366
+2022,333585,Maximiliano Amondarain,Alianza Atlético de Sullana,11,14,0.7215,0,0.7215,0.0515,-0.7215
+2022,339117,Cristian Techera,Ayacucho,22,70,6.9719,10,5.4233,0.0996,3.0281
+2022,339117,Cristian Techera,Club Atlético Grau,1,1,0.0,1,0.0,0.0,1.0
+2022,339159,Josimar Atoche,FC Carlos Stein,3,4,0.173,0,0.173,0.0433,-0.173
+2022,339163,Josué Estrada,Cienciano,19,30,1.1744,1,1.1744,0.0391,-0.1744
+2022,339169,Tarek Carranza,Sport Boys,11,20,2.271,2,0.7224,0.1136,-0.271
+2022,339171,Italo Regalado,Ayacucho,9,17,2.1335,1,2.1335,0.1255,-1.1335
+2022,339177,Rodrigo Cuba,Sport Boys,6,8,1.295,2,1.295,0.1619,0.705
+2022,339475,José Miguel Manzaneda,AD Cantolao,19,38,3.3818,5,2.6075,0.089,1.6182
+2022,339481,Aldair Perleche,Alianza Atlético de Sullana,4,4,0.2734,0,0.2734,0.0684,-0.2734
+2022,339529,Willyan Mimbela,Asociación Deportiva Tarma,3,9,0.3719,0,0.3719,0.0413,-0.3719
+2022,339669,Luis Machado,Asociación Deportiva Tarma,7,10,1.0633,0,1.0633,0.1063,-1.0633
+2022,339841,Ángel Ojeda,Deportivo Binacional,13,20,1.2282,3,1.2282,0.0614,1.7718
+2022,339843,Marco Aldair Rodríguez,Alianza Lima,24,39,4.6397,3,3.8653,0.119,-1.6397
+2022,339855,Bernardo Cuesta,Melgar,27,91,10.2334,12,10.2334,0.1125,1.7666
+2022,340077,Pablo Lavandeira,Alianza Lima,28,61,8.5616,9,7.7872,0.1404,0.4384
+2022,340349,Gabriel Leyes,FC Carlos Stein,13,33,2.6726,2,2.6726,0.081,-0.6726
+2022,340553,Cristian Bordacahar,Melgar,22,39,3.2055,1,3.2055,0.0822,-2.2055
+2022,345779,Christofer Gonzáles,Club Sporting Cristal,11,38,4.9189,7,4.1445,0.1294,2.0811
+2022,345787,Josimar Vargas,FC Carlos Stein,4,4,0.1845,0,0.1845,0.0461,-0.1845
+2022,358194,Koichi Aparicio,Cienciano,2,2,0.087,0,0.087,0.0435,-0.087
+2022,358202,Gianmarco Gambetta,AD Cantolao,3,4,0.7585,0,0.7585,0.1896,-0.7585
+2022,384658,Alexis Cossio,Cienciano,7,8,0.5659,0,0.5659,0.0707,-0.5659
+2022,385418,Joaquín Aguirre,Alianza Atlético de Sullana,12,21,1.5596,3,1.5596,0.0743,1.4404
+2022,387730,Jacson Pita Mina,Deportivo Binacional,5,10,1.3611,1,1.3611,0.1361,-0.3611
+2022,542636,Jairo Vélez,Universidad César Vallejo,26,77,7.7552,9,5.4322,0.1007,1.2448
+2022,560054,Hansell Riojas,Cienciano,3,3,0.9446,1,0.1703,0.3149,0.0554
+2022,578352,Mauro Guevgeozian,Sport Boys,13,27,5.1944,7,4.4201,0.1924,1.8056
+2022,585102,Adrián Fernández,Alianza Atlético de Sullana,18,61,6.5173,9,6.5173,0.1068,2.4827
+2022,586672,Lucas Rodríguez,Carlos A. Mannucci,9,17,1.4562,0,1.4562,0.0857,-1.4562
+2022,588144,Johnny Vidales,Melgar,16,31,4.7002,2,3.9259,0.1516,-2.7002
+2022,589438,Saúl Salas,Carlos A. Mannucci,2,3,0.26,0,0.26,0.0867,-0.26
+2022,589448,Jean Pierre Archimbaud,Melgar,16,22,2.1662,3,2.1662,0.0985,0.8338
+2022,590310,Víctor Cedrón,Deportivo Binacional,26,77,4.158,5,4.158,0.054,0.842
+2022,590448,Emiliano Ciucci,Deportivo Municipal,19,31,1.8262,1,1.8262,0.0589,-0.8262
+2022,590468,Jeremy Martin Rostaing,Club Atlético Grau,11,14,0.3826,0,0.3826,0.0273,-0.3826
+2022,602184,Cristian Florez,Sport Boys,14,20,2.1295,3,2.1295,0.1065,0.8705
+2022,777269,Diego Chávez,Carlos A. Mannucci,23,50,4.8817,3,4.8817,0.0976,-1.8817
+2022,787610,Yorleys Mena,Universidad César Vallejo,26,84,9.0303,14,9.0303,0.1075,4.9697
+2022,789678,Luciano Nieto,Sport Boys,23,47,4.4258,2,3.6514,0.0942,-2.4258
+2022,789932,Sebastián Gularte,Ayacucho,12,38,3.9866,4,3.9866,0.1049,0.0134
+2022,789965,Joao Ortiz,Carlos A. Mannucci,12,17,0.783,0,0.783,0.0461,-0.783
+2022,790018,Elsar Rodas,Club Atlético Grau,3,4,0.1653,1,0.1653,0.0413,0.8347
+2022,790020,Diego Manicero,Sport Huancayo,17,32,3.6974,1,2.923,0.1155,-2.6974
+2022,790029,Alexander Succar,Universitario,17,40,5.5719,5,4.7975,0.1393,-0.5719
+2022,790030,Santiago Rebagliati,Ayacucho,8,10,0.4592,1,0.4592,0.0459,0.5408
+2022,791146,Daniel Franco,Club Atlético Grau,10,12,0.5611,1,0.5611,0.0468,0.4389
+2022,798276,Abdiel Arroyo,Universidad César Vallejo,17,35,3.9491,2,3.9491,0.1128,-1.9491
+2022,801453,Ricardo Salcedo,Sport Huancayo,14,21,0.7898,0,0.7898,0.0376,-0.7898
+2022,802313,Maximiliano Freitas,FC Carlos Stein,8,15,2.2442,1,0.6955,0.1496,-1.2442
+2022,805056,Javier Núñez,Carlos A. Mannucci,13,26,3.2047,6,2.4304,0.1233,2.7953
+2022,805065,Rafael Guarderas,Alianza Atlético de Sullana,2,3,0.0855,0,0.0855,0.0285,-0.0855
+2022,805068,Emmanuel Páucar,Ayacucho,3,3,0.1374,0,0.1374,0.0458,-0.1374
+2022,805135,Gustavo Viera,Carlos A. Mannucci,17,22,0.6688,0,0.6688,0.0304,-0.6688
+2022,805259,Mario Palomino,Sport Boys,6,8,0.2737,0,0.2737,0.0342,-0.2737
+2022,805261,Nilson Loyola,Club Sporting Cristal,11,18,2.3317,2,2.3317,0.1295,-0.3317
+2022,805267,Patricio Arce,Universidad César Vallejo,3,4,0.2953,1,0.2953,0.0738,0.7047
+2022,805268,Alexis Arias,Melgar,27,44,4.2441,1,3.4698,0.0965,-3.2441
+2022,805270,Paolo Fuentes,Cienciano,6,6,0.3868,2,0.3868,0.0645,1.6132
+2022,805333,Ángel Zamudio,Sport Huancayo,1,1,0.0079,0,0.0079,0.0079,-0.0079
+2022,805353,Joao Villamarin,Club Atlético Grau,3,7,1.5383,2,1.5383,0.2198,0.4617
+2022,805353,Joao Villamarin,Universitario,3,8,0.9175,1,0.9175,0.1147,0.0825
+2022,805354,Ronal Huaccha,Sport Huancayo,28,56,10.8474,8,10.0731,0.1937,-2.8474
+2022,805366,Oshiro Takeuchi,FC Carlos Stein,4,6,0.6444,2,0.6444,0.1074,1.3556
+2022,826377,Yhirbis Cordova,Deportivo USMP,12,14,0.4885,0,0.4885,0.0349,-0.4885
+2022,826380,Ray Sandoval,Club Atlético Grau,16,31,2.5644,4,2.5644,0.0827,1.4356
+2022,826382,Carlos Flores,Deportivo Binacional,2,3,0.0824,0,0.0824,0.0275,-0.0824
+2022,828836,Leandro Sosa,Club Sporting Cristal,24,45,5.1698,5,5.1698,0.1149,-0.1698
+2022,830137,Yilton Díaz,Deportivo Binacional,4,6,0.2544,0,0.2544,0.0424,-0.2544
+2022,830663,Alejandro Hohberg,Club Sporting Cristal,27,63,8.7355,9,6.4125,0.1387,0.2645
+2022,831182,Arly Benites,Club Atlético Grau,4,7,0.5556,1,0.5556,0.0794,0.4444
+2022,831183,Carlos Diez,Universidad Técnica de Cajamarca,11,15,0.7974,0,0.7974,0.0532,-0.7974
+2022,832001,Arley Rodríguez,Alianza Lima,14,21,3.6523,4,3.6523,0.1739,0.3477
+2022,836280,Alexis Rojas,Deportivo USMP,17,32,7.5271,12,5.9785,0.2352,4.4729
+2022,839571,Armando Alfageme,Asociación Deportiva Tarma,4,6,0.1539,0,0.1539,0.0256,-0.1539
+2022,839571,Armando Alfageme,Universitario,1,1,0.023,0,0.023,0.023,-0.023
+2022,842529,Claudio Torrejón,Sport Boys,4,7,0.3319,0,0.3319,0.0474,-0.3319
+2022,846366,Adrián Ugarriza,Cienciano,24,83,9.8004,10,8.2518,0.1181,0.1996
+2022,846374,Junior Morales,Carlos A. Mannucci,1,1,0.1881,0,0.1881,0.1881,-0.1881
+2022,846474,Luis Urruti,Universitario,6,15,1.0614,0,1.0614,0.0708,-1.0614
+2022,846742,Marcos Lliuya,Sport Huancayo,30,59,2.1964,1,2.1964,0.0372,-1.1964
+2022,846749,Alexander Lecaros,Carlos A. Mannucci,5,7,0.3551,0,0.3551,0.0507,-0.3551
+2022,859965,Nicolás Rinaldi,Cienciano,23,35,4.7047,5,3.9304,0.1344,0.2953
+2022,868711,Eduardo Rabanal,FC Carlos Stein,1,1,0.0435,0,0.0435,0.0435,-0.0435
+2022,868724,Pier Larrauri,Deportivo Binacional,4,4,0.2416,0,0.2416,0.0604,-0.2416
+2022,869717,Facundo Peraza,Universidad Técnica de Cajamarca,29,70,11.5412,14,10.7669,0.1649,2.4588
+2022,870015,José Ramírez,AD Cantolao,5,6,1.0096,0,1.0096,0.1683,-1.0096
+2022,873703,Anthony Rosell,Sport Huancayo,14,21,1.3215,2,1.3215,0.0629,0.6785
+2022,873704,Ángel Pérez,Sport Huancayo,8,10,0.3809,0,0.3809,0.0381,-0.3809
+2022,873704,Ángel Pérez,Universidad Técnica de Cajamarca,1,1,0.0,1,0.0,0.0,1.0
+2022,873845,Piero Ratto,Deportivo Municipal,5,7,0.4872,0,0.4872,0.0696,-0.4872
+2022,874070,Waldir Calderon,Asociación Deportiva Tarma,1,1,0.0829,0,0.0829,0.0829,-0.0829
+2022,874465,Daniel Camacho,Deportivo USMP,3,4,0.3133,0,0.3133,0.0783,-0.3133
+2022,874981,Jesus Mendieta,Ayacucho,12,17,0.409,1,0.409,0.0241,0.591
+2022,874984,Gianfranco Chávez,Club Sporting Cristal,8,9,1.725,2,1.725,0.1917,0.275
+2022,874985,Renzo Garces,Universidad César Vallejo,8,13,0.6207,1,0.6207,0.0477,0.3793
+2022,874986,Frank Ysique,Universidad César Vallejo,8,9,0.3971,0,0.3971,0.0441,-0.3971
+2022,874987,Fernando Pacheco,Club Sporting Cristal,3,5,0.3563,0,0.3563,0.0713,-0.3563
+2022,874988,Martín Távara,Club Sporting Cristal,20,44,3.2635,4,1.7148,0.0742,0.7365
+2022,875661,Jorge Toledo,Ayacucho,6,11,1.4086,1,1.4086,0.1281,-0.4086
+2022,875662,Kevin Ruiz,Alianza Atlético de Sullana,15,27,1.6091,2,1.6091,0.0596,0.3909
+2022,876304,Luis Haquín,Carlos A. Mannucci,1,1,0.0253,0,0.0253,0.0253,-0.0253
+2022,876924,Diego Carabaño,Universidad Técnica de Cajamarca,10,17,0.5857,0,0.5857,0.0345,-0.5857
+2022,876926,Francisco Duclos,Ayacucho,5,8,0.5157,0,0.5157,0.0645,-0.5157
+2022,876927,Aldair Fuentes,Alianza Lima,2,2,0.0623,0,0.0623,0.0312,-0.0623
+2022,876928,Luis Garro,Sport Boys,10,14,0.6512,0,0.6512,0.0465,-0.6512
+2022,876929,Kevin Quevedo,Melgar,21,51,6.2751,4,4.7265,0.123,-2.2751
+2022,876930,José Cotrina,FC Carlos Stein,1,1,0.0405,0,0.0405,0.0405,-0.0405
+2022,876931,Erinson Ramirez,Asociación Deportiva Tarma,7,22,1.6756,1,1.6756,0.0762,-0.6756
+2022,876931,Erinson Ramirez,Deportivo Municipal,4,9,0.4312,0,0.4312,0.0479,-0.4312
+2022,877910,Fabio Rojas,Alianza Lima,5,5,0.1728,0,0.1728,0.0346,-0.1728
+2022,878754,Ademar Robles,Asociación Deportiva Tarma,2,2,0.1703,0,0.1703,0.0852,-0.1703
+2022,879621,José Luján,Melgar,4,4,0.0636,0,0.0636,0.0159,-0.0636
+2022,879627,Juan Tuesta,Deportivo USMP,13,16,1.4361,3,1.4361,0.0898,1.5639
+2022,879628,Jordan Guivin,Universitario,10,21,1.2891,1,1.2891,0.0614,-0.2891
+2022,879629,Hideyoshi Arakaki,Universidad Técnica de Cajamarca,24,65,8.4227,12,8.4227,0.1296,3.5773
+2022,881243,Lucas Federico Trejo,Deportivo Municipal,8,10,1.8793,3,1.8793,0.1879,1.1207
+2022,882598,Nicolás Ortíz,Universidad Técnica de Cajamarca,12,19,1.3759,2,1.3759,0.0724,0.6241
+2022,882607,Alexis Rodríguez,Deportivo Municipal,24,47,3.9834,7,3.9834,0.0848,3.0166
+2022,882837,Roberto Villamarín,Carlos A. Mannucci,9,15,0.6853,0,0.6853,0.0457,-0.6853
+2022,882837,Roberto Villamarín,Deportivo Municipal,1,1,0.0,1,0.0,0.0,1.0
+2022,882837,Roberto Villamarín,Universitario,4,5,0.2685,0,0.2685,0.0537,-0.2685
+2022,882839,Jorge Murrugarra,Universitario,3,3,0.0748,0,0.0748,0.0249,-0.0748
+2022,882849,Robert Ardiles,Ayacucho,19,31,1.9227,3,1.9227,0.062,1.0773
+2022,882851,Joazhiño Arroé,Carlos A. Mannucci,12,18,0.7507,1,0.7507,0.0417,0.2493
+2022,882860,Luis Carranza,Carlos A. Mannucci,4,5,0.4015,0,0.4015,0.0803,-0.4015
+2022,882897,Alonso Tamaríz,AD Cantolao,3,5,0.367,1,0.367,0.0734,0.633
+2022,882909,Federico Alonso,Universitario,19,30,3.1264,3,3.1264,0.1042,-0.1264
+2022,883142,Diego Saffadi,Sport Boys,16,38,4.8988,2,4.1244,0.1289,-2.8988
+2022,883279,Ronaldo Andía,FC Carlos Stein,1,1,0.0176,0,0.0176,0.0176,-0.0176
+2022,883287,Johan Madrid,Club Sporting Cristal,2,3,0.1728,0,0.1728,0.0576,-0.1728
+2022,883293,Leonel Solís,Deportivo Municipal,8,9,0.7178,2,0.7178,0.0798,1.2822
+2022,883294,Carlos Uribe,AD Cantolao,15,18,1.443,2,1.443,0.0802,0.557
+2022,883296,Kevin Sandoval,Cienciano,31,109,7.3461,10,5.7975,0.0674,2.6539
+2022,883298,Paulo Goyoneche,Universidad Técnica de Cajamarca,3,4,0.5902,0,0.5902,0.1475,-0.5902
+2022,883299,Janio Pósito,Deportivo Binacional,22,62,9.7449,13,8.1963,0.1572,3.2551
+2022,883313,Nelinho Quina,Deportivo Binacional,1,1,0.0,1,0.0,0.0,1.0
+2022,883313,Nelinho Quina,FC Carlos Stein,1,1,0.0,1,0.0,0.0,1.0
+2022,883313,Nelinho Quina,Universitario,15,21,5.382,5,1.5104,0.2563,-0.382
+2022,883329,Luis Benites,Sport Huancayo,31,79,8.5002,18,4.6286,0.1076,9.4998
+2022,883338,José Guidino,Ayacucho,3,3,0.2149,0,0.2149,0.0716,-0.2149
+2022,883343,Aldair Salazar,Ayacucho,13,20,1.3968,1,1.3968,0.0698,-0.3968
+2022,883389,Diego Ramírez,AD Cantolao,6,7,0.3894,0,0.3894,0.0556,-0.3894
+2022,883396,Carlos Cabello,Universidad César Vallejo,6,7,0.3604,0,0.3604,0.0515,-0.3604
+2022,883397,Gerson Barreto,Universitario,6,7,0.14,0,0.14,0.02,-0.14
+2022,883406,Yordi Vílchez,Alianza Lima,12,17,1.2901,1,1.2901,0.0759,-0.2901
+2022,883406,Yordi Vílchez,Melgar,1,1,0.0,1,0.0,0.0,1.0
+2022,883419,Antony Quijano,AD Cantolao,2,2,0.0461,0,0.0461,0.023,-0.0461
+2022,883720,Christian Velarde,Asociación Deportiva Tarma,7,12,0.7084,2,0.7084,0.059,1.2916
+2022,883732,Willy Pretel,Alianza Atlético de Sullana,2,3,0.1724,0,0.1724,0.0575,-0.1724
+2022,883734,Víctor Salas,FC Carlos Stein,1,2,0.1084,0,0.1084,0.0542,-0.1084
+2022,883743,Carlos Junior Huerto,AD Cantolao,1,1,0.0825,0,0.0825,0.0825,-0.0825
+2022,883743,Carlos Junior Huerto,Sport Boys,2,3,0.1403,0,0.1403,0.0468,-0.1403
+2022,883746,Ítalo Espinoza,Universitario,1,1,0.0,1,0.0,0.0,1.0
+2022,883747,Bryan Reyna,AD Cantolao,24,52,5.3876,5,4.6133,0.1036,-0.3876
+2022,883768,David Dioses,Ayacucho,5,7,0.2454,0,0.2454,0.0351,-0.2454
+2022,883768,David Dioses,Carlos A. Mannucci,2,2,0.1658,0,0.1658,0.0829,-0.1658
+2022,883786,Roberto Campos,Deportivo USMP,5,7,0.4735,0,0.4735,0.0676,-0.4735
+2022,883796,Rodrigo Menancho,Sport Huancayo,2,2,0.1675,0,0.1675,0.0837,-0.1675
+2022,883812,Renato Espinosa,Deportivo Municipal,18,32,4.7706,5,4.7706,0.1491,0.2294
+2022,883813,Jose Eduardo Caballero,Club Atlético Grau,2,2,0.3138,0,0.3138,0.1569,-0.3138
+2022,885182,Luis Rodríguez,Ayacucho,1,1,0.03,0,0.03,0.03,-0.03
+2022,885539,Joffré Escobar,Club Sporting Cristal,12,20,3.4248,3,2.6504,0.1712,-0.4248
+2022,885539,Joffré Escobar,Deportivo USMP,9,23,3.1777,4,3.1777,0.1382,0.8223
+2022,886721,Kleiber Palomino,Alianza Atlético de Sullana,6,10,0.8265,1,0.8265,0.0826,0.1735
+2022,887125,Jose Bolivar,Sport Boys,7,8,0.1797,0,0.1797,0.0225,-0.1797
+2022,888479,Carlos Caraza,Deportivo Binacional,9,11,0.3626,0,0.3626,0.033,-0.3626
+2022,892669,Christopher Olivares,Club Sporting Cristal,9,14,2.2077,2,1.4334,0.1577,-0.2077
+2022,893067,Marco Saravia,Deportivo Municipal,8,12,1.506,2,1.506,0.1255,0.494
+2022,895364,Gaspar Gentile,Universidad Técnica de Cajamarca,28,84,7.6578,12,6.8835,0.0912,4.3422
+2022,896749,Nicolás Olivera,Carlos A. Mannucci,12,21,1.6589,0,1.6589,0.079,-1.6589
+2022,896879,Luciano Recalde,Cienciano,18,32,2.8773,0,2.103,0.0899,-2.8773
+2022,897009,Alexis Blanco,Sport Boys,14,23,4.5965,6,3.0478,0.1998,1.4035
+2022,901019,Luis Iberico,Melgar,32,82,10.7168,12,10.7168,0.1307,1.2832
+2022,901020,Jeremy Canela,Alianza Atlético de Sullana,16,40,2.4142,4,2.4142,0.0604,1.5858
+2022,902899,Ignacio Rey,Universidad Técnica de Cajamarca,6,6,0.6037,0,0.6037,0.1006,-0.6037
+2022,913398,Jesús Castillo,AD Cantolao,21,31,3.004,1,3.004,0.0969,-2.004
+2022,914294,Edhu Oliva,Deportivo USMP,13,21,1.794,0,1.794,0.0854,-1.794
+2022,922007,Jimmy Valoyes,Sport Huancayo,18,30,1.5326,1,1.5326,0.0511,-0.5326
+2022,922869,Jesús Barco,Sport Boys,2,2,0.069,0,0.069,0.0345,-0.069
+2022,922870,Jose Antonio Parodi,Ayacucho,6,8,0.3843,1,0.3843,0.048,0.6157
+2022,922871,Nelson Cabanillas,Universitario,10,10,0.4021,0,0.4021,0.0402,-0.4021
+2022,922873,Paulo De La Cruz,Club Atlético Grau,13,25,2.4613,2,2.4613,0.0985,-0.4613
+2022,922874,Anthony Osorio,Club Atlético Grau,2,3,0.1079,0,0.1079,0.036,-0.1079
+2022,923173,Axel Chávez,Cienciano,1,3,0.1197,0,0.1197,0.0399,-0.1197
+2022,923740,Alec Deneumostier,Melgar,8,11,1.3268,0,1.3268,0.1206,-1.3268
+2022,924643,John Fajardo,FC Carlos Stein,4,5,0.1215,0,0.1215,0.0243,-0.1215
+2022,924646,Hoover Crespo,Deportivo Binacional,18,25,1.163,2,1.163,0.0465,0.837
+2022,924725,Santiago Arias,Alianza Atlético de Sullana,20,34,1.7783,2,1.7783,0.0523,0.2217
+2022,924782,Jesús Pretell,Club Sporting Cristal,5,5,0.3406,1,0.3406,0.0681,0.6594
+2022,924783,Jairo Concha,Alianza Lima,24,45,3.6898,6,2.9155,0.082,2.3102
+2022,924787,Jefferson Portales,Alianza Lima,1,1,0.0325,0,0.0325,0.0325,-0.0325
+2022,924789,Andy Polar,Deportivo Binacional,28,78,3.4979,5,2.7235,0.0448,1.5021
+2022,924791,Yorkman Tello,Asociación Deportiva Tarma,5,6,0.1824,1,0.1824,0.0304,0.8176
+2022,924791,Yorkman Tello,Melgar,1,1,0.0,1,0.0,0.0,1.0
+2022,924877,Mario Tajima,AD Cantolao,3,3,0.1028,0,0.1028,0.0343,-0.1028
+2022,924877,Mario Tajima,Deportivo Municipal,3,5,0.5637,0,0.5637,0.1127,-0.5637
+2022,924881,Christian Vasquez,Universidad Técnica de Cajamarca,3,4,0.0613,0,0.0613,0.0153,-0.0613
+2022,924923,Jhon Vega,Deportivo Municipal,1,2,0.0517,0,0.0517,0.0259,-0.0517
+2022,924924,Carlos Neyra,Carlos A. Mannucci,2,2,0.0342,0,0.0342,0.0171,-0.0342
+2022,924932,Alejandro Ramos,Melgar,16,25,1.0449,1,1.0449,0.0418,-0.0449
+2022,925082,Federico Ramos,FC Carlos Stein,3,6,0.7552,0,0.7552,0.1259,-0.7552
+2022,925119,Joel López Pisano,Club Atlético Grau,16,33,1.6629,5,1.6629,0.0504,3.3371
+2022,925158,Sebastian La Torre,Deportivo USMP,3,5,0.3671,0,0.3671,0.0734,-0.3671
+2022,925176,Hugo Ángeles,Sport Huancayo,9,11,0.9686,2,0.9686,0.0881,1.0314
+2022,925232,Juan Barreda,Sport Huancayo,1,1,0.1015,0,0.1015,0.1015,-0.1015
+2022,925309,Carlos Correa,Alianza Atlético de Sullana,6,9,0.3513,1,0.3513,0.039,0.6487
+2022,927690,Matías Succar,Carlos A. Mannucci,10,32,5.1138,2,4.3395,0.1598,-3.1138
+2022,928435,Gonzalo Sanchez,Alianza Atlético de Sullana,1,1,0.0396,0,0.0396,0.0396,-0.0396
+2022,929004,Kevin Ferreyra,Sport Huancayo,1,1,0.1413,0,0.1413,0.1413,-0.1413
+2022,929014,Oslimg Mora,Alianza Lima,7,10,0.5006,0,0.5006,0.0501,-0.5006
+2022,931784,Jhilmar Lobatón,Sport Boys,6,8,0.4048,0,0.4048,0.0506,-0.4048
+2022,931788,Gu Choi,Asociación Deportiva Tarma,6,9,1.2017,1,1.2017,0.1335,-0.2017
+2022,931788,Gu Choi,Ayacucho,1,1,0.0,1,0.0,0.0,1.0
+2022,932088,Piero Vivanco,Sport Boys,16,26,1.7443,2,1.7443,0.0671,0.2557
+2022,932926,Leandro Fleitas,Ayacucho,1,1,0.0,1,0.0,0.0,1.0
+2022,932926,Leandro Fleitas,Universidad César Vallejo,12,12,0.9403,1,0.9403,0.0784,0.0597
+2022,932927,Jorge Rios,Universidad César Vallejo,4,5,0.1994,0,0.1994,0.0399,-0.1994
+2022,933730,Brandon Palacios,FC Carlos Stein,11,17,1.8091,5,1.8091,0.1064,3.1909
+2022,934575,Giancarlo Peña,Sport Huancayo,1,1,0.0245,0,0.0245,0.0245,-0.0245
+2022,936164,Michael Rasmussen,FC Carlos Stein,6,9,0.6763,0,0.6763,0.0751,-0.6763
+2022,936165,Leonardo Mifflin,Universidad Técnica de Cajamarca,8,11,0.8277,1,0.8277,0.0752,0.1723
+2022,942164,José Zevallos,Universitario,1,1,0.7088,1,0.7088,0.7088,0.2912
+2022,949793,Alessandro Milesi,Deportivo USMP,1,1,0.093,0,0.093,0.093,-0.093
+2022,954811,Sebastián Gonzales Zela,Ayacucho,11,21,1.7684,1,1.7684,0.0842,-0.7684
+2022,957298,Joseph Vega,Deportivo USMP,1,1,0.0266,0,0.0266,0.0266,-0.0266
+2022,957940,Manuel Ganoza,Alianza Atlético de Sullana,4,5,0.9019,1,0.9019,0.1804,0.0981
+2022,960216,Jorge Molina,FC Carlos Stein,1,2,0.443,0,0.443,0.2215,-0.443
+2022,960225,Hugo Ancajima,Asociación Deportiva Tarma,4,7,0.7508,0,0.7508,0.1073,-0.7508
+2022,965759,Rodrigo Vilca,Universitario,12,25,1.6804,1,1.6804,0.0672,-0.6804
+2022,965761,Piero Serra,Alianza Atlético de Sullana,9,11,0.4111,0,0.4111,0.0374,-0.4111
+2022,973562,Mauricio Matzuda,Deportivo USMP,1,2,0.128,0,0.128,0.064,-0.128
+2022,973563,Miguel Cornejo,Alianza Lima,4,7,0.5041,1,0.5041,0.072,0.4959
+2022,973566,Oswaldo Valenzuela,Alianza Lima,4,6,0.142,0,0.142,0.0237,-0.142
+2022,973635,Felipe Mesones,FC Carlos Stein,7,9,0.2234,0,0.2234,0.0248,-0.2234
+2022,973636,Paolo Méndez,FC Carlos Stein,2,2,0.0664,1,0.0664,0.0332,0.9336
+2022,973638,Erick Morillo,Universidad César Vallejo,8,10,0.501,0,0.501,0.0501,-0.501
+2022,973650,Franco Zanelatto,Alianza Atlético de Sullana,19,40,6.0196,6,5.2453,0.1505,-0.0196
+2022,973652,Jean Piere Mendoza,FC Carlos Stein,2,2,0.0371,0,0.0371,0.0186,-0.0371
+2022,973653,Jonathan Bilbao,Alianza Atlético de Sullana,6,10,0.7965,0,0.7965,0.0797,-0.7965
+2022,973664,Yuriel Celi,Carlos A. Mannucci,20,36,3.4529,4,2.6785,0.0959,0.5471
+2022,973667,Jack Durán,Cienciano,5,8,0.2064,0,0.2064,0.0258,-0.2064
+2022,973667,Jack Durán,Deportivo Binacional,14,32,1.6661,4,1.6661,0.0521,2.3339
+2022,973675,Manuel Heredia,Cienciano,1,1,0.0,1,0.0,0.0,1.0
+2022,973681,Relly Fernández,Carlos A. Mannucci,18,37,4.5239,4,3.7496,0.1223,-0.5239
+2022,973682,Ricardo Lagos,Alianza Lima,17,27,1.3206,1,1.3206,0.0489,-0.3206
+2022,974136,Beto Da Silva,Universidad César Vallejo,24,49,4.751,5,3.9767,0.097,0.249
+2022,974451,Matías Pérez García,Deportivo Municipal,17,27,2.0014,2,2.0014,0.0741,-0.0014
+2022,975241,Erick Perleche,Cienciano,2,2,0.109,0,0.109,0.0545,-0.109
+2022,975243,Franco Medina,Deportivo Municipal,3,3,0.0519,0,0.0519,0.0173,-0.0519
+2022,975853,Rotceh Aguilar,Deportivo Municipal,7,10,0.4384,0,0.4384,0.0438,-0.4384
+2022,975919,Percy Liza,Club Sporting Cristal,10,16,3.3426,4,3.3426,0.2089,0.6574
+2022,975920,Christian Vargas,Asociación Deportiva Tarma,5,6,0.1852,0,0.1852,0.0309,-0.1852
+2022,975924,Jose Inga,Carlos A. Mannucci,8,11,0.4071,1,0.4071,0.037,0.5929
+2022,975928,Roberto Céspedes,Club Atlético Grau,1,1,0.0706,0,0.0706,0.0706,-0.0706
+2022,975958,Alfonso Barco,Universitario,11,15,0.6104,0,0.6104,0.0407,-0.6104
+2022,975959,Fernando Melgar,Deportivo USMP,3,6,0.5644,1,0.5644,0.0941,0.4356
+2022,976106,Erick Barrios,Ayacucho,14,21,1.2227,1,1.2227,0.0582,-0.2227
+2022,976168,Hugo Magallanes,Ayacucho,13,20,1.6785,0,1.6785,0.0839,-1.6785
+2022,976932,Walter Tandazo,Melgar,12,18,0.8127,0,0.8127,0.0451,-0.8127
+2022,976933,Paolo Reyna,Melgar,18,27,2.7679,2,2.7679,0.1025,-0.7679
+2022,977086,Cristian Carbajal,Deportivo Binacional,2,2,0.1619,0,0.1619,0.081,-0.1619
+2022,978543,Jesús Castillo,Club Sporting Cristal,9,11,0.8353,2,0.8353,0.0759,1.1647
+2022,978544,Diego Espinoza,Deportivo USMP,8,16,1.6674,1,1.6674,0.1042,-0.6674
+2022,978545,Axel Moyano,Deportivo USMP,4,4,0.1575,1,0.1575,0.0394,0.8425
+2022,978549,Rafael Lutiger,Club Sporting Cristal,8,13,1.4741,3,1.4741,0.1134,1.5259
+2022,980141,Diego Soto,Deportivo USMP,10,14,0.9292,0,0.9292,0.0664,-0.9292
+2022,980889,Dylan Caro,Asociación Deportiva Tarma,2,2,0.0544,0,0.0544,0.0272,-0.0544
+2022,981374,Kevin Serna,Asociación Deportiva Tarma,19,64,5.9516,4,5.9516,0.093,-1.9516
+2022,984127,Leonardo Villar,Sport Huancayo,1,1,0.0326,0,0.0326,0.0326,-0.0326
+2022,984882,Arón Sánchez,AD Cantolao,10,13,0.5217,0,0.5217,0.0401,-0.5217
+2022,987648,Darlin Leiton,Alianza Lima,2,4,0.3399,0,0.3399,0.085,-0.3399
+2022,988298,Óscar Pinto,Alianza Lima,6,9,0.7356,0,0.7356,0.0817,-0.7356
+2022,988299,Nicolás Figueroa,Melgar,2,4,0.8165,0,0.8165,0.2041,-0.8165
+2022,989228,Adrián Quiroz,Club Atlético Grau,3,5,0.1699,0,0.1699,0.034,-0.1699
+2022,989230,Axel Gastelu,Alianza Atlético de Sullana,3,4,0.7417,0,0.7417,0.1854,-0.7417
+2022,989258,Marcelo Gaona,Club Atlético Grau,8,11,0.6349,1,0.6349,0.0577,0.3651
+2022,989259,Mathias Llontop,Carlos A. Mannucci,3,3,0.2307,0,0.2307,0.0769,-0.2307
+2022,989260,Pedro Ibañez,Melgar,1,1,0.0223,0,0.0223,0.0223,-0.0223
+2022,989261,Piero Zevallos,Deportivo USMP,1,1,0.1728,0,0.1728,0.1728,-0.1728
+2022,992004,Kevin Peña,Deportivo Municipal,10,14,0.5094,1,0.5094,0.0364,0.4906
+2022,992074,Gabriel Tellas,AD Cantolao,12,24,3.6677,4,2.8934,0.1528,0.3323
+2022,992484,Mario Ceballos,Club Atlético Grau,3,6,0.6388,1,0.6388,0.1065,0.3612
+2022,992514,Rodrigo Salinas,Club Atlético Grau,19,45,6.2617,9,3.9388,0.1391,2.7383
+2022,994148,Carlos Olascuaga,Ayacucho,5,11,1.0748,0,1.0748,0.0977,-1.0748
+2022,994588,José De la Cruz,Deportivo Binacional,8,13,0.8483,2,0.8483,0.0653,1.1517
+2022,1001106,Mathias Carpio,Cienciano,7,10,0.439,1,0.439,0.0439,0.561
+2022,1005176,Jhilmar Lora,AD Cantolao,1,1,0.0,1,0.0,0.0,1.0
+2022,1005176,Jhilmar Lora,Club Sporting Cristal,3,3,0.2153,0,0.2153,0.0718,-0.2153
+2022,1015696,Tiago Cantoro,Universitario,1,1,0.0454,1,0.0454,0.0454,0.9546
+2022,1016015,Jhon Marchán,Universidad Técnica de Cajamarca,12,18,0.8726,0,0.8726,0.0485,-0.8726
+2022,1016972,Alex Valera,Universitario,13,46,7.0646,11,6.2902,0.1536,3.9354
+2022,1016972,Álex Valera,Universitario,1,5,0.8146,1,0.8146,0.1629,0.1854
+2022,1016974,Ayrthon Quintana,Cienciano,11,23,0.8425,1,0.8425,0.0366,0.1575
+2022,1017747,Benjamín Ampuero,Universidad César Vallejo,3,3,0.7334,1,0.7334,0.2445,0.2666
+2022,1017751,Bryan Ríos,Deportivo USMP,3,4,0.272,0,0.272,0.068,-0.272
+2022,1017755,Emilio Saba,Universidad Técnica de Cajamarca,3,4,0.5024,0,0.5024,0.1256,-0.5024
+2022,1017756,Franchesco Flores,Deportivo USMP,2,2,0.0682,0,0.0682,0.0341,-0.0682
+2022,1017759,Jefferson Caceres,Melgar,1,1,0.0773,0,0.0773,0.0773,-0.0773
+2022,1017760,Jhamir D'Arrigo,AD Cantolao,18,27,2.5969,5,1.8226,0.0962,2.4031
+2022,1017763,Juan Pablo Carranza,Deportivo Binacional,3,3,0.1686,0,0.1686,0.0562,-0.1686
+2022,1017768,Rodrigo Salinas,AD Cantolao,2,2,0.0653,0,0.0653,0.0327,-0.0653
+2022,1017776,Sergio Barboza,Ayacucho,2,2,0.1771,0,0.1771,0.0885,-0.1771
+2022,1017778,Williams Guzmán,Deportivo Municipal,2,2,0.0392,0,0.0392,0.0196,-0.0392
+2022,1018072,Joao Grimaldo,Club Sporting Cristal,10,16,1.4243,4,1.4243,0.089,2.5757
+2022,1018081,Adrian Gutierrez,Universidad Técnica de Cajamarca,4,5,0.177,0,0.177,0.0354,-0.177
+2022,1018128,Daniel Morales,Sport Huancayo,10,19,0.6845,2,0.6845,0.036,1.3155
+2022,1018233,Erick Canales,Universidad Técnica de Cajamarca,2,2,0.1117,0,0.1117,0.0559,-0.1117
+2022,1018255,Orlando Nuñez,Universidad César Vallejo,6,6,0.5732,0,0.5732,0.0955,-0.5732
+2022,1018285,José Bustamante,Deportivo USMP,1,1,0.0191,0,0.0191,0.0191,-0.0191
+2022,1018388,Emanuel Ibáñez,Cienciano,15,22,0.768,0,0.768,0.0349,-0.768
+2022,1018586,Carlos Vidal Arroyo Molina,Deportivo USMP,13,28,2.4142,4,2.4142,0.0862,1.5858
+2022,1019250,Diego Temoche,Asociación Deportiva Tarma,3,4,0.5365,0,0.5365,0.1341,-0.5365
+2022,1019250,Diego Temoche,FC Carlos Stein,2,2,0.2432,0,0.2432,0.1216,-0.2432
+2022,1020855,Leonardo Rugel,Universitario,4,6,0.6186,1,0.6186,0.1031,0.3814
+2022,1020999,José Rivera,Carlos A. Mannucci,24,54,5.8274,6,5.0531,0.1079,0.1726
+2022,1022066,Neil Marcos,Club Atlético Grau,3,5,0.4088,0,0.4088,0.0818,-0.4088
+2022,1049077,Sebastian Cavero,Club Atlético Grau,1,1,0.0246,0,0.0246,0.0246,-0.0246
+2022,1049088,Erick Gonzales,AD Cantolao,10,19,0.5635,0,0.5635,0.0297,-0.5635
+2022,1050816,Aryan Romani,Ayacucho,13,23,1.3266,1,1.3266,0.0577,-0.3266
+2022,1065061,Carlos Ruiz,Alianza Atlético de Sullana,3,3,0.2762,0,0.2762,0.0921,-0.2762
+2022,1065267,Adrián Ascues,Deportivo Municipal,22,48,6.2581,8,3.1608,0.1304,1.7419
+2022,1068665,Alonso Yovera,Deportivo Municipal,6,7,0.5248,0,0.5248,0.075,-0.5248
+2022,1069367,Sharif Ramírez,Cienciano,3,4,0.2471,0,0.2471,0.0618,-0.2471
+2022,1083668,Fabrizio Roca,Sport Boys,3,5,0.4843,1,0.4843,0.0969,0.5157
+2022,1086281,Yimy Gamero,Deportivo Binacional,19,33,1.7324,2,1.7324,0.0525,0.2676
+2022,1086284,Matías Lazo,Melgar,2,2,0.2017,0,0.2017,0.1009,-0.2017
+2022,1086295,Kenji Cabrera,Melgar,7,9,1.92,1,1.1457,0.2133,-0.92
+2022,1088529,Jhonny Mena,FC Carlos Stein,5,7,1.2954,2,1.2954,0.1851,0.7046
+2022,1090706,Victor Perlaza,Sport Huancayo,27,55,9.1734,9,6.8504,0.1668,-0.1734
+2022,1090708,Flavio Fernández,Alianza Atlético de Sullana,5,5,0.4673,1,0.4673,0.0935,0.5327
+2022,1090720,Marco Huaman,Sport Huancayo,21,30,1.8865,1,1.8865,0.0629,-0.8865
+2022,1093236,Emilio Gutiérrez,Asociación Deportiva Tarma,5,8,0.2777,0,0.2777,0.0347,-0.2777
+2022,1100345,Yonatan Murillo,Deportivo Binacional,12,12,0.5795,0,0.5795,0.0483,-0.5795
+2022,1102723,Mathías Techera,Club Sporting Cristal,1,1,0.0,1,0.0,0.0,1.0
+2022,1102723,Mathías Techera,FC Carlos Stein,1,1,0.0302,0,0.0302,0.0302,-0.0302
+2022,1106582,Gustavo Loayza,Ayacucho,2,2,0.0462,0,0.0462,0.0231,-0.0462
+2022,1107870,Carlos Meza,Ayacucho,6,7,0.7003,0,0.7003,0.1,-0.7003
+2022,1107888,Jostin Alarcón,Sport Boys,23,53,4.8977,5,3.349,0.0924,0.1023
+2022,1107889,Jimmy Pérez,Sport Huancayo,21,36,1.5941,1,1.5941,0.0443,-0.5941
+2022,1107891,Luiggi Alburqueque,Alianza Atlético de Sullana,2,3,0.29,0,0.29,0.0967,-0.29
+2022,1107897,Janpierr Cano,Carlos A. Mannucci,1,1,0.247,0,0.247,0.247,-0.247
+2022,1107916,Piero Otiniano,Sport Boys,1,1,0.0362,0,0.0362,0.0362,-0.0362
+2022,1107917,Piero Guzman,Universitario,6,6,0.4653,2,0.4653,0.0776,1.5347
+2022,1108679,Bruno Portugal,Melgar,1,1,0.0874,1,0.0874,0.0874,0.9126
+2022,1109858,Guillermo Larios,Universitario,5,7,1.0174,1,1.0174,0.1453,-0.0174
+2022,1109859,Piero Quispe,Universitario,20,36,3.1739,3,3.1739,0.0882,-0.1739
+2022,1116684,Roberto Bardales,Cienciano,1,1,0.0125,0,0.0125,0.0125,-0.0125
+2022,1118109,Juan Quiñones,Universidad César Vallejo,1,1,0.0825,0,0.0825,0.0825,-0.0825
+2022,1120309,Jeickson Reyes,Asociación Deportiva Tarma,2,2,0.0622,0,0.0622,0.0311,-0.0622
+2022,1120309,Jeickson Reyes,Melgar,1,1,0.0,1,0.0,0.0,1.0
+2022,1121081,Carlos Arriola,Deportivo Binacional,2,3,0.1619,0,0.1619,0.054,-0.1619
+2022,1121087,Nicolás Marotta,Deportivo Binacional,14,24,1.6939,3,1.6939,0.0706,1.3061
+2022,1122383,Julio Vizcarra,Deportivo Binacional,2,2,0.055,0,0.055,0.0275,-0.055
+2022,1123909,Baruj Aburto,Sport Boys,3,3,0.0729,0,0.0729,0.0243,-0.0729
+2022,1128927,Gabriel Delgado,Deportivo USMP,2,2,0.213,0,0.213,0.1065,-0.213
+2022,1130035,Jherson Reyes,AD Cantolao,1,1,0.0206,0,0.0206,0.0206,-0.0206
+2022,1131302,Cristian Mejia,Universidad Técnica de Cajamarca,20,28,1.3678,1,1.3678,0.0489,-0.3678
+2022,1148292,Jerry Navarro,Universitario,1,1,0.0369,0,0.0369,0.0369,-0.0369
+2022,1159659,Sebastian Aranda,Deportivo USMP,6,7,0.163,0,0.163,0.0233,-0.163
+2022,1170470,Robinson Alzamora,AD Cantolao,1,1,0.2513,0,0.2513,0.2513,-0.2513
+2022,1170471,Santiago Pallares,Universidad Técnica de Cajamarca,4,5,0.3935,0,0.3935,0.0787,-0.3935
+2022,1170472,Stefano Fernández,Universidad Técnica de Cajamarca,3,3,0.0554,0,0.0554,0.0185,-0.0554
+2022,1170639,Carlos Aliaga,Asociación Deportiva Tarma,3,3,0.2042,0,0.2042,0.0681,-0.2042
+2022,1170640,César Inga,Asociación Deportiva Tarma,3,4,0.2919,0,0.2919,0.073,-0.2919
+2022,1170641,Jorge Palomino,Asociación Deportiva Tarma,3,5,0.2783,0,0.2783,0.0557,-0.2783
+2022,1170643,Sinclair García,Asociación Deportiva Tarma,2,2,0.0884,0,0.0884,0.0442,-0.0884
+2022,1170893,Luis Duque,Alianza Atlético de Sullana,1,1,0.1123,0,0.1123,0.1123,-0.1123
+2022,1176979,Jhosep Nuñez,Deportivo Municipal,6,8,0.2755,0,0.2755,0.0344,-0.2755
+2022,1176980,Juan Sánchez,Club Sporting Cristal,1,1,0.0342,0,0.0342,0.0342,-0.0342
+2022,1176982,Maycol Almonacid,Sport Huancayo,1,3,0.1182,0,0.1182,0.0394,-0.1182
+2022,1176988,Elvis Payé,Deportivo Binacional,5,8,0.9729,1,0.9729,0.1216,0.0271
+2022,1176991,Bryan Urrutia,Carlos A. Mannucci,1,1,0.0142,0,0.0142,0.0142,-0.0142
+2022,1180915,Bryan Molina,Deportivo USMP,1,1,0.0589,0,0.0589,0.0589,-0.0589
+2022,1182506,Valentino Sandoval,Deportivo USMP,4,4,0.2745,1,0.2745,0.0686,0.7255
+2022,1183662,Brando Paladines,Club Atlético Grau,1,1,0.0592,0,0.0592,0.0592,-0.0592
+2022,1183708,Victor Bazan,Sport Boys,6,9,1.6698,0,1.6698,0.1855,-1.6698
+2022,1185677,Chase Villanueva,AD Cantolao,1,1,0.0209,0,0.0209,0.0209,-0.0209
+2022,1190256,Cris Huayhua,Ayacucho,1,1,0.1496,0,0.1496,0.1496,-0.1496
+2022,1191417,Pedro De la Cruz,Asociación Deportiva Tarma,3,4,0.3755,0,0.3755,0.0939,-0.3755
+2022,1214799,Royer Salcedo,Ayacucho,1,3,1.3345,1,1.3345,0.4448,-0.3345
+2022,1381332,Jeanfranco Castillo,FC Carlos Stein,1,1,0.0391,0,0.0391,0.0391,-0.0391
+2022,1385485,Maycol Infante,Universidad Técnica de Cajamarca,1,2,0.0957,0,0.0957,0.0478,-0.0957
+2022,1388435,Michel Sosa,FC Carlos Stein,2,3,0.1939,0,0.1939,0.0646,-0.1939
+2022,1388441,Gino Roque,Deportivo USMP,3,3,0.2067,0,0.2067,0.0689,-0.2067
+2022,1388441,Gino Roque,Universidad Técnica de Cajamarca,1,1,0.0,1,0.0,0.0,1.0
+2022,1388816,Alessandro Moreno,FC Carlos Stein,3,7,0.3099,0,0.3099,0.0443,-0.3099
+2022,1390522,Facundo Rodríguez,Asociación Deportiva Tarma,6,13,1.7026,2,0.9283,0.131,0.2974
+2022,1418572,Jose Lopez,Universitario,1,1,0.1569,0,0.1569,0.1569,-0.1569
+2022,1427485,Gleen Cordero,Sport Boys,1,1,0.0302,0,0.0302,0.0302,-0.0302
+2023,13532,Luis Ramírez,AD Cantolao,10,13,1.0824,1,1.0824,0.0833,-0.0824
+2023,26172,Jair Céspedes,Deportivo Municipal,2,2,0.4855,1,0.4855,0.2427,0.5145
+2023,26884,Wilmer Aguirre,Carlos A. Mannucci,5,5,0.429,0,0.429,0.0858,-0.429
+2023,26884,Wilmer Aguirre,Deportivo Garcilaso,2,3,0.4744,0,0.4744,0.1581,-0.4744
+2023,31175,Hernán Barcos,Alianza Lima,26,83,12.6888,16,11.1551,0.1529,3.3112
+2023,31611,Carlos Zambrano,Alianza Lima,5,9,1.2449,2,1.2449,0.1383,0.7551
+2023,33984,Eduardo Uribe,Sport Boys,3,3,0.7104,1,0.7104,0.2368,0.2896
+2023,33993,Jesus Chavez,Sport Boys,4,4,0.3646,0,0.3646,0.0912,-0.3646
+2023,34016,Josepmir Ballón,Alianza Lima,8,10,0.6422,1,0.6422,0.0642,0.3578
+2023,34016,Josepmir Ballón,Carlos A. Mannucci,1,1,0.0,1,0.0,0.0,1.0
+2023,34025,Ronald Quinteros,Universidad César Vallejo,10,11,0.4279,1,0.4279,0.0389,0.5721
+2023,35621,Hernán Rengifo,Asociación Deportiva Tarma,13,19,2.5199,6,2.5199,0.1326,3.4801
+2023,38013,Minzun Quina,Deportivo Binacional,3,3,1.0466,2,1.0466,0.3489,0.9534
+2023,38020,Giancarlo Carmona,AD Cantolao,5,7,0.3109,1,0.3109,0.0444,0.6891
+2023,38023,Victor Balta,Sport Huancayo,6,7,0.9184,0,0.9184,0.1312,-0.9184
+2023,38516,Herve Kambou,Club Sporting Cristal,1,1,0.0,1,0.0,0.0,1.0
+2023,38516,Herve Kambou,Unión Comercio,2,3,0.7595,1,0.7595,0.2532,0.2405
+2023,43148,Edgar Benítez,Universidad César Vallejo,9,15,3.1776,3,1.6439,0.2118,-0.1776
+2023,46988,Yoshimar Yotún,Club Sporting Cristal,19,31,3.5075,5,2.7406,0.1131,1.4925
+2023,46992,Juan Diego Lojas,Deportivo Garcilaso,16,20,1.3855,3,1.3855,0.0693,1.6145
+2023,47401,Aldo Corzo,Universitario,13,15,1.2435,0,1.2435,0.0829,-1.2435
+2023,47413,Luis Trujillo,Universidad Técnica de Cajamarca,16,26,1.1391,2,1.1391,0.0438,0.8609
+2023,47439,Christian Ramos,Sport Boys,4,4,0.3019,0,0.3019,0.0755,-0.3019
+2023,47447,Christian Cueva,Alianza Lima,10,14,1.3775,0,1.3775,0.0984,-1.3775
+2023,52068,Joao Rojas,Deportivo Garcilaso,22,51,6.1372,5,4.6034,0.1203,-1.1372
+2023,73213,Luis Payares,Unión Comercio,3,3,0.4296,0,0.4296,0.1432,-0.4296
+2023,73666,Marcio Valverde,Sport Boys,4,7,0.5469,0,0.5469,0.0781,-0.5469
+2023,76814,Michel Acosta,AD Cantolao,3,5,0.2393,0,0.2393,0.0479,-0.2393
+2023,83951,Alberto Quintero,Cienciano,22,35,3.9161,3,3.9161,0.1119,-0.9161
+2023,106231,Federico González,Carlos A. Mannucci,16,27,2.5029,2,2.5029,0.0927,-0.5029
+2023,106371,Jersson Vásquez,Universidad César Vallejo,4,7,1.01,1,0.2431,0.1443,-0.01
+2023,107293,Joel Sánchez,Universidad Técnica de Cajamarca,18,31,1.7156,1,1.7156,0.0553,-0.7156
+2023,107315,Paolo Hurtado,Cienciano,10,17,1.494,0,1.494,0.0879,-1.494
+2023,108462,Danilo Carando,Cienciano,12,33,3.6745,2,3.6745,0.1113,-1.6745
+2023,110856,Róger Torres,Alianza Atlético de Sullana,14,19,3.0051,2,1.4714,0.1582,-1.0051
+2023,115187,Joyce Conde,Sport Boys,4,7,0.6036,0,0.6036,0.0862,-0.6036
+2023,121657,Santiago García,Alianza Lima,7,11,1.3749,1,1.3749,0.125,-0.3749
+2023,122618,Leonel Galeano,Melgar,18,21,1.9799,4,1.9799,0.0943,2.0201
+2023,123238,Luis Alvarez,Club Atlético Grau,8,12,0.6409,0,0.6409,0.0534,-0.6409
+2023,123239,Manuel Tejada,Club Atlético Grau,4,5,1.6646,1,1.6646,0.3329,-0.6646
+2023,125122,Alejandro Ramirez,Universidad César Vallejo,26,43,2.8508,4,2.8508,0.0663,1.1492
+2023,129520,Gino Peruzzi,Alianza Lima,5,5,0.2962,1,0.2962,0.0592,0.7038
+2023,133862,Irven Ávila,Club Sporting Cristal,19,35,5.174,2,4.4071,0.1478,-3.174
+2023,143886,Marlon de Jesús,Unión Comercio,28,92,11.7482,13,10.2145,0.1277,1.2518
+2023,154987,Orlando Gaona Lugo,Deportivo Municipal,3,3,0.1875,0,0.1875,0.0625,-0.1875
+2023,162435,Pedro Paulo Requena,Universidad Técnica de Cajamarca,5,9,1.0723,0,1.0723,0.1191,-1.0723
+2023,162603,Juan Morales,Sport Boys,2,3,0.1014,0,0.1014,0.0338,-0.1014
+2023,169899,Alfredo Rojas,Sport Huancayo,9,14,0.5342,2,0.5342,0.0382,1.4658
+2023,169925,Diego Minaya,Deportivo Binacional,3,3,0.1827,1,0.1827,0.0609,0.8173
+2023,169935,Osnar Noronha,Universidad César Vallejo,19,32,4.8605,6,4.8605,0.1519,1.1395
+2023,175977,Alvaro Ampuero,Club Atlético Grau,4,4,0.6881,1,0.6881,0.172,0.3119
+2023,176139,Edison Flores,Universitario,11,30,4.6962,6,4.6962,0.1565,1.3038
+2023,176159,Andy Polo,Universitario,26,43,2.7004,1,2.7004,0.0628,-1.7004
+2023,176285,Werner Schuler,Sport Boys,6,8,0.2895,1,0.2895,0.0362,0.7105
+2023,176289,Ángel Romero,Deportivo Binacional,14,20,2.3852,2,2.3852,0.1193,-0.3852
+2023,189207,Jean Deza,Cienciano,5,6,0.2749,0,0.2749,0.0458,-0.2749
+2023,220104,Emanuel Herrera,AD Cantolao,1,1,0.0,1,0.0,0.0,1.0
+2023,220104,Emanuel Herrera,Universitario,18,40,7.214,6,4.1466,0.1803,-1.214
+2023,220465,Rodrigo Ureña,Universitario,21,33,0.7171,1,0.7171,0.0217,0.2829
+2023,220921,Carlos Ascues,Universidad César Vallejo,7,9,0.4461,0,0.4461,0.0496,-0.4461
+2023,220929,Carlos Beltran,Cienciano,26,56,4.4977,6,4.4977,0.0803,1.5023
+2023,220931,Jorge Bazan,Deportivo Garcilaso,15,26,0.944,1,0.944,0.0363,0.056
+2023,220935,Edson Aubert,Alianza Lima,1,1,0.0,1,0.0,0.0,1.0
+2023,220935,Edson Aubert,Deportivo Binacional,20,33,0.8428,0,0.8428,0.0255,-0.8428
+2023,247071,Carlos Ross,Sport Huancayo,19,53,3.6982,1,3.6982,0.0698,-2.6982
+2023,247079,Carlos Escobar,Sport Huancayo,15,33,4.4582,4,4.4582,0.1351,-0.4582
+2023,247663,Felix Uculmana,Unión Comercio,3,3,0.4354,1,0.4354,0.1451,0.5646
+2023,248059,Raziel García,Carlos A. Mannucci,13,23,1.6965,1,0.9297,0.0738,-0.6965
+2023,248065,Andrés Andrade,Alianza Lima,6,10,2.1631,2,0.6294,0.2163,-0.1631
+2023,248229,Jean Pierre Fuentes,Deportivo Garcilaso,7,8,1.1887,1,1.1887,0.1486,-0.1887
+2023,248229,Jean Pierre Fuentes,Universidad Técnica de Cajamarca,6,9,1.1081,0,1.1081,0.1231,-1.1081
+2023,249069,Fernando Márquez,Club Atlético Grau,19,40,5.3933,5,3.8596,0.1348,-0.3933
+2023,249305,Pablo Míguez,Alianza Lima,5,7,0.7912,0,0.7912,0.113,-0.7912
+2023,249347,Pablo Daniel Magnin,Melgar,9,15,2.5874,3,1.8206,0.1725,0.4126
+2023,249403,Martín Pérez Guedes,Universitario,32,68,6.413,3,6.413,0.0943,-3.413
+2023,249477,Jacobo Kouffaty,Deportivo Binacional,3,4,0.1127,0,0.1127,0.0282,-0.1127
+2023,249599,Donald Millán,Sport Huancayo,7,12,0.7497,0,0.7497,0.0625,-0.7497
+2023,250017,Horacio Orzan,Melgar,6,7,0.1032,0,0.1032,0.0147,-0.1032
+2023,257461,Fernando Evangelista,Cienciano,8,12,1.1152,1,1.1152,0.0929,-0.1152
+2023,257461,Fernando Evangelista,Deportivo Municipal,8,12,0.9579,0,0.9579,0.0798,-0.9579
+2023,285555,Juan David Pérez,Sport Huancayo,9,16,1.139,2,1.139,0.0712,0.861
+2023,295161,Nicolás Pasquini,Club Sporting Cristal,3,6,0.4957,0,0.4957,0.0826,-0.4957
+2023,311522,Alfredo Ramúa,Cienciano,10,25,1.3173,1,1.3173,0.0527,-0.3173
+2023,311522,Alfredo Ramúa,Cusco FC,1,1,0.0216,0,0.0216,0.0216,-0.0216
+2023,311524,Iván Santillán,Cienciano,8,10,0.5012,0,0.5012,0.0501,-0.5012
+2023,311734,Marcos Delgado,Asociación Deportiva Tarma,4,5,0.2012,0,0.2012,0.0402,-0.2012
+2023,312264,Horacio Calcaterra,Universitario,14,21,1.3221,4,1.3221,0.063,2.6779
+2023,312270,Edinson Chavez,Alianza Lima,2,2,0.0405,0,0.0405,0.0202,-0.0405
+2023,330867,Tomás Martínez,Melgar,24,71,6.0575,6,6.0575,0.0853,-0.0575
+2023,333585,Maximiliano Amondarain,Carlos A. Mannucci,11,15,1.1952,0,1.1952,0.0797,-1.1952
+2023,338883,Horacio Benincasa,Cusco FC,5,6,0.5944,0,0.5944,0.0991,-0.5944
+2023,339159,Josimar Atoche,Sport Boys,1,2,0.1123,0,0.1123,0.0561,-0.1123
+2023,339163,Josué Estrada,Cusco FC,14,22,0.7822,1,0.7822,0.0356,0.2178
+2023,339169,Tarek Carranza,Carlos A. Mannucci,6,9,0.199,0,0.199,0.0221,-0.199
+2023,339171,Italo Regalado,AD Cantolao,10,12,1.4515,2,1.4515,0.121,0.5485
+2023,339177,Rodrigo Cuba,Sport Boys,4,6,0.3373,0,0.3373,0.0562,-0.3373
+2023,339179,Alvaro Medrano,AD Cantolao,8,9,0.5881,0,0.5881,0.0653,-0.5881
+2023,339475,José Miguel Manzaneda,Alianza Atlético de Sullana,13,20,1.6561,3,1.6561,0.0828,1.3439
+2023,339481,Aldair Perleche,Alianza Atlético de Sullana,6,6,0.5914,1,0.5914,0.0986,0.4086
+2023,339529,Willyan Mimbela,Asociación Deportiva Tarma,28,82,4.1088,4,3.3419,0.0501,-0.1088
+2023,339657,Felipe Rodríguez,Cusco FC,22,48,7.2882,9,4.2208,0.1518,1.7118
+2023,339737,Nicolas Palacios,Unión Comercio,8,15,3.2964,2,3.2964,0.2198,-1.2964
+2023,339805,Jonathan Medina,Sport Boys,1,1,0.0,1,0.0,0.0,1.0
+2023,339841,Ángel Ojeda,Cienciano,8,14,0.4898,1,0.4898,0.035,0.5102
+2023,339843,Marco Aldair Rodríguez,Alianza Lima,14,26,2.3533,3,2.3533,0.0905,0.6467
+2023,339855,Bernardo Cuesta,Melgar,29,96,15.5324,17,12.4649,0.1618,1.4676
+2023,340077,Pablo Lavandeira,Alianza Lima,11,15,1.9678,1,1.9678,0.1312,-0.9678
+2023,340077,Pablo Lavandeira,Melgar,13,37,5.3595,6,3.0589,0.1449,0.6405
+2023,340349,Gabriel Leyes,AD Cantolao,14,35,4.0413,4,3.2745,0.1155,-0.0413
+2023,340445,Juan Cruz Randazzo,Universidad Técnica de Cajamarca,17,23,3.8583,4,3.8583,0.1678,0.1417
+2023,340449,Federico Milo,Sport Boys,14,26,1.5179,1,1.5179,0.0584,-0.5179
+2023,340553,Cristian Bordacahar,Melgar,24,50,3.9985,6,3.9985,0.08,2.0015
+2023,340855,Oliver Benítez,Sport Boys,13,15,1.2975,1,1.2975,0.0865,-0.2975
+2023,343633,Gino Guerrero,Unión Comercio,20,48,3.0902,2,3.0902,0.0644,-1.0902
+2023,345787,Josimar Vargas,AD Cantolao,6,6,0.3711,0,0.3711,0.0618,-0.3711
+2023,355864,Ray Vanegas,Universidad César Vallejo,6,10,1.5527,1,1.5527,0.1553,-0.5527
+2023,356340,Jonathan Betancourt,Deportivo Garcilaso,24,54,3.923,3,3.1561,0.0726,-0.923
+2023,358194,Koichi Aparicio,Cienciano,10,13,1.1838,1,1.1838,0.0911,-0.1838
+2023,358202,Gianmarco Gambetta,Universidad Técnica de Cajamarca,4,6,0.2977,0,0.2977,0.0496,-0.2977
+2023,384658,Alexis Cossio,Carlos A. Mannucci,14,22,0.7121,1,0.7121,0.0324,0.2879
+2023,385418,Joaquín Aguirre,Alianza Atlético de Sullana,9,12,0.8306,2,0.8306,0.0692,1.1694
+2023,542636,Jairo Vélez,Universidad César Vallejo,31,62,6.0075,3,3.707,0.0969,-3.0075
+2023,560054,Hansell Riojas,Cienciano,8,10,0.4046,0,0.4046,0.0405,-0.4046
+2023,584002,Rodrigo Colombo,Carlos A. Mannucci,1,1,0.0,1,0.0,0.0,1.0
+2023,584002,Rodrigo Colombo,Sport Huancayo,14,30,2.1323,2,2.1323,0.0711,-0.1323
+2023,585102,Adrián Fernández,Alianza Atlético de Sullana,31,94,11.4556,15,9.155,0.1219,3.5444
+2023,588144,Johnny Vidales,Cusco FC,16,24,1.4829,1,1.4829,0.0618,-0.4829
+2023,588594,Walberto Caicedo,Sport Boys,3,6,1.0236,0,1.0236,0.1706,-1.0236
+2023,589438,Saúl Salas,AD Cantolao,1,1,0.0349,0,0.0349,0.0349,-0.0349
+2023,589448,Jean Pierre Archimbaud,Melgar,15,22,1.5069,0,1.5069,0.0685,-1.5069
+2023,590310,Víctor Cedrón,Asociación Deportiva Tarma,14,23,3.5097,1,1.976,0.1526,-2.5097
+2023,590312,Gabriel Costa,Alianza Lima,22,38,4.0361,5,3.2693,0.1062,0.9639
+2023,590448,Emiliano Ciucci,Deportivo Municipal,6,9,0.488,0,0.488,0.0542,-0.488
+2023,590448,Emiliano Ciucci,Universidad César Vallejo,1,1,0.0,1,0.0,0.0,1.0
+2023,590468,Jeremy Martin Rostaing,Club Atlético Grau,4,4,0.0805,0,0.0805,0.0201,-0.0805
+2023,603758,Nicolás Contín,Sport Boys,11,19,1.9315,2,1.9315,0.1017,0.0685
+2023,760636,Anthony Gordillo,Cusco FC,6,7,0.2312,0,0.2312,0.033,-0.2312
+2023,787610,Yorleys Mena,Universidad César Vallejo,29,91,17.3485,17,15.8148,0.1906,-0.3485
+2023,789880,Santiago Giordana,Deportivo Garcilaso,29,125,18.2019,22,12.8339,0.1456,3.7981
+2023,789965,Joao Ortiz,Universidad Técnica de Cajamarca,7,9,0.3449,0,0.3449,0.0383,-0.3449
+2023,790018,Elsar Rodas,Club Atlético Grau,7,8,0.3491,0,0.3491,0.0436,-0.3491
+2023,790029,Alexander Succar,Universitario,5,7,0.4214,0,0.4214,0.0602,-0.4214
+2023,790030,Santiago Rebagliati,Alianza Atlético de Sullana,6,9,1.3869,0,1.3869,0.1541,-1.3869
+2023,791146,Daniel Franco,Club Atlético Grau,13,20,1.8313,1,1.0644,0.0916,-0.8313
+2023,801453,Ricardo Salcedo,Sport Huancayo,8,9,0.3218,0,0.3218,0.0358,-0.3218
+2023,805054,Maelo Reátegui,Unión Comercio,9,14,1.4415,1,1.4415,0.103,-0.4415
+2023,805056,Javier Núñez,Carlos A. Mannucci,12,16,0.7629,1,0.7629,0.0477,0.2371
+2023,805065,Rafael Guarderas,AD Cantolao,10,11,0.7573,0,0.7573,0.0688,-0.7573
+2023,805068,Emmanuel Páucar,Deportivo Garcilaso,6,7,0.2053,0,0.2053,0.0293,-0.2053
+2023,805135,Gustavo Viera,Carlos A. Mannucci,13,17,1.4068,2,1.4068,0.0828,0.5932
+2023,805261,Nilson Loyola,Club Sporting Cristal,7,10,0.9639,1,0.9639,0.0964,0.0361
+2023,805268,Alexis Arias,Melgar,19,28,2.1797,1,2.1797,0.0778,-1.1797
+2023,805289,Leiner Escalante,Carlos A. Mannucci,26,55,4.0846,2,4.0846,0.0743,-2.0846
+2023,805332,Miguel Carranza,Unión Comercio,15,26,3.5613,3,3.5613,0.137,-0.5613
+2023,805350,Jesús Arrieta,Unión Comercio,13,20,2.7559,4,2.7559,0.1378,1.2441
+2023,805353,Joao Villamarin,Carlos A. Mannucci,4,4,0.8523,1,0.0854,0.2131,0.1477
+2023,805354,Ronal Huaccha,Sport Huancayo,27,62,12.5325,13,10.9987,0.2021,0.4675
+2023,806381,Oscar Belinetz,Universidad Técnica de Cajamarca,10,14,1.4947,0,1.4947,0.1068,-1.4947
+2023,812720,Herbert Castillo,Deportivo Garcilaso,1,1,0.0377,0,0.0377,0.0377,-0.0377
+2023,819114,Pablo Sabbag,Alianza Lima,17,41,4.4037,8,3.6369,0.1074,3.5963
+2023,822721,Washington Corozo,Club Sporting Cristal,18,30,3.4743,4,3.4743,0.1158,0.5257
+2023,824158,Jose Cazares,Asociación Deportiva Tarma,2,2,0.0461,0,0.0461,0.023,-0.0461
+2023,825700,Antonio Romero,Unión Comercio,8,10,0.7445,2,0.7445,0.0744,1.2555
+2023,826377,Yhirbis Cordova,Cienciano,3,4,0.2243,1,0.2243,0.0561,0.7757
+2023,826380,Ray Sandoval,Club Atlético Grau,16,41,3.913,4,3.913,0.0954,0.087
+2023,828836,Leandro Sosa,Club Sporting Cristal,21,33,3.9412,5,3.9412,0.1194,1.0588
+2023,830085,Alex Rambal,Club Atlético Grau,1,1,0.0,1,0.0,0.0,1.0
+2023,830085,Alex Rambal,Deportivo Garcilaso,14,18,2.3321,3,2.3321,0.1296,0.6679
+2023,830663,Alejandro Hohberg,Club Sporting Cristal,23,51,8.5232,11,6.9895,0.1671,2.4768
+2023,830746,Neri Bandiera,Club Atlético Grau,32,103,14.9004,14,14.1335,0.1447,-0.9004
+2023,831183,Carlos Diez,Universidad Técnica de Cajamarca,16,23,0.6916,2,0.6916,0.0301,1.3084
+2023,831750,Gianlucca Fatecha,Cienciano,4,4,0.1161,0,0.1161,0.029,-0.1161
+2023,836280,Alexis Rojas,Sport Huancayo,8,10,1.0417,0,1.0417,0.1042,-1.0417
+2023,839571,Armando Alfageme,Asociación Deportiva Tarma,9,14,0.4533,0,0.4533,0.0324,-0.4533
+2023,840208,Brenner,Club Sporting Cristal,25,48,10.7311,13,7.6637,0.2236,2.2689
+2023,840530,Óscar Barreto,Unión Comercio,27,70,4.901,5,4.901,0.07,0.099
+2023,842529,Claudio Torrejón,Cienciano,8,10,0.4672,0,0.4672,0.0467,-0.4672
+2023,842529,Claudio Torrejón,Deportivo Binacional,1,1,0.0,1,0.0,0.0,1.0
+2023,846292,Facundo Rodríguez,Universidad César Vallejo,9,16,2.8082,5,2.8082,0.1755,2.1918
+2023,846366,Adrián Ugarriza,Club Sporting Cristal,3,7,0.7846,0,0.7846,0.1121,-0.7846
+2023,846372,Raúl Tito,Deportivo Garcilaso,7,13,1.1203,0,1.1203,0.0862,-1.1203
+2023,846474,Luis Urruti,Universitario,23,46,5.1392,11,4.3724,0.1117,5.8608
+2023,846742,Marcos Lliuya,Sport Huancayo,26,58,2.1654,3,2.1654,0.0373,0.8346
+2023,846749,Alexander Lecaros,Carlos A. Mannucci,3,5,0.3197,0,0.3197,0.0639,-0.3197
+2023,846751,Miguel Aucca,Cusco FC,3,3,0.1496,0,0.1496,0.0499,-0.1496
+2023,846808,Daniel Cabrera,Deportivo Municipal,6,8,0.3256,1,0.3256,0.0407,0.6744
+2023,869717,Facundo Peraza,Universidad Técnica de Cajamarca,25,48,7.1436,10,6.3768,0.1488,2.8564
+2023,869721,Facundo Moreira,AD Cantolao,5,7,0.8579,0,0.8579,0.1226,-0.8579
+2023,873703,Anthony Rosell,Deportivo Binacional,11,13,0.5294,0,0.5294,0.0407,-0.5294
+2023,873704,Ángel Pérez,Sport Huancayo,16,24,1.625,3,1.625,0.0677,1.375
+2023,873845,Piero Ratto,Asociación Deportiva Tarma,1,1,0.025,0,0.025,0.025,-0.025
+2023,874074,Carlos Jimenez,Sport Huancayo,2,4,0.5594,1,0.5594,0.1398,0.4406
+2023,874981,Jesus Mendieta,Alianza Atlético de Sullana,14,19,0.5669,1,0.5669,0.0298,0.4331
+2023,874984,Gianfranco Chávez,Club Sporting Cristal,9,11,1.5286,1,1.5286,0.139,-0.5286
+2023,874985,Renzo Garces,Universidad César Vallejo,9,10,0.906,0,0.906,0.0906,-0.906
+2023,874986,Frank Ysique,Universidad César Vallejo,7,8,0.2919,1,0.2919,0.0365,0.7081
+2023,874987,Fernando Pacheco,Cienciano,5,7,1.0292,1,1.0292,0.147,-0.0292
+2023,874987,Fernando Pacheco,Deportivo Municipal,9,15,1.0669,1,1.0669,0.0711,-0.0669
+2023,874988,Martín Távara,Club Sporting Cristal,25,42,1.6752,3,1.6752,0.0399,1.3248
+2023,875661,Jorge Toledo,Deportivo Municipal,3,5,0.2651,0,0.2651,0.053,-0.2651
+2023,875662,Kevin Ruiz,Carlos A. Mannucci,8,10,0.7121,2,0.7121,0.0712,1.2879
+2023,876926,Francisco Duclos,AD Cantolao,8,9,0.9483,1,0.9483,0.1054,0.0517
+2023,876927,Aldair Fuentes,Universidad César Vallejo,15,30,2.9005,2,2.9005,0.0967,-0.9005
+2023,876928,Luis Garro,Cienciano,12,14,0.4153,0,0.4153,0.0297,-0.4153
+2023,876929,Kevin Quevedo,Deportivo Garcilaso,31,100,6.3399,8,6.3399,0.0634,1.6601
+2023,876931,Erinson Ramirez,Universidad Técnica de Cajamarca,29,71,6.3606,4,4.8269,0.0896,-2.3606
+2023,876939,Álvaro Villete,Sport Boys,1,1,0.0366,0,0.0366,0.0366,-0.0366
+2023,877910,Fabio Rojas,Club Atlético Grau,4,7,0.3947,0,0.3947,0.0564,-0.3947
+2023,879628,Jordan Guivin,Cusco FC,6,14,0.5327,0,0.5327,0.0381,-0.5327
+2023,879629,Hideyoshi Arakaki,Cusco FC,9,14,1.9176,2,1.9176,0.137,0.0824
+2023,882837,Roberto Villamarín,Deportivo Binacional,14,25,2.4578,2,1.6909,0.0983,-0.4578
+2023,882839,Jorge Murrugarra,Universitario,2,2,0.0439,0,0.0439,0.0219,-0.0439
+2023,882851,Joazhiño Arroé,Unión Comercio,4,7,0.194,0,0.194,0.0277,-0.194
+2023,882860,Luis Carranza,Sport Boys,15,31,1.2857,1,1.2857,0.0415,-0.2857
+2023,882897,Alonso Tamaríz,AD Cantolao,2,2,0.0661,0,0.0661,0.033,-0.0661
+2023,882909,Federico Alonso,Cusco FC,10,17,2.4136,1,2.4136,0.142,-1.4136
+2023,882909,Federico Alonso,Deportivo Garcilaso,1,1,0.0,1,0.0,0.0,1.0
+2023,883142,Diego Saffadi,Alianza Atlético de Sullana,3,3,0.307,0,0.307,0.1023,-0.307
+2023,883142,Diego Saffadi,Asociación Deportiva Tarma,3,4,0.227,0,0.227,0.0567,-0.227
+2023,883287,Johan Madrid,Universidad César Vallejo,4,5,0.1367,0,0.1367,0.0273,-0.1367
+2023,883293,Leonel Solís,Cienciano,5,6,0.5866,1,0.5866,0.0978,0.4134
+2023,883293,Leonel Solís,Deportivo Municipal,4,6,0.3328,0,0.3328,0.0555,-0.3328
+2023,883294,Carlos Uribe,Cusco FC,1,1,0.0932,0,0.0932,0.0932,-0.0932
+2023,883296,Kevin Sandoval,Cienciano,17,39,2.5383,3,1.7715,0.0651,0.4617
+2023,883299,Janio Pósito,Asociación Deportiva Tarma,29,68,11.1129,13,10.346,0.1634,1.8871
+2023,883313,Nelinho Quina,Cusco FC,9,10,0.8909,0,0.8909,0.0891,-0.8909
+2023,883329,Luis Benites,Sport Huancayo,24,65,6.9409,10,3.8734,0.1068,3.0591
+2023,883339,Kevin Moreno,Asociación Deportiva Tarma,1,1,0.0096,0,0.0096,0.0096,-0.0096
+2023,883343,Aldair Salazar,Deportivo Garcilaso,10,11,0.7037,0,0.7037,0.064,-0.7037
+2023,883389,Diego Ramírez,AD Cantolao,11,19,1.5738,0,1.5738,0.0828,-1.5738
+2023,883396,Carlos Cabello,Asociación Deportiva Tarma,1,1,0.0,1,0.0,0.0,1.0
+2023,883396,Carlos Cabello,Universidad César Vallejo,12,12,0.5058,1,0.5058,0.0422,0.4942
+2023,883397,Gerson Barreto,Cusco FC,16,22,0.447,1,0.447,0.0203,0.553
+2023,883406,Yordi Vílchez,Alianza Lima,8,10,0.6799,0,0.6799,0.068,-0.6799
+2023,883416,Sebastián Lojas,AD Cantolao,3,3,0.1243,0,0.1243,0.0414,-0.1243
+2023,883720,Christian Velarde,Asociación Deportiva Tarma,13,17,1.1472,0,1.1472,0.0675,-1.1472
+2023,883729,Kelvin Sánchez,Unión Comercio,17,23,1.5294,2,1.5294,0.0665,0.4706
+2023,883743,Carlos Junior Huerto,AD Cantolao,15,27,2.1445,1,2.1445,0.0794,-1.1445
+2023,883747,Bryan Reyna,Alianza Lima,20,34,4.6931,4,4.6931,0.138,-0.6931
+2023,883768,David Dioses,Deportivo Garcilaso,9,15,0.7883,0,0.7883,0.0526,-0.7883
+2023,883772,Ray Gómez,Sport Huancayo,16,43,1.8439,6,1.8439,0.0429,4.1561
+2023,883802,José Velásquez,Cusco FC,1,1,0.059,0,0.059,0.059,-0.059
+2023,883812,Renato Espinosa,AD Cantolao,16,34,3.0988,1,2.3319,0.0911,-2.0988
+2023,883813,Jose Eduardo Caballero,Club Atlético Grau,8,10,0.9555,1,0.9555,0.0955,0.0445
+2023,884997,Matías Di Benedetto,Universitario,11,15,1.3113,1,1.3113,0.0874,-0.3113
+2023,886558,Ángel Rodríguez,Universidad César Vallejo,4,4,0.3572,0,0.3572,0.0893,-0.3572
+2023,886579,Ángelo Pizzorno,Alianza Atlético de Sullana,4,8,1.2429,4,1.2429,0.1554,2.7571
+2023,886579,Ángelo Pizzorno,Cienciano,1,1,0.0,1,0.0,0.0,1.0
+2023,887125,Jose Bolivar,Universitario,9,14,0.7724,0,0.7724,0.0552,-0.7724
+2023,888479,Carlos Caraza,Deportivo Garcilaso,11,13,0.5484,0,0.5484,0.0422,-0.5484
+2023,892669,Christopher Olivares,Cusco FC,8,12,1.388,0,1.388,0.1157,-1.388
+2023,892669,Christopher Olivares,Deportivo Municipal,11,34,5.0277,6,5.0277,0.1479,0.9723
+2023,893067,Marco Saravia,Universitario,5,6,0.7328,1,0.7328,0.1221,0.2672
+2023,895364,Gaspar Gentile,Universidad Técnica de Cajamarca,34,96,8.3383,6,6.8045,0.0869,-2.3383
+2023,895589,Williams Riveros,Universitario,13,24,2.7861,2,2.7861,0.1161,-0.7861
+2023,898631,Juan Romagnoli,Cienciano,21,41,3.5253,3,2.7585,0.086,-0.5253
+2023,901019,Luis Iberico,Melgar,11,23,3.1384,5,2.3716,0.1365,1.8616
+2023,901020,Jeremy Canela,Alianza Atlético de Sullana,25,63,5.7457,5,5.7457,0.0912,-0.7457
+2023,906002,Carlos Garcés,Cienciano,24,57,10.6,14,7.5325,0.186,3.4
+2023,913398,Jesús Castillo,Alianza Lima,11,16,1.1723,2,1.1723,0.0733,0.8277
+2023,914294,Edhu Oliva,Carlos A. Mannucci,10,14,0.9876,1,0.9876,0.0705,0.0124
+2023,922007,Jimmy Valoyes,Sport Huancayo,15,23,2.3416,1,2.3416,0.1018,-1.3416
+2023,922030,Brayan Fernandez,Deportivo Binacional,13,49,7.2719,7,5.7382,0.1484,-0.2719
+2023,922869,Jesús Barco,Sport Boys,18,36,5.6813,7,3.3808,0.1578,1.3187
+2023,922870,Jose Antonio Parodi,Deportivo Garcilaso,9,11,0.404,1,0.404,0.0367,0.596
+2023,922871,Nelson Cabanillas,Universitario,6,9,0.4602,0,0.4602,0.0511,-0.4602
+2023,922873,Paulo De La Cruz,Club Atlético Grau,18,30,3.3751,3,3.3751,0.1125,-0.3751
+2023,923740,Alec Deneumostier,Melgar,6,7,0.9469,2,0.9469,0.1353,1.0531
+2023,924643,John Fajardo,Universidad Técnica de Cajamarca,7,10,0.5136,0,0.5136,0.0514,-0.5136
+2023,924646,Hoover Crespo,Deportivo Binacional,13,26,1.6071,1,1.6071,0.0618,-0.6071
+2023,924725,Santiago Arias,Alianza Atlético de Sullana,28,46,1.7384,2,1.7384,0.0378,0.2616
+2023,924736,Mauro Da Luz,Cusco FC,24,50,5.0969,6,5.0969,0.1019,0.9031
+2023,924782,Jesús Pretell,Club Sporting Cristal,6,7,0.1504,0,0.1504,0.0215,-0.1504
+2023,924783,Jairo Concha,Alianza Lima,24,47,2.8289,2,2.8289,0.0602,-0.8289
+2023,924787,Jefferson Portales,Carlos A. Mannucci,4,5,0.2443,0,0.2443,0.0489,-0.2443
+2023,924789,Andy Polar,Deportivo Binacional,25,66,3.8315,7,3.0646,0.0581,3.1685
+2023,924791,Yorkman Tello,Unión Comercio,6,6,1.0449,1,1.0449,0.1741,-0.0449
+2023,924793,Héctor Zeta,Deportivo Binacional,18,32,3.8312,7,3.8312,0.1197,3.1688
+2023,924877,Mario Tajima,AD Cantolao,9,14,1.5921,2,1.5921,0.1137,0.4079
+2023,924881,Christian Vasquez,Sport Boys,8,8,0.7357,1,0.7357,0.092,0.2643
+2023,924932,Alejandro Ramos,Melgar,11,21,0.533,0,0.533,0.0254,-0.533
+2023,924932,Alejandro Ramos,Universitario,1,1,0.0,1,0.0,0.0,1.0
+2023,925119,Joel López Pisano,Club Atlético Grau,11,24,1.1788,4,1.1788,0.0491,2.8212
+2023,925176,Hugo Ángeles,Sport Huancayo,11,13,0.9371,0,0.9371,0.0721,-0.9371
+2023,925309,Carlos Correa,Carlos A. Mannucci,5,7,0.1912,0,0.1912,0.0273,-0.1912
+2023,925420,Jean Franco Falconi,Asociación Deportiva Tarma,2,2,0.1079,0,0.1079,0.054,-0.1079
+2023,925420,Jean Franco Falconi,Melgar,1,1,0.0,1,0.0,0.0,1.0
+2023,926640,Gonzalo Rizzo,Asociación Deportiva Tarma,31,57,4.0278,6,3.2609,0.0707,1.9722
+2023,927690,Matías Succar,Carlos A. Mannucci,31,89,11.087,11,8.7864,0.1246,-0.087
+2023,929004,Kevin Ferreyra,Sport Huancayo,1,2,0.1146,0,0.1146,0.0573,-0.1146
+2023,929014,Oslimg Mora,Club Atlético Grau,21,33,2.8486,3,2.8486,0.0863,0.1514
+2023,931772,Francesco Cavagna,Cusco FC,1,1,0.0,1,0.0,0.0,1.0
+2023,931772,Francesco Cavagna,Deportivo Municipal,2,2,0.1024,0,0.1024,0.0512,-0.1024
+2023,931775,Osama Vinladen,Unión Comercio,1,1,0.0741,0,0.0741,0.0741,-0.0741
+2023,931776,Christian Neira,Unión Comercio,23,50,3.3949,4,3.3949,0.0679,0.6051
+2023,931777,Denilson Vargas,Unión Comercio,3,4,0.2872,0,0.2872,0.0718,-0.2872
+2023,931784,Jhilmar Lobatón,Sport Boys,5,7,0.6893,0,0.6893,0.0985,-0.6893
+2023,931788,Gu Choi,Asociación Deportiva Tarma,7,8,0.3151,0,0.3151,0.0394,-0.3151
+2023,932088,Piero Vivanco,Club Atlético Grau,10,21,1.2498,0,1.2498,0.0595,-1.2498
+2023,932926,Leandro Fleitas,Universidad César Vallejo,1,1,0.1267,0,0.1267,0.1267,-0.1267
+2023,932927,Jorge Rios,Sport Boys,18,26,1.3869,0,1.3869,0.0533,-1.3869
+2023,932933,Rolando Diaz,Cusco FC,6,7,0.5386,0,0.5386,0.0769,-0.5386
+2023,933181,Matías Cortave,Carlos A. Mannucci,12,17,1.2559,1,1.2559,0.0739,-0.2559
+2023,933730,Brandon Palacios,Deportivo Binacional,29,70,7.1277,11,5.594,0.1018,3.8723
+2023,936164,Michael Rasmussen,Carlos A. Mannucci,4,9,0.6089,0,0.6089,0.0677,-0.6089
+2023,936165,Leonardo Mifflin,Deportivo Binacional,6,8,0.3382,0,0.3382,0.0423,-0.3382
+2023,936184,José Fajardo,Cusco FC,15,41,5.53,6,5.53,0.1349,0.47
+2023,943795,Sebastián Jaurena,Deportivo Municipal,8,10,0.5943,1,0.5943,0.0594,0.4057
+2023,944683,Cristian Sanchez,AD Cantolao,11,19,0.6558,0,0.6558,0.0345,-0.6558
+2023,949793,Alessandro Milesi,Club Atlético Grau,8,12,0.7776,1,0.7776,0.0648,0.2224
+2023,958382,Ignácio,Club Sporting Cristal,18,38,3.9164,3,3.9164,0.1031,-0.9164
+2023,960225,Hugo Ancajima,Universitario,8,12,0.7304,0,0.7304,0.0609,-0.7304
+2023,965761,Piero Serra,Alianza Atlético de Sullana,5,6,0.1507,0,0.1507,0.0251,-0.1507
+2023,973562,Mauricio Matzuda,Alianza Atlético de Sullana,5,7,0.4788,1,0.4788,0.0684,0.5212
+2023,973563,Miguel Cornejo,Alianza Atlético de Sullana,16,26,1.941,3,1.941,0.0747,1.059
+2023,973566,Oswaldo Valenzuela,Alianza Lima,2,2,0.0426,0,0.0426,0.0213,-0.0426
+2023,973635,Felipe Mesones,Sport Huancayo,1,1,0.0845,0,0.0845,0.0845,-0.0845
+2023,973636,Paolo Méndez,Deportivo Garcilaso,3,4,0.0712,0,0.0712,0.0178,-0.0712
+2023,973638,Erick Morillo,Universidad César Vallejo,1,1,0.0675,0,0.0675,0.0675,-0.0675
+2023,973650,Franco Zanelatto,Alianza Lima,11,18,2.8977,4,2.8977,0.161,1.1023
+2023,973653,Jonathan Bilbao,Cusco FC,4,5,0.7659,1,0.7659,0.1532,0.2341
+2023,973664,Yuriel Celi,Universitario,6,7,0.4486,0,0.4486,0.0641,-0.4486
+2023,973667,Jack Durán,Deportivo Binacional,14,26,1.3315,0,1.3315,0.0512,-1.3315
+2023,973670,Jhony Obeso,Deportivo Garcilaso,7,8,0.2672,0,0.2672,0.0334,-0.2672
+2023,973681,Relly Fernández,Universidad Técnica de Cajamarca,13,21,3.6074,3,3.6074,0.1718,-0.6074
+2023,973682,Ricardo Lagos,Alianza Lima,12,16,0.7162,1,0.7162,0.0448,0.2838
+2023,974136,Beto Da Silva,Melgar,5,6,1.2251,0,1.2251,0.2042,-1.2251
+2023,974136,Beto Da Silva,Universidad César Vallejo,2,2,0.0904,0,0.0904,0.0452,-0.0904
+2023,974451,Matías Pérez García,Deportivo Municipal,24,39,6.1393,5,2.305,0.1574,-1.1393
+2023,975241,Erick Perleche,Carlos A. Mannucci,4,5,0.2445,0,0.2445,0.0489,-0.2445
+2023,975243,Franco Medina,Cienciano,1,1,0.0045,0,0.0045,0.0045,-0.0045
+2023,975243,Franco Medina,Club Sporting Cristal,1,1,0.0416,0,0.0416,0.0416,-0.0416
+2023,975540,Freddy Oncoy,Deportivo Binacional,14,17,1.5916,7,1.5916,0.0936,5.4084
+2023,975853,Rotceh Aguilar,Alianza Atlético de Sullana,1,1,0.02,0,0.02,0.02,-0.02
+2023,975853,Rotceh Aguilar,Deportivo Municipal,9,14,1.2412,1,1.2412,0.0887,-0.2412
+2023,975919,Percy Liza,Club Sporting Cristal,1,1,0.0134,0,0.0134,0.0134,-0.0134
+2023,975920,Christian Vargas,Unión Comercio,5,6,0.6094,0,0.6094,0.1016,-0.6094
+2023,975958,Alfonso Barco,Universitario,4,4,0.1441,0,0.1441,0.036,-0.1441
+2023,976302,Abdiel Ayarza,Cusco FC,26,66,8.3214,9,8.3214,0.1261,0.6786
+2023,976932,Walter Tandazo,Melgar,9,12,0.3374,1,0.3374,0.0281,0.6626
+2023,976933,Paolo Reyna,Melgar,5,6,0.4336,0,0.4336,0.0723,-0.4336
+2023,977086,Cristian Carbajal,Sport Boys,7,9,0.2062,0,0.2062,0.0229,-0.2062
+2023,978353,Gonzalo González,Cienciano,6,6,0.131,0,0.131,0.0218,-0.131
+2023,978543,Jesús Castillo,Club Sporting Cristal,3,3,0.3341,0,0.3341,0.1114,-0.3341
+2023,978545,Axel Moyano,Club Atlético Grau,5,5,0.1408,0,0.1408,0.0282,-0.1408
+2023,978549,Rafael Lutiger,Club Sporting Cristal,7,7,0.62,1,0.62,0.0886,0.38
+2023,980141,Diego Soto,Deportivo Municipal,10,13,0.6577,0,0.6577,0.0506,-0.6577
+2023,980889,Dylan Caro,Sport Boys,1,1,0.0169,0,0.0169,0.0169,-0.0169
+2023,980950,Jack Cirilo,Deportivo Binacional,4,6,0.9458,1,0.9458,0.1576,0.0542
+2023,981374,Kevin Serna,Asociación Deportiva Tarma,34,84,6.5663,6,6.5663,0.0782,-0.5663
+2023,982178,Alexi Edwin Gómez,Deportivo Garcilaso,21,45,1.0389,3,1.0389,0.0231,1.9611
+2023,984107,Luis Ramos,Deportivo Municipal,9,17,2.219,2,1.4522,0.1305,-0.219
+2023,984127,Leonardo Villar,Sport Huancayo,4,5,0.2932,0,0.2932,0.0586,-0.2932
+2023,984882,Arón Sánchez,AD Cantolao,7,9,0.9295,2,0.9295,0.1033,1.0705
+2023,988298,Óscar Pinto,Sport Boys,2,2,0.3596,0,0.3596,0.1798,-0.3596
+2023,988868,José Leguizamón,Cienciano,2,2,0.4435,0,0.4435,0.2217,-0.4435
+2023,989240,Didier La Torre,Cienciano,7,15,1.3537,3,1.3537,0.0902,1.6463
+2023,989258,Marcelo Gaona,Carlos A. Mannucci,3,4,0.2457,0,0.2457,0.0614,-0.2457
+2023,989259,Mathias Llontop,Carlos A. Mannucci,2,2,0.0371,1,0.0371,0.0185,0.9629
+2023,992004,Kevin Peña,Deportivo Municipal,4,4,0.4335,0,0.4335,0.1084,-0.4335
+2023,992004,Kevin Peña,Sport Boys,4,4,0.1799,0,0.1799,0.045,-0.1799
+2023,992514,Rodrigo Salinas,Club Atlético Grau,24,80,8.9425,6,7.4088,0.1118,-2.9425
+2023,994148,Carlos Olascuaga,Deportivo Municipal,6,9,1.2681,1,1.2681,0.1409,-0.2681
+2023,994584,Carlos Montoya,AD Cantolao,2,2,0.0857,0,0.0857,0.0428,-0.0857
+2023,994588,José De la Cruz,Alianza Atlético de Sullana,3,6,0.8809,0,0.8809,0.1468,-0.8809
+2023,1001106,Mathias Carpio,Alianza Atlético de Sullana,2,4,0.2727,0,0.2727,0.0682,-0.2727
+2023,1005176,Jhilmar Lora,Club Sporting Cristal,4,5,0.328,0,0.328,0.0656,-0.328
+2023,1015696,Tiago Cantoro,Cusco FC,11,21,2.2092,3,2.2092,0.1052,0.7908
+2023,1016972,Alex Valera,Universitario,29,104,13.0964,15,11.5627,0.1259,1.9036
+2023,1016973,Álvaro Olaya,Deportivo Garcilaso,4,5,0.854,0,0.854,0.1708,-0.854
+2023,1016974,Ayrthon Quintana,Cienciano,16,23,0.6907,0,0.6907,0.03,-0.6907
+2023,1016979,Javier Trauco,Unión Comercio,3,4,0.2849,0,0.2849,0.0712,-0.2849
+2023,1016982,Marlon Ruidías,Carlos A. Mannucci,4,5,0.2164,0,0.2164,0.0433,-0.2164
+2023,1017747,Benjamín Ampuero,Deportivo Municipal,1,2,0.1337,0,0.1337,0.0668,-0.1337
+2023,1017755,Emilio Saba,Asociación Deportiva Tarma,8,8,0.2248,0,0.2248,0.0281,-0.2248
+2023,1017756,Franchesco Flores,Universidad César Vallejo,2,2,0.0436,1,0.0436,0.0218,0.9564
+2023,1017759,Jefferson Caceres,Deportivo Binacional,14,24,3.6011,3,3.6011,0.15,-0.6011
+2023,1017760,Jhamir D'Arrigo,Melgar,15,20,2.3815,1,1.6146,0.1191,-1.3815
+2023,1017763,Juan Pablo Carranza,Alianza Atlético de Sullana,2,2,0.0334,0,0.0334,0.0167,-0.0334
+2023,1017769,Ronald Vega,AD Cantolao,1,1,0.0087,0,0.0087,0.0087,-0.0087
+2023,1017778,Williams Guzmán,Alianza Atlético de Sullana,5,7,0.4954,0,0.4954,0.0708,-0.4954
+2023,1017778,Williams Guzmán,Deportivo Municipal,8,9,1.9093,0,1.9093,0.2121,-1.9093
+2023,1018072,Joao Grimaldo,Club Sporting Cristal,24,44,5.7617,7,5.7617,0.1309,1.2383
+2023,1018081,Adrian Gutierrez,Universidad Técnica de Cajamarca,3,4,0.3472,1,0.3472,0.0868,0.6528
+2023,1018128,Daniel Morales,Asociación Deportiva Tarma,4,7,0.4836,0,0.4836,0.0691,-0.4836
+2023,1018233,Erick Canales,Universidad Técnica de Cajamarca,4,6,0.1878,0,0.1878,0.0313,-0.1878
+2023,1018255,Orlando Nuñez,Deportivo Binacional,4,4,0.175,0,0.175,0.0437,-0.175
+2023,1018388,Emanuel Ibáñez,Alianza Atlético de Sullana,1,1,0.0192,0,0.0192,0.0192,-0.0192
+2023,1020187,Matías Abisab,Universidad Técnica de Cajamarca,27,46,3.5154,1,2.7485,0.0764,-2.5154
+2023,1020855,Leonardo Rugel,Deportivo Garcilaso,1,1,0.0,1,0.0,0.0,1.0
+2023,1020855,Leonardo Rugel,Deportivo Municipal,8,10,0.9603,0,0.9603,0.096,-0.9603
+2023,1020990,Mathias Silvera,Asociación Deportiva Tarma,1,1,0.0558,0,0.0558,0.0558,-0.0558
+2023,1020999,José Rivera,Universitario,14,32,3.5244,3,3.5244,0.1101,-0.5244
+2023,1022066,Neil Marcos,Club Atlético Grau,5,5,0.5369,0,0.5369,0.1074,-0.5369
+2023,1049077,Sebastian Cavero,Melgar,6,6,0.322,0,0.322,0.0537,-0.322
+2023,1049088,Erick Gonzales,Carlos A. Mannucci,13,17,1.6518,1,1.6518,0.0972,-0.6518
+2023,1049204,James Morales,Cusco FC,4,5,0.4873,1,0.4873,0.0975,0.5127
+2023,1050816,Aryan Romani,Alianza Atlético de Sullana,5,8,0.4571,1,0.4571,0.0571,0.5429
+2023,1065267,Adrián Ascues,Club Sporting Cristal,12,16,0.7129,1,0.7129,0.0446,0.2871
+2023,1068665,Alonso Yovera,Cusco FC,10,15,0.7975,0,0.7975,0.0532,-0.7975
+2023,1069367,Sharif Ramírez,Cienciano,4,5,0.1325,0,0.1325,0.0265,-0.1325
+2023,1083668,Fabrizio Roca,Sport Boys,19,37,6.7384,9,4.4378,0.1821,2.2616
+2023,1084470,Paulo Rodríguez,Deportivo Garcilaso,1,2,0.3471,1,0.3471,0.1736,0.6529
+2023,1086281,Yimy Gamero,Asociación Deportiva Tarma,5,7,0.1711,0,0.1711,0.0244,-0.1711
+2023,1086284,Matías Lazo,Melgar,1,3,0.6547,0,0.6547,0.2182,-0.6547
+2023,1086295,Kenji Cabrera,Melgar,10,15,1.511,2,1.511,0.1007,0.489
+2023,1090706,Victor Perlaza,Asociación Deportiva Tarma,28,80,8.8782,6,8.8782,0.111,-2.8782
+2023,1090708,Flavio Fernández,Alianza Atlético de Sullana,6,6,1.2114,1,1.2114,0.2019,-0.2114
+2023,1090720,Marco Huaman,Sport Huancayo,12,19,1.4116,1,1.4116,0.0743,-0.4116
+2023,1093236,Emilio Gutiérrez,Asociación Deportiva Tarma,7,9,0.9254,0,0.9254,0.1028,-0.9254
+2023,1095031,Santiago Torres,Universidad César Vallejo,9,12,0.3499,0,0.3499,0.0292,-0.3499
+2023,1100345,Yonatan Murillo,Deportivo Binacional,17,23,1.2858,1,1.2858,0.0559,-0.2858
+2023,1107649,Brian Calabrese,AD Cantolao,10,17,3.149,2,3.149,0.1852,-1.149
+2023,1107871,Christian Flores,Deportivo Municipal,2,2,0.0679,0,0.0679,0.034,-0.0679
+2023,1107888,Jostin Alarcón,Club Sporting Cristal,20,33,3.0149,1,3.0149,0.0914,-2.0149
+2023,1107889,Jimmy Pérez,Sport Huancayo,3,4,0.2612,0,0.2612,0.0653,-0.2612
+2023,1107891,Luiggi Alburqueque,Alianza Atlético de Sullana,3,4,0.3418,0,0.3418,0.0854,-0.3418
+2023,1107917,Piero Guzman,Universitario,1,1,0.0247,0,0.0247,0.0247,-0.0247
+2023,1108679,Bruno Portugal,Melgar,4,4,0.3161,0,0.3161,0.079,-0.3161
+2023,1109858,Guillermo Larios,Alianza Atlético de Sullana,12,15,1.2437,4,1.2437,0.0829,2.7563
+2023,1109859,Piero Quispe,Universitario,18,45,2.9984,4,2.9984,0.0666,1.0016
+2023,1112502,Luis Navea,Unión Comercio,1,1,0.1507,0,0.1507,0.1507,-0.1507
+2023,1118109,Juan Quiñones,Universidad César Vallejo,8,8,0.2994,0,0.2994,0.0374,-0.2994
+2023,1120472,Flavio Alcedo,Club Sporting Cristal,2,2,0.0285,0,0.0285,0.0142,-0.0285
+2023,1120726,Nahuel Rodriguez,Universidad César Vallejo,2,4,0.3598,0,0.3598,0.09,-0.3598
+2023,1122383,Julio Vizcarra,Deportivo Binacional,3,3,0.1487,0,0.1487,0.0496,-0.1487
+2023,1128897,Leonardo Díaz,Club Sporting Cristal,6,8,1.1408,1,1.1408,0.1426,-0.1408
+2023,1131302,Cristian Mejia,Universidad César Vallejo,1,1,0.0,1,0.0,0.0,1.0
+2023,1131302,Cristian Mejia,Universidad Técnica de Cajamarca,14,20,1.021,0,1.021,0.0511,-1.021
+2023,1148295,Jhon Alvarez,Unión Comercio,4,4,0.1644,0,0.1644,0.0411,-0.1644
+2023,1148321,Vieri Pérez,Unión Comercio,1,1,0.0626,0,0.0626,0.0626,-0.0626
+2023,1159659,Sebastian Aranda,Unión Comercio,4,4,0.2013,1,0.2013,0.0503,0.7987
+2023,1169590,Edinson Mero,Sport Boys,22,48,3.771,2,3.771,0.0786,-1.771
+2023,1170470,Robinson Alzamora,AD Cantolao,1,1,0.0666,0,0.0666,0.0666,-0.0666
+2023,1170470,Robinson Alzamora,Universitario,1,1,0.0,1,0.0,0.0,1.0
+2023,1170472,Stefano Fernández,Alianza Atlético de Sullana,3,4,0.1325,0,0.1325,0.0331,-0.1325
+2023,1170640,César Inga,Asociación Deportiva Tarma,5,7,0.2273,0,0.2273,0.0325,-0.2273
+2023,1170641,Jorge Palomino,Asociación Deportiva Tarma,4,4,0.2623,1,0.2623,0.0656,0.7377
+2023,1170888,Anderson Villacorta,Universidad César Vallejo,1,3,0.7054,0,0.7054,0.2351,-0.7054
+2023,1170895,Stefano Olaya,Universidad César Vallejo,10,19,1.7356,2,1.7356,0.0913,0.2644
+2023,1172494,Stiwar Mena,Deportivo Binacional,3,3,0.1948,0,0.1948,0.0649,-0.1948
+2023,1176706,Franklin Godos,Club Atlético Grau,1,1,0.0528,0,0.0528,0.0528,-0.0528
+2023,1176979,Jhosep Nuñez,Deportivo Municipal,17,37,2.2922,3,2.2922,0.062,0.7078
+2023,1176991,Bryan Urrutia,Carlos A. Mannucci,6,6,0.9821,1,0.9821,0.1637,0.0179
+2023,1201012,Jhoao Velasquez,Alianza Lima,1,1,0.0087,0,0.0087,0.0087,-0.0087
+2023,1215096,Jorge Aguero,Asociación Deportiva Tarma,2,3,0.1994,0,0.1994,0.0665,-0.1994
+2023,1386871,Guillermo Rojas,Deportivo Municipal,1,1,0.1237,0,0.1237,0.1237,-0.1237
+2023,1388614,Dorian Moyano,Deportivo Municipal,1,1,0.0198,0,0.0198,0.0198,-0.0198
+2023,1390522,Facundo Rodríguez,Deportivo Municipal,9,18,2.0645,1,1.2976,0.1147,-1.0645
+2023,1393339,Jorge Jimenez,Unión Comercio,2,7,0.2191,0,0.2191,0.0313,-0.2191
+2023,1415939,Nicolas Amasifuen,Alianza Lima,2,2,0.0408,0,0.0408,0.0204,-0.0408
+2023,1415941,André Vasquez,Melgar,3,4,0.1425,0,0.1425,0.0356,-0.1425
+2023,1415946,Jack Carhuallanqui,Unión Comercio,5,5,0.2158,0,0.2158,0.0432,-0.2158
+2023,1427486,Renzo Salazar,Sport Boys,2,3,0.1986,0,0.1986,0.0662,-0.1986
+2023,1427494,Pier Gonzales,AD Cantolao,1,1,0.0154,0,0.0154,0.0154,-0.0154
+2023,1464244,Diego Otoya,Club Sporting Cristal,5,6,1.2308,1,1.2308,0.2051,-0.2308
+2023,1464245,Gonzalo Aguirre,Club Sporting Cristal,3,4,0.0866,0,0.0866,0.0217,-0.0866
+2023,1464523,Carlos Fernandez,Deportivo Garcilaso,1,1,0.0529,0,0.0529,0.0529,-0.0529
+2023,1464534,Pedro Zuniga,Deportivo Garcilaso,2,2,0.0484,0,0.0484,0.0242,-0.0484
+2023,1464633,Hebert Vergara,AD Cantolao,22,43,2.38,3,2.38,0.0553,0.62
+2023,1464812,Kevin Sánchez,Sport Boys,9,15,1.6356,1,1.6356,0.109,-0.6356
+2023,1466374,Eslyn Correa,Deportivo Municipal,5,6,0.3323,0,0.3323,0.0554,-0.3323
+2023,1466382,Pablo Erustes,Deportivo Municipal,25,83,10.5915,11,9.0578,0.1276,0.4085
+2023,1466385,Santiago Gálvez,Deportivo Municipal,6,10,0.6903,0,0.6903,0.069,-0.6903
+2023,1468129,Stefano Velasco,AD Cantolao,3,5,0.2539,0,0.2539,0.0508,-0.2539
+2023,1468131,Valentino Delgado,AD Cantolao,2,3,0.6248,0,0.6248,0.2083,-0.6248
+2023,1477650,Diego Martín Sánchez,Sport Boys,4,5,0.0996,0,0.0996,0.0199,-0.0996
+2023,1479165,Abraham Aguinaga,Melgar,8,8,0.7963,0,0.7963,0.0995,-0.7963
+2023,1503648,Alexis Huaman,Sport Boys,3,3,0.3132,0,0.3132,0.1044,-0.3132
+2023,1503695,Antonio Yanez,Deportivo Municipal,1,1,0.0068,0,0.0068,0.0068,-0.0068
+2023,1510616,Manuel Chumpitaz,Deportivo Binacional,1,1,0.0308,0,0.0308,0.0308,-0.0308
+2023,1510807,Cristian Mendoza,Sport Huancayo,1,1,0.0786,0,0.0786,0.0786,-0.0786
+2023,1512472,Jeamson Jimenez,AD Cantolao,1,1,0.0219,0,0.0219,0.0219,-0.0219
+2023,1521230,Juan Martínez,Sport Huancayo,1,1,0.0467,0,0.0467,0.0467,-0.0467
+2023,1587097,Jose Meza,Sport Huancayo,1,1,0.0164,0,0.0164,0.0164,-0.0164
+2024,338,Paolo Guerrero,Alianza Lima,7,20,3.704,4,2.954,0.1852,0.296
+2024,338,Paolo Guerrero,Universidad César Vallejo,6,10,1.9708,3,1.9708,0.1971,1.0292
+2024,31175,Hernán Barcos,Alianza Lima,23,57,10.6834,14,6.1834,0.1874,3.3166
+2024,31611,Carlos Zambrano,Alianza Lima,6,9,0.8367,3,0.8367,0.093,2.1633
+2024,31611,Carlos Zambrano,Universitario de Deportes,1,1,0.0,1,0.0,0.0,1.0
+2024,33587,Hernán Pérez,Unión Comercio,20,43,4.131,4,3.381,0.0961,-0.131
+2024,34016,Josepmir Ballón,Universidad César Vallejo,3,3,0.0967,1,0.0967,0.0322,0.9033
+2024,35621,Hernán Rengifo,Asociación Deportiva Tarma,10,14,2.6335,4,1.8835,0.1881,1.3665
+2024,38013,Minzun Quina,Sport Huancayo,3,3,1.1933,2,1.1933,0.3978,0.8067
+2024,43148,Edgar Benítez,Universidad César Vallejo,10,12,1.211,0,1.211,0.1009,-1.211
+2024,46988,Yoshimar Yotún,Club Sporting Cristal,4,11,2.294,3,0.794,0.2085,0.706
+2024,46992,Juan Diego Lojas,Deportivo Garcilaso,15,26,2.1702,3,2.1702,0.0835,0.8298
+2024,47401,Aldo Corzo,Universitario de Deportes,10,10,0.903,1,0.903,0.0903,0.097
+2024,47413,Luis Trujillo,Unión Comercio,4,4,0.1978,0,0.1978,0.0495,-0.1978
+2024,47418,Sebastián Rodríguez,Alianza Lima,29,57,4.1461,2,3.3961,0.0727,-2.1461
+2024,47435,Martín Cauteruccio,Club Sporting Cristal,26,66,19.9016,35,14.6516,0.3015,15.0984
+2024,47439,Christian Ramos,Alianza Atlético de Sullana,1,1,0.0,1,0.0,0.0,1.0
+2024,47439,Christian Ramos,Sport Boys,1,3,0.1322,0,0.1322,0.0441,-0.1322
+2024,47447,Christian Cueva,Cienciano,4,4,0.1926,1,0.1926,0.0481,0.8074
+2024,52068,Joao Rojas,Asociación Deportiva Tarma,22,61,6.4641,10,6.4641,0.106,3.5359
+2024,107293,Joel Sánchez,Universidad Técnica de Cajamarca,16,28,1.3019,1,1.3019,0.0465,-0.3019
+2024,107315,Paolo Hurtado,Carlos A. Mannucci,12,14,1.0782,0,1.0782,0.077,-1.0782
+2024,107596,John Narváez,Asociación Deportiva Tarma,16,21,1.0335,1,1.0335,0.0492,-0.0335
+2024,108462,Danilo Carando,Cienciano,2,5,0.6622,0,0.6622,0.1324,-0.6622
+2024,108462,Danilo Carando,Deportivo Garcilaso,6,18,2.0861,1,2.0861,0.1159,-1.0861
+2024,122618,Leonel Galeano,Melgar,16,20,1.2267,2,1.2267,0.0613,0.7733
+2024,123238,Luis Alvarez,Asociación Deportiva Tarma,6,7,0.6338,0,0.6338,0.0905,-0.6338
+2024,125122,Alejandro Ramirez,Cienciano,7,9,0.4465,1,0.4465,0.0496,0.5535
+2024,125122,Alejandro Ramirez,Universidad César Vallejo,9,15,2.6428,2,2.6428,0.1762,-0.6428
+2024,133862,Irven Ávila,Club Sporting Cristal,17,22,5.3625,5,5.3625,0.2437,-0.3625
+2024,143886,Marlon de Jesús,Unión Comercio,19,64,8.6354,8,5.6354,0.1349,-0.6354
+2024,147603,Jose Cuero,Deportivo Garcilaso,3,4,0.2658,0,0.2658,0.0664,-0.2658
+2024,147603,Jose Cuero,Universidad Técnica de Cajamarca,3,4,0.3668,0,0.3668,0.0917,-0.3668
+2024,159931,Cecilio Waterman,Alianza Lima,11,30,6.2526,5,5.5026,0.2084,-1.2526
+2024,162435,Pedro Paulo Requena,Universidad Técnica de Cajamarca,3,3,0.1101,0,0.1101,0.0367,-0.1101
+2024,162603,Juan Morales,Sport Boys,2,2,0.06,0,0.06,0.03,-0.06
+2024,169925,Diego Minaya,Sport Huancayo,3,3,0.3008,1,0.3008,0.1003,0.6992
+2024,169935,Osnar Noronha,Universidad César Vallejo,14,18,2.4172,2,1.6672,0.1343,-0.4172
+2024,175977,Alvaro Ampuero,Club Atlético Grau,5,8,0.73,0,0.73,0.0913,-0.73
+2024,176139,Edison Flores,Universitario de Deportes,31,72,6.3627,9,6.3627,0.0884,2.6373
+2024,176159,Andy Polo,Alianza Lima,1,1,0.0,1,0.0,0.0,1.0
+2024,176159,Andy Polo,Universitario de Deportes,22,41,2.2626,3,2.2626,0.0552,0.7374
+2024,176285,Werner Schuler,Sport Boys,1,1,0.0127,0,0.0127,0.0127,-0.0127
+2024,176289,Ángel Romero,Universidad Técnica de Cajamarca,11,13,0.7011,0,0.7011,0.0539,-0.7011
+2024,180045,Germán Mera,Cienciano,17,21,1.8367,2,1.8367,0.0875,0.1633
+2024,180045,Germán Mera,Club Atlético Grau,1,1,0.0,1,0.0,0.0,1.0
+2024,189207,Jean Deza,Sport Huancayo,7,19,0.8309,2,0.8309,0.0437,1.1691
+2024,220465,Rodrigo Ureña,Universitario de Deportes,11,13,0.4094,1,0.4094,0.0315,0.5906
+2024,220921,Carlos Ascues,Universidad César Vallejo,9,12,0.7196,1,0.7196,0.06,0.2804
+2024,220929,Carlos Beltran,Deportivo Garcilaso,17,32,2.5533,2,2.5533,0.0798,-0.5533
+2024,220931,Jorge Bazan,Deportivo Garcilaso,9,11,0.6657,1,0.6657,0.0605,0.3343
+2024,220935,Edson Aubert,Asociación Deportiva Tarma,15,36,1.7763,0,1.0263,0.0493,-1.7763
+2024,243515,Guti,Sport Huancayo,5,6,0.2726,0,0.2726,0.0454,-0.2726
+2024,246313,Lucas Cano,Sport Huancayo,28,85,13.5433,16,11.2933,0.1593,2.4567
+2024,247071,Carlos Ross,Sport Huancayo,16,23,1.5041,2,1.5041,0.0654,0.4959
+2024,249081,Mauricio Cuero,Deportivo Garcilaso,10,19,0.7171,0,0.7171,0.0377,-0.7171
+2024,249305,Pablo Míguez,Carlos A. Mannucci,9,13,0.9102,1,0.9102,0.07,0.0898
+2024,249403,Martín Pérez Guedes,Universitario de Deportes,26,64,6.0875,10,6.0875,0.0951,3.9125
+2024,249599,Donald Millán,Unión Comercio,3,4,0.2939,0,0.2939,0.0735,-0.2939
+2024,250017,Horacio Orzan,Melgar,9,9,0.188,0,0.188,0.0209,-0.188
+2024,255997,Cristian Benavente,Sport Boys,5,10,0.6896,0,0.6896,0.069,-0.6896
+2024,255997,Cristian Benavente,Universidad César Vallejo,2,3,0.1501,0,0.1501,0.05,-0.1501
+2024,295161,Nicolás Pasquini,Club Sporting Cristal,11,15,1.3014,1,1.3014,0.0868,-0.3014
+2024,309126,Nicolás Albarracín,Carlos A. Mannucci,21,39,3.0847,4,2.3347,0.0791,0.9153
+2024,311522,Alfredo Ramúa,Cienciano,17,23,1.0444,0,1.0444,0.0454,-1.0444
+2024,312208,Ruben Ramirez,Cusco FC,9,10,0.9418,0,0.9418,0.0942,-0.9418
+2024,312264,Horacio Calcaterra,Universitario de Deportes,17,22,1.3414,2,1.3414,0.061,0.6586
+2024,312270,Edinson Chavez,Sport Boys,3,3,0.0835,0,0.0835,0.0278,-0.0835
+2024,312346,Teodoro Paredes,Unión Comercio,11,13,2.2178,2,2.2178,0.1706,-0.2178
+2024,330867,Tomás Martínez,Melgar,32,79,6.751,7,6.001,0.0855,0.249
+2024,332265,Kevin Santamaría,Comerciantes Unidos,6,7,0.3212,0,0.3212,0.0459,-0.3212
+2024,332777,Lucas Diarte,Melgar,2,4,0.3236,0,0.3236,0.0809,-0.3236
+2024,333585,Maximiliano Amondarain,Sport Boys,11,16,1.0323,0,1.0323,0.0645,-1.0323
+2024,338883,Horacio Benincasa,Alianza Atlético de Sullana,12,15,3.373,5,1.123,0.2249,1.627
+2024,339117,Cristian Techera,Sport Boys,28,86,5.0868,6,5.0868,0.0591,0.9132
+2024,339155,Alejandro Duarte,Asociación Deportiva Tarma,1,1,0.0,1,0.0,0.0,1.0
+2024,339163,Josué Estrada,Cienciano,19,29,2.3601,5,2.3601,0.0814,2.6399
+2024,339169,Tarek Carranza,Alianza Lima,1,1,0.0,1,0.0,0.0,1.0
+2024,339169,Tarek Carranza,Sport Huancayo,1,2,0.0242,0,0.0242,0.0121,-0.0242
+2024,339169,Tarek Carranza,Unión Comercio,3,3,0.088,0,0.088,0.0293,-0.088
+2024,339171,Italo Regalado,Comerciantes Unidos,4,6,0.2598,1,0.2598,0.0433,0.7402
+2024,339171,Italo Regalado,Unión Comercio,6,6,0.2096,0,0.2096,0.0349,-0.2096
+2024,339475,José Miguel Manzaneda,Los Chankas CYC,24,60,5.8159,7,5.8159,0.0969,1.1841
+2024,339481,Aldair Perleche,Alianza Atlético de Sullana,3,4,0.3329,1,0.3329,0.0832,0.6671
+2024,339529,Willyan Mimbela,Carlos A. Mannucci,16,32,0.9868,0,0.9868,0.0308,-0.9868
+2024,339841,Ángel Ojeda,Universidad Técnica de Cajamarca,14,20,0.587,1,0.587,0.0293,0.413
+2024,339843,Marco Aldair Rodríguez,Cienciano,18,26,1.6116,2,1.6116,0.062,0.3884
+2024,339855,Bernardo Cuesta,Melgar,24,109,13.2474,15,11.7474,0.1215,1.7526
+2024,339963,Luis Caicedo,Deportivo Garcilaso,4,5,0.1664,0,0.1664,0.0333,-0.1664
+2024,340077,Pablo Lavandeira,Melgar,13,33,4.2685,2,3.5185,0.1293,-2.2685
+2024,340553,Cristian Bordacahar,Melgar,26,62,6.3405,7,6.3405,0.1023,0.6595
+2024,341981,Rodrigo Castro,Alianza Atlético de Sullana,16,21,1.5079,1,1.5079,0.0718,-0.5079
+2024,343633,Gino Guerrero,Unión Comercio,4,7,0.5246,1,0.5246,0.0749,0.4754
+2024,345779,Christofer Gonzáles,Club Sporting Cristal,10,24,2.5822,2,2.5822,0.1076,-0.5822
+2024,345779,Christofer Gonzáles,Universitario de Deportes,8,9,0.3187,0,0.3187,0.0354,-0.3187
+2024,358194,Koichi Aparicio,Universidad Técnica de Cajamarca,19,33,3.3524,6,3.3524,0.1016,2.6476
+2024,365990,Leonel González,Melgar,11,12,1.3611,0,0.6111,0.1134,-1.3611
+2024,365990,Leonel González,Sport Huancayo,1,1,0.0,1,0.0,0.0,1.0
+2024,384658,Alexis Cossio,Carlos A. Mannucci,10,19,0.7445,0,0.7445,0.0392,-0.7445
+2024,385712,Roberto Siucho,Alianza Atlético de Sullana,3,3,0.1194,0,0.1194,0.0398,-0.1194
+2024,542636,Jairo Vélez,Universidad César Vallejo,30,84,7.1455,10,5.6455,0.0851,2.8545
+2024,560054,Hansell Riojas,Unión Comercio,2,4,0.3099,0,0.3099,0.0775,-0.3099
+2024,583660,Marcelo Benítez,Cienciano,16,31,1.1932,0,1.1932,0.0385,-1.1932
+2024,585102,Adrián Fernández,Alianza Atlético de Sullana,24,74,11.108,6,6.608,0.1501,-5.108
+2024,586956,Lucas Colitto,Cusco FC,30,56,5.2223,6,5.2223,0.0933,0.7777
+2024,586956,Lucas Colitto,Unión Comercio,1,1,0.0,1,0.0,0.0,1.0
+2024,588144,Jhonny Vidales,Carlos A. Mannucci,1,3,0.1073,0,0.1073,0.0358,-0.1073
+2024,588144,Johnny Vidales,Carlos A. Mannucci,14,17,1.5217,2,1.5217,0.0895,0.4783
+2024,589292,Ángel Benítez,Carlos A. Mannucci,17,34,2.5981,5,2.5981,0.0764,2.4019
+2024,589448,Jean Pierre Archimbaud,Melgar,25,52,8.3057,12,8.3057,0.1597,3.6943
+2024,590310,Víctor Cedrón,Asociación Deportiva Tarma,28,74,4.5696,7,3.0696,0.0618,2.4304
+2024,590312,Gabriel Costa,Alianza Lima,3,3,0.5153,1,0.5153,0.1718,0.4847
+2024,590312,Gabriel Costa,Universitario de Deportes,8,11,1.0045,1,1.0045,0.0913,-0.0045
+2024,590468,Jeremy Martin Rostaing,Club Atlético Grau,11,14,0.7825,0,0.7825,0.0559,-0.7825
+2024,590468,Jeremy Rostaing,Club Atlético Grau,2,2,0.1842,0,0.1842,0.0921,-0.1842
+2024,760636,Anthony Gordillo,Deportivo Garcilaso,16,25,0.8895,1,0.8895,0.0356,0.1105
+2024,787610,Yorleys Mena,Universidad César Vallejo,28,82,11.1202,10,9.6202,0.1356,-1.1202
+2024,789372,Adrián Arregui,Alianza Lima,15,27,1.7651,1,1.7651,0.0654,-0.7651
+2024,789416,Federico Illanes,Alianza Atlético de Sullana,4,5,0.1546,0,0.1546,0.0309,-0.1546
+2024,790018,Elsar Rodas,Club Atlético Grau,11,13,0.6304,1,0.6304,0.0485,0.3696
+2024,790029,Alexander Succar,Carlos A. Mannucci,12,19,1.6038,3,1.6038,0.0844,1.3962
+2024,790030,Santiago Rebagliati,Alianza Atlético de Sullana,6,11,1.1582,1,1.1582,0.1053,-0.1582
+2024,791146,Daniel Franco,Club Atlético Grau,10,14,1.218,0,0.468,0.087,-1.218
+2024,791146,Daniel Franco,Universidad Técnica de Cajamarca,1,1,0.0,1,0.0,0.0,1.0
+2024,799663,Abel Casquete,Los Chankas CYC,12,21,1.4869,2,1.4869,0.0708,0.5131
+2024,801453,Ricardo Salcedo,Sport Huancayo,8,13,0.5316,0,0.5316,0.0409,-0.5316
+2024,805055,Gustavo Dulanto,Universitario de Deportes,1,3,0.3755,0,0.3755,0.1252,-0.3755
+2024,805056,Javier Núñez,Sport Huancayo,12,20,0.7493,0,0.7493,0.0375,-0.7493
+2024,805065,Rafael Guarderas,Club Atlético Grau,9,12,0.6369,0,0.6369,0.0531,-0.6369
+2024,805068,Emmanuel Páucar,Comerciantes Unidos,2,3,0.1483,0,0.1483,0.0494,-0.1483
+2024,805135,Gustavo Viera,Carlos A. Mannucci,8,10,0.1556,0,0.1556,0.0156,-0.1556
+2024,805261,Nilson Loyola,Universidad César Vallejo,2,3,0.3498,0,0.3498,0.1166,-0.3498
+2024,805264,Patricio Álvarez,Club Atlético Grau,6,6,3.1005,4,0.1005,0.5168,0.8995
+2024,805268,Alexis Arias,Melgar,4,5,0.6735,1,0.6735,0.1347,0.3265
+2024,805270,Paolo Fuentes,Cienciano,6,10,1.0105,2,1.0105,0.101,0.9895
+2024,805332,Miguel Carranza,Unión Comercio,8,14,0.7989,0,0.7989,0.0571,-0.7989
+2024,805353,Joao Villamarin,Sport Boys,9,22,2.3501,1,2.3501,0.1068,-1.3501
+2024,805354,Ronal Huaccha,Sport Huancayo,19,30,3.5148,4,2.7648,0.1172,0.4852
+2024,805366,Oshiro Takeuchi,Los Chankas CYC,17,25,3.5488,4,3.5488,0.142,0.4512
+2024,805451,Jarlin Quintero,Universidad Técnica de Cajamarca,31,69,10.7176,17,6.2176,0.1553,6.2824
+2024,815133,Matias Noble,Melgar,3,6,1.0799,1,1.0799,0.18,-0.0799
+2024,818401,Pierre Da Silva,Universidad César Vallejo,15,29,2.278,1,2.278,0.0786,-1.278
+2024,819114,Pablo Sabbag,Alianza Lima,11,27,4.2479,4,3.4979,0.1573,-0.2479
+2024,819935,Victor Labrin,Unión Comercio,2,2,0.2798,0,0.2798,0.1399,-0.2798
+2024,820980,Jonathan Segura,Universidad César Vallejo,1,1,0.0,1,0.0,0.0,1.0
+2024,820980,Jonathan Segura,Universidad Técnica de Cajamarca,5,8,0.4334,0,0.4334,0.0542,-0.4334
+2024,826380,Ray Sandoval,Club Atlético Grau,8,21,2.3877,1,1.6377,0.1137,-1.3877
+2024,828836,Leandro Sosa,Club Sporting Cristal,12,18,2.7015,2,2.7015,0.1501,-0.7015
+2024,829029,Iván Colman,Cusco FC,31,75,7.8332,8,5.5832,0.1044,0.1668
+2024,830004,Jhonier Viveros,Sport Huancayo,3,3,0.1535,0,0.1535,0.0512,-0.1535
+2024,830085,Alex Rambal,Asociación Deportiva Tarma,12,17,1.3961,1,1.3961,0.0821,-0.3961
+2024,830660,Rodrigo Tapia,Club Atlético Grau,5,7,0.8536,0,0.8536,0.1219,-0.8536
+2024,830663,Alejandro Hohberg,Club Sporting Cristal,6,7,0.758,0,0.758,0.1083,-0.758
+2024,830746,Neri Bandiera,Club Atlético Grau,30,74,11.4592,14,11.4592,0.1549,2.5408
+2024,830880,Nicolás Silva,Cusco FC,25,56,4.6929,4,4.6929,0.0838,-0.6929
+2024,831182,Arly Benites,Sport Boys,2,2,0.0478,0,0.0478,0.0239,-0.0478
+2024,831183,Carlos Diez,Deportivo Garcilaso,13,17,0.7982,1,0.7982,0.047,0.2018
+2024,832001,Arley Rodríguez,Universidad César Vallejo,6,10,0.812,0,0.812,0.0812,-0.812
+2024,832687,Duván Palacios,Comerciantes Unidos,23,37,1.3587,2,1.3587,0.0367,0.6413
+2024,839368,Tomás Sandoval,Club Atlético Grau,13,32,4.0506,3,3.3006,0.1266,-1.0506
+2024,840530,Óscar Barreto,Universidad César Vallejo,6,9,1.0336,1,1.0336,0.1148,-0.0336
+2024,842529,Claudio Torrejón,Cienciano,17,23,1.094,1,1.094,0.0476,-0.094
+2024,846366,Adrián Ugarriza,Deportivo Garcilaso,22,51,8.4576,10,6.2076,0.1658,1.5424
+2024,846474,Luis Urruti,Carlos A. Mannucci,17,52,3.8992,4,3.8992,0.075,0.1008
+2024,846474,Luis Urruti,Deportivo Garcilaso,8,20,0.8796,3,0.8796,0.044,2.1204
+2024,846486,Segundo Portocarrero,Universitario de Deportes,12,17,1.5748,1,1.5748,0.0926,-0.5748
+2024,846742,Marcos Lliuya,Sport Huancayo,26,63,2.246,3,2.246,0.0357,0.754
+2024,846749,Alexander Lecaros,Cienciano,6,9,0.7363,0,0.7363,0.0818,-0.7363
+2024,846751,Miguel Aucca,Cusco FC,19,34,4.0055,5,4.0055,0.1178,0.9945
+2024,848365,Joseph Cox,Los Chankas CYC,2,3,0.4808,0,0.4808,0.1603,-0.4808
+2024,868711,Eduardo Rabanal,Carlos A. Mannucci,3,3,0.1782,0,0.1782,0.0594,-0.1782
+2024,873703,Anthony Rosell,Club Atlético Grau,1,1,0.0119,0,0.0119,0.0119,-0.0119
+2024,873704,Ángel Pérez,Sport Huancayo,14,24,0.8653,1,0.8653,0.0361,0.1347
+2024,874981,Jesus Mendieta,Alianza Atlético de Sullana,15,21,0.7768,1,0.7768,0.037,0.2232
+2024,874984,Gianfranco Chávez,Club Sporting Cristal,6,9,1.4075,1,1.4075,0.1564,-0.4075
+2024,874985,Renzo Garces,Alianza Lima,13,15,1.602,2,1.602,0.1068,0.398
+2024,874985,Renzo Garcés,Alianza Lima,2,4,0.8968,0,0.8968,0.2242,-0.8968
+2024,874986,Frank Ysique,Universidad César Vallejo,8,9,0.7583,0,0.7583,0.0843,-0.7583
+2024,874987,Fernando Pacheco,Club Sporting Cristal,6,7,0.9141,3,0.9141,0.1306,2.0859
+2024,874988,Martín Távara,Club Sporting Cristal,23,41,2.1799,2,1.4299,0.0532,-0.1799
+2024,875661,Jorge Toledo,Comerciantes Unidos,7,8,0.1463,0,0.1463,0.0183,-0.1463
+2024,875662,Kevin Ruiz,Universidad Técnica de Cajamarca,15,22,1.0551,1,1.0551,0.048,-0.0551
+2024,876924,Diego Carabaño,Los Chankas CYC,19,39,1.3173,0,1.3173,0.0338,-1.3173
+2024,876926,Francisco Duclos,Alianza Atlético de Sullana,1,1,0.0504,0,0.0504,0.0504,-0.0504
+2024,876927,Aldair Fuentes,Alianza Lima,4,5,0.5827,1,0.5827,0.1165,0.4173
+2024,876928,Luis Garro,Sport Huancayo,13,17,1.2106,0,1.2106,0.0712,-1.2106
+2024,876929,Kevin Quevedo,Alianza Lima,7,16,1.0821,0,1.0821,0.0676,-1.0821
+2024,876931,Erinson Ramirez,Deportivo Garcilaso,5,10,0.2554,0,0.2554,0.0255,-0.2554
+2024,876931,Erinson Ramirez,Unión Comercio,9,16,0.6952,1,0.6952,0.0434,0.3048
+2024,877910,Fabio Rojas,Club Atlético Grau,2,2,0.4633,0,0.4633,0.2317,-0.4633
+2024,878754,Ademar Robles,Los Chankas CYC,10,11,0.2976,1,0.2976,0.0271,0.7024
+2024,879621,José Luján,Los Chankas CYC,4,5,0.2458,0,0.2458,0.0492,-0.2458
+2024,879628,Jordan Guivin,Cienciano,8,12,0.5405,0,0.5405,0.045,-0.5405
+2024,879629,Hideyoshi Arakaki,Alianza Atlético de Sullana,5,6,0.441,0,0.441,0.0735,-0.441
+2024,882837,Roberto Villamarín,Unión Comercio,8,11,0.5313,0,0.5313,0.0483,-0.5313
+2024,882839,Jorge Murrugarra,Universitario de Deportes,3,3,0.0737,0,0.0737,0.0246,-0.0737
+2024,882897,Alonso Tamaríz,Cusco FC,2,2,0.2316,0,0.2316,0.1158,-0.2316
+2024,883287,Johan Madrid,Universidad César Vallejo,15,21,0.8193,1,0.8193,0.039,0.1807
+2024,883294,Carlos Uribe,Unión Comercio,9,12,0.7602,1,0.7602,0.0633,0.2398
+2024,883296,Kevin Sandoval,Melgar,9,17,1.1417,1,1.1417,0.0672,-0.1417
+2024,883298,Paulo Goyoneche,Universidad Técnica de Cajamarca,2,2,0.0611,0,0.0611,0.0306,-0.0611
+2024,883299,Janio Pósito,Asociación Deportiva Tarma,21,42,10.0906,10,7.0906,0.2403,-0.0906
+2024,883313,Nelinho Quina,Carlos A. Mannucci,2,2,0.3138,0,0.3138,0.1569,-0.3138
+2024,883313,Nelinho Quina,Cienciano,1,1,0.0,1,0.0,0.0,1.0
+2024,883329,Luis Benites,Sport Huancayo,15,25,2.7755,2,2.0255,0.111,-0.7755
+2024,883343,Aldair Salazar,Deportivo Garcilaso,9,12,0.6879,0,0.6879,0.0573,-0.6879
+2024,883389,Diego Ramírez,Deportivo Garcilaso,9,13,0.9544,0,0.9544,0.0734,-0.9544
+2024,883391,Ederson Mogollón,Los Chankas CYC,1,2,0.1221,0,0.1221,0.061,-0.1221
+2024,883393,Keyvin Paico,Comerciantes Unidos,3,3,0.052,0,0.052,0.0173,-0.052
+2024,883396,Carlos Cabello,Universidad César Vallejo,7,13,0.5276,0,0.5276,0.0406,-0.5276
+2024,883397,Gerson Barreto,Universidad César Vallejo,14,19,0.6033,0,0.6033,0.0318,-0.6033
+2024,883406,Yordi Vílchez,Asociación Deportiva Tarma,1,1,0.2183,0,0.2183,0.2183,-0.2183
+2024,883720,Christian Velarde,Carlos A. Mannucci,3,3,0.1017,0,0.1017,0.0339,-0.1017
+2024,883729,Kelvin Sánchez,Cienciano,1,1,0.0,1,0.0,0.0,1.0
+2024,883729,Kelvin Sánchez,Unión Comercio,15,21,1.0552,1,1.0552,0.0502,-0.0552
+2024,883746,Ítalo Espinoza,Carlos A. Mannucci,1,1,0.0,1,0.0,0.0,1.0
+2024,883768,David Dioses,Comerciantes Unidos,7,9,0.7903,0,0.7903,0.0878,-0.7903
+2024,883768,David Dioses,Sport Huancayo,1,2,0.0302,0,0.0302,0.0151,-0.0302
+2024,883772,Ray Gómez,Sport Huancayo,14,31,2.2805,1,1.5305,0.0736,-1.2805
+2024,883812,Renato Espinosa,Alianza Atlético de Sullana,16,30,4.6376,8,4.6376,0.1546,3.3624
+2024,883812,Renato Espinosa,Sport Huancayo,2,2,0.2714,0,0.2714,0.1357,-0.2714
+2024,883813,Jose Eduardo Caballero,Comerciantes Unidos,4,6,0.6947,0,0.6947,0.1158,-0.6947
+2024,884997,Matías Di Benedetto,Asociación Deportiva Tarma,1,1,0.0,1,0.0,0.0,1.0
+2024,884997,Matías Di Benedetto,Universitario de Deportes,11,12,0.6766,0,0.6766,0.0564,-0.6766
+2024,885006,Francisco Grahl,Sport Boys,8,12,0.6708,1,0.6708,0.0559,0.3292
+2024,885583,Cristian González,Alianza Lima,1,1,0.0,1,0.0,0.0,1.0
+2024,885583,Cristian González,Comerciantes Unidos,5,6,0.251,2,0.251,0.0418,1.749
+2024,886545,Angel Quiñonez,Asociación Deportiva Tarma,20,33,3.3105,2,3.3105,0.1003,-1.3105
+2024,886763,José Cortés,Carlos A. Mannucci,24,59,6.3539,5,6.3539,0.1077,-1.3539
+2024,887125,Jose Bolivar,Universidad César Vallejo,5,5,0.332,0,0.332,0.0664,-0.332
+2024,892073,Gustavo Cazonatti,Club Sporting Cristal,17,29,2.0481,3,2.0481,0.0706,0.9519
+2024,892669,Christopher Olivares,Universitario de Deportes,8,11,1.028,2,1.028,0.0935,0.972
+2024,893536,Diego Dorregaray,Universitario de Deportes,12,22,4.3712,4,2.8712,0.1987,-0.3712
+2024,895338,Fernando Bersano,Asociación Deportiva Tarma,10,13,0.5484,2,0.5484,0.0422,1.4516
+2024,895364,Gaspar Gentile,Deportivo Garcilaso,31,78,6.4196,5,6.4196,0.0823,-1.4196
+2024,895589,Williams Riveros,Universitario de Deportes,20,23,1.9834,4,1.9834,0.0862,2.0166
+2024,898631,Juan Romagnoli,Cienciano,23,37,1.4875,1,1.4875,0.0402,-0.4875
+2024,898755,Diego Mondino,Universidad Técnica de Cajamarca,5,6,0.6751,1,0.6751,0.1125,0.3249
+2024,898755,Diego Mondino,Unión Comercio,1,1,0.0,1,0.0,0.0,1.0
+2024,901019,Luis Iberico,Club Sporting Cristal,2,3,0.4149,2,0.4149,0.1383,1.5851
+2024,901020,Jeremy Canela,Alianza Atlético de Sullana,29,62,5.2496,2,5.2496,0.0847,-3.2496
+2024,906002,Carlos Garcés,Cienciano,29,78,15.3263,19,10.8263,0.1965,3.6737
+2024,909108,Cristian Ojeda,Universidad Técnica de Cajamarca,7,15,1.1687,0,1.1687,0.0779,-1.1687
+2024,909661,Luis Chicaiza,Deportivo Garcilaso,16,30,4.1089,2,1.8589,0.137,-2.1089
+2024,913398,Jesús Castillo,Alianza Lima,5,6,0.412,0,0.412,0.0687,-0.412
+2024,922007,Jimmy Valoyes,Cienciano,7,9,1.0608,1,1.0608,0.1179,-0.0608
+2024,922007,Jimmy Valoyes,Universidad Técnica de Cajamarca,11,20,1.0707,0,1.0707,0.0535,-1.0707
+2024,922869,Jesús Barco,Sport Boys,10,19,1.6768,3,0.9268,0.0883,1.3232
+2024,922870,Jose Antonio Parodi,Comerciantes Unidos,6,7,0.1761,0,0.1761,0.0252,-0.1761
+2024,922871,Nelson Cabanillas,Universitario de Deportes,8,8,0.4473,0,0.4473,0.0559,-0.4473
+2024,922873,Paulo De La Cruz,Club Atlético Grau,19,31,2.7358,3,2.7358,0.0883,0.2642
+2024,923173,Axel Chávez,Los Chankas CYC,13,15,0.8444,1,0.8444,0.0563,0.1556
+2024,923196,Juan Tévez,Cusco FC,26,44,7.2356,11,5.7356,0.1644,3.7644
+2024,923740,Alec Deneumostier,Universidad César Vallejo,8,11,0.8023,0,0.8023,0.0729,-0.8023
+2024,924574,Carlos López,Los Chankas CYC,23,39,5.2915,11,2.2915,0.1357,5.7085
+2024,924725,Santiago Arias,Alianza Atlético de Sullana,16,29,0.9134,0,0.9134,0.0315,-0.9134
+2024,924736,Mauro Da Luz,Club Atlético Grau,22,54,8.1557,10,7.4057,0.151,1.8443
+2024,924782,Jesús Pretell,Club Sporting Cristal,15,17,0.3698,0,0.3698,0.0218,-0.3698
+2024,924783,Jairo Concha,Universitario de Deportes,21,41,2.0713,1,2.0713,0.0505,-1.0713
+2024,924787,Jefferson Portales,Cienciano,2,2,0.1579,0,0.1579,0.0789,-0.1579
+2024,924787,Jefferson Portales,Universidad Técnica de Cajamarca,2,2,0.0869,0,0.0869,0.0434,-0.0869
+2024,924793,Héctor Zeta,Unión Comercio,10,16,3.2811,4,2.5311,0.2051,0.7189
+2024,924860,Franco Romero,Club Sporting Cristal,9,14,1.1477,0,1.1477,0.082,-1.1477
+2024,924881,Christian Vasquez,Alianza Atlético de Sullana,9,10,0.6034,0,0.6034,0.0603,-0.6034
+2024,924932,Alejandro Ramos,Melgar,6,11,0.3837,0,0.3837,0.0349,-0.3837
+2024,925119,Joel López Pisano,Sport Boys,6,6,0.2836,0,0.2836,0.0473,-0.2836
+2024,925119,Joel López Pissano,Sport Boys,3,4,0.1421,0,0.1421,0.0355,-0.1421
+2024,925154,Sandro Rengifo,Unión Comercio,1,1,0.1417,0,0.1417,0.1417,-0.1417
+2024,925176,Hugo Ángeles,Sport Huancayo,12,16,2.0491,2,2.0491,0.1281,-0.0491
+2024,925232,Juan Barreda,Sport Huancayo,1,1,0.0465,0,0.0465,0.0465,-0.0465
+2024,925309,Carlos Correa,Sport Boys,4,7,0.2425,0,0.2425,0.0346,-0.2425
+2024,925420,Jean Franco Falconi,Asociación Deportiva Tarma,5,9,0.5852,0,0.5852,0.065,-0.5852
+2024,926237,Jorge Bosmediano,Comerciantes Unidos,3,4,0.5401,1,0.5401,0.135,0.4599
+2024,926640,Gonzalo Rizzo,Carlos A. Mannucci,13,17,1.5424,3,1.5424,0.0907,1.4576
+2024,927690,Matías Succar,Alianza Lima,6,15,1.4674,0,1.4674,0.0978,-1.4674
+2024,927690,Matías Succar,Carlos A. Mannucci,13,34,4.4234,4,3.6734,0.1301,-0.4234
+2024,928434,Alan Murialdo,Los Chankas CYC,11,20,3.327,2,3.327,0.1663,-1.327
+2024,928435,Gonzalo Sanchez,Los Chankas CYC,7,9,0.4744,0,0.4744,0.0527,-0.4744
+2024,929004,Kevin Ferreyra,Unión Comercio,3,3,0.1776,0,0.1776,0.0592,-0.1776
+2024,929014,Oslimg Mora,Club Atlético Grau,4,10,0.4063,0,0.4063,0.0406,-0.4063
+2024,929109,Pedro Garcia,Los Chankas CYC,1,2,0.2098,0,0.2098,0.1049,-0.2098
+2024,929699,Ángel Ledesma,Los Chankas CYC,25,61,6.9403,6,6.9403,0.1138,-0.9403
+2024,931653,Kevin Becerra,Los Chankas CYC,14,26,2.611,2,2.611,0.1004,-0.611
+2024,931653,Kevin Becerra,Melgar,1,1,0.0,1,0.0,0.0,1.0
+2024,931775,Osama Vinladen,Unión Comercio,3,4,0.0647,0,0.0647,0.0162,-0.0647
+2024,931776,Christian Neira,Alianza Lima,6,7,1.2157,1,1.2157,0.1737,-0.2157
+2024,931777,Denilson Vargas,Unión Comercio,8,11,0.3505,0,0.3505,0.0319,-0.3505
+2024,931788,Gu Choi,Asociación Deportiva Tarma,4,4,0.275,0,0.275,0.0688,-0.275
+2024,932088,Piero Vivanco,Club Atlético Grau,9,20,1.4765,1,1.4765,0.0738,-0.4765
+2024,932870,Alan Perez,Cusco FC,8,9,0.6093,0,0.6093,0.0677,-0.6093
+2024,932927,Jorge Rios,Sport Boys,12,17,0.5741,0,0.5741,0.0338,-0.5741
+2024,933181,Matías Cortave,Carlos A. Mannucci,3,5,0.3299,0,0.3299,0.066,-0.3299
+2024,933730,Brandon Palacios,Sport Boys,15,22,2.2308,2,2.2308,0.1014,-0.2308
+2024,936165,Leonardo Mifflin,Cienciano,2,3,0.2682,0,0.2682,0.0894,-0.2682
+2024,937859,Santiago González,Club Sporting Cristal,29,88,7.8304,14,7.0804,0.089,6.1696
+2024,941410,Brian Blando,Melgar,23,57,7.1845,3,7.1845,0.126,-4.1845
+2024,942164,José Zevallos,Club Sporting Cristal,1,1,0.0,1,0.0,0.0,1.0
+2024,942164,José Zevallos,Cusco FC,8,9,0.2969,0,0.2969,0.033,-0.2969
+2024,944825,Jeriel De Santis,Alianza Lima,4,5,0.3636,0,0.3636,0.0727,-0.3636
+2024,949793,Alessandro Milesi,Alianza Atlético de Sullana,14,19,1.0979,0,1.0979,0.0578,-1.0979
+2024,954811,Sebastián Gonzales Zela,Comerciantes Unidos,18,36,3.7199,6,2.9699,0.1033,2.2801
+2024,957940,Manuel Ganoza,Universidad César Vallejo,2,2,0.3024,0,0.3024,0.1512,-0.3024
+2024,958382,Ignácio,Club Sporting Cristal,11,18,2.9159,5,2.9159,0.162,2.0841
+2024,960215,Rudy Palomino,Cienciano,7,11,0.7676,2,0.7676,0.0698,1.2324
+2024,960215,Rudy Palomino,Los Chankas CYC,5,7,0.1712,0,0.1712,0.0245,-0.1712
+2024,960220,Matias Sen,Comerciantes Unidos,23,54,7.6299,13,5.3799,0.1413,5.3701
+2024,960225,Hugo Ancajima,Universitario de Deportes,3,3,0.1137,0,0.1137,0.0379,-0.1137
+2024,962187,Juan Freytes,Alianza Lima,30,60,3.9682,4,3.9682,0.0661,0.0318
+2024,965761,Piero Serra,Unión Comercio,9,12,0.4951,0,0.4951,0.0413,-0.4951
+2024,973563,Miguel Cornejo,Deportivo Garcilaso,5,6,0.3102,0,0.3102,0.0517,-0.3102
+2024,973566,Oswaldo Valenzuela,Cusco FC,22,38,1.066,2,1.066,0.0281,0.934
+2024,973650,Franco Zanelatto,Alianza Lima,12,17,0.9867,0,0.9867,0.058,-0.9867
+2024,973653,Jonathan Bilbao,Cusco FC,7,8,0.4626,0,0.4626,0.0578,-0.4626
+2024,973664,Yuriel Celi,Universitario de Deportes,6,7,1.0015,1,0.2515,0.1431,-0.0015
+2024,973681,Relly Fernández,Cusco FC,5,5,0.3368,1,0.3368,0.0674,0.6632
+2024,973682,Ricardo Lagos,Alianza Lima,2,3,0.0992,0,0.0992,0.0331,-0.0992
+2024,974006,Pablo Cárdenas,Cusco FC,7,8,1.129,1,1.129,0.1411,-0.129
+2024,974136,Beto Da Silva,Asociación Deportiva Tarma,18,36,4.2692,3,4.2692,0.1186,-1.2692
+2024,974451,Matías Pérez García,Sport Huancayo,11,13,1.1031,2,1.1031,0.0849,0.8969
+2024,975241,Erick Perleche,Alianza Atlético de Sullana,1,1,0.0,1,0.0,0.0,1.0
+2024,975241,Erick Perleche,Deportivo Garcilaso,6,9,0.4783,1,0.4783,0.0531,0.5217
+2024,975540,Freddy Oncoy,Club Atlético Grau,9,11,1.4451,3,1.4451,0.1314,1.5549
+2024,975853,Rotceh Aguilar,Los Chankas CYC,2,2,0.037,0,0.037,0.0185,-0.037
+2024,975919,Percy Liza,Carlos A. Mannucci,13,18,2.4658,1,2.4658,0.137,-1.4658
+2024,975920,Christian Vargas,Asociación Deportiva Tarma,2,2,0.2251,0,0.2251,0.1125,-0.2251
+2024,976096,Gonzalo Ritacco,Cienciano,20,29,1.8551,1,1.8551,0.064,-0.8551
+2024,976302,Abdiel Ayarza,Cienciano,10,18,2.8974,4,2.8974,0.161,1.1026
+2024,976931,Carlos Gamarra,Comerciantes Unidos,1,1,0.0,1,0.0,0.0,1.0
+2024,976931,Carlos Gamarra,Los Chankas CYC,9,10,0.8264,1,0.8264,0.0826,0.1736
+2024,976932,Walter Tandazo,Melgar,9,12,1.7223,0,1.7223,0.1435,-1.7223
+2024,976933,Paolo Reyna,Melgar,11,14,1.2296,1,1.2296,0.0878,-0.2296
+2024,977086,Cristian Carbajal,Sport Boys,12,13,0.8525,1,0.8525,0.0656,0.1475
+2024,978520,Joe Martínez,Los Chankas CYC,1,1,0.0469,0,0.0469,0.0469,-0.0469
+2024,978545,Axel Moyano,Alianza Lima,1,1,0.029,0,0.029,0.029,-0.029
+2024,978549,Rafael Lutiger,Club Sporting Cristal,4,5,0.2318,1,0.2318,0.0464,0.7682
+2024,978549,Rafael Lutiger,Sport Boys,3,4,0.4572,0,0.4572,0.1143,-0.4572
+2024,980141,Diego Soto,Club Atlético Grau,16,21,0.7425,0,0.7425,0.0354,-0.7425
+2024,980889,Dylan Caro,Comerciantes Unidos,11,18,0.6427,1,0.6427,0.0357,0.3573
+2024,981374,Kevin Serna,Alianza Lima,11,18,1.3415,1,1.3415,0.0745,-0.3415
+2024,982178,Alexi Edwin Gómez,Deportivo Garcilaso,10,21,0.4143,1,0.4143,0.0197,0.5857
+2024,982178,Alexi Edwin Gómez,Sport Huancayo,4,5,0.1904,0,0.1904,0.0381,-0.1904
+2024,984107,Luis Ramos,Cusco FC,23,55,7.7558,11,7.0058,0.141,3.2442
+2024,988298,Óscar Pinto,Comerciantes Unidos,22,37,2.4893,2,1.7393,0.0673,-0.4893
+2024,988299,Nicolás Figueroa,Club Atlético Grau,5,7,0.9435,1,0.9435,0.1348,0.0565
+2024,989240,Didier La Torre,Cienciano,10,12,1.0491,2,1.0491,0.0874,0.9509
+2024,989258,Marcelo Gaona,Carlos A. Mannucci,3,5,0.3834,0,0.3834,0.0767,-0.3834
+2024,989259,Mathias Llontop,Carlos A. Mannucci,6,8,0.3981,0,0.3981,0.0498,-0.3981
+2024,989260,Pedro Ibañez,Cienciano,2,2,0.0929,0,0.0929,0.0465,-0.0929
+2024,989711,Mario Otazú,Universidad Técnica de Cajamarca,12,32,1.721,0,1.721,0.0538,-1.721
+2024,991202,Pablo Bueno,Sport Boys,26,68,9.6461,11,8.1461,0.1419,1.3539
+2024,992004,Kevin Peña,Sport Boys,5,5,0.2051,0,0.2051,0.041,-0.2051
+2024,992958,Eric Tovo,Alianza Atlético de Sullana,7,8,0.4608,0,0.4608,0.0576,-0.4608
+2024,994588,José De la Cruz,Alianza Atlético de Sullana,3,3,0.0868,0,0.0868,0.0289,-0.0868
+2024,1001106,Mathias Carpio,Los Chankas CYC,1,1,0.0295,0,0.0295,0.0295,-0.0295
+2024,1005176,Jhilmar Lora,Club Sporting Cristal,3,5,0.2723,0,0.2723,0.0545,-0.2723
+2024,1006509,Jiovany Ramos,Alianza Lima,7,9,0.736,1,0.736,0.0818,0.264
+2024,1015696,Tiago Cantoro,Universidad Técnica de Cajamarca,9,15,1.9606,1,1.2106,0.1307,-0.9606
+2024,1016972,Alex Valera,Universitario de Deportes,25,92,11.1306,13,7.3806,0.121,1.8694
+2024,1016974,Ayrthon Quintana,Los Chankas CYC,3,3,0.1011,0,0.1011,0.0337,-0.1011
+2024,1016974,Ayrthon Quintana,Sport Boys,1,2,0.0367,0,0.0367,0.0184,-0.0367
+2024,1016982,Marlon Ruidías,Los Chankas CYC,15,24,1.736,4,1.736,0.0723,2.264
+2024,1017755,Emilio Saba,Carlos A. Mannucci,9,10,0.5263,0,0.5263,0.0526,-0.5263
+2024,1017756,Franchesco Flores,Universidad César Vallejo,3,4,0.2578,0,0.2578,0.0645,-0.2578
+2024,1017759,Jefferson Caceres,Melgar,17,39,7.0254,8,6.2754,0.1801,0.9746
+2024,1017760,Jhamir D'Arrigo,Alianza Lima,8,10,1.732,2,1.732,0.1732,0.268
+2024,1017768,Rodrigo Salinas,Comerciantes Unidos,5,5,0.184,0,0.184,0.0368,-0.184
+2024,1017768,Rodrigo Salinas,Los Chankas CYC,2,3,0.1775,0,0.1775,0.0592,-0.1775
+2024,1018072,Joao Grimaldo,Club Sporting Cristal,13,31,2.8339,3,2.8339,0.0914,0.1661
+2024,1018081,Adrian Gutierrez,Universidad Técnica de Cajamarca,2,5,0.3338,0,0.3338,0.0668,-0.3338
+2024,1018134,Geisson Perea,Universidad César Vallejo,3,3,0.125,0,0.125,0.0417,-0.125
+2024,1018164,Jhojan Dominguez,Asociación Deportiva Tarma,1,2,0.1972,0,0.1972,0.0986,-0.1972
+2024,1018233,Erick Canales,Deportivo Garcilaso,8,9,0.7834,0,0.7834,0.087,-0.7834
+2024,1018255,Orlando Nuñez,Cienciano,1,1,0.0496,0,0.0496,0.0496,-0.0496
+2024,1018422,José Villegas,Alianza Atlético de Sullana,11,17,1.1564,0,1.1564,0.068,-1.1564
+2024,1018573,Edgar Lastre,Comerciantes Unidos,7,10,1.3477,2,1.3477,0.1348,0.6523
+2024,1019250,Diego Temoche,Los Chankas CYC,2,2,0.2087,0,0.2087,0.1044,-0.2087
+2024,1020375,Erick Noriega,Alianza Lima,10,14,1.1764,1,1.1764,0.084,-0.1764
+2024,1020375,Erick Noriega,Comerciantes Unidos,7,8,0.4972,0,0.4972,0.0622,-0.4972
+2024,1020855,Leonardo Rugel,Cienciano,6,9,0.6718,0,0.6718,0.0746,-0.6718
+2024,1020999,José Rivera,Universitario de Deportes,23,47,6.3816,9,5.6316,0.1358,2.6184
+2024,1022066,Neil Marcos,Universidad Técnica de Cajamarca,8,11,0.3109,0,0.3109,0.0283,-0.3109
+2024,1049077,Sebastian Cavero,Melgar,4,4,0.1907,0,0.1907,0.0477,-0.1907
+2024,1049079,Richard Guevara,Universidad Técnica de Cajamarca,2,3,0.0856,0,0.0856,0.0285,-0.0856
+2024,1049088,Erick Gonzales,Deportivo Garcilaso,6,8,0.1984,0,0.1984,0.0248,-0.1984
+2024,1049204,James Morales,Cusco FC,2,2,0.0691,0,0.0691,0.0346,-0.0691
+2024,1065267,Adrián Ascues,Club Sporting Cristal,2,3,0.2536,0,0.2536,0.0845,-0.2536
+2024,1068656,Alonso Yovera,Club Sporting Cristal,1,1,0.0,1,0.0,0.0,1.0
+2024,1069367,Sharif Ramírez,Cienciano,1,3,0.1095,0,0.1095,0.0365,-0.1095
+2024,1083668,Fabrizio Roca,Sport Boys,11,16,3.5355,4,1.2855,0.221,0.4645
+2024,1084470,Paulo Rodríguez,Deportivo Garcilaso,1,1,0.0474,0,0.0474,0.0474,-0.0474
+2024,1086281,Yimy Gamero,Asociación Deportiva Tarma,14,27,1.6342,1,1.6342,0.0605,-0.6342
+2024,1086284,Matías Lazo,Melgar,3,4,0.3895,0,0.3895,0.0974,-0.3895
+2024,1086295,Kenji Cabrera,Melgar,9,16,1.6251,4,1.6251,0.1016,2.3749
+2024,1087335,Facundo Mansilla,Sport Boys,10,15,1.0231,0,1.0231,0.0682,-1.0231
+2024,1089808,Kenji Barrios,Comerciantes Unidos,6,8,0.6257,0,0.6257,0.0782,-0.6257
+2024,1090706,Victor Perlaza,Universidad Técnica de Cajamarca,27,77,6.7449,2,5.9949,0.0876,-4.7449
+2024,1090720,Marco Huaman,Alianza Lima,4,6,0.1817,0,0.1817,0.0303,-0.1817
+2024,1098312,Luis Pérez,Asociación Deportiva Tarma,23,37,1.7475,0,1.7475,0.0472,-1.7475
+2024,1098312,Luis Pérez,Carlos A. Mannucci,1,1,0.0,1,0.0,0.0,1.0
+2024,1107871,Christian Flores,Alianza Atlético de Sullana,2,4,0.37,0,0.37,0.0925,-0.37
+2024,1107888,Jostin Alarcón,Club Sporting Cristal,23,43,2.8565,4,2.8565,0.0664,1.1435
+2024,1107889,Jimmy Pérez,Universidad Técnica de Cajamarca,26,40,1.9155,4,1.9155,0.0479,2.0845
+2024,1107917,Piero Guzman,Cusco FC,4,5,0.7024,1,0.7024,0.1405,0.2976
+2024,1108679,Bruno Portugal,Melgar,2,2,0.4885,1,0.4885,0.2442,0.5115
+2024,1109858,Guillermo Larios,Alianza Atlético de Sullana,11,15,1.8909,0,1.8909,0.1261,-1.8909
+2024,1112502,Luis Navea,Unión Comercio,10,24,1.8439,2,1.0939,0.0768,0.1561
+2024,1118109,Juan Quiñones,Universidad César Vallejo,1,1,0.0552,0,0.0552,0.0552,-0.0552
+2024,1120472,Flavio Alcedo,Sport Boys,2,3,0.074,0,0.074,0.0247,-0.074
+2024,1120472,Flavio Alcedo,Universidad Técnica de Cajamarca,2,2,0.1123,0,0.1123,0.0562,-0.1123
+2024,1120803,Jhonnier Montaño,Sport Boys,2,4,0.1778,0,0.1778,0.0445,-0.1778
+2024,1120902,Aldair Vasquez,Club Atlético Grau,10,13,1.3278,2,1.3278,0.1021,0.6722
+2024,1123909,Baruj Aburto,Sport Boys,1,2,0.0913,0,0.0913,0.0456,-0.0913
+2024,1128886,Gilmar Paredes,Cienciano,1,1,0.0094,0,0.0094,0.0094,-0.0094
+2024,1130035,Jherson Reyes,Club Atlético Grau,1,1,0.0425,0,0.0425,0.0425,-0.0425
+2024,1130277,Carlos Ramirez,Alianza Lima,1,1,0.0,1,0.0,0.0,1.0
+2024,1130277,Carlos Ramirez,Unión Comercio,7,17,2.0129,2,0.5129,0.1184,-0.0129
+2024,1131133,Otávio Gut,Sport Huancayo,9,11,0.6574,0,0.6574,0.0598,-0.6574
+2024,1131289,Renny Sinisterra,Deportivo Garcilaso,5,8,0.7021,1,0.7021,0.0878,0.2979
+2024,1131302,Cristian Mejia,Los Chankas CYC,15,17,0.9397,1,0.9397,0.0553,0.0603
+2024,1148295,Jhon Alvarez,Unión Comercio,1,1,0.0177,0,0.0177,0.0177,-0.0177
+2024,1148324,Willy Diaz,Unión Comercio,1,1,0.1863,0,0.1863,0.1863,-0.1863
+2024,1159651,Jorge del Castillo,Alianza Atlético de Sullana,3,4,0.2629,0,0.2629,0.0657,-0.2629
+2024,1159653,Joshua Cantt,Sport Boys,2,2,0.0538,0,0.0538,0.0269,-0.0538
+2024,1159659,Sebastian Aranda,Unión Comercio,1,2,0.2231,0,0.2231,0.1116,-0.2231
+2024,1170472,Stefano Fernández,Alianza Atlético de Sullana,4,5,0.243,0,0.243,0.0486,-0.243
+2024,1170640,César Inga,Asociación Deportiva Tarma,18,38,2.0738,0,2.0738,0.0546,-2.0738
+2024,1170641,Jorge Palomino,Asociación Deportiva Tarma,2,2,0.1262,0,0.1262,0.0631,-0.1262
+2024,1170895,Stefano Olaya,Cusco FC,2,4,0.2273,0,0.2273,0.0568,-0.2273
+2024,1170895,Stefano Olaya,Universidad César Vallejo,2,4,0.8557,1,0.1057,0.2139,0.1443
+2024,1176233,Jorge Tandazo,Unión Comercio,3,4,0.2248,1,0.2248,0.0562,0.7752
+2024,1176706,Franklin Godos,Club Atlético Grau,2,2,0.2682,0,0.2682,0.1341,-0.2682
+2024,1182506,Valentino Sandoval,Unión Comercio,3,5,0.3304,0,0.3304,0.0661,-0.3304
+2024,1185457,Byron Angulo,Unión Comercio,9,12,0.5922,1,0.5922,0.0494,0.4078
+2024,1199271,Juan Gonzáles,Asociación Deportiva Tarma,16,28,2.2021,4,2.2021,0.0786,1.7979
+2024,1201006,Enzo Borletti,Comerciantes Unidos,1,1,0.1996,0,0.1996,0.1996,-0.1996
+2024,1385485,Maycol Infante,Universidad Técnica de Cajamarca,1,1,0.3091,0,0.3091,0.3091,-0.3091
+2024,1393339,Jorge Jimenez,Unión Comercio,1,2,0.0833,0,0.0833,0.0416,-0.0833
+2024,1408186,Gabriel Alfaro,Comerciantes Unidos,2,2,0.0634,0,0.0634,0.0317,-0.0634
+2024,1411422,Piero Magallanes,Comerciantes Unidos,23,39,3.6515,4,1.4015,0.0936,0.3485
+2024,1415939,Nicolas Amasifuen,Universidad César Vallejo,1,2,0.1061,0,0.1061,0.053,-0.1061
+2024,1415941,André Vasquez,Cusco FC,11,24,1.6212,0,1.6212,0.0676,-1.6212
+2024,1415942,Catriel Cabellos,Alianza Lima,20,40,4.5098,6,4.5098,0.1127,1.4902
+2024,1427104,Alvaro Rojas,Universitario de Deportes,1,1,0.0153,0,0.0153,0.0153,-0.0153
+2024,1427486,Renzo Salazar,Sport Boys,5,6,0.4229,1,0.4229,0.0705,0.5771
+2024,1464244,Diego Otoya,Club Sporting Cristal,2,3,0.4581,1,0.4581,0.1527,0.5419
+2024,1464245,Gonzalo Aguirre,Alianza Lima,1,4,0.1363,0,0.1363,0.0341,-0.1363
+2024,1464523,Carlos Fernandez,Universidad Técnica de Cajamarca,6,7,0.4456,0,0.4456,0.0637,-0.4456
+2024,1466374,Eslyn Correa,Cusco FC,1,1,0.1608,0,0.1608,0.1608,-0.1608
+2024,1466382,Pablo Erustes,Deportivo Garcilaso,22,56,6.3463,5,6.3463,0.1133,-1.3463
+2024,1466815,Nadhir Colunga,Cienciano,1,3,0.626,1,0.626,0.2087,0.374
+2024,1477138,Ian Wisdom,Club Sporting Cristal,3,4,0.3143,0,0.3143,0.0786,-0.3143
+2024,1477144,Alejandro Pósito,Club Sporting Cristal,2,2,0.1078,0,0.1078,0.0539,-0.1078
+2024,1482444,Víctor Guzmán,Alianza Lima,1,1,0.0341,0,0.0341,0.0341,-0.0341
+2024,1483020,Guillermo Grández,Universidad César Vallejo,1,1,0.0615,0,0.0615,0.0615,-0.0615
+2024,1503648,Alexis Huaman,Sport Boys,3,4,0.2383,1,0.2383,0.0596,0.7617
+2024,1512395,Jhair Soto,Asociación Deportiva Tarma,2,5,0.3464,0,0.3464,0.0693,-0.3464
+2024,1526674,Matias Almiron,Comerciantes Unidos,13,16,1.3721,1,1.3721,0.0858,-0.3721
+2024,1527034,Fark Ventura,Deportivo Garcilaso,1,1,0.0215,0,0.0215,0.0215,-0.0215
+2024,1546919,Edu Villar,Sport Huancayo,3,4,0.1481,0,0.1481,0.037,-0.1481
+2024,1587097,Jose Meza,Sport Huancayo,2,2,0.1596,0,0.1596,0.0798,-0.1596
+2024,1627933,Richar Bazán,Comerciantes Unidos,2,3,0.3541,0,0.3541,0.118,-0.3541
+2024,1637295,Jhan Cumbicus,Sport Huancayo,1,2,0.2522,0,0.2522,0.1261,-0.2522
+2024,1644875,Hernan Lupú,Alianza Atlético de Sullana,6,7,0.3441,1,0.3441,0.0492,0.6559
+2024,1650235,Maxloren Castro,Club Sporting Cristal,6,9,0.7899,2,0.7899,0.0878,1.2101
+2024,1650247,Gilmar Rodríguez,Sport Boys,5,7,0.9591,1,0.9591,0.137,0.0409
+2024,1650997,David Marines,Unión Comercio,3,5,0.1969,0,0.1969,0.0394,-0.1969
+2024,1819312,Josue Torres,Unión Comercio,6,8,0.5174,0,0.5174,0.0647,-0.5174
+2024,1845239,Dalexander Rios,Cienciano,1,1,0.0,1,0.0,0.0,1.0
+2024,1845546,Luis Torres,Sport Huancayo,1,1,0.0203,0,0.0203,0.0203,-0.0203
+2024,1888001,Bryan Ormeño,Sport Boys,1,1,0.0715,0,0.0715,0.0715,-0.0715
+2024,1902139,Angelo Valiente,Universidad César Vallejo,1,1,0.0829,0,0.0829,0.0829,-0.0829
+2024,1968631,Farid Melendez,Unión Comercio,1,2,0.0409,0,0.0409,0.0204,-0.0409
+2025,338,Paolo Guerrero,Alianza Lima,22,55,10.4161,15,7.3554,0.1894,4.5839
+2025,31175,Hernán Barcos,Alianza Lima,20,55,10.6855,9,8.3899,0.1943,-1.6855
+2025,31611,Carlos Zambrano,Alianza Lima,4,6,0.3818,0,0.3818,0.0636,-0.3818
+2025,35621,Hernán Rengifo,Asociación Deportiva Tarma,16,31,5.0531,3,5.0531,0.163,-2.0531
+2025,45794,Fidel Martínez,Sport Boys,6,7,0.937,1,0.937,0.1339,0.063
+2025,46988,Yoshimar Yotún,Club Sporting Cristal,7,12,2.2872,1,0.7568,0.1906,-1.2872
+2025,46992,Juan Diego Lojas,Deportivo Garcilaso,15,25,1.8553,2,1.8553,0.0742,0.1447
+2025,47401,Aldo Corzo,Universitario de Deportes,5,5,0.2778,3,0.2778,0.0556,2.7222
+2025,47435,Martín Cauteruccio,Club Sporting Cristal,11,25,8.5461,8,3.955,0.3418,-0.5461
+2025,47439,Christian Ramos,Alianza Universidad,2,3,0.3993,1,0.3993,0.1331,0.6007
+2025,47439,Christian Ramos,Universitario de Deportes,1,1,0.0,1,0.0,0.0,1.0
+2025,47447,Christian Cueva,Cienciano,6,10,2.2397,5,0.7094,0.224,2.7603
+2025,47449,Luis Garcia,Comerciantes Unidos,4,5,0.1361,0,0.1361,0.0272,-0.1361
+2025,52068,Joao Rojas,Asociación Deportiva Tarma,19,37,3.9537,4,3.9537,0.1069,0.0463
+2025,106461,Fernando Gaibor,Alianza Lima,23,40,2.5443,2,1.7791,0.0636,-0.5443
+2025,107596,John Narváez,Asociación Deportiva Tarma,15,24,2.0644,0,2.0644,0.086,-2.0644
+2025,107625,Raúl Ruidíaz,Club Atlético Grau,24,92,11.5614,8,7.7355,0.1257,-3.5614
+2025,110856,Róger Torres,Deportivo Binacional,10,14,1.8767,4,1.1115,0.134,2.1233
+2025,122618,Leonel Galeano,Cienciano,9,11,0.8612,0,0.8612,0.0783,-0.8612
+2025,123022,Derlis Orue,Ayacucho,16,23,0.747,1,0.747,0.0325,0.253
+2025,123238,Luis Alvarez,Universidad Técnica de Cajamarca,6,8,0.2251,0,0.2251,0.0281,-0.2251
+2025,133862,Irven Ávila,Club Sporting Cristal,20,45,7.7346,11,7.7346,0.1719,3.2654
+2025,140103,Pier Barrios,Melgar,16,24,2.2979,1,2.2979,0.0957,-1.2979
+2025,143886,Marlon de Jesús,Sport Huancayo,28,50,5.8768,6,5.1117,0.1175,0.1232
+2025,146410,Danilo Ortiz,Cienciano,9,13,1.0883,3,1.0883,0.0837,1.9117
+2025,146599,Pablo Ceppelini,Alianza Lima,15,26,2.1813,2,1.4161,0.0839,-0.1813
+2025,169935,Osnar Noronha,Cienciano,11,18,2.1058,3,2.1058,0.117,0.8942
+2025,175977,Alvaro Ampuero,Cusco FC,11,12,1.1015,2,1.1015,0.0918,0.8985
+2025,176139,Edison Flores,Universitario de Deportes,23,47,5.8006,4,5.8006,0.1234,-1.8006
+2025,176159,Andy Polo,Universitario de Deportes,23,38,2.3223,1,2.3223,0.0611,-1.3223
+2025,220465,Rodrigo Ureña,Universitario de Deportes,10,12,0.211,0,0.211,0.0176,-0.211
+2025,220921,Carlos Ascues,Alianza Universidad,6,11,1.6094,1,1.6094,0.1463,-0.6094
+2025,220921,Carlos Ascues,Asociación Deportiva Tarma,1,2,0.0373,0,0.0373,0.0187,-0.0373
+2025,220929,Carlos Beltran,Alianza Atlético de Sullana,1,1,0.0,1,0.0,0.0,1.0
+2025,220929,Carlos Beltran,Deportivo Garcilaso,21,42,2.4765,2,2.4765,0.059,-0.4765
+2025,220931,Jorge Bazan,Deportivo Garcilaso,4,5,0.2627,0,0.2627,0.0525,-0.2627
+2025,220935,Edson Aubert,Alianza Universidad,4,8,0.2288,0,0.2288,0.0286,-0.2288
+2025,220935,Edson Aubert,Deportivo Binacional,7,16,0.4587,1,0.4587,0.0287,0.5413
+2025,247665,Miguel Trauco,Alianza Lima,14,17,0.4809,0,0.4809,0.0283,-0.4809
+2025,248437,Anderson Santamaría,Asociación Deportiva Tarma,1,1,0.0,1,0.0,0.0,1.0
+2025,248437,Anderson Santamaría,Universitario de Deportes,4,4,0.5309,1,0.5309,0.1327,0.4691
+2025,248925,Omar Vasquez,Alianza Universidad,5,5,0.8581,0,0.0929,0.1716,-0.8581
+2025,249137,Diego Churin,Universitario de Deportes,11,20,3.4917,5,1.9614,0.1746,1.5083
+2025,249403,Martín Pérez Guedes,Universitario de Deportes,22,57,6.8295,4,6.8295,0.1198,-2.8295
+2025,250017,Horacio Orzan,Melgar,7,8,0.2292,0,0.2292,0.0286,-0.2292
+2025,250339,Juan Garro,Club Atlético Grau,20,36,4.2256,2,4.2256,0.1174,-2.2256
+2025,255997,Cristian Benavente,Club Sporting Cristal,7,11,1.1657,1,1.1657,0.106,-0.1657
+2025,295161,Nicolás Pasquini,Club Sporting Cristal,15,18,2.1456,0,2.1456,0.1192,-2.1456
+2025,311522,Alfredo Ramúa,Cienciano,7,10,0.3901,0,0.3901,0.039,-0.3901
+2025,311524,Iván Santillán,ADC Juan Pablo II,2,2,0.1221,0,0.1221,0.0611,-0.1221
+2025,312264,Horacio Calcaterra,Universitario de Deportes,5,6,0.3309,0,0.3309,0.0551,-0.3309
+2025,312270,Edinson Chavez,Deportivo Binacional,3,4,0.1116,0,0.1116,0.0279,-0.1116
+2025,312284,Pedro Aquino,Alianza Lima,6,6,0.5382,2,0.5382,0.0897,1.4618
+2025,325609,Facundo Callejo,Cusco FC,30,90,15.404,25,12.3433,0.1712,9.596
+2025,330867,Tomás Martínez,Melgar,25,65,4.2789,3,4.2789,0.0658,-1.2789
+2025,333585,Maximiliano Amondarain,Cienciano,7,9,1.0625,1,1.0625,0.1181,-0.0625
+2025,338883,Horacio Benincasa,Alianza Atlético de Sullana,11,17,3.0158,2,2.2507,0.1774,-1.0158
+2025,338957,Erick Castillo,Alianza Lima,2,6,1.2062,2,0.441,0.201,0.7938
+2025,338957,Eryc Castillo,Alianza Lima,24,56,5.6828,4,5.6828,0.1015,-1.6828
+2025,339163,Josué Estrada,Alianza Lima,5,6,1.0017,1,1.0017,0.167,-0.0017
+2025,339163,Josué Estrada,Cienciano,10,22,0.4907,2,0.4907,0.0223,1.5093
+2025,339475,José Miguel Manzaneda,Los Chankas CYC,26,58,5.9219,8,2.8612,0.1021,2.0781
+2025,339481,Aldair Perleche,Alianza Universidad,3,3,0.0625,0,0.0625,0.0208,-0.0625
+2025,339481,Aldair Perleche,Universidad Técnica de Cajamarca,1,1,0.0,1,0.0,0.0,1.0
+2025,339843,Marco Aldair Rodríguez,Deportivo Garcilaso,2,2,0.3601,0,0.3601,0.18,-0.3601
+2025,339855,Bernardo Cuesta,Melgar,17,54,5.3992,4,5.3992,0.1,-1.3992
+2025,340077,Pablo Lavandeira,Alianza Lima,4,9,0.5461,1,0.5461,0.0607,0.4539
+2025,340349,Gabriel Leyes,Deportivo Binacional,6,17,4.144,3,2.6136,0.2438,-1.144
+2025,340529,Luciano Nequecaur,Sport Boys,18,37,8.3721,9,6.0766,0.2263,0.6279
+2025,340553,Cristian Bordacahar,Melgar,26,60,6.7755,3,6.0104,0.1129,-3.7755
+2025,341981,Rodrigo Castro,Alianza Atlético de Sullana,19,26,1.6577,0,1.6577,0.0638,-1.6577
+2025,345779,Christofer Gonzáles,Club Sporting Cristal,24,53,6.5969,8,5.8317,0.1245,1.4031
+2025,351398,Javier Sanguinetti,Sport Huancayo,29,81,7.3705,11,5.8401,0.091,3.6295
+2025,365990,Leonel González,ADC Juan Pablo II,1,1,0.0,1,0.0,0.0,1.0
+2025,365990,Leonel González,Melgar,11,12,0.4827,2,0.4827,0.0402,1.5173
+2025,370226,Miguel Araujo,Club Sporting Cristal,7,12,1.1827,2,1.1827,0.0986,0.8173
+2025,384658,Alexis Cossio,Alianza Atlético de Sullana,5,6,0.3085,1,0.3085,0.0514,0.6915
+2025,385418,Joaquín Aguirre,Deportivo Garcilaso,1,1,0.0,1,0.0,0.0,1.0
+2025,385418,Joaquín Aguirre,Universidad Técnica de Cajamarca,7,9,0.4021,1,0.4021,0.0447,0.5979
+2025,385894,Francisco Arancibia,Deportivo Garcilaso,3,3,0.1524,1,0.1524,0.0508,0.8476
+2025,542636,Jairo Vélez,Universitario de Deportes,18,36,3.1131,3,3.1131,0.0865,-0.1131
+2025,546342,Julián Marchioni,Comerciantes Unidos,14,26,1.5293,2,1.5293,0.0588,0.4707
+2025,557108,Nahuel Luján,Sport Huancayo,23,52,5.5926,2,5.5926,0.1076,-3.5926
+2025,560054,Hansell Riojas,Sport Boys,10,13,1.5869,3,0.8218,0.1221,1.4131
+2025,584002,Rodrigo Colombo,Sport Boys,10,12,1.349,0,1.349,0.1124,-1.349
+2025,585102,Adrián Fernández,Asociación Deportiva Tarma,5,7,0.7207,0,0.7207,0.103,-0.7207
+2025,586956,Lucas Colitto,Cusco FC,22,31,3.8769,4,3.1117,0.1251,0.1231
+2025,588144,Jhonny Vidales,Asociación Deportiva Tarma,11,30,4.0524,7,4.0524,0.1351,2.9476
+2025,588144,Jhonny Vidales,Melgar,11,22,4.8273,6,4.8273,0.2194,1.1727
+2025,588144,Johnny Vidales,Asociación Deportiva Tarma,3,12,3.0228,6,3.0228,0.2519,2.9772
+2025,589448,Jean Pierre Archimbaud,Alianza Lima,4,4,0.2596,0,0.2596,0.0649,-0.2596
+2025,590310,Víctor Cedrón,Asociación Deportiva Tarma,13,28,3.1162,2,2.3511,0.1113,-1.1162
+2025,590312,Gabriel Costa,Universitario de Deportes,6,8,0.271,0,0.271,0.0339,-0.271
+2025,590468,Jeremy Martin Rostaing,Club Atlético Grau,1,1,0.0766,0,0.0766,0.0766,-0.0766
+2025,590468,Jeremy Rostaing,Club Atlético Grau,10,12,0.5288,0,0.5288,0.0441,-0.5288
+2025,760636,Anthony Gordillo,Alianza Atlético de Sullana,5,6,0.4456,0,0.4456,0.0743,-0.4456
+2025,777249,Hernan Da Campo,Sport Boys,20,34,2.4731,3,2.4731,0.0727,0.5269
+2025,787610,Yorleys Mena,Alianza Universidad,32,80,13.6704,14,11.3748,0.1709,0.3296
+2025,788039,Franco Caballero,Ayacucho,10,28,4.2874,5,3.5223,0.1531,0.7126
+2025,789416,Federico Illanes,Alianza Atlético de Sullana,5,5,0.0955,0,0.0955,0.0191,-0.0955
+2025,789965,Joao Ortiz,Cienciano,4,6,0.5105,1,0.5105,0.0851,0.4895
+2025,790018,Elsar Rodas,Club Atlético Grau,4,5,0.8462,0,0.8462,0.1692,-0.8462
+2025,790031,Luis Abram,Club Sporting Cristal,2,4,0.9373,1,0.9373,0.2343,0.0627
+2025,791146,Daniel Franco,Club Atlético Grau,15,17,1.1308,0,1.1308,0.0665,-1.1308
+2025,800243,Facundo Castro,Melgar,7,14,2.4923,5,2.4923,0.178,2.5077
+2025,801453,Ricardo Salcedo,Sport Huancayo,8,10,0.2599,0,0.2599,0.026,-0.2599
+2025,805055,Gustavo Dulanto,Asociación Deportiva Tarma,10,20,0.9854,1,0.9854,0.0493,0.0146
+2025,805055,Gustavo Dulanto,Deportivo Garcilaso,1,1,0.0,1,0.0,0.0,1.0
+2025,805055,Gustavo Dulanto,Universitario de Deportes,2,5,0.0894,0,0.0894,0.0179,-0.0894
+2025,805065,Rafael Guarderas,Club Atlético Grau,13,17,0.8766,1,0.8766,0.0516,0.1234
+2025,805068,Emmanuel Páucar,Deportivo Garcilaso,4,4,0.2786,0,0.2786,0.0697,-0.2786
+2025,805261,Nilson Loyola,ADC Juan Pablo II,4,4,0.6914,0,0.6914,0.1728,-0.6914
+2025,805261,Nilson Loyola,Deportivo Binacional,1,1,0.079,0,0.079,0.079,-0.079
+2025,805264,Patricio Álvarez,Club Atlético Grau,5,5,3.1074,3,0.0467,0.6215,-0.1074
+2025,805268,Alexis Arias,Melgar,5,6,0.551,1,0.551,0.0918,0.449
+2025,805270,Paolo Fuentes,Alianza Universidad,8,10,0.7509,1,0.7509,0.0751,0.2491
+2025,805270,Paolo Fuentes,Asociación Deportiva Tarma,2,2,0.5191,0,0.5191,0.2596,-0.5191
+2025,805289,Leiner Escalante,Comerciantes Unidos,7,16,1.49,2,1.49,0.0931,0.51
+2025,805332,Miguel Carranza,Sport Huancayo,9,13,1.043,1,1.043,0.0802,-0.043
+2025,805353,Joao Villamarin,Ayacucho,10,19,1.2549,1,1.2549,0.066,-0.2549
+2025,805354,Ronal Huaccha,Sport Huancayo,18,32,3.5367,3,3.5367,0.1105,-0.5367
+2025,805366,Oshiro Takeuchi,Los Chankas CYC,15,26,1.979,6,1.979,0.0761,4.021
+2025,805423,Juan Valencia,Deportivo Garcilaso,1,1,0.0,1,0.0,0.0,1.0
+2025,805451,Jarlin Quintero,Universidad Técnica de Cajamarca,33,90,16.1414,16,9.2548,0.1793,-0.1414
+2025,818401,Pierre Da Silva,Cusco FC,15,21,1.6447,2,1.6447,0.0783,0.3553
+2025,826380,Ray Sandoval,Cienciano,3,3,0.4373,0,0.4373,0.1458,-0.4373
+2025,826380,Ray Sandoval,Comerciantes Unidos,4,5,0.8128,1,0.8128,0.1626,0.1872
+2025,828836,Leandro Sosa,Club Sporting Cristal,16,24,3.0164,5,3.0164,0.1257,1.9836
+2025,829029,Iván Colman,Cusco FC,29,46,7.6081,8,3.7822,0.1654,0.3919
+2025,829983,Carlos Pérez,Deportivo Binacional,1,2,0.1481,0,0.1481,0.0741,-0.1481
+2025,830660,Rodrigo Tapia,Club Atlético Grau,11,14,1.1081,0,1.1081,0.0792,-1.1081
+2025,830660,Rodrigo Tapia,Sport Huancayo,1,1,0.0,1,0.0,0.0,1.0
+2025,830663,Alejandro Hohberg,Cienciano,14,42,6.1187,5,6.1187,0.1457,-1.1187
+2025,830663,Alejandro Hohberg,Sport Boys,17,54,9.7294,9,5.9035,0.1802,-0.7294
+2025,830746,Neri Bandiera,Club Atlético Grau,26,50,7.9826,10,7.9826,0.1597,2.0174
+2025,830880,Nicolás Silva,Cusco FC,27,43,4.4883,3,4.4883,0.1044,-1.4883
+2025,831183,Carlos Diez,Cusco FC,18,23,1.6234,1,1.6234,0.0706,-0.6234
+2025,831815,Mauricio Affonso,ADC Juan Pablo II,7,10,2.2326,3,1.4674,0.2233,0.7674
+2025,839368,Tomás Sandoval,Club Atlético Grau,19,29,3.4914,4,3.4914,0.1204,0.5086
+2025,839635,Felipe Vizeu,Club Sporting Cristal,6,10,1.8665,2,1.8665,0.1867,0.1335
+2025,842529,Claudio Torrejón,Cienciano,12,14,0.9467,1,0.9467,0.0676,0.0533
+2025,846366,Adrián Ugarriza,Deportivo Garcilaso,17,40,5.5639,6,4.0335,0.1391,0.4361
+2025,846474,Luis Urruti,Sport Boys,23,57,6.8671,5,6.8671,0.1205,-1.8671
+2025,846742,Marcos Lliuya,Alianza Universidad,19,35,1.6922,2,1.6922,0.0483,0.3078
+2025,846749,Alexander Lecaros,Comerciantes Unidos,14,23,1.4154,1,1.4154,0.0615,-0.4154
+2025,846751,Miguel Aucca,Cusco FC,8,10,1.3213,2,1.3213,0.1321,0.6787
+2025,849339,Sergio Peña,Alianza Lima,6,13,2.5724,2,1.0421,0.1979,-0.5724
+2025,860001,Cristian Ramírez,ADC Juan Pablo II,8,15,1.2205,1,1.2205,0.0814,-0.2205
+2025,862216,Renzo Alfani,ADC Juan Pablo II,17,27,3.3466,4,3.3466,0.1239,0.6534
+2025,869989,Geimer Balanta,Universidad Técnica de Cajamarca,10,16,0.6338,0,0.6338,0.0396,-0.6338
+2025,873619,Maximiliano Perez,Ayacucho,22,51,6.5924,7,5.062,0.1293,0.4076
+2025,873703,Anthony Rosell,Universidad Técnica de Cajamarca,9,14,0.375,0,0.375,0.0268,-0.375
+2025,873704,Ángel Pérez,Asociación Deportiva Tarma,11,19,0.4467,0,0.4467,0.0235,-0.4467
+2025,873706,Brayan Guevara,Alianza Universidad,8,11,0.3229,0,0.3229,0.0294,-0.3229
+2025,873707,Marvin Rios,Ayacucho,5,10,0.309,1,0.309,0.0309,0.691
+2025,873806,Rick Campodonico,Alianza Universidad,22,45,2.1973,4,2.1973,0.0488,1.8027
+2025,873845,Piero Ratto,Ayacucho,2,2,0.0231,0,0.0231,0.0116,-0.0231
+2025,874072,Brackson Leon,Ayacucho,4,6,0.6852,0,0.6852,0.1142,-0.6852
+2025,874072,Brackson Leon,Deportivo Binacional,6,7,0.5541,1,0.5541,0.0792,0.4459
+2025,874980,David Martin Gonzales,Los Chankas CYC,1,1,0.0123,0,0.0123,0.0123,-0.0123
+2025,874981,Jesus Mendieta,Alianza Universidad,15,27,0.8861,0,0.8861,0.0328,-0.8861
+2025,874984,Gianfranco Chávez,Alianza Lima,2,2,0.1284,0,0.1284,0.0642,-0.1284
+2025,874984,Gianfranco Chávez,Club Sporting Cristal,6,8,1.0314,0,1.0314,0.1289,-1.0314
+2025,874985,Renzo Garces,Alianza Lima,2,2,0.149,0,0.149,0.0745,-0.149
+2025,874985,Renzo Garcés,Alianza Lima,13,18,2.1838,1,2.1838,0.1213,-1.1838
+2025,874986,Frank Ysique,Alianza Atlético de Sullana,7,8,0.3095,0,0.3095,0.0387,-0.3095
+2025,874987,Fernando Pacheco,Club Sporting Cristal,15,28,5.0573,2,5.0573,0.1806,-3.0573
+2025,874988,Martín Távara,Club Sporting Cristal,29,67,5.0339,10,1.9732,0.0751,4.9661
+2025,875661,Jorge Toledo,ADC Juan Pablo II,16,19,1.1221,0,1.1221,0.0591,-1.1221
+2025,876924,Diego Carabaño,Sport Huancayo,19,35,1.718,3,1.718,0.0491,1.282
+2025,876926,Francisco Duclos,Comerciantes Unidos,2,2,0.1544,0,0.1544,0.0772,-0.1544
+2025,876927,Aldair Fuentes,Cusco FC,18,33,3.6032,3,3.6032,0.1092,-0.6032
+2025,876928,Luis Garro,Universidad Técnica de Cajamarca,4,4,0.2085,0,0.2085,0.0521,-0.2085
+2025,876929,Kevin Quevedo,Alianza Lima,18,52,4.7182,4,4.7182,0.0907,-0.7182
+2025,876931,Erinson Ramirez,Universidad Técnica de Cajamarca,30,88,5.7004,6,5.7004,0.0648,0.2996
+2025,877910,Fabio Rojas,Club Atlético Grau,3,3,0.0765,0,0.0765,0.0255,-0.0765
+2025,878754,Ademar Robles,Asociación Deportiva Tarma,15,23,0.6702,0,0.6702,0.0291,-0.6702
+2025,879621,José Luján,Universidad Técnica de Cajamarca,9,12,0.6016,0,0.6016,0.0501,-0.6016
+2025,879628,Jordan Guivin,Los Chankas CYC,24,48,1.4376,1,1.4376,0.03,-0.4376
+2025,879629,Hideyoshi Arakaki,Ayacucho,13,23,2.4542,3,2.4542,0.1067,0.5458
+2025,882837,Roberto Villamarín,Universidad Técnica de Cajamarca,11,17,1.1751,1,1.1751,0.0691,-0.1751
+2025,882839,Jorge Murrugarra,Universitario de Deportes,1,1,0.0179,0,0.0179,0.0179,-0.0179
+2025,882897,Alonso Tamaríz,Ayacucho,4,4,0.2838,0,0.2838,0.0709,-0.2838
+2025,882899,José Marina,Comerciantes Unidos,15,22,0.9429,1,0.9429,0.0429,0.0571
+2025,883142,Diego Saffadi,Alianza Universidad,2,2,0.0932,0,0.0932,0.0466,-0.0932
+2025,883287,Johan Madrid,Sport Huancayo,14,20,0.8823,0,0.8823,0.0441,-0.8823
+2025,883293,Leonel Solís,Club Atlético Grau,5,5,0.2526,0,0.2526,0.0505,-0.2526
+2025,883293,Leonel Solís,Sport Boys,3,5,0.3383,0,0.3383,0.0677,-0.3383
+2025,883294,Carlos Uribe,Ayacucho,3,4,0.4388,1,0.4388,0.1097,0.5612
+2025,883296,Kevin Sandoval,Deportivo Garcilaso,26,46,3.6978,6,2.9326,0.0804,2.3022
+2025,883299,Janio Pósito,Sport Huancayo,21,45,10.4818,7,9.7166,0.2329,-3.4818
+2025,883329,Luis Benites,Cienciano,22,33,2.9144,6,1.384,0.0883,3.0856
+2025,883343,Aldair Salazar,Deportivo Garcilaso,5,6,0.9618,1,0.9618,0.1603,0.0382
+2025,883389,Diego Ramírez,Ayacucho,8,11,0.4574,0,0.4574,0.0416,-0.4574
+2025,883391,Ederson Mogollón,Los Chankas CYC,3,3,0.2344,0,0.2344,0.0781,-0.2344
+2025,883393,Keyvin Paico,Comerciantes Unidos,3,3,0.0447,0,0.0447,0.0149,-0.0447
+2025,883393,Keyvin Paico,Los Chankas CYC,1,1,0.0,1,0.0,0.0,1.0
+2025,883396,Carlos Cabello,Asociación Deportiva Tarma,18,35,4.8647,4,4.8647,0.139,-0.8647
+2025,883397,Gerson Barreto,Asociación Deportiva Tarma,19,53,1.7612,0,1.7612,0.0332,-1.7612
+2025,883406,Yordi Vílchez,Comerciantes Unidos,1,1,0.1063,0,0.1063,0.1063,-0.1063
+2025,883720,Christian Velarde,Los Chankas CYC,3,4,0.1046,1,0.1046,0.0261,0.8954
+2025,883729,Kelvin Sánchez,Los Chankas CYC,2,2,0.0436,0,0.0436,0.0218,-0.0436
+2025,883772,Ray Gómez,Alianza Universidad,1,1,0.0258,0,0.0258,0.0258,-0.0258
+2025,883812,Renato Espinosa,Alianza Atlético de Sullana,8,11,2.2232,2,2.2232,0.2021,-0.2232
+2025,884997,Matías Di Benedetto,Universitario de Deportes,11,16,1.9012,2,1.9012,0.1188,0.0988
+2025,885539,Joffré Escobar,Alianza Universidad,17,41,7.0847,7,7.0847,0.1728,-0.0847
+2025,887125,Jose Bolivar,Club Atlético Grau,6,8,1.2371,2,1.2371,0.1546,0.7629
+2025,888723,Brayan Lucumí,Comerciantes Unidos,2,2,0.0974,0,0.0974,0.0487,-0.0974
+2025,892669,Christopher Olivares,Club Atlético Grau,13,22,2.703,2,1.9378,0.1229,-0.703
+2025,893067,Marco Saravia,Cusco FC,6,9,1.1261,2,1.1261,0.1251,0.8739
+2025,895338,Fernando Bersano,Asociación Deportiva Tarma,17,35,2.1185,1,1.3533,0.0605,-1.1185
+2025,895364,Gaspar Gentile,Alianza Lima,11,25,2.7426,2,2.7426,0.1097,-0.7426
+2025,895364,Gaspar Gentile,Cienciano,10,23,1.5971,2,1.5971,0.0694,0.4029
+2025,895589,Williams Riveros,Universitario de Deportes,14,23,3.6934,5,3.6934,0.1606,1.3066
+2025,896747,Brian Sosa,Comerciantes Unidos,4,8,1.4074,0,1.4074,0.1759,-1.4074
+2025,897102,Nicolás Gómez,Deportivo Garcilaso,11,16,0.6625,0,0.6625,0.0414,-0.6625
+2025,898631,Juan Romagnoli,Cienciano,8,11,0.8371,1,0.8371,0.0761,0.1629
+2025,901020,Jeremy Canela,Alianza Atlético de Sullana,3,8,1.1586,2,1.1586,0.1448,0.8414
+2025,901020,Jeremy Canela,Alianza Universidad,10,14,0.9221,2,0.9221,0.0659,1.0779
+2025,906002,Carlos Garcés,Cienciano,24,67,9.8095,9,8.2791,0.1464,-0.8095
+2025,906816,Nahuel Tecilla,Comerciantes Unidos,10,10,0.9226,0,0.9226,0.0923,-0.9226
+2025,913398,Jesús Castillo,Alianza Lima,5,5,0.4695,1,0.4695,0.0939,0.5305
+2025,914211,José Sinisterra,Deportivo Garcilaso,1,1,0.0115,0,0.0115,0.0115,-0.0115
+2025,914294,Edhu Oliva,Alianza Universidad,8,12,1.1714,0,1.1714,0.0976,-1.1714
+2025,914483,José Soto Ramirez,ADC Juan Pablo II,2,2,0.0426,0,0.0426,0.0213,-0.0426
+2025,914484,Félix Espinoza,Alianza Universidad,4,7,0.4412,0,0.4412,0.063,-0.4412
+2025,914484,Félix Espinoza,Los Chankas CYC,2,2,0.0845,0,0.0845,0.0423,-0.0845
+2025,914617,Nazareno Bazán,Asociación Deportiva Tarma,12,28,4.6826,4,2.3871,0.1672,-0.6826
+2025,922007,Jimmy Valoyes,Cienciano,25,47,3.2568,4,3.2568,0.0693,0.7432
+2025,922870,Jose Antonio Parodi,Comerciantes Unidos,13,21,1.0999,1,1.0999,0.0524,-0.0999
+2025,922871,Nelson Cabanillas,Melgar,2,2,0.1167,0,0.1167,0.0583,-0.1167
+2025,922873,Paulo De La Cruz,Club Atlético Grau,13,18,1.6445,2,1.6445,0.0914,0.3555
+2025,923196,Juan Tévez,Cusco FC,18,33,9.1643,11,6.8687,0.2777,1.8357
+2025,923694,Gerson Iraola,Alianza Universidad,10,14,1.0222,0,1.0222,0.073,-1.0222
+2025,923740,Alec Deneumostier,Melgar,5,7,0.6549,1,0.6549,0.0936,0.3451
+2025,924574,Carlos López,Sport Boys,23,41,4.2377,4,4.2377,0.1034,-0.2377
+2025,924646,Hoover Crespo,Deportivo Binacional,8,13,0.7059,1,0.7059,0.0543,0.2941
+2025,924725,Santiago Arias,Cienciano,19,38,1.0826,1,1.0826,0.0285,-0.0826
+2025,924736,Mauro Da Luz,Asociación Deportiva Tarma,18,55,7.9357,6,7.1706,0.1443,-1.9357
+2025,924762,Agustín González,Cienciano,16,37,1.2285,0,1.2285,0.0332,-1.2285
+2025,924782,Jesús Pretell,Club Sporting Cristal,20,29,0.6766,0,0.6766,0.0233,-0.6766
+2025,924783,Jairo Concha,Universitario de Deportes,27,53,3.6448,8,3.6448,0.0688,4.3552
+2025,924791,Yorkman Tello,Deportivo Binacional,4,5,0.206,0,0.206,0.0412,-0.206
+2025,924860,Franco Romero,Club Sporting Cristal,9,11,0.8708,0,0.8708,0.0792,-0.8708
+2025,924881,Christian Vasquez,Alianza Atlético de Sullana,18,24,1.1478,1,1.1478,0.0478,-0.1478
+2025,924895,Cristian Souza,Cienciano,8,13,0.7248,1,0.7248,0.0558,0.2752
+2025,924923,Jhon Vega,ADC Juan Pablo II,3,3,0.5933,1,0.5933,0.1978,0.4067
+2025,924923,Jhon Vega,Comerciantes Unidos,3,3,0.208,1,0.208,0.0693,0.792
+2025,924932,Alejandro Ramos,Melgar,4,7,0.3881,2,0.3881,0.0554,1.6119
+2025,925176,Hugo Ángeles,Sport Huancayo,10,11,1.3373,0,1.3373,0.1216,-1.3373
+2025,925232,Juan Barreda,Sport Huancayo,6,7,0.4514,1,0.4514,0.0645,0.5486
+2025,925309,Carlos Correa,Ayacucho,7,9,0.1792,0,0.1792,0.0199,-0.1792
+2025,925420,Jean Franco Falconi,Ayacucho,6,8,0.9468,0,0.9468,0.1184,-0.9468
+2025,927690,Matías Succar,Alianza Lima,9,19,1.6788,0,1.6788,0.0884,-1.6788
+2025,928435,Gonzalo Sanchez,Comerciantes Unidos,1,1,0.0212,0,0.0212,0.0212,-0.0212
+2025,929004,Kevin Ferreyra,Ayacucho,1,1,0.0813,0,0.0813,0.0813,-0.0813
+2025,929014,Oslimg Mora,Sport Boys,16,21,0.9507,0,0.9507,0.0453,-0.9507
+2025,931772,Francesco Cavagna,Club Atlético Grau,1,1,0.0418,0,0.0418,0.0418,-0.0418
+2025,931776,Christian Neira,Cienciano,18,29,1.6498,2,1.6498,0.0569,0.3502
+2025,931788,Gu Run Choi,Asociación Deportiva Tarma,1,3,0.0609,0,0.0609,0.0203,-0.0609
+2025,931788,Gu-rum Choi,Asociación Deportiva Tarma,7,12,1.1819,1,1.1819,0.0985,-0.1819
+2025,932088,Piero Vivanco,Comerciantes Unidos,1,1,0.0866,0,0.0866,0.0866,-0.0866
+2025,932088,Piero Vivanco,Melgar,2,2,0.0661,0,0.0661,0.033,-0.0661
+2025,932870,Alan Perez,Sport Huancayo,2,2,0.067,0,0.067,0.0335,-0.067
+2025,932888,Alejandro Altuna,Sport Boys,5,6,0.8443,1,0.8443,0.1407,0.1557
+2025,932927,Jorge Rios,Sport Boys,8,9,0.4574,0,0.4574,0.0508,-0.4574
+2025,932933,Rolando Diaz,Alianza Atlético de Sullana,10,17,2.1316,3,2.1316,0.1254,0.8684
+2025,933730,Brandon Palacios,Universidad Técnica de Cajamarca,12,18,1.0284,0,1.0284,0.0571,-1.0284
+2025,936165,Leonardo Mifflin,Deportivo Binacional,2,3,0.2539,0,0.2539,0.0846,-0.2539
+2025,936165,Leonardo Mifflin,Los Chankas CYC,3,3,0.0574,0,0.0574,0.0191,-0.0574
+2025,937859,Santiago González,Club Sporting Cristal,25,62,6.6997,7,6.6997,0.1081,0.3003
+2025,942164,José Zevallos,Cusco FC,2,2,0.1936,0,0.1936,0.0968,-0.1936
+2025,943177,Cristian García,Alianza Atlético de Sullana,1,1,0.0,1,0.0,0.0,1.0
+2025,943177,Cristian García,Deportivo Garcilaso,3,4,0.2821,0,0.2821,0.0705,-0.2821
+2025,943712,Guillermo Enrique,Alianza Lima,13,21,0.7848,1,0.7848,0.0374,0.2152
+2025,944073,Michael Rasmussen,ADC Juan Pablo II,2,3,0.1855,0,0.1855,0.0618,-0.1855
+2025,944073,Michael Rasmussen,Deportivo Binacional,13,21,1.6451,2,1.6451,0.0783,0.3549
+2025,946934,Josuee Herrera,Sport Huancayo,18,24,1.1332,2,1.1332,0.0472,0.8668
+2025,949793,Alessandro Milesi,Cusco FC,6,6,0.5334,0,0.5334,0.0889,-0.5334
+2025,954811,Sebastián Gonzales Zela,Comerciantes Unidos,9,18,2.2566,5,2.2566,0.1254,2.7434
+2025,957940,Manuel Ganoza,Ayacucho,2,2,0.4492,1,0.4492,0.2246,0.5508
+2025,960016,Lautaro Guzmán,Melgar,19,41,3.1015,4,3.1015,0.0756,0.8985
+2025,960215,Rudy Palomino,Cienciano,2,2,0.0204,0,0.0204,0.0102,-0.0204
+2025,960220,Matias Sen,Comerciantes Unidos,29,92,14.835,14,11.0091,0.1613,-0.835
+2025,960225,Hugo Ancajima,Universitario de Deportes,3,5,0.2498,1,0.2498,0.05,0.7502
+2025,965759,Rodrigo Vilca,Club Atlético Grau,18,36,1.5889,2,1.5889,0.0441,0.4111
+2025,965761,Piero Serra,Universidad Técnica de Cajamarca,6,12,1.5305,0,1.5305,0.1275,-1.5305
+2025,972824,Marlon Torres,Deportivo Binacional,16,37,4.5175,3,4.5175,0.1221,-1.5175
+2025,973566,Oswaldo Valenzuela,Cusco FC,15,17,0.5208,0,0.5208,0.0306,-0.5208
+2025,973636,Paolo Méndez,Comerciantes Unidos,7,7,0.9186,1,0.9186,0.1312,0.0814
+2025,973653,Jonathan Bilbao,Ayacucho,11,17,1.5146,2,1.5146,0.0891,0.4854
+2025,973664,Yuriel Celi,Deportivo Garcilaso,15,22,1.0841,0,1.0841,0.0493,-1.0841
+2025,973667,Jack Durán,ADC Juan Pablo II,6,8,0.0887,0,0.0887,0.0111,-0.0887
+2025,973667,Jack Durán,Alianza Universidad,3,4,0.2258,0,0.2258,0.0564,-0.2258
+2025,973667,Jack Durán,Club Atlético Grau,1,1,0.0,1,0.0,0.0,1.0
+2025,973671,Jorginho Sernaqué,Alianza Universidad,17,47,4.1421,2,4.1421,0.0881,-2.1421
+2025,973681,Relly Fernández,ADC Juan Pablo II,16,35,2.757,0,2.757,0.0788,-2.757
+2025,973682,Ricardo Lagos,Alianza Lima,6,12,0.5674,1,0.5674,0.0473,0.4326
+2025,974006,Pablo Cárdenas,Comerciantes Unidos,7,12,1.2102,2,1.2102,0.1008,0.7898
+2025,974006,Pablo Cárdenas,Cusco FC,1,2,0.3449,0,0.3449,0.1724,-0.3449
+2025,974136,Beto Da Silva,Cienciano,22,44,5.599,4,5.599,0.1272,-1.599
+2025,975235,Anthony Aoki,Alianza Universidad,3,3,0.0485,0,0.0485,0.0162,-0.0485
+2025,975235,Anthony Aoki,Cusco FC,1,1,0.057,0,0.057,0.057,-0.057
+2025,975241,Erick Perleche,Alianza Atlético de Sullana,13,18,1.3368,3,1.3368,0.0743,1.6632
+2025,975243,Franco Medina,Ayacucho,3,3,0.1037,0,0.1037,0.0346,-0.1037
+2025,975243,Franco Medina,Deportivo Binacional,1,1,0.0126,0,0.0126,0.0126,-0.0126
+2025,975540,Freddy Oncoy,Universidad Técnica de Cajamarca,11,13,1.7229,1,1.7229,0.1325,-0.7229
+2025,975853,Rotceh Aguilar,Comerciantes Unidos,5,5,0.2809,0,0.2809,0.0562,-0.2809
+2025,975919,Percy Liza,Melgar,11,18,2.4586,3,2.4586,0.1366,0.5414
+2025,976931,Carlos Gamarra,Cusco FC,1,1,0.0721,0,0.0721,0.0721,-0.0721
+2025,976932,Walter Tandazo,Melgar,16,26,1.0991,0,1.0991,0.0423,-1.0991
+2025,976933,Paolo Reyna,Universitario de Deportes,2,2,0.18,0,0.18,0.09,-0.18
+2025,977086,Cristian Carbajal,Sport Boys,10,14,0.8591,1,0.8591,0.0614,0.1409
+2025,978543,Jesús Castillo,Universitario de Deportes,5,7,0.6786,0,0.6786,0.0969,-0.6786
+2025,978549,Rafael Lutiger,Club Sporting Cristal,11,16,1.1159,0,1.1159,0.0697,-1.1159
+2025,980141,Diego Soto,Club Atlético Grau,13,15,0.3862,1,0.3862,0.0257,0.6138
+2025,980889,Dylan Caro,Ayacucho,5,6,0.7727,1,0.7727,0.1288,0.2273
+2025,982178,Alexi Edwin Gómez,Alianza Universidad,6,7,0.3136,0,0.3136,0.0448,-0.3136
+2025,982178,Alexi Edwin Gómez,Cienciano,5,7,0.2333,0,0.2333,0.0333,-0.2333
+2025,984175,Jose Anthony Gallardo,Deportivo Garcilaso,1,1,0.0851,0,0.0851,0.0851,-0.0851
+2025,984882,Arón Sánchez,ADC Juan Pablo II,14,21,1.7349,2,1.7349,0.0826,0.2651
+2025,984882,Arón Sánchez,Cusco FC,1,1,0.0,1,0.0,0.0,1.0
+2025,988298,Óscar Pinto,Asociación Deportiva Tarma,9,13,0.6015,0,0.6015,0.0463,-0.6015
+2025,988299,Nicolás Figueroa,Comerciantes Unidos,3,6,0.7658,0,0.7658,0.1276,-0.7658
+2025,988299,Nicolás Figueroa,Deportivo Binacional,7,8,1.3696,1,1.3696,0.1712,-0.3696
+2025,989228,Adrián Quiroz,Los Chankas CYC,21,30,1.0619,2,1.0619,0.0354,0.9381
+2025,989240,Didier La Torre,Cienciano,10,13,0.8677,2,0.8677,0.0667,1.1323
+2025,989258,Marcelo Gaona,Sport Huancayo,8,12,1.5381,2,1.5381,0.1282,0.4619
+2025,989259,Mathias Llontop,Melgar,9,11,0.9495,0,0.9495,0.0863,-0.9495
+2025,989460,Gustavo Machado,ADC Juan Pablo II,3,5,1.0073,1,1.0073,0.2015,-0.0073
+2025,991108,Hector González,Los Chankas CYC,20,27,1.9849,2,1.9849,0.0735,0.0151
+2025,991202,Pablo Bueno,Los Chankas CYC,25,56,8.3657,9,7.6005,0.1494,0.6343
+2025,992004,Kevin Peña,Comerciantes Unidos,1,1,0.0274,0,0.0274,0.0274,-0.0274
+2025,994588,José De la Cruz,Universidad Técnica de Cajamarca,4,5,0.194,0,0.194,0.0388,-0.194
+2025,1000289,Alessandro Burlamaqui,Alianza Lima,3,3,0.0614,0,0.0614,0.0205,-0.0614
+2025,1001106,Mathias Carpio,Comerciantes Unidos,8,10,0.4247,0,0.4247,0.0425,-0.4247
+2025,1005176,Jhilmar Lora,Club Sporting Cristal,2,4,0.2818,0,0.2818,0.0704,-0.2818
+2025,1009556,Nicolás Quagliata,Melgar,13,28,2.1324,3,2.1324,0.0762,0.8676
+2025,1015696,Tiago Cantoro,ADC Juan Pablo II,1,2,0.1429,0,0.1429,0.0715,-0.1429
+2025,1015697,Inti Garrafa,Deportivo Garcilaso,1,1,0.0258,0,0.0258,0.0258,-0.0258
+2025,1016972,Alex Valera,Universitario de Deportes,33,133,18.2107,16,14.3848,0.1369,-2.2107
+2025,1016974,Ayrthon Quintana,Los Chankas CYC,15,20,0.5391,0,0.5391,0.027,-0.5391
+2025,1016982,Marlon Ruidías,Cusco FC,21,36,1.7558,1,1.7558,0.0488,-0.7558
+2025,1017480,José Carabalí,Universitario de Deportes,14,20,1.555,0,1.555,0.0777,-1.555
+2025,1017747,Benjamín Ampuero,Alianza Universidad,4,4,0.5352,0,0.5352,0.1338,-0.5352
+2025,1017755,Emilio Saba,Sport Boys,2,2,0.0492,0,0.0492,0.0246,-0.0492
+2025,1017756,Franchesco Flores,Alianza Atlético de Sullana,1,1,0.0748,0,0.0748,0.0748,-0.0748
+2025,1017756,Franchesco Flores,Deportivo Binacional,13,20,1.3441,1,1.3441,0.0672,-0.3441
+2025,1017760,Jhamir D'Arrigo,Alianza Lima,4,8,0.4754,0,0.4754,0.0594,-0.4754
+2025,1017760,Jhamir D'Arrigo,Melgar,3,5,0.3398,0,0.3398,0.068,-0.3398
+2025,1017763,Juan Pablo Carranza,Deportivo Binacional,10,20,1.2482,0,1.2482,0.0624,-1.2482
+2025,1017769,Ronald Vega,Los Chankas CYC,1,1,0.1033,0,0.1033,0.1033,-0.1033
+2025,1017776,Sergio Barboza,Sport Huancayo,5,5,0.7066,1,0.7066,0.1413,0.2934
+2025,1017778,Williams Guzmán,Comerciantes Unidos,9,14,1.8504,3,1.8504,0.1322,1.1496
+2025,1018233,Erick Canales,Deportivo Garcilaso,8,13,0.4318,0,0.4318,0.0332,-0.4318
+2025,1018255,Orlando Nuñez,Deportivo Garcilaso,3,3,0.0336,0,0.0336,0.0112,-0.0336
+2025,1018388,Emanuel Ibáñez,Comerciantes Unidos,2,2,0.0791,0,0.0791,0.0395,-0.0791
+2025,1018414,Gregorio Rodriguez,Melgar,17,24,2.8647,3,2.8647,0.1194,0.1353
+2025,1018422,José Villegas,Alianza Atlético de Sullana,12,18,1.9013,1,1.9013,0.1056,-0.9013
+2025,1020375,Erick Noriega,Alianza Lima,12,27,1.9052,2,1.9052,0.0706,0.0948
+2025,1020855,Leonardo Rugel,Universidad Técnica de Cajamarca,3,4,0.2979,0,0.2979,0.0745,-0.2979
+2025,1020999,José Rivera,Universitario de Deportes,26,55,11.7816,12,10.2512,0.2142,0.2184
+2025,1049077,Sebastian Cavero,Cienciano,3,6,0.3611,0,0.3611,0.0602,-0.3611
+2025,1049086,Gustavo Aliaga,ADC Juan Pablo II,3,5,0.3249,0,0.3249,0.065,-0.3249
+2025,1049088,Erick Gonzales,Sport Boys,4,4,0.244,0,0.244,0.061,-0.244
+2025,1065267,Adrián Ascues,Cienciano,6,12,0.5469,0,0.5469,0.0456,-0.5469
+2025,1068656,Alonso Yovera,Ayacucho,11,16,1.2229,0,1.2229,0.0764,-1.2229
+2025,1083668,Fabrizio Roca,ADC Juan Pablo II,10,14,1.6155,1,1.6155,0.1154,-0.6155
+2025,1083668,Fabrizio Roca,Sport Boys,2,6,2.1454,0,1.3802,0.3576,-2.1454
+2025,1084961,Alan Cantero,Alianza Lima,16,39,4.6692,3,4.6692,0.1197,-1.6692
+2025,1085447,Emiliano Villar,ADC Juan Pablo II,22,40,7.2191,5,7.2191,0.1805,-2.2191
+2025,1086281,Yimy Gamero,Cienciano,2,2,0.1845,0,0.1845,0.0922,-0.1845
+2025,1086284,Matías Lazo,Cienciano,1,1,0.0,1,0.0,0.0,1.0
+2025,1086284,Matías Lazo,Melgar,13,20,3.0659,4,3.0659,0.1533,0.9341
+2025,1086295,Kenji Cabrera,Melgar,11,25,3.6915,6,2.1611,0.1477,2.3085
+2025,1086797,Pedro Peral,Ayacucho,3,3,0.0619,0,0.0619,0.0206,-0.0619
+2025,1087004,Ignacio Gariglio,Deportivo Garcilaso,9,12,1.1112,4,1.1112,0.0926,2.8888
+2025,1089808,Kenji Barrios,Ayacucho,6,8,0.3965,0,0.3965,0.0496,-0.3965
+2025,1090696,Anderson Guevara,ADC Juan Pablo II,3,4,0.1803,0,0.1803,0.0451,-0.1803
+2025,1090708,Flavio Fernández,ADC Juan Pablo II,1,1,0.0561,0,0.0561,0.0561,-0.0561
+2025,1090720,Marco Huaman,Alianza Lima,8,8,0.7828,0,0.7828,0.0978,-0.7828
+2025,1092343,Enzo Ariel Fernandez,Sport Huancayo,24,43,2.4991,3,2.4991,0.0581,0.5009
+2025,1095031,Santiago Torres,Los Chankas CYC,3,6,0.2317,0,0.2317,0.0386,-0.2317
+2025,1096363,Miguel Agustín Graneros,Alianza Atlético de Sullana,32,99,14.4811,14,10.6552,0.1463,-0.4811
+2025,1098306,Franco Torres,Los Chankas CYC,28,74,4.8813,6,4.8813,0.066,1.1187
+2025,1100345,Yonatan Murillo,Sport Huancayo,9,11,0.8343,1,0.8343,0.0758,0.1657
+2025,1103492,Gustavo Navarro,Ayacucho,2,2,0.0626,0,0.0626,0.0313,-0.0626
+2025,1106545,Yehider Ibargüen,Universidad Técnica de Cajamarca,3,3,0.106,0,0.106,0.0353,-0.106
+2025,1106569,José Ataupillco,Ayacucho,2,2,0.0339,0,0.0339,0.0169,-0.0339
+2025,1106582,Gustavo Loayza,Ayacucho,2,2,0.1694,0,0.1694,0.0847,-0.1694
+2025,1107870,Carlos Meza,Deportivo Binacional,5,5,0.6533,0,0.6533,0.1307,-0.6533
+2025,1107871,Christian Flores,ADC Juan Pablo II,5,6,0.1428,0,0.1428,0.0238,-0.1428
+2025,1107888,Jostin Alarcón,Club Sporting Cristal,8,12,0.8319,0,0.8319,0.0693,-0.8319
+2025,1107888,Jostin Alarcón,Sport Boys,10,24,2.15,2,1.3848,0.0896,-0.15
+2025,1107889,Jimmy Pérez,Alianza Atlético de Sullana,16,27,1.3366,2,1.3366,0.0495,0.6634
+2025,1107900,Yamir Ruidiaz,Ayacucho,1,1,0.0168,0,0.0168,0.0168,-0.0168
+2025,1107917,Piero Guzman,Alianza Atlético de Sullana,6,6,0.4656,0,0.4656,0.0776,-0.4656
+2025,1107919,Xavi Moreno,Deportivo Garcilaso,1,1,0.0111,0,0.0111,0.0111,-0.0111
+2025,1108679,Bruno Portugal,Comerciantes Unidos,3,4,0.0908,0,0.0908,0.0227,-0.0908
+2025,1109858,Guillermo Larios,Alianza Atlético de Sullana,22,32,5.263,4,5.263,0.1645,-1.263
+2025,1110305,Leonardo de la Cruz,Universidad Técnica de Cajamarca,3,4,0.5545,0,0.5545,0.1386,-0.5545
+2025,1116647,Benjamín García,Club Atlético Grau,7,8,0.4371,0,0.4371,0.0546,-0.4371
+2025,1118109,Juan Quiñones,Alianza Atlético de Sullana,1,2,0.9152,0,0.9152,0.4576,-0.9152
+2025,1118109,Juan Quiñones,Deportivo Binacional,1,1,0.1402,0,0.1402,0.1402,-0.1402
+2025,1120472,Flavio Alcedo,Club Sporting Cristal,4,4,0.4924,0,0.4924,0.1231,-0.4924
+2025,1120472,Flavio Alcedo,Comerciantes Unidos,1,1,0.0564,0,0.0564,0.0564,-0.0564
+2025,1120726,Nahuel Rodriguez,ADC Juan Pablo II,9,16,1.0479,0,1.0479,0.0655,-1.0479
+2025,1120902,Aldair Vasquez,Club Atlético Grau,9,11,0.6018,1,0.6018,0.0547,0.3982
+2025,1121321,Cristhian Tizon,ADC Juan Pablo II,24,68,8.7914,8,4.9655,0.1293,-0.7914
+2025,1121321,Cristhian Tizón,ADC Juan Pablo II,9,23,4.0734,2,3.3082,0.1771,-2.0734
+2025,1121487,Carlos Pimienta,Los Chankas CYC,12,15,0.3533,0,0.3533,0.0236,-0.3533
+2025,1122908,Jhon Ibargüen,Alianza Universidad,3,3,0.2745,0,0.2745,0.0915,-0.2745
+2025,1128886,Gilmar Paredes,Comerciantes Unidos,8,11,0.4869,0,0.4869,0.0443,-0.4869
+2025,1128897,Leonardo Díaz,Club Sporting Cristal,1,1,0.0772,0,0.0772,0.0772,-0.0772
+2025,1129485,Ezequiel Naya,Deportivo Garcilaso,25,55,7.3095,8,5.7791,0.1329,0.6905
+2025,1130035,Jherson Reyes,Club Atlético Grau,2,3,0.7047,1,0.7047,0.2349,0.2953
+2025,1131133,Otávio Gut,Alianza Universidad,16,21,1.6917,2,1.6917,0.0806,0.3083
+2025,1131302,Cristian Mejia,Universidad Técnica de Cajamarca,24,38,2.4101,3,2.4101,0.0634,0.5899
+2025,1139922,Farid Romero,Universidad Técnica de Cajamarca,3,3,0.1157,0,0.1157,0.0386,-0.1157
+2025,1148272,Arthur Gutiérrez,Asociación Deportiva Tarma,2,2,0.0683,0,0.0683,0.0342,-0.0683
+2025,1148272,Arthur Gutiérrez,Deportivo Binacional,10,16,0.7621,2,0.7621,0.0476,1.2379
+2025,1159651,Jorge del Castillo,Alianza Atlético de Sullana,6,10,0.4931,0,0.4931,0.0493,-0.4931
+2025,1159653,Joshua Cantt,Universidad Técnica de Cajamarca,1,1,0.0115,0,0.0115,0.0115,-0.0115
+2025,1159659,Sebastian Aranda,Sport Boys,5,5,0.2563,0,0.2563,0.0513,-0.2563
+2025,1170472,Stefano Fernández,Alianza Atlético de Sullana,7,8,1.5589,1,1.5589,0.1949,-0.5589
+2025,1170640,César Inga,Universitario de Deportes,9,19,1.375,1,1.375,0.0724,-0.375
+2025,1170641,Jorge Palomino,Los Chankas CYC,2,2,0.103,0,0.103,0.0515,-0.103
+2025,1170893,Luis Duque,Deportivo Binacional,4,6,0.1999,1,0.1999,0.0333,0.8001
+2025,1170895,Stefano Olaya,Deportivo Binacional,1,1,0.2424,0,0.2424,0.2424,-0.2424
+2025,1173448,Isaac Camargo,Los Chankas CYC,25,43,8.0342,9,7.2691,0.1868,0.9658
+2025,1176232,Jiries Salem,Ayacucho,1,1,0.0093,0,0.0093,0.0093,-0.0093
+2025,1199271,Juan Gonzáles,Sport Boys,7,10,0.8001,1,0.8001,0.08,0.1999
+2025,1201012,Jhoao Velasquez,Alianza Lima,2,3,0.4552,0,0.4552,0.1517,-0.4552
+2025,1201012,Jhoao Velasquez,Club Sporting Cristal,1,1,0.0,1,0.0,0.0,1.0
+2025,1214799,Royer Salcedo,Ayacucho,3,5,0.3183,0,0.3183,0.0637,-0.3183
+2025,1393514,Nicolas Rodriguez Petrini,Deportivo Binacional,9,11,1.3356,1,1.3356,0.1214,-0.3356
+2025,1408186,Gabriel Alfaro,Comerciantes Unidos,7,8,0.3324,0,0.3324,0.0415,-0.3324
+2025,1411422,Piero Magallanes,Sport Huancayo,21,45,3.9322,6,3.167,0.0874,2.0678
+2025,1411424,Martin Peralta,ADC Juan Pablo II,4,5,1.0059,0,1.0059,0.2012,-1.0059
+2025,1415939,Nicolas Amasifuen,Alianza Lima,1,1,0.1287,0,0.1287,0.1287,-0.1287
+2025,1415941,André Vasquez,Universidad Técnica de Cajamarca,20,37,1.5182,2,1.5182,0.041,0.4818
+2025,1415942,Catriel Cabellos,Club Sporting Cristal,12,18,1.0327,0,1.0327,0.0574,-1.0327
+2025,1424581,Jean Pierre Vilchez,Ayacucho,9,11,0.6415,0,0.6415,0.0583,-0.6415
+2025,1427104,Alvaro Rojas,ADC Juan Pablo II,20,39,3.4977,4,3.4977,0.0897,0.5023
+2025,1427486,Renzo Salazar,Alianza Universidad,1,1,0.0,1,0.0,0.0,1.0
+2025,1464244,Diego Otoya,Club Sporting Cristal,2,4,0.4761,1,0.4761,0.119,0.5239
+2025,1464244,Diego Otoya,Sport Boys,2,2,0.2356,0,0.2356,0.1178,-0.2356
+2025,1464245,Gonzalo Aguirre,Alianza Lima,4,7,0.2244,0,0.2244,0.0321,-0.2244
+2025,1464245,Gonzalo Aguirre,Cienciano,4,4,0.1113,0,0.1113,0.0278,-0.1113
+2025,1464276,Marcelo Ferreira,Ayacucho,7,16,1.2842,3,1.2842,0.0803,1.7158
+2025,1464527,Hairo Timaná,Deportivo Binacional,6,13,0.6486,1,0.6486,0.0499,0.3514
+2025,1464813,Kevin Sánchez,Los Chankas CYC,3,4,0.1618,0,0.1618,0.0405,-0.1618
+2025,1466382,Pablo Erustes,Deportivo Garcilaso,29,84,11.457,15,7.6311,0.1364,3.543
+2025,1466385,Santiago Gálvez,Cusco FC,3,3,0.3018,1,0.3018,0.1006,0.6982
+2025,1466550,Mariano Barreda,Melgar,4,10,1.5736,1,1.5736,0.1574,-0.5736
+2025,1476736,Luis Olmedo,Alianza Atlético de Sullana,27,61,3.9051,2,3.1399,0.064,-1.9051
+2025,1477138,Ian Wisdom,Club Sporting Cristal,16,20,2.0002,3,2.0002,0.1,0.9998
+2025,1477144,Alejandro Pósito,Club Sporting Cristal,5,7,0.7327,1,0.7327,0.1047,0.2673
+2025,1477145,Joel Herrera,Club Atlético Grau,4,4,0.3202,1,0.3202,0.08,0.6798
+2025,1479165,Abraham Aguinaga,Alianza Atlético de Sullana,1,1,0.0777,0,0.0777,0.0777,-0.0777
+2025,1479165,Abraham Aguinaga,Deportivo Binacional,10,18,0.9599,1,0.9599,0.0533,0.0401
+2025,1482430,Axel Cabellos,Club Sporting Cristal,2,2,0.0648,0,0.0648,0.0324,-0.0648
+2025,1482438,Bassco Soyer,Alianza Lima,3,5,0.7755,1,0.7755,0.1551,0.2245
+2025,1482440,Brian Arias,Alianza Lima,1,1,0.2409,0,0.2409,0.2409,-0.2409
+2025,1482472,Jair Moretti,Club Sporting Cristal,4,7,1.0811,0,1.0811,0.1544,-1.0811
+2025,1482473,Mateo Rodríguez,Club Sporting Cristal,4,6,0.6316,0,0.6316,0.1053,-0.6316
+2025,1485386,Mauro Pérez,Alianza Atlético de Sullana,8,14,2.1135,1,2.1135,0.151,-1.1135
+2025,1512395,Jhair Soto,Asociación Deportiva Tarma,4,8,1.4374,1,1.4374,0.1797,-0.4374
+2025,1523087,Dennis Perez,Cusco FC,1,1,0.0,1,0.0,0.0,1.0
+2025,1523087,Dennis Perez,Deportivo Binacional,4,4,0.1424,0,0.1424,0.0356,-0.1424
+2025,1526674,Matias Almiron,Sport Boys,10,16,0.8528,0,0.8528,0.0533,-0.8528
+2025,1546919,Edu Villar,Sport Huancayo,13,16,1.1634,1,1.1634,0.0727,-0.1634
+2025,1627935,Walter Leguía,Alianza Universidad,4,5,0.9878,1,0.9878,0.1976,0.0122
+2025,1633854,Carlos Daniel Gómez Cassani,Alianza Lima,1,1,0.0126,0,0.0126,0.0126,-0.0126
+2025,1639672,Juan Delgado,Alianza Lima,1,1,0.045,0,0.045,0.045,-0.045
+2025,1644875,Hernan Lupú,Alianza Atlético de Sullana,17,28,3.0072,2,3.0072,0.1074,-1.0072
+2025,1649452,Gian García,Melgar,2,3,0.152,0,0.152,0.0507,-0.152
+2025,1650222,D'Alessandro Montenegro,Asociación Deportiva Tarma,10,15,1.2672,2,1.2672,0.0845,0.7328
+2025,1650222,D'Alessandro Montenegro,Sport Boys,1,1,0.0,1,0.0,0.0,1.0
+2025,1650235,Maxloren Castro,Club Sporting Cristal,21,33,2.7157,2,2.7157,0.0823,-0.7157
+2025,1650247,Gilmar Rodríguez,Sport Boys,3,3,0.2037,0,0.2037,0.0679,-0.2037
+2025,1650313,Jesús Huamán,Sport Boys,1,2,0.1734,0,0.1734,0.0867,-0.1734
+2025,1650465,Misael Sosa,Club Sporting Cristal,9,17,2.1959,2,2.1959,0.1292,-0.1959
+2025,1653007,Lucas Rodriguez,Deportivo Binacional,3,12,1.648,0,1.648,0.1373,-1.648
+2025,1839331,Juan Lucumí,Ayacucho,27,64,5.5912,5,5.5912,0.0874,-0.5912
+2025,1845606,Josué Alvino,Asociación Deportiva Tarma,2,2,0.1487,0,0.1487,0.0744,-0.1487
+2025,1920842,Juan Cruz Vega,Universidad Técnica de Cajamarca,13,25,2.3027,2,2.3027,0.0921,-0.3027
+2025,1938922,Gustavo Pereira,Alianza Universidad,2,6,2.0088,1,2.0088,0.3348,-1.0088
+2025,1938924,Nilton Ramirez,Alianza Universidad,10,12,0.8675,0,0.8675,0.0723,-0.8675
+2025,2024668,Julián Aquino,Cusco FC,2,2,0.0524,0,0.0524,0.0262,-0.0524
+2025,2025040,Fabio Agurto,ADC Juan Pablo II,7,9,0.7315,0,0.7315,0.0813,-0.7315
+2025,2025044,Josué Canova,ADC Juan Pablo II,2,3,0.2072,0,0.2072,0.0691,-0.2072
+2025,2031644,Alexis Fernández,Alianza Universidad,4,7,0.1153,0,0.1153,0.0165,-0.1153
+2025,2031645,Camilo Rodríguez,Alianza Universidad,2,3,0.0951,0,0.0951,0.0317,-0.0951
+2025,2039604,Piero Cari,Alianza Lima,10,12,1.1594,1,1.1594,0.0966,-0.1594
+2025,2044144,Adriel Trelles,Club Atlético Grau,1,1,0.0628,0,0.0628,0.0628,-0.0628
+2025,2044305,Adrián De la Cruz,Ayacucho,8,11,0.3677,0,0.3677,0.0334,-0.3677
+2025,2044309,Jime Tuesta,Ayacucho,1,1,0.0267,0,0.0267,0.0267,-0.0267
+2025,2064737,Héctor Campos,Comerciantes Unidos,2,2,0.1834,0,0.1834,0.0917,-0.1834
+2025,2111308,Henry Caparó,Club Sporting Cristal,3,4,0.2337,0,0.2337,0.0584,-0.2337
+2025,2125235,Ricardo Chipao,Comerciantes Unidos,3,3,0.1477,0,0.1477,0.0492,-0.1477
+2025,2198393,Jhojan Garcilazo,Asociación Deportiva Tarma,1,1,0.1269,0,0.1269,0.1269,-0.1269
+2025,2366555,Henri Espinoza,Club Atlético Grau,1,1,0.1112,0,0.1112,0.1112,-0.1112
+2025,2366559,Carlos Salgado,Club Atlético Grau,1,1,0.0,1,0.0,0.0,1.0
+2026,338,Paolo Guerrero,Alianza Lima,18,40,6.2892,5,4.7607,0.1572,-1.2892
+2026,31175,Hernán Barcos,Club Sporting Cristal,13,26,3.8473,7,3.0831,0.148,3.1527
+2026,31175,Hernán Barcos,FC Cajamarca,12,26,3.8816,9,2.3531,0.1493,5.1184
+2026,31611,Carlos Zambrano,Sport Boys,6,7,0.6178,0,0.6178,0.0883,-0.6178
+2026,35621,Hernán Rengifo,Asociación Deportiva Tarma,7,11,1.2928,0,1.2928,0.1175,-1.2928
+2026,46988,Yoshimar Yotún,Club Sporting Cristal,21,35,4.2604,6,2.7319,0.1217,1.7396
+2026,46992,Juan Diego Lojas,CD Moquegua,12,18,1.5168,1,1.5168,0.0843,-0.5168
+2026,46992,Juan Diego Lojas,Universidad Técnica de Cajamarca,1,1,0.0,1,0.0,0.0,1.0
+2026,47401,Aldo Corzo,Universitario de Deportes,2,2,0.2247,0,0.2247,0.1123,-0.2247
+2026,47447,Christian Cueva,ACD Juan Pablo II,7,12,2.4184,2,0.8899,0.2015,-0.4184
+2026,47447,Christian Cueva,Sport Boys,9,14,3.1369,4,0.8441,0.2241,0.8631
+2026,52068,Joao Rojas,Asociación Deportiva Tarma,18,44,3.7461,3,3.7461,0.0851,-0.7461
+2026,105717,Michael Hoyos,Club Sporting Cristal,12,30,3.0937,5,3.0937,0.1031,1.9063
+2026,106461,Fernando Gaibor,Alianza Lima,18,27,1.1357,3,1.1357,0.0421,1.8643
+2026,107596,John Narváez,Asociación Deportiva Tarma,9,15,0.9437,2,0.9437,0.0629,1.0563
+2026,107596,John Narváez,FC Cajamarca,1,1,0.0,1,0.0,0.0,1.0
+2026,107625,Raúl Ruidíaz,Club Atlético Grau,19,70,8.3464,3,6.0537,0.1192,-5.3464
+2026,110856,Róger Torres,CD Moquegua,2,2,0.0779,0,0.0779,0.039,-0.0779
+2026,123245,Arquímedes Figuera,Universidad Técnica de Cajamarca,10,11,0.2824,0,0.2824,0.0257,-0.2824
+2026,133862,Irven Ávila,Club Sporting Cristal,11,18,2.8542,3,2.8542,0.1586,0.1458
+2026,143886,Marlon de Jesús,Universidad Técnica de Cajamarca,23,57,8.3143,8,6.0216,0.1459,-0.3143
+2026,147368,Gianluca Lapadula,Universitario de Deportes,13,37,8.0172,9,5.7245,0.2167,0.9828
+2026,149850,Luis Advíncula,Alianza Lima,17,23,0.8199,0,0.8199,0.0356,-0.8199
+2026,175977,Alvaro Ampuero,Alianza Lima,1,1,0.0,1,0.0,0.0,1.0
+2026,175977,Alvaro Ampuero,Cusco FC,13,22,2.093,1,2.093,0.0951,-1.093
+2026,176139,Edison Flores,Universitario de Deportes,15,30,3.1453,4,3.1453,0.1048,0.8547
+2026,176159,Andy Polo,Universitario de Deportes,17,26,1.948,3,1.948,0.0749,1.052
+2026,220439,Cristian Penilla,Alianza Atlético de Sullana,32,80,6.463,9,4.1703,0.0808,2.537
+2026,243459,Gabriel,Club Sporting Cristal,4,6,0.5581,0,0.5581,0.093,-0.5581
+2026,243459,Gabriel Santana,Club Sporting Cristal,6,11,0.8305,1,0.8305,0.0755,0.1695
+2026,247665,Miguel Trauco,Sport Boys,6,8,0.5778,0,0.5778,0.0722,-0.5778
+2026,247931,Jairo Molina,Alianza Atlético de Sullana,8,29,5.7895,5,5.7895,0.1996,-0.7895
+2026,248437,Anderson Santamaría,Universitario de Deportes,12,13,0.9211,1,0.9211,0.0709,0.0789
+2026,249305,Pablo Míguez,ACD Juan Pablo II,6,9,2.0352,1,2.0352,0.2261,-1.0352
+2026,249305,Pablo Míguez,FC Cajamarca,4,4,0.3601,0,0.3601,0.09,-0.3601
+2026,249403,Martín Pérez Guedes,Universitario de Deportes,12,19,1.6422,2,1.6422,0.0864,0.3578
+2026,250017,Horacio Orzan,Melgar,1,1,0.0169,0,0.0169,0.0169,-0.0169
+2026,255997,Cristian Benavente,Club Sporting Cristal,4,11,1.2251,0,1.2251,0.1114,-1.2251
+2026,311520,Jose Granda,CD Moquegua,1,1,0.035,0,0.035,0.035,-0.035
+2026,312264,Horacio Calcaterra,Universitario de Deportes,7,9,0.5158,0,0.5158,0.0573,-0.5158
+2026,325609,Facundo Callejo,Cusco FC,28,99,16.8269,19,12.2414,0.17,2.1731
+2026,333585,Maximiliano Amondarain,Cienciano,7,11,0.7257,0,0.7257,0.066,-0.7257
+2026,338883,Horacio Benincasa,Asociación Deportiva Tarma,8,10,1.346,2,1.346,0.1346,0.654
+2026,338883,Horacio Benincasa,Deportivo Garcilaso,4,5,0.4701,0,0.4701,0.094,-0.4701
+2026,338957,Eryc Castillo,Alianza Lima,31,111,15.8985,23,15.8985,0.1432,7.1015
+2026,339123,Martín Alaníz,ACD Juan Pablo II,15,34,3.5317,4,2.0033,0.1039,0.4683
+2026,339163,Josué Estrada,Alianza Lima,1,1,0.0078,0,0.0078,0.0078,-0.0078
+2026,339475,José Miguel Manzaneda,Cusco FC,19,29,2.106,3,2.106,0.0726,0.894
+2026,339481,Aldair Perleche,CD Moquegua,10,13,1.3945,0,1.3945,0.1073,-1.3945
+2026,339681,Esteban Pavez,Alianza Lima,18,29,1.0818,1,1.0818,0.0373,-0.0818
+2026,339841,Ángel Ojeda,Asociación Deportiva Tarma,12,16,0.6375,1,0.6375,0.0398,0.3625
+2026,339843,Marco Aldair Rodríguez,Asociación Deportiva Tarma,11,20,1.989,1,1.989,0.0995,-0.989
+2026,339855,Bernardo Cuesta,Melgar,24,93,13.6328,15,12.8686,0.1466,1.3672
+2026,339929,Cristian Enciso,ACD Juan Pablo II,1,1,0.0,1,0.0,0.0,1.0
+2026,339929,Cristian Enciso,CD Moquegua,12,18,1.1303,0,1.1303,0.0628,-1.1303
+2026,340077,Pablo Lavandeira,Club Atlético Grau,10,14,2.2418,1,1.4775,0.1601,-1.2418
+2026,340077,Pablo Lavandeira,FC Cajamarca,6,16,1.3104,0,1.3104,0.0819,-1.3104
+2026,340201,Jefferson Orejuela,FC Cajamarca,2,3,0.0923,0,0.0923,0.0308,-0.0923
+2026,340529,Luciano Nequecaur,Sport Boys,19,41,7.0995,6,4.8068,0.1732,-1.0995
+2026,340553,Cristian Bordacahar,Melgar,19,42,4.9952,8,4.9952,0.1189,3.0048
+2026,345779,Christofer Gonzáles,Club Sporting Cristal,2,5,0.9644,0,0.2002,0.1929,-0.9644
+2026,351398,Javier Sanguinetti,Sport Huancayo,27,92,9.7234,12,5.138,0.1057,2.2766
+2026,356340,Jonathan Betancourt,FC Cajamarca,12,17,1.1606,2,1.1606,0.0683,0.8394
+2026,365990,Leonel González,Melgar,7,8,0.4646,0,0.4646,0.0581,-0.4646
+2026,370226,Miguel Araujo,Club Sporting Cristal,12,18,1.9327,3,1.9327,0.1074,1.0673
+2026,384260,Lucas Acevedo,Club Atlético Grau,11,15,1.8135,1,1.8135,0.1209,-0.8135
+2026,384658,Alexis Cossio,Comerciantes Unidos,15,22,0.8227,1,0.8227,0.0374,0.1773
+2026,385894,Francisco Arancibia,Deportivo Garcilaso,14,19,1.4289,6,1.4289,0.0752,4.5711
+2026,542636,Jairo Vélez,Alianza Lima,25,53,4.9974,6,4.9974,0.0943,1.0026
+2026,557108,Nahuel Luján,Sport Huancayo,29,70,5.6007,6,5.6007,0.08,0.3993
+2026,560054,Hansell Riojas,Sport Boys,8,8,1.0103,2,0.2461,0.1263,0.9897
+2026,585102,Adrián Fernández,Club Atlético Grau,17,45,3.6406,6,3.6406,0.0809,2.3594
+2026,586956,Lucas Colitto,Cusco FC,15,33,3.221,4,3.221,0.0976,0.779
+2026,588144,Jhonny Vidales,Melgar,27,50,9.7998,14,6.7429,0.196,4.2002
+2026,588584,Brayan Angulo,CD Moquegua,2,3,0.2509,0,0.2509,0.0836,-0.2509
+2026,588584,Bryan Angulo,CD Moquegua,18,25,5.4798,6,2.4228,0.2192,0.5202
+2026,588626,Daniel Porozo,Sport Huancayo,14,29,5.4274,6,5.4274,0.1872,0.5726
+2026,589448,Jean Pierre Archimbaud,Alianza Lima,5,7,0.2368,0,0.2368,0.0338,-0.2368
+2026,590310,Víctor Cedrón,Asociación Deportiva Tarma,10,13,1.2298,2,0.4656,0.0946,0.7702
+2026,590468,Jeremy Rostaing,Sport Huancayo,4,4,0.2009,0,0.2009,0.0502,-0.2009
+2026,755394,Javier Salas,Melgar,5,6,0.3475,1,0.3475,0.0579,0.6525
+2026,760636,Anthony Gordillo,Alianza Atlético de Sullana,15,21,0.6844,0,0.6844,0.0326,-0.6844
+2026,777249,Hernan Da Campo,Sport Boys,16,33,2.8369,3,2.8369,0.086,0.1631
+2026,787610,Yorleys Mena,Sport Huancayo,13,21,3.609,5,2.8447,0.1719,1.391
+2026,788039,Franco Caballero,Sport Huancayo,3,4,1.3337,1,0.5694,0.3334,-0.3337
+2026,788039,Franco Javier Caballero,Sport Huancayo,9,26,3.3796,3,3.3796,0.13,-0.3796
+2026,789265,Matias Vega,ACD Juan Pablo II,1,1,0.061,0,0.061,0.061,-0.061
+2026,789416,Federico Illanes,Sport Boys,5,5,0.0901,0,0.0901,0.018,-0.0901
+2026,790018,Elsar Rodas,Club Atlético Grau,5,7,0.3323,0,0.3323,0.0475,-0.3323
+2026,794761,Nicolás Delgadillo,Club Atlético Grau,8,14,0.5897,1,0.5897,0.0421,0.4103
+2026,796088,Sekou Gassama,Universitario de Deportes,2,2,0.3926,0,0.3926,0.1963,-0.3926
+2026,798276,Abdiel Arroyo,Universidad Técnica de Cajamarca,20,41,4.5444,5,3.7801,0.1108,0.4556
+2026,801453,Ricardo Salcedo,Sport Huancayo,14,22,1.7215,1,1.7215,0.0783,-0.7215
+2026,805055,Gustavo Dulanto,Sport Boys,8,10,0.68,0,0.68,0.068,-0.68
+2026,805065,Rafael Guarderas,Club Atlético Grau,14,18,0.8979,1,0.8979,0.0499,0.1021
+2026,805132,Juan Escobar,Alianza Atlético de Sullana,1,1,0.0,1,0.0,0.0,1.0
+2026,805132,Juan Escobar,Melgar,14,21,1.4964,0,1.4964,0.0713,-1.4964
+2026,805261,Nilson Loyola,Sport Boys,2,2,0.2376,0,0.2376,0.1188,-0.2376
+2026,805264,Patricio Álvarez,Club Atlético Grau,4,4,3.057,4,0.0,0.7642,0.943
+2026,805268,Alexis Arias,Comerciantes Unidos,19,28,1.0621,0,1.0621,0.0379,-1.0621
+2026,805270,Paolo Fuentes,ACD Juan Pablo II,6,9,2.2568,3,2.2568,0.2508,0.7432
+2026,805270,Paolo Fuentes,Comerciantes Unidos,2,3,0.4159,0,0.4159,0.1386,-0.4159
+2026,805312,Gonzalo Falcón,Cienciano,1,1,0.0667,0,0.0667,0.0667,-0.0667
+2026,805332,Miguel Carranza,Comerciantes Unidos,1,1,0.0561,0,0.0561,0.0561,-0.0561
+2026,805333,Ángel Zamudio,Asociación Deportiva Tarma,1,1,0.0,1,0.0,0.0,1.0
+2026,805354,Ronal Huaccha,Sport Huancayo,17,25,4.6841,4,4.6841,0.1874,-0.6841
+2026,805366,Oshiro Takeuchi,Los Chankas CYC,21,37,4.7981,5,4.7981,0.1297,0.2019
+2026,805423,Juan Valencia,ACD Juan Pablo II,1,1,0.0,1,0.0,0.0,1.0
+2026,805451,Jarlin Quintero,Los Chankas CYC,26,67,10.7588,9,9.9946,0.1606,-1.7588
+2026,814017,Tomás Andrade,FC Cajamarca,5,11,0.42,0,0.42,0.0382,-0.42
+2026,822718,Kevin Minda,Melgar,7,8,0.2368,0,0.2368,0.0296,-0.2368
+2026,826380,Ray Sandoval,Cienciano,13,19,1.2726,1,1.2726,0.067,-0.2726
+2026,826832,Wilter Ayovi,Comerciantes Unidos,3,4,0.5676,2,0.5676,0.1419,1.4324
+2026,826832,Wilter Ayoví,Comerciantes Unidos,7,12,0.8256,0,0.8256,0.0688,-0.8256
+2026,828836,Leandro Sosa,Club Sporting Cristal,12,15,0.9787,1,0.9787,0.0652,0.0213
+2026,829029,Iván Colman,Cusco FC,26,60,8.7404,7,6.4476,0.1457,-1.7404
+2026,830660,Rodrigo Tapia,Club Atlético Grau,7,9,0.6591,1,0.6591,0.0732,0.3409
+2026,830663,Alejandro Hohberg,Cienciano,21,87,12.8039,11,8.9827,0.1472,-1.8039
+2026,830742,Gabriel Carabajal,Cusco FC,12,19,0.8329,2,0.8329,0.0438,1.1671
+2026,830746,Neri Bandiera,Cienciano,25,56,11.5534,10,11.5534,0.2063,-1.5534
+2026,830879,Nicolás Leguizamón,ACD Juan Pablo II,2,4,0.5965,1,0.5965,0.1491,0.4035
+2026,830880,Nicolás Silva,Cusco FC,26,37,3.5565,1,3.5565,0.0961,-2.5565
+2026,830888,Emiliano Franco,Club Atlético Grau,4,6,0.7093,1,0.7093,0.1182,0.2907
+2026,831183,Carlo Diez,Cusco FC,6,6,0.4006,0,0.4006,0.0668,-0.4006
+2026,831183,Carlos Diez,Cusco FC,3,3,0.179,0,0.179,0.0597,-0.179
+2026,831608,Héctor Fértoli,Universitario de Deportes,5,5,0.3657,0,0.3657,0.0731,-0.3657
+2026,832001,Arley Rodríguez,FC Cajamarca,5,11,0.9904,2,0.9904,0.09,1.0096
+2026,839635,Felipe Vizeu,Club Sporting Cristal,9,23,5.0136,5,5.0136,0.218,-0.0136
+2026,842529,Claudio Torrejón,Deportivo Garcilaso,6,8,0.311,0,0.311,0.0389,-0.311
+2026,845431,Ignacio Tapia,Club Atlético Grau,5,7,0.9696,1,0.9696,0.1385,0.0304
+2026,846474,Luis Urruti,Sport Boys,28,53,5.3108,3,5.3108,0.1002,-2.3108
+2026,846742,Marcos Lliuya,Universidad Técnica de Cajamarca,25,54,2.8071,5,2.0429,0.052,2.1929
+2026,846749,Alexander Lecaros,CD Moquegua,4,6,0.4309,0,0.4309,0.0718,-0.4309
+2026,862216,Renzo Alfani,Sport Boys,4,7,0.4187,0,0.4187,0.0598,-0.4187
+2026,869785,Adolfo Muñoz,Universidad Técnica de Cajamarca,23,40,4.3144,5,4.3144,0.1079,0.6856
+2026,873619,Maximiliano Perez,Comerciantes Unidos,1,2,0.8144,1,0.0502,0.4072,0.1856
+2026,873619,Maximiliano Pérez,Comerciantes Unidos,9,18,3.5658,3,2.8016,0.1981,-0.5658
+2026,873645,Agustin Gomez,Alianza Lima,1,1,0.0,1,0.0,0.0,1.0
+2026,873645,Agustin Gomez,Deportivo Garcilaso,15,21,2.3849,0,2.3849,0.1136,-2.3849
+2026,873706,Brayan Guevara,Los Chankas CYC,6,9,0.2206,0,0.2206,0.0245,-0.2206
+2026,873806,Rick Campodonico,Sport Huancayo,9,18,1.407,0,1.407,0.0782,-1.407
+2026,874645,Bruno Duarte,Universidad Técnica de Cajamarca,19,27,1.6134,3,1.6134,0.0598,1.3866
+2026,874980,David Gonzales,Los Chankas CYC,4,4,0.5657,1,0.5657,0.1414,0.4343
+2026,874981,Jesus Mendieta,Alianza Atlético de Sullana,6,6,0.263,0,0.263,0.0438,-0.263
+2026,874984,Gianfranco Chávez,Alianza Lima,2,2,0.0574,0,0.0574,0.0287,-0.0574
+2026,874985,Renzo Garcés,Alianza Lima,17,21,2.1946,5,2.1946,0.1045,2.8054
+2026,874987,Fernando Pacheco,Deportivo Garcilaso,2,3,0.2823,0,0.2823,0.0941,-0.2823
+2026,874988,Martín Távara,Club Sporting Cristal,25,52,2.5681,4,1.8038,0.0494,1.4319
+2026,875661,Jorge Toledo,ACD Juan Pablo II,12,15,0.6989,1,0.6989,0.0466,0.3011
+2026,875662,Kevin Ruiz,CD Moquegua,5,7,0.5257,2,0.5257,0.0751,1.4743
+2026,876924,Diego Carabaño,Sport Huancayo,23,51,2.894,2,2.1298,0.0567,-0.894
+2026,876927,Aldair Fuentes,Cusco FC,8,11,1.0481,1,1.0481,0.0953,-0.0481
+2026,876928,Luis Garro,Universidad Técnica de Cajamarca,11,14,0.8316,1,0.8316,0.0594,0.1684
+2026,876929,Kevin Quevedo,Alianza Lima,14,26,2.2667,1,2.2667,0.0872,-1.2667
+2026,876931,Erinson Ramirez,ACD Juan Pablo II,20,46,6.1129,7,2.2917,0.1329,0.8871
+2026,877910,Fabio Rojas,Comerciantes Unidos,4,6,0.2696,0,0.2696,0.0449,-0.2696
+2026,878754,Ademar Robles,Cienciano,8,10,0.3249,0,0.3249,0.0325,-0.3249
+2026,879621,José Luján,Alianza Atlético de Sullana,11,12,0.5798,1,0.5798,0.0483,0.4202
+2026,879621,José Luján,Universitario de Deportes,1,1,0.0,1,0.0,0.0,1.0
+2026,879628,Jordan Guivin,Asociación Deportiva Tarma,16,38,2.1996,5,2.1996,0.0579,2.8004
+2026,879628,Jordan Guivin,Universitario de Deportes,2,3,0.0558,0,0.0558,0.0186,-0.0558
+2026,879629,Hideyoshi Arakaki,Asociación Deportiva Tarma,1,2,0.5534,1,0.5534,0.2767,0.4466
+2026,879886,David Camacho,Universidad Técnica de Cajamarca,24,51,6.6538,6,6.6538,0.1305,-0.6538
+2026,882839,Jorge Murrugarra,Universitario de Deportes,1,1,0.0246,0,0.0246,0.0246,-0.0246
+2026,883293,Leonel Solís,Sport Boys,1,2,0.0152,0,0.0152,0.0076,-0.0152
+2026,883296,Kevin Sandoval,Deportivo Garcilaso,18,36,2.5535,2,1.7893,0.0709,-0.5535
+2026,883298,Paulo Goyoneche,FC Cajamarca,5,7,0.2144,0,0.2144,0.0306,-0.2144
+2026,883299,Janio Pósito,ACD Juan Pablo II,10,22,6.4109,7,5.6467,0.2914,0.5891
+2026,883299,Janio Pósito,Los Chankas CYC,4,7,1.5037,0,1.5037,0.2148,-1.5037
+2026,883329,Luis Benites,Asociación Deportiva Tarma,9,20,2.7786,3,1.2502,0.1389,0.2214
+2026,883329,Luis Benites,Club Atlético Grau,7,10,1.387,2,1.387,0.1387,0.613
+2026,883343,Aldair Salazar,Deportivo Garcilaso,7,15,1.8718,3,1.8718,0.1248,1.1282
+2026,883388,Jeferson Collazos,CD Moquegua,21,36,6.95,5,4.6572,0.1931,-1.95
+2026,883389,Diego Ramírez,CD Moquegua,4,4,0.2213,0,0.2213,0.0553,-0.2213
+2026,883396,Carlos Cabello,Asociación Deportiva Tarma,7,13,1.1546,0,1.1546,0.0888,-1.1546
+2026,883396,Carlos Cabello,Cienciano,6,8,0.8157,1,0.8157,0.102,0.1843
+2026,883397,Gerson Barreto,Cienciano,12,21,0.6706,0,0.6706,0.0319,-0.6706
+2026,883406,Yordi Vílchez,Club Sporting Cristal,1,1,0.0,1,0.0,0.0,1.0
+2026,883406,Yordi Vílchez,Comerciantes Unidos,2,2,0.089,0,0.089,0.0445,-0.089
+2026,883406,Yordi Vílchez,FC Cajamarca,4,5,0.2536,0,0.2536,0.0507,-0.2536
+2026,883720,Christian Velarde,Los Chankas CYC,7,11,0.2773,0,0.2773,0.0252,-0.2773
+2026,883729,Kelvin Sánchez,Los Chankas CYC,12,15,0.8532,1,0.8532,0.0569,0.1468
+2026,883743,Carlos Junior Huerto,Universidad Técnica de Cajamarca,7,11,1.5245,2,1.5245,0.1386,0.4755
+2026,883747,Bryan Reyna,Universitario de Deportes,7,12,0.905,1,0.905,0.0754,0.095
+2026,883768,David Dioses,Universidad Técnica de Cajamarca,7,9,0.4231,0,0.4231,0.047,-0.4231
+2026,883786,Roberto Campos,Los Chankas CYC,2,3,0.2013,0,0.2013,0.0671,-0.2013
+2026,883811,Edgar Santillán,CD Moquegua,1,1,0.0463,0,0.0463,0.0463,-0.0463
+2026,884997,Matías Di Benedetto,Universitario de Deportes,7,9,0.5406,0,0.5406,0.0601,-0.5406
+2026,886239,Cristiano,Club Sporting Cristal,9,12,0.5574,0,0.5574,0.0464,-0.5574
+2026,888377,Diego Barreto,Club Atlético Grau,12,22,1.2491,1,1.2491,0.0568,-0.2491
+2026,892073,Gustavo Cazonatti,Club Sporting Cristal,11,20,2.738,3,2.738,0.1369,0.262
+2026,892451,Juan Cruz Gonzalez,Club Sporting Cristal,10,24,1.0497,0,1.0497,0.0437,-1.0497
+2026,892451,Juan Gonzalez,Club Sporting Cristal,3,8,0.3693,0,0.3693,0.0462,-0.3693
+2026,892669,Christopher Olivares,Deportivo Garcilaso,22,47,8.1069,10,8.1069,0.1725,1.8931
+2026,894214,Carlos Mosquera,Sport Huancayo,1,1,0.0,1,0.0,0.0,1.0
+2026,894452,Jonathan Bauman,Asociación Deportiva Tarma,20,48,7.0053,5,6.241,0.1459,-2.0053
+2026,895229,Facundo Castelli,Deportivo Garcilaso,15,37,6.5026,7,5.7384,0.1757,0.4974
+2026,895364,Gaspar Gentile,Alianza Lima,18,29,2.5754,1,2.5754,0.0888,-1.5754
+2026,895589,Williams Riveros,Universitario de Deportes,10,14,2.1097,3,2.1097,0.1507,0.8903
+2026,897059,Lisandro Alzugaray,Universitario de Deportes,22,53,3.8121,6,3.8121,0.0719,2.1879
+2026,901019,Luis Iberico,Club Sporting Cristal,21,37,6.7366,12,6.7366,0.1821,5.2634
+2026,901020,Jeremy Canela,Asociación Deportiva Tarma,9,26,1.5651,3,1.5651,0.0602,1.4349
+2026,901020,Jeremy Canela,Sport Huancayo,7,8,0.4972,0,0.4972,0.0622,-0.4972
+2026,905565,Jean Carlos Montaño,Cusco FC,6,6,0.1136,0,0.1136,0.0189,-0.1136
+2026,906002,Carlos Garcés,Cienciano,30,91,13.7609,18,12.2324,0.1512,4.2391
+2026,913398,Jesús Castillo,Alianza Lima,3,5,0.8165,0,0.8165,0.1633,-0.8165
+2026,914211,José Sinisterra,Deportivo Garcilaso,12,15,0.9946,0,0.9946,0.0663,-0.9946
+2026,914484,Félix Espinoza,Los Chankas CYC,6,12,0.8578,1,0.8578,0.0715,0.1422
+2026,922007,Jimmy Valoyes,Cusco FC,1,1,0.0,1,0.0,0.0,1.0
+2026,922007,Jimmy Valoyes,Sport Boys,1,1,0.0,1,0.0,0.0,1.0
+2026,922007,Jimmy Valoyes,Sport Huancayo,19,39,1.7795,1,1.7795,0.0456,-0.7795
+2026,922870,Jose Antonio Parodi,Comerciantes Unidos,2,2,0.1278,1,0.1278,0.0639,0.8722
+2026,922870,José Parodi,Comerciantes Unidos,8,11,1.4265,1,1.4265,0.1297,-0.4265
+2026,922871,Nelson Cabanillas,Melgar,9,11,0.4604,0,0.4604,0.0419,-0.4604
+2026,922873,Paulo De La Cruz,Club Atlético Grau,2,4,0.3355,0,0.3355,0.0839,-0.3355
+2026,922873,Paulo de la Cruz,Club Atlético Grau,11,20,1.8068,1,1.8068,0.0903,-0.8068
+2026,923173,Axel Chávez,Los Chankas CYC,2,2,0.0621,0,0.0621,0.0311,-0.0621
+2026,923173,Axel Chávez,Sport Huancayo,1,1,0.0326,0,0.0326,0.0326,-0.0326
+2026,923196,Juan Tévez,Cusco FC,16,29,4.5149,3,3.7507,0.1557,-1.5149
+2026,923677,Claudio Nunez,Cienciano,2,2,0.1179,0,0.1179,0.059,-0.1179
+2026,923677,Claudio Núñez,Cienciano,8,11,0.8197,0,0.8197,0.0745,-0.8197
+2026,923740,Alec Deneumostier,Melgar,4,7,0.4923,1,0.4923,0.0703,0.5077
+2026,924530,Nicolás Díaz,Alianza Lima,2,3,0.2519,0,0.2519,0.084,-0.2519
+2026,924574,Carlos López,Sport Boys,13,23,1.2997,1,1.2997,0.0565,-0.2997
+2026,924725,Santiago Arias,Cienciano,16,31,1.1008,0,1.1008,0.0355,-1.1008
+2026,924725,Santiago Arias,Cusco FC,1,1,0.0,1,0.0,0.0,1.0
+2026,924736,Mauro Da Luz,Club Atlético Grau,7,17,2.4517,1,2.4517,0.1442,-1.4517
+2026,924762,Agustín González,Deportivo Garcilaso,25,66,4.4473,6,3.6831,0.0674,1.5527
+2026,924783,Jairo Concha,Universitario de Deportes,25,44,1.6761,3,1.6761,0.0381,1.3239
+2026,924881,Christian Vasquez,Comerciantes Unidos,3,6,0.2384,0,0.2384,0.0397,-0.2384
+2026,924881,Christian Vásquez,Club Atlético Grau,3,3,0.1155,0,0.1155,0.0385,-0.1155
+2026,924895,Cristian Souza,Cienciano,20,43,4.2087,3,4.2087,0.0979,-1.2087
+2026,924923,John Vega,FC Cajamarca,4,4,0.689,0,0.689,0.1722,-0.689
+2026,924932,Alejandro Ramos,Asociación Deportiva Tarma,6,6,0.3211,0,0.3211,0.0535,-0.3211
+2026,924932,Alejandro Ramos,Melgar,5,6,0.2131,0,0.2131,0.0355,-0.2131
+2026,925176,Hugo Ángeles,Sport Huancayo,21,27,2.4265,2,2.4265,0.0899,-0.4265
+2026,925232,Juan Barreda,Sport Huancayo,3,3,0.3242,0,0.3242,0.1081,-0.3242
+2026,925309,Carlos Correa,Comerciantes Unidos,1,1,0.0099,0,0.0099,0.0099,-0.0099
+2026,925309,Carlos Correa,FC Cajamarca,3,3,0.0766,0,0.0766,0.0255,-0.0766
+2026,925420,Jean Franco Falconi,Sport Huancayo,11,14,1.0926,1,1.0926,0.078,-0.0926
+2026,926640,Gonzalo Rizzo,Los Chankas CYC,8,13,1.5503,1,1.5503,0.1193,-0.5503
+2026,927088,Nicolas Chavez,CD Moquegua,15,35,1.5966,0,1.5966,0.0456,-1.5966
+2026,927690,Matías Succar,Cienciano,23,49,8.6442,6,7.88,0.1764,-2.6442
+2026,928021,Jorge Gutiérrez,Universitario de Deportes,1,1,0.0829,0,0.0829,0.0829,-0.0829
+2026,929014,Oslimg Mora,FC Cajamarca,1,1,0.0,1,0.0,0.0,1.0
+2026,929014,Oslimg Mora,Sport Boys,23,37,1.2251,1,1.2251,0.0331,-0.2251
+2026,931653,Kevin Becerra,Cienciano,13,21,2.244,1,2.244,0.1069,-1.244
+2026,931772,Francesco Cavagna,Universidad Técnica de Cajamarca,1,2,0.0389,0,0.0389,0.0194,-0.0389
+2026,931776,Christian Neira,Alianza Lima,3,5,0.4443,0,0.4443,0.0889,-0.4443
+2026,931776,Christian Neira,Club Atlético Grau,12,25,2.7173,1,2.7173,0.1087,-1.7173
+2026,932098,Alexis Rodas,FC Cajamarca,7,10,0.5303,0,0.5303,0.053,-0.5303
+2026,932933,Rolando Diaz,Sport Boys,18,24,2.7981,1,2.7981,0.1166,-1.7981
+2026,932945,Marcos Martinich,Cienciano,19,27,1.0393,0,1.0393,0.0385,-1.0393
+2026,933730,Brandon Palacios,FC Cajamarca,26,65,7.4225,8,6.6583,0.1142,0.5775
+2026,937859,Santiago González,Club Sporting Cristal,22,48,3.7164,6,3.7164,0.0774,2.2836
+2026,939946,Ariel Muñoz,Alianza Atlético de Sullana,19,41,2.1034,4,1.3391,0.0513,1.8966
+2026,942164,José Zevallos,Cusco FC,6,6,0.4863,0,0.4863,0.081,-0.4863
+2026,944073,Michael Rasmussen,Universidad Técnica de Cajamarca,3,5,0.4141,1,0.4141,0.0828,0.5859
+2026,944073,Michel Rasmussen,FC Cajamarca,7,14,1.8448,4,1.0805,0.1318,2.1552
+2026,944073,Michel Rasmussen,Universidad Técnica de Cajamarca,3,3,0.074,0,0.074,0.0247,-0.074
+2026,944825,Jeriel De Santis,Melgar,3,3,0.7648,1,0.7648,0.2549,0.2352
+2026,946934,Josuee Herrera,Comerciantes Unidos,24,59,5.3403,6,4.5761,0.0905,0.6597
+2026,957304,Accel Campos,Los Chankas CYC,2,2,0.1541,0,0.1541,0.077,-0.1541
+2026,957940,Manuel Ganoza,Universidad Técnica de Cajamarca,5,6,0.4164,1,0.4164,0.0694,0.5836
+2026,957952,Agustín Álvarez,Club Sporting Cristal,5,8,0.3659,0,0.3659,0.0457,-0.3659
+2026,960016,Lautaro Guzmán,Melgar,17,30,1.8087,2,1.8087,0.0603,0.1913
+2026,960220,Matias Sen,Comerciantes Unidos,7,15,2.2825,3,1.5183,0.1522,0.7175
+2026,960220,Matías Sen,Comerciantes Unidos,22,79,9.2268,8,7.6983,0.1168,-1.2268
+2026,960225,Hugo Ancajima,ACD Juan Pablo II,3,3,0.1507,0,0.1507,0.0502,-0.1507
+2026,960225,Hugo Ancajima,Universitario de Deportes,1,1,0.0739,0,0.0739,0.0739,-0.0739
+2026,965759,Rodrigo Vilca,Comerciantes Unidos,28,68,5.682,7,4.1535,0.0836,1.318
+2026,965761,Piero Serra,Universidad Técnica de Cajamarca,6,6,0.4589,0,0.4589,0.0765,-0.4589
+2026,965873,Ronny Biojo,Asociación Deportiva Tarma,2,2,0.0526,0,0.0526,0.0263,-0.0526
+2026,965967,Juan Manuel Requena,Universitario de Deportes,4,4,0.2654,0,0.2654,0.0663,-0.2654
+2026,966164,Federico Girotti,Alianza Lima,25,69,6.3981,4,6.3981,0.0927,-2.3981
+2026,971200,Caín Fara,Universitario de Deportes,18,31,2.2214,3,2.2214,0.0717,0.7786
+2026,972824,Marlon Torres,Los Chankas CYC,19,38,4.3684,4,4.3684,0.115,-0.3684
+2026,973566,Oswaldo Valenzuela,Cusco FC,7,8,0.161,0,0.161,0.0201,-0.161
+2026,973650,Franco Zanelatto,Melgar,6,8,0.621,0,0.621,0.0776,-0.621
+2026,973664,Yuriel Celi,Sport Boys,10,23,2.0398,3,1.2755,0.0887,0.9602
+2026,973667,Jack Durán,ACD Juan Pablo II,15,18,0.6798,2,0.6798,0.0378,1.3202
+2026,973682,Ricardo Lagos,Cusco FC,8,11,0.346,1,0.346,0.0315,0.654
+2026,973682,Ricardo Lagos,FC Cajamarca,3,6,0.3648,0,0.3648,0.0608,-0.3648
+2026,974136,Beto Da Silva,Deportivo Garcilaso,28,57,8.1223,11,5.0653,0.1425,2.8777
+2026,974679,Franco Coronel,Alianza Atlético de Sullana,12,30,3.2064,3,3.2064,0.1069,-0.2064
+2026,975241,Erick Perleche,Alianza Atlético de Sullana,12,15,0.9849,1,0.9849,0.0657,0.0151
+2026,975246,Jossimar Serrato,ACD Juan Pablo II,2,2,0.2743,0,0.2743,0.1371,-0.2743
+2026,975544,Jhon Sánchez,Comerciantes Unidos,7,9,1.1138,2,1.1138,0.1238,0.8862
+2026,975708,Luis Arce,Universidad Técnica de Cajamarca,23,50,1.7401,3,1.7401,0.0348,1.2599
+2026,975853,Rotceh Aguilar,Cienciano,6,10,0.7001,0,0.7001,0.07,-0.7001
+2026,975919,Percy Liza,Sport Boys,17,30,3.3892,3,3.3892,0.113,-0.3892
+2026,975960,Héctor Bazán,ACD Juan Pablo II,5,6,0.8379,0,0.8379,0.1397,-0.8379
+2026,976302,Abdiel Ayarza,Los Chankas CYC,16,24,3.1769,5,3.1769,0.1324,1.8231
+2026,976931,Carlos Gamarra,Cusco FC,7,8,0.554,0,0.554,0.0693,-0.554
+2026,976932,Walter Tandazo,Melgar,16,30,2.2361,0,2.2361,0.0745,-2.2361
+2026,976933,Paolo Reyna,ACD Juan Pablo II,8,12,0.4823,0,0.4823,0.0402,-0.4823
+2026,976933,Paolo Reyna,Universitario de Deportes,1,1,0.0331,0,0.0331,0.0331,-0.0331
+2026,977086,Cristian Carbajal,Alianza Lima,2,2,0.0589,0,0.0589,0.0295,-0.0589
+2026,978543,Jesús Castillo,Universitario de Deportes,8,11,0.3435,0,0.3435,0.0312,-0.3435
+2026,978549,Rafael Lutiger,Cienciano,1,1,0.0,1,0.0,0.0,1.0
+2026,978549,Rafael Lutiger,Club Sporting Cristal,11,12,0.9801,2,0.9801,0.0817,1.0199
+2026,978991,Juan Manuel Cuesta,Club Sporting Cristal,7,12,0.4823,2,0.4823,0.0402,1.5177
+2026,980141,Diego Soto,Cusco FC,20,27,1.97,1,1.97,0.073,-0.97
+2026,980889,Dylan Caro,Universidad Técnica de Cajamarca,9,9,0.4712,0,0.4712,0.0524,-0.4712
+2026,984107,Luis Ramos,Alianza Lima,10,11,2.0604,1,2.0604,0.1873,-1.0604
+2026,984127,Leonardo Villar,Sport Huancayo,1,1,0.1158,0,0.1158,0.1158,-0.1158
+2026,984613,Miguel Silveira,Cusco FC,2,3,0.3259,0,0.3259,0.1086,-0.3259
+2026,984613,Miguel Silveira,Universitario de Deportes,4,8,1.7718,1,1.7718,0.2215,-0.7718
+2026,984882,Arón Sánchez,ACD Juan Pablo II,8,12,0.5954,1,0.5954,0.0496,0.4046
+2026,988298,Óscar Pinto,Comerciantes Unidos,5,5,0.437,0,0.437,0.0874,-0.437
+2026,989228,Adrián Quiroz,Los Chankas CYC,9,14,0.7203,1,0.7203,0.0515,0.2797
+2026,989228,Adrián Quiroz,Universitario de Deportes,4,9,0.7796,0,0.7796,0.0866,-0.7796
+2026,989232,Diego Romero,Cienciano,1,1,0.0,1,0.0,0.0,1.0
+2026,989240,Didier La Torre,Cienciano,4,5,0.3001,0,0.3001,0.06,-0.3001
+2026,989258,Marcelo Gaona,Sport Huancayo,12,16,1.264,1,1.264,0.079,-0.264
+2026,989259,Mathias Llontop,Sport Boys,7,9,0.9352,0,0.9352,0.1039,-0.9352
+2026,989330,José Ingratti,Alianza Atlético de Sullana,14,35,4.9812,3,4.9812,0.1423,-1.9812
+2026,991108,Hector González,Los Chankas CYC,12,19,0.754,1,0.754,0.0397,0.246
+2026,994724,Yorman Zapata,CD Moquegua,21,35,2.2348,2,2.2348,0.0639,-0.2348
+2026,1000289,Alessandro Burlamaqui,Alianza Lima,1,1,0.0182,0,0.0182,0.0182,-0.0182
+2026,1001106,Mathías Carpio,Comerciantes Unidos,6,6,0.355,0,0.355,0.0592,-0.355
+2026,1009256,Carlos Ramos,Deportivo Garcilaso,21,32,1.5253,1,1.5253,0.0477,-0.5253
+2026,1009556,Nicolás Quagliata,Melgar,25,83,6.3873,7,5.6231,0.077,0.6127
+2026,1011440,José Lugo,FC Cajamarca,11,33,2.5418,2,1.7775,0.077,-0.5418
+2026,1015697,Inti Garrafa,Deportivo Garcilaso,1,2,0.1234,0,0.1234,0.0617,-0.1234
+2026,1016972,Alex Valera,Universitario de Deportes,17,62,11.4386,13,9.1458,0.1845,1.5614
+2026,1016972,Álex Valera,Universitario de Deportes,13,61,8.3276,5,6.7991,0.1365,-3.3276
+2026,1016974,Ayrthon Quintana,Los Chankas CYC,16,30,0.7936,0,0.7936,0.0265,-0.7936
+2026,1016982,Marlon Ruidías,Cusco FC,10,20,1.2707,1,1.2707,0.0635,-0.2707
+2026,1017480,José Carabalí,Universitario de Deportes,3,4,0.2864,1,0.2864,0.0716,0.7136
+2026,1017753,Claudio Ramírez,CD Moquegua,6,11,0.3904,0,0.3904,0.0355,-0.3904
+2026,1017755,Emilio Saba,Sport Boys,10,19,2.8473,2,2.8473,0.1499,-0.8473
+2026,1017756,Franchesco Flores,Alianza Atlético de Sullana,10,16,1.6497,1,1.6497,0.1031,-0.6497
+2026,1017759,Jefferson Caceres,Melgar,8,13,1.3696,1,1.3696,0.1054,-0.3696
+2026,1017760,Jhamir D'Arrigo,Melgar,2,3,0.1154,0,0.1154,0.0385,-0.1154
+2026,1017778,Williams Guzmán,Alianza Atlético de Sullana,6,8,1.4679,1,1.4679,0.1835,-0.4679
+2026,1017778,Williams Guzmán,Alianza Lima,1,1,0.0,1,0.0,0.0,1.0
+2026,1018233,Erick Canales,Deportivo Garcilaso,16,27,0.6769,0,0.6769,0.0251,-0.6769
+2026,1018255,Orlando Nuñez,Asociación Deportiva Tarma,4,7,0.5118,0,0.5118,0.0731,-0.5118
+2026,1018255,Orlando Nuñez,Deportivo Garcilaso,3,4,0.2479,0,0.2479,0.062,-0.2479
+2026,1018422,José Villegas,Alianza Atlético de Sullana,4,5,0.4364,0,0.4364,0.0873,-0.4364
+2026,1018573,Edgar Lastre,CD Moquegua,27,57,5.6328,8,5.6328,0.0988,2.3672
+2026,1020855,Leonardo Rugel,Asociación Deportiva Tarma,1,1,0.143,0,0.143,0.143,-0.143
+2026,1020999,José Rivera,Universitario de Deportes,11,18,1.841,1,1.841,0.1023,-0.841
+2026,1022095,Luis Gomez,Asociación Deportiva Tarma,7,9,0.7639,1,0.7639,0.0849,0.2361
+2026,1022275,Juan Ospina,Los Chankas CYC,2,2,0.0629,0,0.0629,0.0314,-0.0629
+2026,1046428,Aldo Quiñonez,Sport Huancayo,9,11,0.3184,0,0.3184,0.0289,-0.3184
+2026,1046624,Jesus Alcantar,Melgar,8,12,1.617,2,1.617,0.1347,0.383
+2026,1049075,Sebastien Pineau,FC Cajamarca,3,3,0.4456,1,0.4456,0.1485,0.5544
+2026,1049077,Sebastian Cavero,Cienciano,5,7,0.4402,0,0.4402,0.0629,-0.4402
+2026,1065267,Adrián Ascues,Deportivo Garcilaso,18,36,1.5957,2,1.5957,0.0443,0.4043
+2026,1068656,Alonso Yovera,Cienciano,4,4,0.3766,0,0.3766,0.0942,-0.3766
+2026,1069367,Sharif Ramírez,Deportivo Garcilaso,6,10,0.9765,3,0.9765,0.0976,2.0235
+2026,1084961,Alan Cantero,Alianza Lima,24,43,3.806,3,3.806,0.0885,-0.806
+2026,1086281,Yimy Gamero,Comerciantes Unidos,2,3,0.097,0,0.097,0.0323,-0.097
+2026,1086281,Yimy Gamero,Melgar,1,1,0.0232,0,0.0232,0.0232,-0.0232
+2026,1086284,Matías Lazo,Melgar,14,16,2.3887,0,2.3887,0.1493,-2.3887
+2026,1089808,Kenji Barrios,Los Chankas CYC,8,9,0.4254,2,0.4254,0.0473,1.5746
+2026,1090720,Marco Huamán,Alianza Lima,15,16,0.7967,2,0.7967,0.0498,1.2033
+2026,1095007,Lucas Ríos,Deportivo Garcilaso,3,5,0.4883,1,0.4883,0.0977,0.5117
+2026,1095031,Santiago Torres,Club Atlético Grau,4,8,0.3166,0,0.3166,0.0396,-0.3166
+2026,1096363,Miguel Agustín Graneros,Deportivo Garcilaso,13,25,2.775,0,2.775,0.111,-2.775
+2026,1098306,Franco Torres,Los Chankas CYC,26,86,10.1289,11,7.072,0.1178,0.8711
+2026,1098312,Luis Pérez,Asociación Deportiva Tarma,22,48,2.619,1,2.619,0.0546,-1.619
+2026,1100345,Yonatan Murillo,Cienciano,1,1,0.0,1,0.0,0.0,1.0
+2026,1106569,José Ataupillco,Club Atlético Grau,2,2,0.3206,1,0.3206,0.1603,0.6794
+2026,1107870,Carlos Meza,FC Cajamarca,9,12,1.7714,3,1.7714,0.1476,1.2286
+2026,1107871,Christian Flores,ACD Juan Pablo II,1,1,0.0161,0,0.0161,0.0161,-0.0161
+2026,1107888,Jostin Alarcón,Sport Boys,23,47,3.7385,5,3.7385,0.0795,1.2615
+2026,1107889,Jimmy Pérez,Alianza Atlético de Sullana,9,11,1.2811,1,1.2811,0.1165,-0.2811
+2026,1107893,José Soto,FC Cajamarca,3,4,0.1383,0,0.1383,0.0346,-0.1383
+2026,1107900,Yamir Ruidiaz,Club Atlético Grau,6,10,0.9399,0,0.9399,0.094,-0.9399
+2026,1107917,Piero Guzman,Comerciantes Unidos,1,2,0.3548,0,0.3548,0.1774,-0.3548
+2026,1107917,Piero Guzmán,Comerciantes Unidos,8,14,1.1333,1,1.1333,0.0809,-0.1333
+2026,1107919,Xavi Moreno,Deportivo Garcilaso,3,4,0.4209,0,0.4209,0.1052,-0.4209
+2026,1109858,Guillermo Larios,Alianza Atlético de Sullana,19,38,4.6731,4,4.6731,0.123,-0.6731
+2026,1109859,Piero Quispe,Universitario de Deportes,6,6,0.5587,0,0.5587,0.0931,-0.5587
+2026,1113533,Joaquin Pereyra,Asociación Deportiva Tarma,10,16,1.9078,1,1.9078,0.1192,-0.9078
+2026,1113533,Joaquin Pereyra,Comerciantes Unidos,1,1,0.0,1,0.0,0.0,1.0
+2026,1116337,German Diaz,Alianza Atlético de Sullana,20,32,1.7814,1,1.0172,0.0557,-0.7814
+2026,1116589,Mateo Antoni,Alianza Lima,8,12,0.9469,1,0.9469,0.0789,0.0531
+2026,1119882,Iago Iriarte,ACD Juan Pablo II,3,5,1.2666,2,1.2666,0.2533,0.7334
+2026,1120472,Flavio Alcedo,Comerciantes Unidos,12,17,2.5565,2,2.5565,0.1504,-0.5565
+2026,1120902,Aldair Vasquez,Club Atlético Grau,13,20,2.4322,3,2.4322,0.1216,0.5678
+2026,1121321,Cristhian Tizón,ACD Juan Pablo II,9,15,1.5878,1,1.5878,0.1059,-0.5878
+2026,1121487,Carlos Pimienta,Los Chankas CYC,17,23,0.9508,1,0.9508,0.0413,0.0492
+2026,1128886,Gilmar Paredes,Universidad Técnica de Cajamarca,12,18,0.8738,0,0.8738,0.0485,-0.8738
+2026,1128897,Leonardo Díaz,Club Sporting Cristal,1,1,0.0939,0,0.0939,0.0939,-0.0939
+2026,1131302,Cristian Mejia,CD Moquegua,18,20,2.2391,2,2.2391,0.112,-0.2391
+2026,1148272,Arthur Gutiérrez,Asociación Deportiva Tarma,3,3,0.2139,0,0.2139,0.0713,-0.2139
+2026,1148272,Arthur Gutiérrez,FC Cajamarca,1,2,0.1454,0,0.1454,0.0727,-0.1454
+2026,1148292,Jerry Navarro,Asociación Deportiva Tarma,1,1,0.0969,0,0.0969,0.0969,-0.0969
+2026,1159651,Jorge del Castillo,Alianza Atlético de Sullana,22,47,3.5755,6,3.5755,0.0761,2.4245
+2026,1159653,Joshua Cantt,Universidad Técnica de Cajamarca,5,6,0.2189,0,0.2189,0.0365,-0.2189
+2026,1159659,Sebastian Aranda,Sport Boys,2,3,0.154,0,0.154,0.0513,-0.154
+2026,1167858,Marcos Portillo,Melgar,6,9,0.2271,0,0.2271,0.0252,-0.2271
+2026,1170472,Stefano Fernández,Alianza Atlético de Sullana,5,7,0.451,0,0.451,0.0644,-0.451
+2026,1170640,César Inga,Universitario de Deportes,10,12,0.714,2,0.714,0.0595,1.286
+2026,1170641,Jorge Palomino,Los Chankas CYC,6,7,0.1975,0,0.1975,0.0282,-0.1975
+2026,1173448,Isaac Camargo,Club Atlético Grau,10,12,1.8616,2,1.8616,0.1551,0.1384
+2026,1176979,Jhosep Nuñez,Universidad Técnica de Cajamarca,8,14,1.0222,2,1.0222,0.073,0.9778
+2026,1177407,Maximiliano Juambeltz,ACD Juan Pablo II,8,11,1.4364,3,1.4364,0.1306,1.5636
+2026,1182506,Valentino Sandoval,FC Cajamarca,1,1,0.1202,0,0.1202,0.1202,-0.1202
+2026,1184194,Daniel Lino,Comerciantes Unidos,1,1,0.0325,0,0.0325,0.0325,-0.0325
+2026,1185677,Chase Villanueva,ACD Juan Pablo II,3,7,0.4955,0,0.4955,0.0708,-0.4955
+2026,1191282,Diego Rodriguez,Club Atlético Grau,2,2,0.1294,0,0.1294,0.0647,-0.1294
+2026,1197978,Román Suárez,Alianza Atlético de Sullana,7,8,0.5241,0,0.5241,0.0655,-0.5241
+2026,1197978,Román Suárez,Universitario de Deportes,1,1,0.0,1,0.0,0.0,1.0
+2026,1199271,Juan Gonzáles,Sport Boys,1,1,0.0806,0,0.0806,0.0806,-0.0806
+2026,1199431,Juan Giménez,Sport Huancayo,5,6,0.3503,1,0.3503,0.0584,0.6497
+2026,1201015,Juan Pablo Goicochea,ACD Juan Pablo II,6,11,1.6764,1,1.6764,0.1524,-0.6764
+2026,1388439,Jimmy Jiménez,CD Moquegua,1,1,0.0165,0,0.0165,0.0165,-0.0165
+2026,1408186,Gabriel Alfaro,Club Atlético Grau,8,9,1.1113,0,1.1113,0.1235,-1.1113
+2026,1411422,Piero Magallanes,Sport Huancayo,24,60,5.0346,4,3.5061,0.0839,-1.0346
+2026,1411424,Martin Peralta,ACD Juan Pablo II,4,5,0.1779,1,0.1779,0.0356,0.8221
+2026,1411430,Allonso Davila,CD Moquegua,14,25,1.2855,0,1.2855,0.0514,-1.2855
+2026,1415939,Nicolas Amasifuen,CD Moquegua,10,13,0.4563,0,0.4563,0.0351,-0.4563
+2026,1415941,André Vasquez,Los Chankas CYC,2,2,0.0348,0,0.0348,0.0174,-0.0348
+2026,1415942,Catriel Cabellos,Club Sporting Cristal,8,10,1.1118,0,1.1118,0.1112,-1.1118
+2026,1418572,Jose Lopez,CD Moquegua,2,2,0.0367,0,0.0367,0.0184,-0.0367
+2026,1427104,Alvaro Rojas,ACD Juan Pablo II,13,36,3.0917,3,3.0917,0.0859,-0.0917
+2026,1427104,Alvaro Rojas,Cienciano,2,2,0.2336,0,0.2336,0.1168,-0.2336
+2026,1427486,Renzo Salazar,Cienciano,2,3,0.4345,0,0.4345,0.1448,-0.4345
+2026,1462908,Juan Torres,Sport Boys,9,17,0.7095,0,0.7095,0.0417,-0.7095
+2026,1463863,Mauricio Arrasco,FC Cajamarca,22,56,4.5578,8,3.7936,0.0814,3.4422
+2026,1464244,Diego Otoya,Club Sporting Cristal,2,2,0.1214,0,0.1214,0.0607,-0.1214
+2026,1464245,Gonzalo Aguirre,Cienciano,10,15,0.7983,0,0.7983,0.0532,-0.7983
+2026,1464527,Hairo Timaná,FC Cajamarca,5,5,0.3259,1,0.3259,0.0652,0.6741
+2026,1466374,Eslyn Correa,Club Atlético Grau,2,2,0.0858,0,0.0858,0.0429,-0.0858
+2026,1466382,Pablo Erustes,Melgar,7,13,1.904,1,1.1397,0.1465,-0.904
+2026,1466382,Pablo Erustes,Sport Boys,11,26,3.9836,4,3.9836,0.1532,0.0164
+2026,1466385,Santiago Gálvez,Universidad Técnica de Cajamarca,3,3,0.1858,0,0.1858,0.0619,-0.1858
+2026,1466550,Mariano Barreda,Alianza Atlético de Sullana,2,4,0.3764,0,0.3764,0.0941,-0.3764
+2026,1468047,Agustin Rodriguez,Comerciantes Unidos,2,2,0.073,0,0.073,0.0365,-0.073
+2026,1468047,Agustín Rodriguez,Comerciantes Unidos,2,4,0.2487,0,0.2487,0.0622,-0.2487
+2026,1477138,Ian Wisdom,Club Sporting Cristal,7,10,1.8266,1,1.8266,0.1827,-0.8266
+2026,1477144,Alejandro Pósito,Club Sporting Cristal,1,1,0.2363,0,0.2363,0.2363,-0.2363
+2026,1477144,Alejandro Pósito,FC Cajamarca,2,2,0.1077,0,0.1077,0.0539,-0.1077
+2026,1477145,Joel Herrera,Cusco FC,4,6,0.6178,1,0.6178,0.103,0.3822
+2026,1482464,Thiago Salinas,Comerciantes Unidos,5,6,0.9416,1,0.9416,0.1569,0.0584
+2026,1482472,Jair Moretti,Club Sporting Cristal,1,1,0.0395,1,0.0395,0.0395,0.9605
+2026,1482473,Mateo Rodríguez,ACD Juan Pablo II,4,9,1.2732,1,1.2732,0.1415,-0.2732
+2026,1482473,Mateo Rodríguez,Club Sporting Cristal,3,3,0.2169,0,0.2169,0.0723,-0.2169
+2026,1483023,Jonathan García,Alianza Lima,1,1,0.0975,0,0.0975,0.0975,-0.0975
+2026,1502585,Fabrizio Lora,Club Sporting Cristal,1,1,0.0814,0,0.0814,0.0814,-0.0814
+2026,1503648,Alexis Huaman,Sport Boys,2,2,0.2158,1,0.2158,0.1079,0.7842
+2026,1512395,Jhair Soto,Asociación Deportiva Tarma,8,11,0.765,0,0.765,0.0695,-0.765
+2026,1521230,Juan Martínez,Sport Huancayo,9,12,2.3002,1,2.3002,0.1917,-1.3002
+2026,1522872,Adán Henricks,ACD Juan Pablo II,6,11,1.4069,1,1.4069,0.1279,-0.4069
+2026,1523086,Christian Valladolid,Alianza Atlético de Sullana,4,6,1.0695,1,1.0695,0.1783,-0.0695
+2026,1526674,Matias Almiron,ACD Juan Pablo II,5,6,0.5148,1,0.5148,0.0858,0.4852
+2026,1526674,Matias Almiron,Cusco FC,1,1,0.0,1,0.0,0.0,1.0
+2026,1526674,Matias Almiron,FC Cajamarca,3,5,0.2931,0,0.2931,0.0586,-0.2931
+2026,1539595,Jean Carlo Olivares,Comerciantes Unidos,12,26,3.6434,3,3.6434,0.1401,-0.6434
+2026,1546919,Edu Villar,Sport Huancayo,6,6,0.2653,0,0.2653,0.0442,-0.2653
+2026,1633854,Carlos Gómez,FC Cajamarca,7,7,0.2328,0,0.2328,0.0333,-0.2328
+2026,1639672,Juan Delgado,Alianza Atlético de Sullana,3,6,0.4588,1,0.4588,0.0765,0.5412
+2026,1644875,Hernan Lupú,Alianza Atlético de Sullana,17,25,3.924,4,3.924,0.157,0.076
+2026,1650235,Maxloren Castro,Club Sporting Cristal,21,37,3.4886,4,3.4886,0.0943,0.5114
+2026,1650560,Arnold Flores,Club Atlético Grau,1,1,0.4909,0,0.4909,0.4909,-0.4909
+2026,1654120,Juan José Rodríguez,Comerciantes Unidos,19,47,3.9726,3,3.9726,0.0845,-0.9726
+2026,1654120,Juan Rodríguez,Comerciantes Unidos,5,7,0.2979,1,0.2979,0.0426,0.7021
+2026,1656737,Pedro Santiago Cejas,FC Cajamarca,11,26,3.4483,1,3.4483,0.1326,-2.4483
+2026,1800727,Valentín Robaldo,Alianza Atlético de Sullana,18,44,4.658,3,4.658,0.1059,-1.658
+2026,1819312,Josue Torres,ACD Juan Pablo II,6,10,0.8833,3,0.8833,0.0883,2.1167
+2026,1839331,Juan Lucumí,Asociación Deportiva Tarma,13,31,3.4237,3,1.8952,0.1104,-0.4237
+2026,1840466,Yhonier López,CD Moquegua,4,8,0.5256,0,0.5256,0.0657,-0.5256
+2026,1845606,Josué Alvino,Asociación Deportiva Tarma,8,12,0.6367,1,0.6367,0.0531,0.3633
+2026,1938924,Nilton Ramirez,ACD Juan Pablo II,13,24,2.5969,2,2.5969,0.1082,-0.5969
+2026,2025038,Adriano Espinoza,ACD Juan Pablo II,2,2,0.0276,0,0.0276,0.0138,-0.0276
+2026,2025040,Fabio Agurto,ACD Juan Pablo II,4,6,0.3653,0,0.3653,0.0609,-0.3653
+2026,2025044,Josué Canova,ACD Juan Pablo II,3,3,0.1001,0,0.1001,0.0334,-0.1001
+2026,2038516,Nicolás Rengifo,Asociación Deportiva Tarma,1,2,0.1273,0,0.1273,0.0637,-0.1273
+2026,2040141,Said Peralta,Asociación Deportiva Tarma,8,19,2.0249,1,2.0249,0.1066,-1.0249
+2026,2040141,Said Peralta,FC Cajamarca,3,5,1.0901,0,1.0901,0.218,-1.0901
+2026,2044019,Patricio Núnez,Melgar,2,3,0.6321,0,0.6321,0.2107,-0.6321
+2026,2044305,Adrián De la Cruz,Club Atlético Grau,10,17,0.3894,0,0.3894,0.0229,-0.3894
+2026,2045248,José Davey,Sport Boys,1,2,0.456,0,0.456,0.228,-0.456
+2026,2111308,Henry Caparó,Cienciano,8,11,0.4013,0,0.4013,0.0365,-0.4013
+2026,2125142,Anthony Cubas,Asociación Deportiva Tarma,2,3,0.0569,0,0.0569,0.019,-0.0569
+2026,2125181,Jhan Vega,FC Cajamarca,2,2,0.0173,0,0.0173,0.0087,-0.0173
+2026,2125191,Eros Montenegro,CD Moquegua,6,7,0.2144,0,0.2144,0.0306,-0.2144
+2026,2125211,Sebastián Enciso,FC Cajamarca,20,43,2.5442,3,1.7799,0.0592,0.4558
+2026,2125216,Michael Kaufman,Cienciano,1,1,0.0,1,0.0,0.0,1.0
+2026,2125216,Michael Kaufman,Los Chankas CYC,5,6,0.4483,0,0.4483,0.0747,-0.4483
+2026,2125235,Ricardo Chipao,CD Moquegua,12,19,1.5782,3,1.5782,0.0831,1.4218
+2026,2125242,Renato Suárez,FC Cajamarca,1,1,0.0283,0,0.0283,0.0283,-0.0283
+2026,2194001,Jorge Quijano,ACD Juan Pablo II,2,4,0.4609,0,0.4609,0.1152,-0.4609
+2026,2198393,Jhojan Garcilazo,Asociación Deportiva Tarma,4,6,0.6638,0,0.6638,0.1106,-0.6638
+2026,2249828,Emerson García,Asociación Deportiva Tarma,3,3,0.0864,0,0.0864,0.0288,-0.0864
+2026,2366555,Henri Espinoza,Club Atlético Grau,1,1,0.1365,1,0.1365,0.1365,0.8635
+2026,2366556,José Mellán,Club Sporting Cristal,2,2,0.126,0,0.126,0.063,-0.126
+2026,2439111,Matías Zegarra,Melgar,23,47,4.144,3,4.144,0.0882,-1.144
+2026,2445432,Aylton Mazzo,Asociación Deportiva Tarma,14,30,2.1902,1,2.1902,0.073,-1.1902
+2026,2454293,Jorge Pretel,Melgar,1,1,0.0,1,0.0,0.0,1.0
+2026,2454299,Keith Yanez,Melgar,1,1,0.074,0,0.074,0.074,-0.074
+2026,2650035,Adrián Valiente,Sport Boys,1,1,0.0159,0,0.0159,0.0159,-0.0159

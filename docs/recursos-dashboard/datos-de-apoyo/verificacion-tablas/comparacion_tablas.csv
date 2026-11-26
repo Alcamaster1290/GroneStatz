@@ -1,0 +1,279 @@
+﻿torneo,pos_w,equipo_w,PJ_w,PG_w,PE_w,PP_w,GF_w,GC_w,DG_w,Pts_w,Equipo,Pos,id,PJ,PG,PE,PP,GF,GC,DG,Pts,season,_merge,d_PJ,d_PG,d_PE,d_PP,d_GF,d_GC,d_DG,d_Pts,d_pos,iguales_sin_puntos,igual_todo
+2022 Acumulada,14,Academia Cantolao,36,8,10,18,37,54,-17,34,AD Cantolao,14,245083,36,8,10,18,37,54,-17,34,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,13,ADT,36,9,13,14,39,49,-10,40,ADT,13,335557,36,9,13,14,39,49,-10,40,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,9,Alianza Atlético,36,17,6,13,49,48,1,57,Alianza Atlético,9,2307,36,17,6,13,49,48,1,57,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,2,Alianza Lima,36,23,6,7,59,26,33,77,Alianza Lima,2,2311,36,23,6,7,59,26,33,77,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,10,Atlético Grau,36,15,10,11,50,42,8,55,Atlético Grau,10,282538,36,15,10,11,50,42,8,55,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,17,Ayacucho,36,6,8,22,41,60,-19,27,Ayacucho FC,17,33894,36,6,8,22,41,60,-19,27,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,15,Carlos A. Mannucci,36,8,9,19,32,55,-23,33,Carlos A. Mannucci,15,252245,36,8,9,19,32,55,-23,33,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,7,Cienciano,36,16,9,11,61,45,16,57,Cienciano,7,2301,36,16,9,11,61,45,16,57,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,8,Binacional,36,18,3,15,52,38,14,57,Deportivo Binacional,8,275839,36,18,3,15,52,38,14,57,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,12,Deportivo Municipal,36,12,9,15,50,65,-15,41,Deportivo Municipal,12,7031,36,12,9,15,50,65,-15,41,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,18,Universidad San Martín,36,5,6,25,38,84,-46,21,Deportivo USMP,18,5282,36,5,6,25,38,84,-46,21,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,19,Carlos Stein,36,4,8,24,36,74,-38,18,FC Carlos Stein,19,335037,36,4,8,24,36,74,-38,18,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,3,Melgar,36,23,5,8,54,29,25,74,Melgar,3,2308,36,23,5,8,54,29,25,74,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,16,Sport Boys,36,11,6,19,40,63,-23,32,Sport Boys,16,2312,36,11,6,19,40,63,-23,32,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,4,Sport Huancayo,36,20,7,9,61,37,24,67,Sport Huancayo,4,33895,36,20,7,9,61,37,24,67,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,1,Sporting Cristal,36,23,10,3,74,37,37,79,Sporting Cristal,1,2302,36,23,10,3,74,37,37,79,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,11,UTC,36,14,6,16,57,56,1,48,UTC,11,87854,36,14,6,16,57,56,1,48,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,6,Universidad César Vallejo,36,18,9,9,50,39,11,61,Universidad César Vallejo,6,5281,36,18,9,9,50,39,11,61,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Acumulada,5,Universitario,36,17,10,9,50,29,21,61,Universitario,5,2305,36,17,10,9,50,29,21,61,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,16,Academia Cantolao,18,4,3,11,18,32,-14,15,AD Cantolao,16,245083,18,4,3,11,18,32,-14,15,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,15,ADT,18,3,7,8,14,24,-10,16,ADT,15,335557,18,3,7,8,14,24,-10,16,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,8,Alianza Atlético,18,9,3,6,26,27,-1,30,Alianza Atlético,8,2307,18,9,3,6,26,27,-1,30,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,4,Alianza Lima,18,10,3,5,28,16,12,33,Alianza Lima,4,2311,18,10,3,5,28,16,12,33,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,13,Atlético Grau,18,4,6,8,20,23,-3,18,Atlético Grau,13,282538,18,4,6,8,20,23,-3,18,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,19,Ayacucho,18,3,3,12,25,32,-7,12,Ayacucho FC,19,33894,18,3,3,12,25,32,-7,12,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,12,Carlos A. Mannucci,18,5,5,8,19,22,-3,20,Carlos A. Mannucci,12,252245,18,5,5,8,19,22,-3,20,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,5,Cienciano,18,9,5,4,37,22,15,32,Cienciano,5,2301,18,9,5,4,37,22,15,32,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,6,Binacional,18,10,1,7,24,19,5,31,Deportivo Binacional,6,275839,18,10,1,7,24,19,5,31,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,10,Deportivo Municipal,18,7,4,7,30,36,-6,25,Deportivo Municipal,10,7031,18,7,4,7,30,36,-6,25,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,17,Universidad San Martín,18,4,3,11,21,37,-16,15,Deportivo USMP,17,5282,18,4,3,11,21,37,-16,15,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,18,Carlos Stein,18,3,5,10,18,31,-13,14,FC Carlos Stein,18,335037,18,3,5,10,18,31,-13,14,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,1,Melgar,18,13,2,3,23,11,12,41,Melgar,1,2308,18,13,2,3,23,11,12,41,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,14,Sport Boys,18,5,3,10,17,32,-15,18,Sport Boys,14,2312,18,5,3,10,17,32,-15,18,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,2,Sport Huancayo,18,12,4,2,35,18,17,40,Sport Huancayo,2,33895,18,12,4,2,35,18,17,40,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,3,Sporting Cristal,18,11,5,2,35,20,15,38,Sporting Cristal,3,2302,18,11,5,2,35,20,15,38,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,11,UTC,18,6,2,10,29,32,-3,20,UTC,11,87854,18,6,2,10,29,32,-3,20,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,7,Universidad César Vallejo,18,8,6,4,25,15,10,30,Universidad César Vallejo,7,5281,18,8,6,4,25,15,10,30,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Apertura,9,Universitario,18,8,4,6,24,19,5,28,Universitario,9,2305,18,8,4,6,24,19,5,28,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,15,Academia Cantolao,18,4,7,7,19,22,-3,19,AD Cantolao,15,245083,18,4,7,7,19,22,-3,19,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,12,ADT,18,6,6,6,25,25,0,24,ADT,12,335557,18,6,6,6,25,25,0,24,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,9,Alianza Atlético,18,8,3,7,23,21,2,27,Alianza Atlético,9,2307,18,8,3,7,23,21,2,27,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,1,Alianza Lima,18,13,3,2,31,10,21,42,Alianza Lima,1,2311,18,13,3,2,31,10,21,42,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,3,Atlético Grau,18,11,4,3,30,19,11,37,Atlético Grau,3,282538,18,11,4,3,30,19,11,37,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,16,Ayacucho,18,3,5,10,16,28,-12,14,Ayacucho FC,16,33894,18,3,5,10,16,28,-12,14,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,17,Carlos A. Mannucci,18,3,4,11,13,33,-20,13,Carlos A. Mannucci,17,252245,18,3,4,11,13,33,-20,13,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,11,Cienciano,18,7,4,7,24,23,1,25,Cienciano,11,2301,18,7,4,7,24,23,1,25,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,10,Binacional,18,8,2,8,28,19,9,26,Deportivo Binacional,10,275839,18,8,2,8,28,19,9,26,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,14,Deportivo Municipal,18,5,5,8,20,29,-9,20,Deportivo Municipal,14,7031,18,5,5,8,20,29,-9,20,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,19,Universidad San Martín,18,1,3,14,17,47,-30,6,Deportivo USMP,19,5282,18,1,3,14,17,47,-30,6,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,18,Carlos Stein,18,1,3,14,18,43,-25,6,FC Carlos Stein,18,335037,18,1,3,14,18,43,-25,6,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,5,Melgar,18,10,3,5,31,18,13,33,Melgar,5,2308,18,10,3,5,31,18,13,33,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,13,Sport Boys,18,6,3,9,23,31,-8,21,Sport Boys,13,2312,18,6,3,9,23,31,-8,21,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,8,Sport Huancayo,18,8,3,7,26,19,7,27,Sport Huancayo,8,33895,18,8,3,7,26,19,7,27,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,2,Sporting Cristal,18,12,5,1,39,17,22,41,Sporting Cristal,2,2302,18,12,5,1,39,17,22,41,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,7,UTC,18,8,4,6,28,24,4,28,UTC,7,87854,18,8,4,6,28,24,4,28,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,6,Universidad César Vallejo,18,10,3,5,25,24,1,33,Universidad César Vallejo,6,5281,18,10,3,5,25,24,1,33,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2022 Clausura,4,Universitario,18,9,6,3,26,10,16,33,Universitario,4,2305,18,9,6,3,26,10,16,33,2022,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,19,Academia Cantolao,36,7,5,24,21,62,-41,26,AD Cantolao,19,245083,36,7,5,24,21,62,-41,26,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,6,ADT,36,14,13,9,44,36,8,55,ADT,6,335557,36,14,13,9,44,36,8,55,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,14,Alianza Atlético,36,10,9,17,46,58,-12,39,Alianza Atlético,14,2307,36,10,9,17,46,58,-12,39,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,1,Alianza Lima,36,24,7,5,55,22,33,79,Alianza Lima,1,2311,36,24,7,5,55,22,33,79,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,12,Atlético Grau,36,10,11,15,48,48,0,41,Atlético Grau,12,282538,36,10,11,15,48,48,0,41,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,11,Carlos A. Mannucci,36,13,8,15,33,40,-7,47,Carlos A. Mannucci,11,252245,36,13,8,15,33,40,-7,47,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,10,Cienciano,36,13,9,14,44,48,-4,48,Cienciano,10,2301,36,13,9,14,44,48,-4,48,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,9,Cusco,36,14,8,14,42,45,-3,50,Cusco FC,9,63760,36,14,8,14,42,45,-3,50,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,17,Binacional,36,10,5,21,53,68,-15,35,Deportivo Binacional,17,275839,36,10,5,21,53,68,-15,35,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,7,Deportivo Garcilaso,36,13,13,10,56,47,9,51,Deportivo Garcilaso,7,458584,36,13,13,10,56,47,9,51,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,18,Deportivo Municipal,36,11,3,22,36,54,-18,31,Deportivo Municipal,18,7031,36,11,3,22,36,54,-18,31,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,4,Melgar,36,17,12,7,55,35,20,63,Melgar,4,2308,36,17,12,7,55,35,20,63,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,15,Sport Boys,36,11,8,17,28,49,-21,37,Sport Boys,15,2312,36,11,8,17,28,49,-21,37,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,5,Sport Huancayo,36,16,8,12,52,39,13,56,Sport Huancayo,5,33895,36,16,8,12,52,39,13,56,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,3,Sporting Cristal,36,19,14,3,64,31,33,71,Sporting Cristal,3,2302,36,19,14,3,64,31,33,71,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,13,UTC,36,8,16,12,37,45,-8,40,UTC,13,87854,36,8,16,12,37,45,-8,40,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,8,Universidad César Vallejo,36,14,9,13,50,42,8,51,Universidad César Vallejo,8,5281,36,14,9,13,50,42,8,51,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,2,Universitario,36,22,7,7,57,22,35,73,Universitario,2,2305,36,22,7,7,57,22,35,73,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Acumulada,16,Unión Comercio,36,9,9,18,42,72,-30,36,Unión Comercio,16,48431,36,9,9,18,42,72,-30,36,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,19,Academia Cantolao,18,2,3,13,9,36,-27,9,AD Cantolao,19,245083,18,2,3,13,9,36,-27,9,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,14,ADT,18,5,6,7,23,23,0,21,ADT,14,335557,18,5,6,7,23,23,0,21,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,13,Alianza Atlético,18,6,5,7,32,33,-1,23,Alianza Atlético,13,2307,18,6,5,7,32,33,-1,23,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,1,Alianza Lima,18,14,0,4,37,16,21,42,Alianza Lima,1,2311,18,14,0,4,37,16,21,42,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,12,Atlético Grau,18,6,5,7,31,21,10,23,Atlético Grau,12,282538,18,6,5,7,31,21,10,23,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,7,Carlos A. Mannucci,18,8,3,7,17,18,-1,27,Carlos A. Mannucci,7,252245,18,8,3,7,17,18,-1,27,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,11,Cienciano,18,7,3,8,23,28,-5,24,Cienciano,11,2301,18,7,3,8,23,28,-5,24,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,4,Cusco,18,10,2,6,24,22,2,32,Cusco FC,4,63760,18,10,2,6,24,22,2,32,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,17,Binacional,18,5,3,10,28,34,-6,18,Deportivo Binacional,17,275839,18,5,3,10,28,34,-6,18,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,8,Deportivo Garcilaso,18,6,7,5,32,27,5,25,Deportivo Garcilaso,8,458584,18,6,7,5,32,27,5,25,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,10,Deportivo Municipal,18,7,3,8,19,21,-2,24,Deportivo Municipal,10,7031,18,7,3,8,19,21,-2,24,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,9,Melgar,18,6,7,5,24,22,2,25,Melgar,9,2308,18,6,7,5,24,22,2,25,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,18,Sport Boys,18,5,3,10,13,26,-13,18,Sport Boys,18,2312,18,5,3,10,13,26,-13,18,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,5,Sport Huancayo,18,8,3,7,30,25,5,27,Sport Huancayo,5,33895,18,8,3,7,30,25,5,27,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,2,Sporting Cristal,18,9,8,1,33,18,15,35,Sporting Cristal,2,2302,18,9,8,1,33,18,15,35,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,15,UTC,18,5,6,7,16,22,-6,21,UTC,15,87854,18,5,6,7,16,22,-6,21,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,6,Universidad César Vallejo,18,7,6,5,25,23,2,27,Universidad César Vallejo,6,5281,18,7,6,5,25,23,2,27,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,3,Universitario,18,11,1,6,29,14,15,34,Universitario,3,2305,18,11,1,6,29,14,15,34,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Apertura,16,Unión Comercio,18,5,4,9,24,40,-16,19,Unión Comercio,16,48431,18,5,4,9,24,40,-16,19,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,17,Academia Cantolao,18,5,2,11,12,26,-14,17,AD Cantolao,17,245083,18,5,2,11,12,26,-14,17,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,5,ADT,18,9,7,2,21,13,8,34,ADT,5,335557,18,9,7,2,21,13,8,34,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,18,Alianza Atlético,18,4,4,10,14,25,-11,16,Alianza Atlético,18,2307,18,4,4,10,14,25,-11,16,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,3,Alianza Lima,18,10,7,1,18,6,12,37,Alianza Lima,3,2311,18,10,7,1,18,6,12,37,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,14,Atlético Grau,18,4,6,8,17,27,-10,18,Atlético Grau,14,282538,18,4,6,8,17,27,-10,18,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,11,Carlos A. Mannucci,18,5,5,8,16,22,-6,20,Carlos A. Mannucci,11,252245,18,5,5,8,16,22,-6,20,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,9,Cienciano,18,6,6,6,21,20,1,24,Cienciano,9,2301,18,6,6,6,21,20,1,24,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,13,Cusco,18,4,6,8,18,23,-5,18,Cusco FC,13,63760,18,4,6,8,18,23,-5,18,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,15,Binacional,18,5,2,11,25,34,-9,17,Deportivo Binacional,15,275839,18,5,2,11,25,34,-9,17,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,7,Deportivo Garcilaso,18,7,6,5,24,20,4,26,Deportivo Garcilaso,7,458584,18,7,6,5,24,20,4,26,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,19,Deportivo Municipal,18,4,0,14,17,33,-16,12,Deportivo Municipal,19,7031,18,4,0,14,17,33,-16,12,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,2,Melgar,18,11,5,2,31,13,18,38,Melgar,2,2308,18,11,5,2,31,13,18,38,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,10,Sport Boys,18,6,5,7,15,23,-8,23,Sport Boys,10,2312,18,6,5,7,15,23,-8,23,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,6,Sport Huancayo,18,8,5,5,22,14,8,29,Sport Huancayo,6,33895,18,8,5,5,22,14,8,29,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,4,Sporting Cristal,18,10,6,2,31,13,18,36,Sporting Cristal,4,2302,18,10,6,2,31,13,18,36,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,12,UTC,18,3,10,5,21,23,-2,19,UTC,12,87854,18,3,10,5,21,23,-2,19,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,8,Universidad César Vallejo,18,7,3,8,25,19,6,24,Universidad César Vallejo,8,5281,18,7,3,8,25,19,6,24,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,1,Universitario,18,11,6,1,28,8,20,39,Universitario,1,2305,18,11,6,1,28,8,20,39,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2023 Clausura,16,Unión Comercio,18,4,5,9,18,32,-14,17,Unión Comercio,16,48431,18,4,5,9,18,32,-14,17,2023,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,8,ADT,34,14,9,11,47,40,7,51,ADT,8,335557,34,14,9,11,47,40,7,51,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,9,Alianza Atlético,34,11,11,12,28,34,-6,44,Alianza Atlético,9,2307,34,11,11,12,28,34,-6,44,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,4,Alianza Lima,34,22,3,9,57,27,30,69,Alianza Lima,4,2311,34,22,3,9,57,27,30,69,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,7,Atlético Grau,34,12,15,7,44,28,16,51,Atlético Grau,7,282538,34,12,15,7,44,28,16,51,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,16,Carlos A. Mannucci,34,7,10,17,34,64,-30,31,Carlos A. Mannucci,16,252245,34,7,10,17,34,64,-30,31,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,6,Cienciano,34,14,10,10,48,44,4,52,Cienciano,6,2301,34,14,10,10,48,44,4,52,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,14,Comerciantes Unidos,34,9,8,17,36,60,-24,35,Comerciantes Unidos,14,213609,34,9,8,17,36,60,-24,35,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,5,Cusco,34,18,6,10,50,44,6,60,Cusco FC,5,63760,34,18,6,10,50,44,6,60,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,12,Deportivo Garcilaso,34,10,7,17,37,43,-6,37,Deportivo Garcilaso,12,458584,34,10,7,17,37,43,-6,37,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,10,Los Chankas,34,10,9,15,42,47,-5,39,Los Chankas,10,252254,34,10,9,15,42,47,-5,39,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,3,Melgar,34,21,7,6,66,35,31,70,Melgar,3,2308,34,21,7,6,66,35,31,70,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,13,Sport Boys,34,9,8,17,32,51,-19,35,Sport Boys,13,2312,34,9,8,17,32,51,-19,35,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,11,Sport Huancayo,34,10,8,16,39,57,-18,38,Sport Huancayo,11,33895,34,10,8,16,39,57,-18,38,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,2,Sporting Cristal,34,23,5,6,91,35,56,74,Sporting Cristal,2,2302,34,23,5,6,91,35,56,74,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,15,UTC,34,7,10,17,35,53,-18,31,UTC,15,87854,34,7,10,17,35,53,-18,31,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,17,Universidad César Vallejo,34,6,12,16,34,55,-21,30,Universidad César Vallejo,17,5281,34,6,12,16,34,55,-21,30,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,1,Universitario,34,23,8,3,63,17,46,77,Universitario,1,2305,34,23,8,3,63,17,46,77,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Acumulada,18,Unión Comercio,34,3,8,23,30,79,-49,17,Unión Comercio,18,48431,34,3,8,23,30,79,-49,17,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,6,ADT,17,8,4,5,29,24,5,28,ADT,6,335557,17,8,4,5,29,24,5,28,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,16,Alianza Atlético,17,3,5,9,11,19,-8,14,Alianza Atlético,16,2307,17,3,5,9,11,19,-8,14,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,4,Alianza Lima,17,11,0,6,32,16,16,33,Alianza Lima,4,2311,17,11,0,6,32,16,16,33,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,11,Atlético Grau,17,4,7,6,19,17,2,19,Atlético Grau,11,282538,17,4,7,6,19,17,2,19,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,17,Carlos A. Mannucci,17,3,5,9,11,34,-23,14,Carlos A. Mannucci,17,252245,17,3,5,9,11,34,-23,14,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,7,Cienciano,17,6,8,3,20,20,0,26,Cienciano,7,2301,17,6,8,3,20,20,0,26,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,8,Comerciantes Unidos,17,6,4,7,22,31,-9,22,Comerciantes Unidos,8,213609,17,6,4,7,22,31,-9,22,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,5,Cusco,17,9,2,6,22,21,1,29,Cusco FC,5,63760,17,9,2,6,22,21,1,29,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,15,Deportivo Garcilaso,17,3,5,9,20,26,-6,14,Deportivo Garcilaso,15,458584,17,3,5,9,20,26,-6,14,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,9,Los Chankas,17,6,3,8,25,26,-1,21,Los Chankas,9,252254,17,6,3,8,25,26,-1,21,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,3,Melgar,17,12,2,3,36,19,17,38,Melgar,3,2308,17,12,2,3,36,19,17,38,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,12,Sport Boys,17,5,4,8,18,20,-2,19,Sport Boys,12,2312,17,5,4,8,18,20,-2,19,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,13,Sport Huancayo,17,5,4,8,18,29,-11,19,Sport Huancayo,13,33895,17,5,4,8,18,29,-11,19,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,2,Sporting Cristal,17,13,1,3,44,20,24,40,Sporting Cristal,2,2302,17,13,1,3,44,20,24,40,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,14,UTC,17,4,4,9,21,29,-8,16,UTC,14,87854,17,4,4,9,21,29,-8,16,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,10,Universidad César Vallejo,17,4,8,5,19,24,-5,20,Universidad César Vallejo,10,5281,17,4,8,5,19,24,-5,20,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,1,Universitario,17,12,4,1,32,7,25,40,Universitario,1,2305,17,12,4,1,32,7,25,40,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Apertura,18,Unión Comercio,17,1,6,10,17,34,-17,9,Unión Comercio,18,48431,17,1,6,10,17,34,-17,9,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,9,ADT,17,6,5,6,18,16,2,23,ADT,9,335557,17,6,5,6,18,16,2,23,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,7,Alianza Atlético,17,8,6,3,17,15,2,30,Alianza Atlético,7,2307,17,8,6,3,17,15,2,30,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,2,Alianza Lima,17,11,3,3,24,12,12,36,Alianza Lima,2,2311,17,11,3,3,25,11,14,36,2024,both,0,0,0,0,1,-1,2,0,0,False,False
+2024 Clausura,5,Atlético Grau,17,8,8,1,25,11,14,32,Atlético Grau,5,282538,17,8,8,1,25,11,14,32,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,13,Carlos A. Mannucci,17,4,5,8,23,30,-7,17,Carlos A. Mannucci,13,252245,17,4,5,8,23,30,-7,17,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,8,Cienciano,17,8,2,7,28,24,4,26,Cienciano,8,2301,17,8,2,7,28,24,4,26,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,16,Comerciantes Unidos,17,3,4,10,14,29,-15,13,Comerciantes Unidos,16,213609,17,3,4,10,14,29,-15,13,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,6,Cusco,17,9,4,4,29,22,7,31,Cusco FC,6,63760,17,9,4,4,28,23,5,31,2024,both,0,0,0,0,-1,1,-2,0,0,False,False
+2024 Clausura,10,Deportivo Garcilaso,17,7,2,8,17,17,0,23,Deportivo Garcilaso,10,458584,17,7,2,8,17,17,0,23,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,12,Los Chankas,17,4,6,7,17,21,-4,18,Los Chankas,12,252254,17,4,6,7,17,21,-4,18,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,4,Melgar,17,9,5,3,30,16,14,32,Melgar,4,2308,17,9,5,3,30,16,14,32,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,14,Sport Boys,17,4,4,9,14,31,-17,16,Sport Boys,14,2312,17,4,4,9,14,31,-17,16,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,11,Sport Huancayo,17,5,4,8,21,28,-7,19,Sport Huancayo,11,33895,17,5,4,8,21,28,-7,19,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,3,Sporting Cristal,17,10,4,3,47,15,32,34,Sporting Cristal,3,2302,17,10,4,3,47,15,32,34,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,15,UTC,17,3,6,8,14,24,-10,15,UTC,15,87854,17,3,6,8,14,24,-10,15,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,17,Universidad César Vallejo,17,2,4,11,15,31,-16,10,Universidad César Vallejo,17,5281,17,2,4,11,15,31,-16,10,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,1,Universitario,17,11,4,2,31,10,21,37,Universitario,1,2305,17,11,4,2,31,10,21,37,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2024 Clausura,18,Unión Comercio,17,2,2,13,13,45,-32,8,Unión Comercio,18,48431,17,2,2,13,13,45,-32,8,2024,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,10,ADT,35,13,10,12,43,50,-7,49,ADT,10,335557,35,13,10,12,43,50,-7,49,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,5,Alianza Atlético,35,17,6,12,43,30,13,57,Alianza Atlético,5,2307,35,17,6,12,43,30,13,57,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,3,Alianza Lima,35,20,8,7,53,30,23,68,Alianza Lima,3,2311,35,20,8,7,53,30,23,68,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,18,Alianza Universidad,35,7,7,21,39,66,-27,28,Alianza Universidad,18,306660,35,7,7,21,39,66,-27,28,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,12,Atlético Grau,35,9,11,15,42,48,-6,38,Atlético Grau,12,282538,35,9,11,15,42,48,-6,38,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,17,Ayacucho,35,8,5,22,30,56,-26,29,Ayacucho FC,17,33894,35,8,5,22,30,56,-26,29,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,8,Cienciano,35,13,11,11,54,46,8,50,Cienciano,8,2301,35,13,11,11,54,46,8,50,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,13,Comerciantes Unidos,35,9,10,16,37,52,-15,37,Comerciantes Unidos,13,213609,35,9,10,16,37,52,-15,37,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,2,Cusco,35,21,7,7,63,35,28,70,Cusco FC,2,63760,35,21,7,7,63,35,28,70,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,19,Binacional,18,4,6,8,20,33,-13,18,Deportivo Binacional,19,275839,18,4,6,8,20,33,-13,18,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,7,Deportivo Garcilaso,35,14,10,11,48,40,8,52,Deportivo Garcilaso,7,458584,35,14,10,11,48,40,8,52,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,15,Juan Pablo II College,35,8,9,18,33,51,-18,33,Juan Pablo II College,15,511206,35,8,9,18,33,51,-18,33,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,9,Los Chankas,35,14,8,13,45,53,-8,50,Los Chankas,9,252254,35,14,8,13,45,53,-8,50,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,6,Melgar,35,14,14,7,52,37,15,56,Melgar,6,2308,35,14,14,7,52,37,15,56,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,14,Sport Boys,35,9,9,17,40,53,-13,36,Sport Boys,14,2312,35,9,9,17,40,53,-13,36,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,11,Sport Huancayo,35,14,6,15,51,49,2,48,Sport Huancayo,11,33895,35,14,6,15,51,49,2,48,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,4,Sporting Cristal,35,19,6,10,60,37,23,63,Sporting Cristal,4,2302,35,19,6,10,60,37,23,63,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,16,UTC,35,8,8,19,33,62,-29,32,UTC,16,87854,35,8,8,19,33,62,-29,32,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Acumulada,1,Universitario,35,24,7,4,67,25,42,79,Universitario,1,2305,35,24,7,4,67,25,42,79,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,9,ADT,18,6,6,6,24,30,-6,24,ADT,9,335557,18,6,6,6,24,30,-6,24,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,4,Alianza Atlético,18,11,1,6,28,18,10,34,Alianza Atlético,4,2307,18,11,1,6,28,18,10,34,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,2,Alianza Lima,18,11,4,3,23,11,12,37,Alianza Lima,2,2311,18,11,4,3,23,11,12,37,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,19,Alianza Universidad,18,2,5,11,16,33,-17,11,Alianza Universidad,19,306660,18,2,5,11,16,33,-17,11,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,12,Atlético Grau,18,5,7,6,23,24,-1,22,Atlético Grau,12,282538,18,5,7,6,23,24,-1,22,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,17,Ayacucho,18,4,3,11,14,27,-13,15,Ayacucho FC,17,33894,18,4,3,11,14,27,-13,15,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,10,Cienciano,18,5,8,5,29,25,4,23,Cienciano,10,2301,18,5,8,5,29,25,4,23,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,18,Comerciantes Unidos,18,2,5,11,17,31,-14,11,Comerciantes Unidos,18,213609,18,2,5,11,17,31,-14,11,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,3,Cusco,18,10,4,4,34,20,14,34,Cusco FC,3,63760,18,10,4,4,34,20,14,34,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,16,Binacional,18,4,6,8,20,33,-13,18,Deportivo Binacional,16,275839,18,4,6,8,20,33,-13,18,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,8,Deportivo Garcilaso,18,8,3,7,28,19,9,27,Deportivo Garcilaso,8,458584,18,8,3,7,28,19,9,27,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,14,Juan Pablo II College,18,5,4,9,20,28,-8,19,Juan Pablo II College,14,511206,18,5,4,9,20,28,-8,19,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,11,Los Chankas,18,5,8,5,24,25,-1,23,Los Chankas,11,252254,18,5,8,5,24,25,-1,23,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,6,Melgar,18,8,7,3,28,20,8,31,Melgar,6,2308,18,8,7,3,28,20,8,31,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,13,Sport Boys,18,5,5,8,26,28,-2,20,Sport Boys,13,2312,18,5,5,8,26,28,-2,20,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,7,Sport Huancayo,18,9,3,6,23,21,2,30,Sport Huancayo,7,33895,18,9,3,6,23,21,2,30,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,5,Sporting Cristal,18,10,2,6,31,24,7,32,Sporting Cristal,5,2302,18,10,2,6,31,24,7,32,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,15,UTC,18,5,4,9,17,34,-17,19,UTC,15,87854,18,5,4,9,17,34,-17,19,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Apertura,1,Universitario,18,12,3,3,38,12,26,39,Universitario,1,2305,18,12,3,3,38,12,26,39,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,10,ADT,17,7,4,6,19,20,-1,25,ADT,10,335557,17,7,4,6,19,20,-1,25,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,11,Alianza Atlético,17,6,5,6,15,12,3,23,Alianza Atlético,11,2307,17,6,5,6,15,12,3,23,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,4,Alianza Lima,17,9,4,4,30,19,11,31,Alianza Lima,4,2311,17,9,4,4,30,19,11,31,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,13,Alianza Universidad,17,5,2,10,23,33,-10,17,Alianza Universidad,13,306660,17,5,2,10,23,33,-10,17,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,14,Atlético Grau,17,4,4,9,19,24,-5,16,Atlético Grau,14,282538,17,4,4,9,19,24,-5,16,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,17,Ayacucho,17,4,2,11,16,29,-13,14,Ayacucho FC,17,33894,17,4,2,11,16,29,-13,14,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,5,Cienciano,17,8,3,6,25,21,4,27,Cienciano,5,2301,17,8,3,6,25,21,4,27,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,7,Comerciantes Unidos,17,7,5,5,20,21,-1,26,Comerciantes Unidos,7,213609,17,7,5,5,20,21,-1,26,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,2,Cusco,17,11,3,3,29,15,14,36,Cusco FC,2,63760,17,11,3,3,29,15,14,36,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,9,Deportivo Garcilaso,17,6,7,4,20,21,-1,25,Deportivo Garcilaso,9,458584,17,6,7,4,20,21,-1,25,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,16,Juan Pablo II College,17,3,5,9,13,23,-10,14,Juan Pablo II College,16,511206,17,3,5,9,13,23,-10,14,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,6,Los Chankas,17,9,0,8,21,28,-7,27,Los Chankas,6,252254,17,9,0,8,21,28,-7,27,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,8,Melgar,17,6,7,4,24,17,7,25,Melgar,8,2308,17,6,7,4,24,17,7,25,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,15,Sport Boys,17,4,4,9,14,25,-11,16,Sport Boys,15,2312,17,4,4,9,14,25,-11,16,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,12,Sport Huancayo,17,5,3,9,28,28,0,18,Sport Huancayo,12,33895,17,5,3,9,28,28,0,18,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,3,Sporting Cristal,17,9,4,4,29,13,16,31,Sporting Cristal,3,2302,17,9,4,4,29,13,16,31,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,18,UTC,17,3,4,10,16,28,-12,13,UTC,18,87854,17,3,4,10,16,28,-12,13,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2025 Clausura,1,Universitario,17,12,4,1,29,13,16,40,Universitario,1,2305,17,12,4,1,29,13,16,40,2025,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,16,ADT,34,7,12,15,38,50,-12,32,ADT,16,335557,34,7,12,15,38,50,-12,32,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,9,Alianza Atlético,34,14,8,12,50,49,1,50,Alianza Atlético,9,2307,34,14,8,12,50,49,1,50,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,1,Alianza Lima,34,21,9,4,59,24,35,72,Alianza Lima,1,2311,34,21,9,4,59,24,35,72,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,14,Atlético Grau,34,10,7,17,33,43,-10,37,Atlético Grau,14,282538,34,10,7,17,33,43,-10,37,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,15,Deportivo Moquegua,34,8,9,17,29,49,-20,33,CD Moquegua,15,492848,34,8,9,17,29,49,-20,33,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,8,Cienciano,34,15,5,14,55,50,5,50,Cienciano,8,2301,34,15,5,14,55,50,5,50,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,13,Comerciantes Unidos,34,8,14,12,47,50,-3,38,Comerciantes Unidos,13,213609,34,8,14,12,47,50,-3,38,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,7,Cusco,34,16,4,14,48,49,-1,52,Cusco FC,7,63760,34,16,4,14,48,49,-1,52,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,4,Deportivo Garcilaso,34,16,8,10,52,37,15,56,Deportivo Garcilaso,4,458584,34,16,8,10,52,37,15,56,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,17,Cajamarca,34,8,7,19,46,70,-24,29,FC Cajamarca,17,1082002,34,8,7,19,46,70,-24,29,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,12,Juan Pablo II College,34,11,9,14,50,61,-11,42,Juan Pablo II College,12,511206,34,11,9,14,50,61,-11,42,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,10,Los Chankas,34,13,9,12,43,57,-14,48,Los Chankas,10,252254,34,13,9,12,43,57,-14,48,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,3,Melgar,34,16,10,8,57,39,18,58,Melgar,3,2308,34,16,10,8,57,39,18,58,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,11,Sport Boys,34,12,11,11,40,38,2,43,Sport Boys,11,2312,34,12,11,11,40,38,2,43,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,6,Sport Huancayo,34,16,5,13,52,50,2,53,Sport Huancayo,6,33895,34,16,5,13,52,50,2,53,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,5,Sporting Cristal,34,16,6,12,67,49,18,54,Sporting Cristal,5,2302,34,16,6,12,67,49,18,54,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,18,UTC,34,6,9,19,43,61,-18,17,UTC,18,87854,34,6,9,19,43,61,-18,17,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Acumulada,2,Universitario,34,17,10,7,60,43,17,61,Universitario,2,2305,34,17,10,7,60,43,17,61,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,10,ADT,17,5,5,7,22,21,1,20,ADT,10,335557,17,5,5,7,22,21,1,20,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,8,Alianza Atlético,17,5,6,6,20,18,2,21,Alianza Atlético,8,2307,17,5,6,6,20,18,2,21,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,1,Alianza Lima,17,12,4,1,30,8,22,40,Alianza Lima,1,2311,17,12,4,1,30,8,22,40,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,15,Atlético Grau,17,4,4,9,12,18,-6,16,Atlético Grau,15,282538,17,4,4,9,12,18,-6,16,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,13,Deportivo Moquegua,17,5,3,9,17,24,-7,18,CD Moquegua,13,492848,17,5,3,9,17,24,-7,18,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,3,Cienciano,17,10,3,4,34,22,12,33,Cienciano,3,2301,17,10,3,4,34,22,12,33,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,9,Comerciantes Unidos,17,5,6,6,18,20,-2,21,Comerciantes Unidos,9,213609,17,5,6,6,18,20,-2,21,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,6,Cusco,17,8,3,6,21,24,-3,27,Cusco FC,6,63760,17,8,3,6,21,24,-3,27,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,7,Deportivo Garcilaso,17,7,5,5,21,18,3,26,Deportivo Garcilaso,7,458584,17,7,5,5,21,18,3,26,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,14,Cajamarca,17,4,5,8,23,28,-5,17,FC Cajamarca,14,1082002,17,4,5,8,23,28,-5,17,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,17,Juan Pablo II College,17,4,4,9,22,40,-18,16,Juan Pablo II College,17,511206,17,4,4,9,22,40,-18,16,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,2,Los Chankas,17,10,4,3,25,21,4,34,Los Chankas,2,252254,17,10,4,3,25,21,4,34,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,5,Melgar,17,8,4,5,29,20,9,28,Melgar,5,2308,17,8,4,5,29,20,9,28,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,11,Sport Boys,17,5,5,7,15,19,-4,20,Sport Boys,11,2312,17,5,5,7,15,19,-4,20,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,16,Sport Huancayo,17,4,4,9,21,31,-10,16,Sport Huancayo,16,33895,17,4,4,9,21,31,-10,16,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,12,Sporting Cristal,17,5,4,8,28,30,-2,19,Sporting Cristal,12,2302,17,5,4,8,28,30,-2,19,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,18,UTC,17,4,6,7,21,26,-5,13,UTC,18,87854,17,4,6,7,21,26,-5,13,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Apertura,4,Universitario,17,8,5,4,24,15,9,29,Universitario,4,2305,17,8,5,4,24,15,9,29,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,17,ADT,17,2,7,8,16,28,-12,13,ADT,17,335557,17,2,7,8,16,29,-13,13,2026,both,0,0,0,0,0,1,-1,0,0,False,False
+2026 Clausura,7,Alianza Atlético,17,9,2,6,30,31,-1,29,Alianza Atlético,7,2307,17,9,2,6,30,31,-1,29,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,3,Alianza Lima,17,9,5,3,28,16,12,32,Alianza Lima,3,2311,17,9,5,3,29,16,13,32,2026,both,0,0,0,0,1,0,1,0,0,False,False
+2026 Clausura,11,Atlético Grau,17,6,3,8,21,25,-4,21,Atlético Grau,11,282538,17,6,3,8,21,25,-4,21,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,14,Deportivo Moquegua,17,3,6,8,12,25,-13,15,CD Moquegua,14,492848,17,3,6,8,12,25,-13,15,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,13,Cienciano,17,5,2,10,21,28,-7,17,Cienciano,13,2301,17,5,2,10,21,28,-7,17,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,12,Comerciantes Unidos,17,3,8,6,29,30,-1,17,Comerciantes Unidos,12,213609,17,3,8,6,29,30,-1,17,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,10,Cusco,17,8,1,8,27,25,2,25,Cusco FC,10,63760,17,8,1,8,27,25,2,25,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,5,Deportivo Garcilaso,17,9,3,5,31,19,12,30,Deportivo Garcilaso,5,458584,17,9,3,5,31,19,12,30,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,15,Cajamarca,17,4,2,11,23,42,-19,14,FC Cajamarca,16,1082002,17,4,2,11,23,42,-19,14,2026,both,0,0,0,0,0,0,0,0,1,True,True
+2026 Clausura,9,Juan Pablo II College,17,7,5,5,28,21,7,26,Juan Pablo II College,9,511206,17,7,5,5,28,21,7,26,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,16,Los Chankas,17,3,5,9,18,36,-18,14,Los Chankas,15,252254,17,3,5,9,18,36,-18,14,2026,both,0,0,0,0,0,0,0,0,-1,True,True
+2026 Clausura,6,Melgar,17,8,6,3,28,19,9,30,Melgar,6,2308,17,8,6,3,28,19,9,30,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,8,Sport Boys,17,7,6,4,25,19,6,27,Sport Boys,8,2312,17,7,6,4,25,19,6,27,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,1,Sport Huancayo,17,12,1,4,31,19,12,37,Sport Huancayo,1,33895,17,12,1,4,31,19,12,37,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,2,Sporting Cristal,17,11,2,4,39,19,20,35,Sporting Cristal,2,2302,17,11,2,4,39,19,20,35,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,18,UTC,17,2,3,12,22,35,-13,4,UTC,18,87854,17,2,3,12,22,35,-13,4,2026,both,0,0,0,0,0,0,0,0,0,True,True
+2026 Clausura,4,Universitario,17,9,5,3,36,28,8,32,Universitario,4,2305,17,9,5,3,36,28,8,32,2026,both,0,0,0,0,0,0,0,0,0,True,True

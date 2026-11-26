@@ -1,0 +1,293 @@
+## 2022 Apertura
+1 Melgar 18 13 2 3 23 11 +12 41
+2 Sport Huancayo 18 12 4 2 35 18 +17 40
+3 Sporting Cristal 18 11 5 2 35 20 +15 38
+4 Alianza Lima 18 10 3 5 28 16 +12 33
+5 Cienciano 18 9 5 4 37 22 +15 32
+6 Binacional 18 10 1 7 24 19 +5 31
+7 Universidad César Vallejo 18 8 6 4 25 15 +10 30
+8 Alianza Atlético 18 9 3 6 26 27 −1 30
+9 Universitario 18 8 4 6 24 19 +5 28
+10 Deportivo Municipal 18 7 4 7 30 36 −6 25
+11 UTC 18 6 2 10 29 32 −3 20
+12 Carlos A. Mannucci 18 5 5 8 19 22 −3 20
+13 Atlético Grau 18 4 6 8 20 23 −3 18
+14 Sport Boys 18 5 3 10 17 32 −15 18
+15 ADT 18 3 7 8 14 24 −10 16
+16 Academia Cantolao 18 4 3 11 18 32 −14 15
+17 Universidad San Martín 18 4 3 11 21 37 −16 15
+18 Carlos Stein 18 3 5 10 18 31 −13 14
+19 Ayacucho 18 3 3 12 25 32 −7 12
+## 2022 Clausura
+1 Alianza Lima 18 13 3 2 31 10 +21 42
+2 Sporting Cristal 18 12 5 1 39 17 +22 41
+3 Atlético Grau 18 11 4 3 30 19 +11 37
+4 Universitario 18 9 6 3 26 10 +16 33
+5 Melgar 18 10 3 5 31 18 +13 33
+6 Universidad César Vallejo 18 10 3 5 25 24 +1 33
+7 UTC 18 8 4 6 28 24 +4 28
+8 Sport Huancayo 18 8 3 7 26 19 +7 27
+9 Alianza Atlético 18 8 3 7 23 21 +2 27
+10 Binacional 18 8 2 8 28 19 +9 26
+11 Cienciano 18 7 4 7 24 23 +1 25
+12 ADT 18 6 6 6 25 25 0 24
+13 Sport Boys 18 6 3 9 23 31 −8 21
+14 Deportivo Municipal 18 5 5 8 20 29 −9 20
+15 Academia Cantolao 18 4 7 7 19 22 −3 19
+16 Ayacucho 18 3 5 10 16 28 −12 14
+17 Carlos A. Mannucci 18 3 4 11 13 33 −20 13
+18 Carlos Stein 18 1 3 14 18 43 −25 6
+19 Universidad San Martín 18 1 3 14 17 47 −30 6
+## 2022 Acumulada
+1 Sporting Cristal 36 23 10 3 74 37 +37 79
+2 Alianza Lima 36 23 6 7 59 26 +33 77
+3 Melgar 36 23 5 8 54 29 +25 74
+4 Sport Huancayo 36 20 7 9 61 37 +24 67
+5 Universitario 36 17 10 9 50 29 +21 61
+6 Universidad César Vallejo 36 18 9 9 50 39 +11 61
+7 Cienciano 36 16 9 11 61 45 +16 57
+8 Binacional 36 18 3 15 52 38 +14 57
+9 Alianza Atlético 36 17 6 13 49 48 +1 57
+10 Atlético Grau 36 15 10 11 50 42 +8 55
+11 UTC 36 14 6 16 57 56 +1 48
+12 Deportivo Municipal 36 12 9 15 50 65 −15 41
+13 ADT 36 9 13 14 39 49 −10 40
+14 Academia Cantolao 36 8 10 18 37 54 −17 34
+15 Carlos A. Mannucci 36 8 9 19 32 55 −23 33
+16 Sport Boys 36 11 6 19 40 63 −23 32
+17 Ayacucho 36 6 8 22 41 60 −19 27
+18 Universidad San Martín 36 5 6 25 38 84 −46 21
+19 Carlos Stein 36 4 8 24 36 74 −38 18
+## 2023 Apertura
+1 Alianza Lima 18 14 0 4 37 16 +21 42
+2 Sporting Cristal 18 9 8 1 33 18 +15 35
+3 Universitario 18 11 1 6 29 14 +15 34
+4 Cusco 18 10 2 6 24 22 +2 32
+5 Sport Huancayo 18 8 3 7 30 25 +5 27
+6 Universidad César Vallejo 18 7 6 5 25 23 +2 27
+7 Carlos A. Mannucci 18 8 3 7 17 18 -1 27
+8 Deportivo Garcilaso 18 6 7 5 32 27 +5 25
+9 Melgar 18 6 7 5 24 22 +2 25
+10 Deportivo Municipal 18 7 3 8 19 21 -2 24
+11 Cienciano 18 7 3 8 23 28 -5 24
+12 Atlético Grau 18 6 5 7 31 21 +10 23
+13 Alianza Atlético 18 6 5 7 32 33 -1 23
+14 ADT 18 5 6 7 23 23 0 21
+15 UTC 18 5 6 7 16 22 -6 21
+16 Unión Comercio 18 5 4 9 24 40 -16 19
+17 Binacional 18 5 3 10 28 34 -6 18
+18 Sport Boys 18 5 3 10 13 26 -13 18
+19 Academia Cantolao 18 2 3 13 9 36 -27 9
+## 2023 Clausura
+1 Universitario 18 11 6 1 28 8 +20 39
+2 Melgar 18 11 5 2 31 13 +18 38
+3 Alianza Lima 18 10 7 1 18 6 +12 37
+4 Sporting Cristal 18 10 6 2 31 13 +18 36
+5 ADT 18 9 7 2 21 13 +8 34
+6 Sport Huancayo 18 8 5 5 22 14 +8 29
+7 Deportivo Garcilaso 18 7 6 5 24 20 +4 26
+8 Universidad César Vallejo 18 7 3 8 25 19 +6 24
+9 Cienciano 18 6 6 6 21 20 +1 24
+10 Sport Boys 18 6 5 7 15 23 -8 23
+11 Carlos A. Mannucci 18 5 5 8 16 22 -6 20
+12 UTC 18 3 10 5 21 23 -2 19
+13 Cusco 18 4 6 8 18 23 -5 18
+14 Atlético Grau 18 4 6 8 17 27 -10 18
+15 Binacional 18 5 2 11 25 34 -9 17
+16 Unión Comercio 18 4 5 9 18 32 -14 17
+17 Academia Cantolao 18 5 2 11 12 26 -14 17
+18 Alianza Atlético 18 4 4 10 14 25 -11 16
+19 Deportivo Municipal 18 4 0 14 17 33 -16 12
+## 2023 Acumulada
+1 Alianza Lima 36 24 7 5 55 22 +33 79
+2 Universitario 36 22 7 7 57 22 +35 73
+3 Sporting Cristal 36 19 14 3 64 31 +33 71
+4 Melgar 36 17 12 7 55 35 +20 63
+5 Sport Huancayo 36 16 8 12 52 39 +13 56
+6 ADT 36 14 13 9 44 36 +8 55
+7 Deportivo Garcilaso 36 13 13 10 56 47 +9 51
+8 Universidad César Vallejo 36 14 9 13 50 42 +8 51
+9 Cusco 36 14 8 14 42 45 -3 50
+10 Cienciano 36 13 9 14 44 48 -4 48
+11 Carlos A. Mannucci 36 13 8 15 33 40 -7 47
+12 Atlético Grau 36 10 11 15 48 48 0 41
+13 UTC 36 8 16 12 37 45 -8 40
+14 Alianza Atlético 36 10 9 17 46 58 -12 39
+15 Sport Boys 36 11 8 17 28 49 -21 37
+16 Unión Comercio 36 9 9 18 42 72 -30 36
+17 Binacional 36 10 5 21 53 68 -15 35
+18 Deportivo Municipal 36 11 3 22 36 54 -18 31
+19 Academia Cantolao 36 7 5 24 21 62 -41 26
+## 2024 Apertura
+1 Universitario 17 12 4 1 32 7 +25 40
+2 Sporting Cristal 17 13 1 3 44 20 +24 40
+3 Melgar 17 12 2 3 36 19 +17 38
+4 Alianza Lima 17 11 0 6 32 16 +16 33
+5 Cusco 17 9 2 6 22 21 +1 29
+6 ADT 17 8 4 5 29 24 +5 28
+7 Cienciano 17 6 8 3 20 20 0 26
+8 Comerciantes Unidos 17 6 4 7 22 31 −9 22
+9 Los Chankas 17 6 3 8 25 26 −1 21
+10 Universidad César Vallejo 17 4 8 5 19 24 −5 20
+11 Atlético Grau 17 4 7 6 19 17 +2 19
+12 Sport Boys 17 5 4 8 18 20 −2 19
+13 Sport Huancayo 17 5 4 8 18 29 −11 19
+14 UTC 17 4 4 9 21 29 −8 16
+15 Deportivo Garcilaso 17 3 5 9 20 26 −6 14
+16 Alianza Atlético 17 3 5 9 11 19 −8 14
+17 Carlos A. Mannucci 17 3 5 9 11 34 −23 14
+18 Unión Comercio 17 1 6 10 17 34 −17 9
+## 2024 Clausura
+1 Universitario 17 11 4 2 31 10 +21 37
+2 Alianza Lima 17 11 3 3 24 12 +12 36
+3 Sporting Cristal 17 10 4 3 47 15 +32 34
+4 Melgar 17 9 5 3 30 16 +14 32
+5 Atlético Grau 17 8 8 1 25 11 +14 32
+6 Cusco 17 9 4 4 29 22 +7 31
+7 Alianza Atlético 17 8 6 3 17 15 +2 30
+8 Cienciano 17 8 2 7 28 24 +4 26
+9 ADT 17 6 5 6 18 16 +2 23
+10 Deportivo Garcilaso 17 7 2 8 17 17 0 23
+11 Sport Huancayo 17 5 4 8 21 28 −7 19
+12 Los Chankas 17 4 6 7 17 21 −4 18
+13 Carlos A. Mannucci 17 4 5 8 23 30 −7 17
+14 Sport Boys 17 4 4 9 14 31 −17 16
+15 UTC 17 3 6 8 14 24 −10 15
+16 Comerciantes Unidos 17 3 4 10 14 29 −15 13
+17 Universidad César Vallejo 17 2 4 11 15 31 −16 10
+18 Unión Comercio 17 2 2 13 13 45 −32 8
+## 2024 Acumulada
+1 Universitario 34 23 8 3 63 17 +46 77
+2 Sporting Cristal 34 23 5 6 91 35 +56 74
+3 Melgar 34 21 7 6 66 35 +31 70
+4 Alianza Lima 34 22 3 9 57 27 +30 69
+5 Cusco 34 18 6 10 50 44 +6 60
+6 Cienciano 34 14 10 10 48 44 +4 52
+7 Atlético Grau 34 12 15 7 44 28 +16 51
+8 ADT 34 14 9 11 47 40 +7 51
+9 Alianza Atlético 34 11 11 12 28 34 −6 44
+10 Los Chankas 34 10 9 15 42 47 −5 39
+11 Sport Huancayo 34 10 8 16 39 57 −18 38
+12 Deportivo Garcilaso 34 10 7 17 37 43 −6 37
+13 Sport Boys 34 9 8 17 32 51 −19 35
+14 Comerciantes Unidos 34 9 8 17 36 60 −24 35
+15 UTC 34 7 10 17 35 53 −18 31
+16 Carlos A. Mannucci 34 7 10 17 34 64 −30 31
+17 Universidad César Vallejo 34 6 12 16 34 55 −21 30
+18 Unión Comercio 34 3 8 23 30 79 −49 17
+## 2025 Apertura
+1 Universitario 18 12 3 3 38 12 +26 39
+2 Alianza Lima 18 11 4 3 23 11 +12 37
+3 Cusco 18 10 4 4 34 20 +14 34
+4 Alianza Atlético 18 11 1 6 28 18 +10 34
+5 Sporting Cristal 18 10 2 6 31 24 +7 32
+6 Melgar 18 8 7 3 28 20 +8 31
+7 Sport Huancayo 18 9 3 6 23 21 +2 30
+8 Deportivo Garcilaso 18 8 3 7 28 19 +9 27
+9 ADT 18 6 6 6 24 30 -6 24
+10 Cienciano 18 5 8 5 29 25 +4 23
+11 Los Chankas 18 5 8 5 24 25 -1 23
+12 Atlético Grau 18 5 7 6 23 24 -1 22
+13 Sport Boys 18 5 5 8 26 28 -2 20
+14 Juan Pablo II College 18 5 4 9 20 28 -8 19
+15 UTC 18 5 4 9 17 34 -17 19
+16 Binacional 18 4 6 8 20 33 -13 18
+17 Ayacucho 18 4 3 11 14 27 -13 15
+18 Comerciantes Unidos 18 2 5 11 17 31 -14 11
+19 Alianza Universidad 18 2 5 11 16 33 -17 11
+## 2025 Clausura
+1 Universitario 17 12 4 1 29 13 +16 40
+2 Cusco 17 11 3 3 29 15 +14 36
+3 Sporting Cristal 17 9 4 4 29 13 +16 31
+4 Alianza Lima 17 9 4 4 30 19 +11 31
+5 Cienciano 17 8 3 6 25 21 +4 27
+6 Los Chankas 17 9 0 8 21 28 -7 27
+7 Comerciantes Unidos 17 7 5 5 20 21 -1 26
+8 Melgar 17 6 7 4 24 17 +7 25
+9 Deportivo Garcilaso 17 6 7 4 20 21 -1 25
+10 ADT 17 7 4 6 19 20 -1 25
+11 Alianza Atlético 17 6 5 6 15 12 +3 23
+12 Sport Huancayo 17 5 3 9 28 28 0 18
+13 Alianza Universidad 17 5 2 10 23 33 -10 17
+14 Atlético Grau 17 4 4 9 19 24 -5 16
+15 Sport Boys 17 4 4 9 14 25 -11 16
+16 Juan Pablo II College 17 3 5 9 13 23 -10 14
+17 Ayacucho 17 4 2 11 16 29 -13 14
+18 UTC 17 3 4 10 16 28 -12 13
+## 2025 Acumulada
+1 Universitario 35 24 7 4 67 25 +42 79
+2 Cusco 35 21 7 7 63 35 +28 70
+3 Alianza Lima 35 20 8 7 53 30 +23 68
+4 Sporting Cristal 35 19 6 10 60 37 +23 63
+5 Alianza Atlético 35 17 6 12 43 30 +13 57
+6 Melgar 35 14 14 7 52 37 +15 56
+7 Deportivo Garcilaso 35 14 10 11 48 40 +8 52
+8 Cienciano 35 13 11 11 54 46 +8 50
+9 Los Chankas 35 14 8 13 45 53 -8 50
+10 ADT 35 13 10 12 43 50 -7 49
+11 Sport Huancayo 35 14 6 15 51 49 +2 48
+12 Atlético Grau 35 9 11 15 42 48 -6 38
+13 Comerciantes Unidos 35 9 10 16 37 52 -15 37
+14 Sport Boys 35 9 9 17 40 53 -13 36
+15 Juan Pablo II College 35 8 9 18 33 51 -18 33
+16 UTC 35 8 8 19 33 62 -29 32
+17 Ayacucho 35 8 5 22 30 56 -26 29
+18 Alianza Universidad 35 7 7 21 39 66 -27 28
+19 Binacional 18 4 6 8 20 33 -13 18
+## 2026 Apertura
+1 Alianza Lima 17 12 4 1 30 8 +22 40
+2 Los Chankas 17 10 4 3 25 21 +4 34
+3 Cienciano 17 10 3 4 34 22 +12 33
+4 Universitario 17 8 5 4 24 15 +9 29
+5 Melgar 17 8 4 5 29 20 +9 28
+6 Cusco 17 8 3 6 21 24 -3 27
+7 Deportivo Garcilaso 17 7 5 5 21 18 +3 26
+8 Alianza Atlético 17 5 6 6 20 18 +2 21
+9 Comerciantes Unidos 17 5 6 6 18 20 -2 21
+10 ADT 17 5 5 7 22 21 +1 20
+11 Sport Boys 17 5 5 7 15 19 -4 20
+12 Sporting Cristal 17 5 4 8 28 30 -2 19
+13 Deportivo Moquegua 17 5 3 9 17 24 -7 18
+14 Cajamarca 17 4 5 8 23 28 -5 17
+15 Atlético Grau 17 4 4 9 12 18 -6 16
+16 Sport Huancayo 17 4 4 9 21 31 -10 16
+17 Juan Pablo II College 17 4 4 9 22 40 -18 16
+18 UTC 17 4 6 7 21 26 -5 13
+## 2026 Clausura
+1 Sport Huancayo 17 12 1 4 31 19 +12 37
+2 Sporting Cristal 17 11 2 4 39 19 +20 35
+3 Alianza Lima 17 9 5 3 28 16 +12 32
+4 Universitario 17 9 5 3 36 28 +8 32
+5 Deportivo Garcilaso 17 9 3 5 31 19 +12 30
+6 Melgar 17 8 6 3 28 19 +9 30
+7 Alianza Atlético 17 9 2 6 30 31 -1 29
+8 Sport Boys 17 7 6 4 25 19 +6 27
+9 Juan Pablo II College 17 7 5 5 28 21 +7 26
+10 Cusco 17 8 1 8 27 25 +2 25
+11 Atlético Grau 17 6 3 8 21 25 -4 21
+12 Comerciantes Unidos 17 3 8 6 29 30 -1 17
+13 Cienciano 17 5 2 10 21 28 -7 17
+14 Deportivo Moquegua 17 3 6 8 12 25 -13 15
+15 Cajamarca 17 4 2 11 23 42 -19 14
+16 Los Chankas 17 3 5 9 18 36 -18 14
+17 ADT 17 2 7 8 16 28 -12 13
+18 UTC 17 2 3 12 22 35 -13 4
+## 2026 Acumulada
+1 Alianza Lima 34 21 9 4 59 24 +35 72
+2 Universitario 34 17 10 7 60 43 +17 61
+3 Melgar 34 16 10 8 57 39 +18 58
+4 Deportivo Garcilaso 34 16 8 10 52 37 +15 56
+5 Sporting Cristal 34 16 6 12 67 49 +18 54
+6 Sport Huancayo 34 16 5 13 52 50 +2 53
+7 Cusco 34 16 4 14 48 49 -1 52
+8 Cienciano 34 15 5 14 55 50 +5 50
+9 Alianza Atlético 34 14 8 12 50 49 +1 50
+10 Los Chankas 34 13 9 12 43 57 -14 48
+11 Sport Boys 34 12 11 11 40 38 +2 43
+12 Juan Pablo II College 34 11 9 14 50 61 -11 42
+13 Comerciantes Unidos 34 8 14 12 47 50 -3 38
+14 Atlético Grau 34 10 7 17 33 43 -10 37
+15 Deportivo Moquegua 34 8 9 17 29 49 -20 33
+16 ADT 34 7 12 15 38 50 -12 32
+17 Cajamarca 34 8 7 19 46 70 -24 29
+18 UTC 34 6 9 19 43 61 -18 17

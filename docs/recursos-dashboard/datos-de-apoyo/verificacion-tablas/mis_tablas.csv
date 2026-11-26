@@ -1,0 +1,280 @@
+﻿torneo,Pos,Equipo,PJ,PG,PE,PP,GF,GC,DG,Pts,id
+2022 Apertura,1,Melgar,18,13,2,3,23,11,12,41,2308
+2022 Apertura,2,Sport Huancayo,18,12,4,2,35,18,17,40,33895
+2022 Apertura,3,Sporting Cristal,18,11,5,2,35,20,15,38,2302
+2022 Apertura,4,Alianza Lima,18,10,3,5,28,16,12,33,2311
+2022 Apertura,5,Cienciano,18,9,5,4,37,22,15,32,2301
+2022 Apertura,6,Deportivo Binacional,18,10,1,7,24,19,5,31,275839
+2022 Apertura,7,Universidad César Vallejo,18,8,6,4,25,15,10,30,5281
+2022 Apertura,8,Alianza Atlético,18,9,3,6,26,27,-1,30,2307
+2022 Apertura,9,Universitario,18,8,4,6,24,19,5,28,2305
+2022 Apertura,10,Deportivo Municipal,18,7,4,7,30,36,-6,25,7031
+2022 Apertura,11,UTC,18,6,2,10,29,32,-3,20,87854
+2022 Apertura,12,Carlos A. Mannucci,18,5,5,8,19,22,-3,20,252245
+2022 Apertura,13,Atlético Grau,18,4,6,8,20,23,-3,18,282538
+2022 Apertura,14,Sport Boys,18,5,3,10,17,32,-15,18,2312
+2022 Apertura,15,ADT,18,3,7,8,14,24,-10,16,335557
+2022 Apertura,16,AD Cantolao,18,4,3,11,18,32,-14,15,245083
+2022 Apertura,17,Deportivo USMP,18,4,3,11,21,37,-16,15,5282
+2022 Apertura,18,FC Carlos Stein,18,3,5,10,18,31,-13,14,335037
+2022 Apertura,19,Ayacucho FC,18,3,3,12,25,32,-7,12,33894
+2022 Clausura,1,Alianza Lima,18,13,3,2,31,10,21,42,2311
+2022 Clausura,2,Sporting Cristal,18,12,5,1,39,17,22,41,2302
+2022 Clausura,3,Atlético Grau,18,11,4,3,30,19,11,37,282538
+2022 Clausura,4,Universitario,18,9,6,3,26,10,16,33,2305
+2022 Clausura,5,Melgar,18,10,3,5,31,18,13,33,2308
+2022 Clausura,6,Universidad César Vallejo,18,10,3,5,25,24,1,33,5281
+2022 Clausura,7,UTC,18,8,4,6,28,24,4,28,87854
+2022 Clausura,8,Sport Huancayo,18,8,3,7,26,19,7,27,33895
+2022 Clausura,9,Alianza Atlético,18,8,3,7,23,21,2,27,2307
+2022 Clausura,10,Deportivo Binacional,18,8,2,8,28,19,9,26,275839
+2022 Clausura,11,Cienciano,18,7,4,7,24,23,1,25,2301
+2022 Clausura,12,ADT,18,6,6,6,25,25,0,24,335557
+2022 Clausura,13,Sport Boys,18,6,3,9,23,31,-8,21,2312
+2022 Clausura,14,Deportivo Municipal,18,5,5,8,20,29,-9,20,7031
+2022 Clausura,15,AD Cantolao,18,4,7,7,19,22,-3,19,245083
+2022 Clausura,16,Ayacucho FC,18,3,5,10,16,28,-12,14,33894
+2022 Clausura,17,Carlos A. Mannucci,18,3,4,11,13,33,-20,13,252245
+2022 Clausura,18,FC Carlos Stein,18,1,3,14,18,43,-25,6,335037
+2022 Clausura,19,Deportivo USMP,18,1,3,14,17,47,-30,6,5282
+2022 Acumulada,1,Sporting Cristal,36,23,10,3,74,37,37,79,2302
+2022 Acumulada,2,Alianza Lima,36,23,6,7,59,26,33,75,2311
+2022 Acumulada,3,Melgar,36,23,5,8,54,29,25,74,2308
+2022 Acumulada,4,Sport Huancayo,36,20,7,9,61,37,24,67,33895
+2022 Acumulada,5,Universidad César Vallejo,36,18,9,9,50,39,11,63,5281
+2022 Acumulada,6,Universitario,36,17,10,9,50,29,21,61,2305
+2022 Acumulada,7,Cienciano,36,16,9,11,61,45,16,57,2301
+2022 Acumulada,8,Deportivo Binacional,36,18,3,15,52,38,14,57,275839
+2022 Acumulada,9,Alianza Atlético,36,17,6,13,49,48,1,57,2307
+2022 Acumulada,10,Atlético Grau,36,15,10,11,50,42,8,55,282538
+2022 Acumulada,11,UTC,36,14,6,16,57,56,1,48,87854
+2022 Acumulada,12,Deportivo Municipal,36,12,9,15,50,65,-15,45,7031
+2022 Acumulada,13,ADT,36,9,13,14,39,49,-10,40,335557
+2022 Acumulada,14,Sport Boys,36,11,6,19,40,63,-23,39,2312
+2022 Acumulada,15,AD Cantolao,36,8,10,18,37,54,-17,34,245083
+2022 Acumulada,16,Carlos A. Mannucci,36,8,9,19,32,55,-23,33,252245
+2022 Acumulada,17,Ayacucho FC,36,6,8,22,41,60,-19,26,33894
+2022 Acumulada,18,Deportivo USMP,36,5,6,25,38,84,-46,21,5282
+2022 Acumulada,19,FC Carlos Stein,36,4,8,24,36,74,-38,20,335037
+2023 Apertura,1,Alianza Lima,18,14,0,4,37,16,21,42,2311
+2023 Apertura,2,Sporting Cristal,18,9,8,1,33,18,15,35,2302
+2023 Apertura,3,Universitario,18,11,1,6,29,14,15,34,2305
+2023 Apertura,4,Cusco FC,18,10,2,6,24,22,2,32,63760
+2023 Apertura,5,Sport Huancayo,18,8,3,7,30,25,5,27,33895
+2023 Apertura,6,Universidad César Vallejo,18,7,6,5,25,23,2,27,5281
+2023 Apertura,7,Carlos A. Mannucci,18,8,3,7,17,18,-1,27,252245
+2023 Apertura,8,Deportivo Garcilaso,18,6,7,5,32,27,5,25,458584
+2023 Apertura,9,Melgar,18,6,7,5,24,22,2,25,2308
+2023 Apertura,10,Deportivo Municipal,18,7,3,8,19,21,-2,24,7031
+2023 Apertura,11,Cienciano,18,7,3,8,23,28,-5,24,2301
+2023 Apertura,12,Atlético Grau,18,6,5,7,31,21,10,23,282538
+2023 Apertura,13,Alianza Atlético,18,6,5,7,32,33,-1,23,2307
+2023 Apertura,14,ADT,18,5,6,7,23,23,0,21,335557
+2023 Apertura,15,UTC,18,5,6,7,16,22,-6,21,87854
+2023 Apertura,16,Unión Comercio,18,5,4,9,24,40,-16,19,48431
+2023 Apertura,17,Deportivo Binacional,18,5,3,10,28,34,-6,18,275839
+2023 Apertura,18,Sport Boys,18,5,3,10,13,26,-13,18,2312
+2023 Apertura,19,AD Cantolao,18,2,3,13,9,36,-27,9,245083
+2023 Clausura,1,Universitario,18,11,6,1,28,8,20,39,2305
+2023 Clausura,2,Melgar,18,11,5,2,31,13,18,38,2308
+2023 Clausura,3,Alianza Lima,18,10,7,1,18,6,12,37,2311
+2023 Clausura,4,Sporting Cristal,18,10,6,2,31,13,18,36,2302
+2023 Clausura,5,ADT,18,9,7,2,21,13,8,34,335557
+2023 Clausura,6,Sport Huancayo,18,8,5,5,22,14,8,29,33895
+2023 Clausura,7,Deportivo Garcilaso,18,7,6,5,24,20,4,27,458584
+2023 Clausura,8,Universidad César Vallejo,18,7,3,8,25,19,6,24,5281
+2023 Clausura,9,Cienciano,18,6,6,6,21,20,1,24,2301
+2023 Clausura,10,Sport Boys,18,6,5,7,15,23,-8,23,2312
+2023 Clausura,11,UTC,18,3,10,5,21,23,-2,19,87854
+2023 Clausura,12,Cusco FC,18,4,6,8,18,23,-5,18,63760
+2023 Clausura,13,Carlos A. Mannucci,17,4,5,8,16,22,-6,17,252245
+2023 Clausura,14,Deportivo Binacional,18,5,2,11,25,34,-9,17,275839
+2023 Clausura,15,Unión Comercio,18,4,5,9,18,32,-14,17,48431
+2023 Clausura,16,AD Cantolao,18,5,2,11,12,26,-14,17,245083
+2023 Clausura,17,Alianza Atlético,18,4,4,10,14,25,-11,16,2307
+2023 Clausura,18,Atlético Grau,17,3,6,8,17,27,-10,15,282538
+2023 Clausura,19,Deportivo Municipal,16,4,0,12,17,33,-16,12,7031
+2023 Acumulada,1,Alianza Lima,36,24,7,5,55,22,33,79,2311
+2023 Acumulada,2,Universitario,36,22,7,7,57,22,35,73,2305
+2023 Acumulada,3,Sporting Cristal,36,19,14,3,64,31,33,71,2302
+2023 Acumulada,4,Melgar,36,17,12,7,55,35,20,63,2308
+2023 Acumulada,5,Sport Huancayo,36,16,8,12,52,39,13,56,33895
+2023 Acumulada,6,ADT,36,14,13,9,44,36,8,55,335557
+2023 Acumulada,7,Deportivo Garcilaso,36,13,13,10,56,47,9,52,458584
+2023 Acumulada,8,Universidad César Vallejo,36,14,9,13,50,42,8,51,5281
+2023 Acumulada,9,Cusco FC,36,14,8,14,42,45,-3,50,63760
+2023 Acumulada,10,Cienciano,36,13,9,14,44,48,-4,48,2301
+2023 Acumulada,11,Carlos A. Mannucci,35,12,8,15,33,40,-7,44,252245
+2023 Acumulada,12,Sport Boys,36,11,8,17,28,49,-21,41,2312
+2023 Acumulada,13,UTC,36,8,16,12,37,45,-8,40,87854
+2023 Acumulada,14,Alianza Atlético,36,10,9,17,46,58,-12,39,2307
+2023 Acumulada,15,Atlético Grau,35,9,11,15,48,48,0,38,282538
+2023 Acumulada,16,Deportivo Municipal,34,11,3,20,36,54,-18,36,7031
+2023 Acumulada,17,Unión Comercio,36,9,9,18,42,72,-30,36,48431
+2023 Acumulada,18,Deportivo Binacional,36,10,5,21,53,68,-15,35,275839
+2023 Acumulada,19,AD Cantolao,36,7,5,24,21,62,-41,26,245083
+2024 Apertura,1,Universitario,17,12,4,1,32,7,25,40,2305
+2024 Apertura,2,Sporting Cristal,17,13,1,3,44,20,24,40,2302
+2024 Apertura,3,Melgar,17,12,2,3,36,19,17,38,2308
+2024 Apertura,4,Alianza Lima,17,11,0,6,32,16,16,33,2311
+2024 Apertura,5,Cusco FC,17,9,2,6,22,21,1,29,63760
+2024 Apertura,6,ADT,17,8,4,5,29,24,5,28,335557
+2024 Apertura,7,Cienciano,17,6,8,3,20,20,0,26,2301
+2024 Apertura,8,Comerciantes Unidos,17,6,4,7,22,31,-9,22,213609
+2024 Apertura,9,Los Chankas,17,6,3,8,25,26,-1,21,252254
+2024 Apertura,10,Universidad César Vallejo,17,4,8,5,19,24,-5,20,5281
+2024 Apertura,11,Atlético Grau,17,4,7,6,19,17,2,19,282538
+2024 Apertura,12,Sport Boys,17,5,4,8,18,20,-2,19,2312
+2024 Apertura,13,Sport Huancayo,17,5,4,8,18,29,-11,19,33895
+2024 Apertura,14,UTC,17,4,4,9,21,29,-8,16,87854
+2024 Apertura,15,Deportivo Garcilaso,17,3,5,9,20,26,-6,14,458584
+2024 Apertura,16,Alianza Atlético,17,3,5,9,11,19,-8,14,2307
+2024 Apertura,17,Carlos A. Mannucci,17,3,5,9,11,34,-23,14,252245
+2024 Apertura,18,Unión Comercio,17,1,6,10,17,34,-17,9,48431
+2024 Clausura,1,Universitario,17,11,4,2,31,10,21,37,2305
+2024 Clausura,2,Alianza Lima,17,11,3,3,25,11,14,36,2311
+2024 Clausura,3,Sporting Cristal,17,10,4,3,47,15,32,34,2302
+2024 Clausura,4,Melgar,17,9,5,3,30,16,14,32,2308
+2024 Clausura,5,Atlético Grau,17,8,8,1,25,11,14,32,282538
+2024 Clausura,6,Cusco FC,17,9,4,4,28,23,5,31,63760
+2024 Clausura,7,Alianza Atlético,17,8,6,3,17,15,2,30,2307
+2024 Clausura,8,Cienciano,17,8,2,7,28,24,4,26,2301
+2024 Clausura,9,ADT,17,6,5,6,18,16,2,23,335557
+2024 Clausura,10,Deportivo Garcilaso,17,7,2,8,17,17,0,23,458584
+2024 Clausura,11,Sport Huancayo,17,5,4,8,21,28,-7,19,33895
+2024 Clausura,12,Los Chankas,17,4,6,7,17,21,-4,18,252254
+2024 Clausura,13,Carlos A. Mannucci,17,4,5,8,23,30,-7,17,252245
+2024 Clausura,14,Sport Boys,17,4,4,9,14,31,-17,16,2312
+2024 Clausura,15,UTC,17,3,6,8,14,24,-10,15,87854
+2024 Clausura,16,Comerciantes Unidos,17,3,4,10,14,29,-15,13,213609
+2024 Clausura,17,Universidad César Vallejo,17,2,4,11,15,31,-16,10,5281
+2024 Clausura,18,Unión Comercio,17,2,2,13,13,45,-32,8,48431
+2024 Acumulada,1,Universitario,34,23,8,3,63,17,46,77,2305
+2024 Acumulada,2,Sporting Cristal,34,23,5,6,91,35,56,74,2302
+2024 Acumulada,3,Melgar,34,21,7,6,66,35,31,70,2308
+2024 Acumulada,4,Alianza Lima,34,22,3,9,57,27,30,69,2311
+2024 Acumulada,5,Cusco FC,34,18,6,10,50,44,6,60,63760
+2024 Acumulada,6,Cienciano,34,14,10,10,48,44,4,52,2301
+2024 Acumulada,7,Atlético Grau,34,12,15,7,44,28,16,51,282538
+2024 Acumulada,8,ADT,34,14,9,11,47,40,7,51,335557
+2024 Acumulada,9,Alianza Atlético,34,11,11,12,28,34,-6,44,2307
+2024 Acumulada,10,Los Chankas,34,10,9,15,42,47,-5,39,252254
+2024 Acumulada,11,Sport Huancayo,34,10,8,16,39,57,-18,38,33895
+2024 Acumulada,12,Deportivo Garcilaso,34,10,7,17,37,43,-6,37,458584
+2024 Acumulada,13,Sport Boys,34,9,8,17,32,51,-19,35,2312
+2024 Acumulada,14,Comerciantes Unidos,34,9,8,17,36,60,-24,35,213609
+2024 Acumulada,15,UTC,34,7,10,17,35,53,-18,31,87854
+2024 Acumulada,16,Carlos A. Mannucci,34,7,10,17,34,64,-30,31,252245
+2024 Acumulada,17,Universidad César Vallejo,34,6,12,16,34,55,-21,30,5281
+2024 Acumulada,18,Unión Comercio,34,3,8,23,30,79,-49,17,48431
+2025 Apertura,1,Universitario,18,12,3,3,38,12,26,39,2305
+2025 Apertura,2,Alianza Lima,18,11,4,3,23,11,12,37,2311
+2025 Apertura,3,Cusco FC,18,10,4,4,34,20,14,34,63760
+2025 Apertura,4,Alianza Atlético,18,11,1,6,28,18,10,34,2307
+2025 Apertura,5,Sporting Cristal,18,10,2,6,31,24,7,32,2302
+2025 Apertura,6,Melgar,18,8,7,3,28,20,8,31,2308
+2025 Apertura,7,Sport Huancayo,18,9,3,6,23,21,2,30,33895
+2025 Apertura,8,Deportivo Garcilaso,18,8,3,7,28,19,9,27,458584
+2025 Apertura,9,ADT,18,6,6,6,24,30,-6,24,335557
+2025 Apertura,10,Cienciano,18,5,8,5,29,25,4,23,2301
+2025 Apertura,11,Los Chankas,18,5,8,5,24,25,-1,23,252254
+2025 Apertura,12,Atlético Grau,18,5,7,6,23,24,-1,22,282538
+2025 Apertura,13,Sport Boys,18,5,5,8,26,28,-2,20,2312
+2025 Apertura,14,Juan Pablo II College,18,5,4,9,20,28,-8,19,511206
+2025 Apertura,15,UTC,18,5,4,9,17,34,-17,19,87854
+2025 Apertura,16,Deportivo Binacional,18,4,6,8,20,33,-13,18,275839
+2025 Apertura,17,Ayacucho FC,18,4,3,11,14,27,-13,15,33894
+2025 Apertura,18,Comerciantes Unidos,18,2,5,11,17,31,-14,11,213609
+2025 Apertura,19,Alianza Universidad,18,2,5,11,16,33,-17,11,306660
+2025 Clausura,1,Universitario,17,12,4,1,29,13,16,40,2305
+2025 Clausura,2,Cusco FC,18,12,3,3,31,15,16,39,63760
+2025 Clausura,3,Sporting Cristal,18,10,4,4,32,14,18,34,2302
+2025 Clausura,4,Alianza Lima,17,9,4,4,30,19,11,31,2311
+2025 Clausura,5,Cienciano,17,8,3,6,25,21,4,27,2301
+2025 Clausura,6,Los Chankas,17,9,0,8,21,28,-7,27,252254
+2025 Clausura,7,Melgar,17,6,7,4,24,17,7,25,2308
+2025 Clausura,8,Deportivo Garcilaso,17,6,7,4,20,21,-1,25,458584
+2025 Clausura,9,ADT,17,7,4,6,19,20,-1,25,335557
+2025 Clausura,10,Alianza Atlético,18,6,5,7,15,14,1,23,2307
+2025 Clausura,11,Comerciantes Unidos,17,6,5,6,17,22,-5,23,213609
+2025 Clausura,12,Sport Huancayo,17,5,3,9,28,28,0,18,33895
+2025 Clausura,13,Ayacucho FC,17,5,2,10,17,26,-9,17,33894
+2025 Clausura,14,Alianza Universidad,17,5,2,10,23,33,-10,17,306660
+2025 Clausura,15,Atlético Grau,17,4,4,9,19,24,-5,16,282538
+2025 Clausura,16,Sport Boys,17,4,4,9,14,25,-11,16,2312
+2025 Clausura,17,Juan Pablo II College,18,3,6,9,13,23,-10,15,511206
+2025 Clausura,18,UTC,18,3,5,10,16,28,-12,14,87854
+2025 Clausura,19,Deportivo Binacional,5,1,2,2,3,5,-2,5,275839
+2025 Acumulada,1,Universitario,35,24,7,4,67,25,42,79,2305
+2025 Acumulada,2,Cusco FC,36,22,7,7,65,35,30,73,63760
+2025 Acumulada,3,Alianza Lima,35,20,8,7,53,30,23,68,2311
+2025 Acumulada,4,Sporting Cristal,36,20,6,10,63,38,25,66,2302
+2025 Acumulada,5,Alianza Atlético,36,17,6,13,43,32,11,57,2307
+2025 Acumulada,6,Melgar,35,14,14,7,52,37,15,56,2308
+2025 Acumulada,7,Deportivo Garcilaso,35,14,10,11,48,40,8,52,458584
+2025 Acumulada,8,Cienciano,35,13,11,11,54,46,8,50,2301
+2025 Acumulada,9,Los Chankas,35,14,8,13,45,53,-8,50,252254
+2025 Acumulada,10,ADT,35,13,10,12,43,50,-7,49,335557
+2025 Acumulada,11,Sport Huancayo,35,14,6,15,51,49,2,48,33895
+2025 Acumulada,12,Atlético Grau,35,9,11,15,42,48,-6,38,282538
+2025 Acumulada,13,Sport Boys,35,9,9,17,40,53,-13,36,2312
+2025 Acumulada,14,Juan Pablo II College,36,8,10,18,33,51,-18,34,511206
+2025 Acumulada,15,Comerciantes Unidos,35,8,10,17,34,53,-19,34,213609
+2025 Acumulada,16,UTC,36,8,9,19,33,62,-29,33,87854
+2025 Acumulada,17,Ayacucho FC,35,9,5,21,31,53,-22,32,33894
+2025 Acumulada,18,Alianza Universidad,35,7,7,21,39,66,-27,28,306660
+2025 Acumulada,19,Deportivo Binacional,23,5,8,10,23,38,-15,23,275839
+2026 Apertura,1,Alianza Lima,17,12,4,1,30,8,22,40,2311
+2026 Apertura,2,Los Chankas,17,10,4,3,25,21,4,34,252254
+2026 Apertura,3,Cienciano,17,10,3,4,34,22,12,33,2301
+2026 Apertura,4,Universitario,17,8,5,4,24,15,9,29,2305
+2026 Apertura,5,Melgar,17,8,4,5,29,20,9,28,2308
+2026 Apertura,6,Cusco FC,17,8,3,6,21,24,-3,27,63760
+2026 Apertura,7,Deportivo Garcilaso,17,7,5,5,21,18,3,26,458584
+2026 Apertura,8,Alianza Atlético,17,5,6,6,20,18,2,21,2307
+2026 Apertura,9,Comerciantes Unidos,17,5,6,6,18,20,-2,21,213609
+2026 Apertura,10,ADT,17,5,5,7,22,21,1,20,335557
+2026 Apertura,11,Sport Boys,17,5,5,7,15,19,-4,20,2312
+2026 Apertura,12,Sporting Cristal,17,5,4,8,28,30,-2,19,2302
+2026 Apertura,13,UTC,17,4,6,7,21,26,-5,18,87854
+2026 Apertura,14,CD Moquegua,17,5,3,9,17,24,-7,18,492848
+2026 Apertura,15,FC Cajamarca,17,4,5,8,23,28,-5,17,1082002
+2026 Apertura,16,Atlético Grau,17,4,4,9,12,18,-6,16,282538
+2026 Apertura,17,Sport Huancayo,17,4,4,9,21,31,-10,16,33895
+2026 Apertura,18,Juan Pablo II College,17,4,4,9,22,40,-18,16,511206
+2026 Clausura,1,Sport Huancayo,17,12,1,4,31,19,12,37,33895
+2026 Clausura,2,Sporting Cristal,17,11,2,4,39,19,20,35,2302
+2026 Clausura,3,Alianza Lima,17,9,5,3,29,16,13,32,2311
+2026 Clausura,4,Universitario,17,9,5,3,36,28,8,32,2305
+2026 Clausura,5,Deportivo Garcilaso,17,9,3,5,31,19,12,30,458584
+2026 Clausura,6,Melgar,17,8,6,3,28,19,9,30,2308
+2026 Clausura,7,Alianza Atlético,17,9,2,6,30,31,-1,29,2307
+2026 Clausura,8,Sport Boys,17,7,6,4,25,19,6,27,2312
+2026 Clausura,9,Juan Pablo II College,17,7,5,5,28,21,7,26,511206
+2026 Clausura,10,Cusco FC,17,8,1,8,27,25,2,25,63760
+2026 Clausura,11,Atlético Grau,17,6,3,8,21,25,-4,21,282538
+2026 Clausura,12,Comerciantes Unidos,17,3,8,6,29,30,-1,17,213609
+2026 Clausura,13,Cienciano,17,5,2,10,21,28,-7,17,2301
+2026 Clausura,14,CD Moquegua,17,3,6,8,12,25,-13,15,492848
+2026 Clausura,15,Los Chankas,17,3,5,9,18,36,-18,14,252254
+2026 Clausura,16,FC Cajamarca,17,4,2,11,23,42,-19,14,1082002
+2026 Clausura,17,ADT,17,2,7,8,16,29,-13,13,335557
+2026 Clausura,18,UTC,17,2,3,12,22,35,-13,9,87854
+2026 Acumulada,1,Alianza Lima,34,21,9,4,59,24,35,72,2311
+2026 Acumulada,2,Universitario,34,17,10,7,60,43,17,61,2305
+2026 Acumulada,3,Melgar,34,16,10,8,57,39,18,58,2308
+2026 Acumulada,4,Deportivo Garcilaso,34,16,8,10,52,37,15,56,458584
+2026 Acumulada,5,Sporting Cristal,34,16,6,12,67,49,18,54,2302
+2026 Acumulada,6,Sport Huancayo,34,16,5,13,52,50,2,53,33895
+2026 Acumulada,7,Cusco FC,34,16,4,14,48,49,-1,52,63760
+2026 Acumulada,8,Cienciano,34,15,5,14,55,50,5,50,2301
+2026 Acumulada,9,Alianza Atlético,34,14,8,12,50,49,1,50,2307
+2026 Acumulada,10,Los Chankas,34,13,9,12,43,57,-14,48,252254
+2026 Acumulada,11,Sport Boys,34,12,11,11,40,38,2,47,2312
+2026 Acumulada,12,Juan Pablo II College,34,11,9,14,50,61,-11,42,511206
+2026 Acumulada,13,Comerciantes Unidos,34,8,14,12,47,50,-3,38,213609
+2026 Acumulada,14,Atlético Grau,34,10,7,17,33,43,-10,37,282538
+2026 Acumulada,15,ADT,34,7,12,15,38,50,-12,33,335557
+2026 Acumulada,16,CD Moquegua,34,8,9,17,29,49,-20,33,492848
+2026 Acumulada,17,FC Cajamarca,34,8,7,19,46,70,-24,31,1082002
+2026 Acumulada,18,UTC,34,6,9,19,43,61,-18,27,87854

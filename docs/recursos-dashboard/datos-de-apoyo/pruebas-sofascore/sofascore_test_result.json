@@ -1,0 +1,30 @@
+{
+ "started": "2026-11-25 19:44:45",
+ "calls": [
+  {
+   "label": "alineaciones",
+   "path": "/api/v1/event/13352931/lineups",
+   "seconds": 10.7,
+   "blocked": false,
+   "top_keys": [
+    "confirmed",
+    "home",
+    "away",
+    "statisticalVersion"
+   ],
+   "error": null
+  },
+  {
+   "label": "lista de partidos 2026 (página 0, últimos)",
+   "path": "/api/v1/unique-tournament/406/season/88529/events/last/0",
+   "seconds": 2.5,
+   "blocked": false,
+   "top_keys": [
+    "events",
+    "hasNextPage"
+   ],
+   "error": null
+  }
+ ],
+ "finished": "2026-11-25 19:44:58"
+}
