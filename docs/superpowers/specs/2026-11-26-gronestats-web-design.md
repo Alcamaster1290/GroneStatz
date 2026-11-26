@@ -1,6 +1,6 @@
 # GroneStats web: diseño
 
-**Estado:** borrador. Secciones 1 a 4 aprobadas por Alvaro (2026-11-26); sección 5 presentada, a la espera de su OK; secciones 6 y 7 pendientes. Reemplaza el borrador de octubre (`2026-10-26-reingenieria-gronestats-borrador.md`).
+**Estado:** borrador. Secciones 1 a 5 aprobadas por Alvaro (2026-11-26); sección 6 presentada, a la espera de su OK; sección 7 pendiente. Reemplaza el borrador de octubre (`2026-10-26-reingenieria-gronestats-borrador.md`).
 
 ## Alcance y decisiones previas
 
@@ -53,8 +53,11 @@ Un bundle de servicio nuevo, con `publish-target` propio (`web`), que reúne las
 | `player_similarity` | season, jugador, vecino | jugadores parecidos |
 | `heatmap_density` | season, jugador | densidad precalculada del heatmap |
 | `teammate_synergy` | season, jugador, compañero | sinergia, con xGD o diferencia de goles |
+| `data_coverage` | season, tipo de dato | partidos esperados y presentes, con el desglose por estado (sección 6) |
+| `known_gaps` | season, alcance | huecos permanentes explicados, con motivo y fuente |
+| `release_log` | release | fecha de construcción y partidos añadidos de cada release |
 
-Las cuatro últimas ya estaban decididas el 25 de noviembre (las calcula el pipeline) y la ficha del jugador las necesita. Ninguna existe todavía como código: su definición (grupos de rol, minutos mínimos, medida de similitud y de sinergia) va al plan de implementación, igual que las métricas de `team_match_style`.
+Las cuatro anteriores a `data_coverage` ya estaban decididas el 25 de noviembre (las calcula el pipeline) y la ficha del jugador las necesita. Ninguna existe todavía como código: su definición (grupos de rol, minutos mínimos, medida de similitud y de sinergia) va al plan de implementación, igual que las métricas de `team_match_style`.
 
 **Reglas del contrato:**
 1. **Nombres uniformes.** Hoy el mismo dato se llama `season_year`, `season`, `tour` o `torneo` según el archivo. En el bundle serán `season` y `tournament`, con valores `Apertura` y `Clausura` (y `Acumulada` en `standings`).
@@ -104,7 +107,7 @@ Endpoints por pantalla, no volcados genéricos de tablas, de modo que cada bloqu
 - **Paneles «próximamente»:** mapa de ocasiones, take-ons, inicio y fin de pases, zonas defensivas (las 6 hojas del scraper no traen eventos con coordenadas).
 - **Fotos y escudos:** dorsales cuando no hay foto (cobertura del 85 % en 2026 y del 37 % al 65 % en 2022-2025); escudos hasta 150 px.
 
-## 5. Entrega (presentada, pendiente de OK)
+## 5. Entrega (aprobada)
 
 **Topología en el VPS (Docker Compose):** `caddy` (TLS automático y proxy inverso), `web` (Next.js en modo `standalone`) y `api` (uvicorn). Sin base de datos, sin cola y sin estado. `api` monta `/srv/gronestats` en solo lectura; ahí viven `releases/<id>/` y `current`, un enlace simbólico relativo (`current -> releases/<id>`) para que resuelva igual dentro del contenedor. Caddy no expone la ruta interna de recarga de la API.
 
@@ -142,7 +145,32 @@ Se conservan los últimos 5 releases; revertir es apuntar `current` a uno anteri
 
 **Proveedor del VPS: abierto.** Oracle quedó como opción débil, Hetzner se descartó por soporte en Latinoamérica y Vultr está cerrado. Criterios: ≥ 1 vCPU, ≥ 1 GB de RAM, ≥ 10 GB de disco, IPv4 fija, snapshots y pago con tarjeta desde Perú. Con Cloudflare delante la región casi no importa.
 
-## 6. Monitor de estado de datos (pendiente)
+## 6. Monitor de estado de datos (presentada, pendiente de OK)
+
+**Para qué:** responder «¿puedo confiar en este número y qué falta?» a dos públicos: Alvaro (¿corrió la actualización?, ¿qué quedó bloqueado?) y los usuarios (¿qué tan al día y qué tan completo está?).
+
+**Qué se mide.** El pipeline escribe tres tablas pequeñas en el bundle:
+- `data_coverage` (season, tipo de dato, esperado, presente y su desglose). Lo «esperado» sale de los partidos terminados en `matches`, no de lo que existe, así que un hueco nuevo aparece solo. Tipos: detalle del partido, heatmaps, momentum, estadísticas de equipo, posiciones medias, mapa de tiros y alineaciones.
+- `known_gaps`, que sale de `known_gaps.csv` en git (con motivo y fuente): los huecos permanentes ya explicados.
+- `release_log`: los últimos releases, con id, fecha de construcción y partidos añadidos.
+
+Cada celda de cobertura tiene un estado: `complete`, `missing_from_source` (404 en origen), `administrative` (resultado fijado por la federación, sin partido), `pending` (esperado y no intentado) o `blocked` (el intento se cortó por bloqueo). Salen del registro de scrapeo (`scrape_ledger.jsonl`, que vive solo en la PC): al bundle va un resumen en el `manifest.json`, no el registro.
+
+**Lo explicado no es alarma.** Cada hueco permanente se registra en `known_gaps.csv`: los 6 partidos administrativos del Apertura 2023, los momentum que SofaScore no trae (50 intentos, todos 404), los 33 partidos de local de ADT Tarma sin estadio y las 20 alineaciones con 10 titulares. Solo un hueco nuevo y sin explicación es alerta.
+
+**Frescura.** El estado lleva `data_as_of` (último partido terminado), la hora de construcción del release y la cantidad de partidos ya jugados sin resultado o sin detalle. Si hay partidos jugados hace más de N horas sin detalle, `/v1/status` devuelve `stale: true` (N se fija en el plan).
+
+**Salud de los modelos**, desde `model_runs` y los chequeos de `validate`: desvío del xG contra los goles por temporada, probabilidades que suman 100 %, y tablas de torneos cerrados contra la referencia. Cada chequeo se muestra con nombre, resultado y valor.
+
+**Qué bloquea y qué avisa:**
+- Bloquean la publicación: esquema roto, partido terminado ausente de `matches`, probabilidades que no suman 100 %, y tabla de torneo cerrado distinta de la referencia (salvo las excepciones documentadas).
+- Avisan sin bloquear: un hueco nuevo sin explicación y un desvío del xG sobre su umbral (el caso de 2025 fue +7 %; el umbral se fija en el plan).
+- La temporada en curso sigue en modo laxo, como hoy.
+
+**Dónde se ve:**
+- `/estado` (público): release activo, hora de actualización, cobertura por temporada con sus huecos explicados, versiones y métricas de los modelos y los últimos 5 releases.
+- Para Alvaro: `python -m gronestats.processing.status` imprime pendientes, bloqueados y huecos sin explicar al terminar cada corrida. No hay cuentas en v1, así que no hay vista privada.
+- Alertas: sin notificaciones propias en v1. El chequeo externo de la sección 5 vigila `/v1/status` (caída o `stale: true`) y avisa por correo.
 
 ## 7. Transversal y pruebas (pendiente)
 
