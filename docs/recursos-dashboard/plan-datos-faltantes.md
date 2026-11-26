@@ -154,3 +154,25 @@ El error es el partido 10438805 de 2022: SofaScore responde posiciones medias co
 
 **Correcciones al ejecutor** (`sofascore_batches.py`, 29 pruebas): `details` ya no vuelve a pedir ni **borra** un workbook que existe pero está incompleto (con 2026 no pasó porque los 129 no tenían archivo); no pide los partidos que el listado no marca `finished`; el listado de la temporada se invalida si un bloqueo lo interrumpe a la mitad (ScraperFC lo habría tomado por el final y guardado una temporada truncada); y el corte por «tres fallos seguidos» no cuenta los 404 del momentum.
 
+
+## 11. Fotos de jugadores (2026-11-26)
+
+Alvaro pidió scrapear las fotos que faltaban y confirmó que tiene los derechos de los escudos y de las imágenes scrapeadas.
+
+**Modo nuevo `sofascore_batches player-images`:** una llamada por jugador a `/api/v1/player/{id}/image` con la sesión de Chrome. Guarda el archivo con su formato real (PNG, JPEG o WEBP, según los primeros bytes) en `gronestats/images/players/<id>.<ext>`. Un 404 queda como «vacío» (SofaScore no tiene la foto); cualquier otro error, incluido un 200 que no es una imagen, corta la tanda. Registro en `gronestats/images/scrape_ledger.jsonl`.
+
+**Resultado:** de 1.302 jugadores en los bundles de 2022-2026, 835 no tenían foto (718 con minutos y 117 de banca). Se pidieron los 835, sin bloqueos ni errores: **650 fotos descargadas** (9,2 MB; 305 PNG, 269 JPG y 76 WEBP, casi todas de 150×150) y **185 sin foto en SofaScore**.
+
+| | Antes | Ahora |
+|---|---|---|
+| Jugadores con minutos con foto | 39,3 % | 89,3 % (1.056 de 1.182) |
+| Ponderado por minutos | 66,2 % | 99,2 % |
+| 2022 / 2023 / 2024 / 2025 / 2026 | 37,2 / 42,9 / 51,9 / 65,4 / 83,9 % | 90,7 / 93,3 / 92,1 / 96,7 / 98,2 % |
+
+Quedan 126 jugadores con minutos sin foto en origen (el 0,8 % de los minutos): se muestra el dorsal con el color del equipo.
+
+**Observaciones:**
+- Tres pares de fotos idénticas. Kevin Moreno (883339 y 874982) y Rodrigo Dioses (1912871 y 1912906) son la misma persona con dos ids en SofaScore, lo que afecta a `player_identity`. José y Leonardo De la Cruz (994588 y 1110305, mismo equipo) comparten foto: revisar.
+- Los formatos siguen mezclados (la carpeta ya los mezclaba): la web debe servir los tres o convertirlos.
+
+Reproducir: `py -3.11 -m gronestats.processing.sofascore_batches player-images`.

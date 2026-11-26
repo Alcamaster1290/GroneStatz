@@ -109,7 +109,7 @@ Repos del mismo índice **sin licencia** (solo lectura): `how-to-expected-goals`
 ## 7. Pendiente de buscar (cuando lo pidas)
 
 - **Altitud real de cada estadio** (ver `datos-de-apoyo/altitud_estadios.csv`, columna `altitud_msnm`): no puse cifras de memoria. Se llena con fuentes que verifiquemos juntos.
-- **Escudos en alta resolución o vectoriales**: los actuales son de 150 px. Antes de buscar, aclarar los derechos de uso.
+- **Escudos en alta resolución o vectoriales**: los actuales son de 150 px. Alvaro confirmó (2026-11-26) que tiene los derechos de los escudos y de las imágenes scrapeadas.
 
 ## Altitud de estadios (fuentes usadas el 2026-11-26)
 Método reproducible detrás de `datos-de-apoyo/altitud_estadios_medida.csv`: coordenadas del estadio y elevación del modelo digital de terreno.

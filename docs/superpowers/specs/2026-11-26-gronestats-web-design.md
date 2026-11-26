@@ -105,7 +105,7 @@ Endpoints por pantalla, no volcados genéricos de tablas, de modo que cada bloqu
 - **Reglas visibles de producto:** toda cifra derivada muestra su n; el dato ausente se muestra como «sin dato en origen», no como 0; el nivel del rival va en texto, no en color; el pie lleva el release y la fecha; español de Perú y hora de Lima; tema claro y oscuro; pensada primero para móvil.
 - **Marcadores:** ⚠ queda solo para la formación cuyo número de defensas no coincide. La muestra chica (menos de 6 partidos) se atenúa y muestra «n=4», sin símbolo.
 - **Paneles «próximamente»:** mapa de ocasiones, take-ons, inicio y fin de pases, zonas defensivas (las 6 hojas del scraper no traen eventos con coordenadas).
-- **Fotos y escudos:** dorsales cuando no hay foto (cobertura del 85 % en 2026 y del 37 % al 65 % en 2022-2025); escudos hasta 150 px.
+- **Fotos y escudos:** fotos de jugadores y escudos propios (los derechos son de Alvaro). Las fotos que faltaban se descargaron de SofaScore el 2026-11-26: cobertura del 89,3 % de los jugadores con minutos de 2022-2026 (99,2 % ponderado por minutos y 98,2 % en 2026). A los 126 que SofaScore no tiene se les muestra el dorsal con el color del equipo. Las fotos mezclan PNG, JPG y WEBP; las nuevas son de unos 150×150 px y los escudos llegan hasta 150 px.
 
 ## 5. Entrega (aprobada)
 
@@ -189,7 +189,7 @@ Cada celda de cobertura tiene un estado: `complete`, `missing_from_source` (404 
 
 **Datos en git (decidido).** Desde el plan de implementación no se versionan las salidas generadas (`current`, releases, `staging`, `curated` y libros por partido). Sí se versionan el código, los CSV de correcciones y de referencia, el esquema, el bundle de juguete y los docs. Los bundles viajan por SSH (sección 5) y `raw/` se respalda fuera de la PC. Lo ya publicado queda en el historial.
 
-**Fotos y escudos (decidido).** La v1 no usa fotos de jugadores (dorsales y color del equipo, como en las pantallas aprobadas), porque su origen y derechos no están verificados. Los escudos se mantienen (29 PNG ya en el repo, hasta 150 px) y queda anotado verificar sus derechos antes del lanzamiento público.
+**Fotos y escudos (decidido; corregido el 2026-11-26).** La v1 usa fotos de jugadores y escudos: Alvaro confirmó que tiene los derechos de ambos, así que no queda un riesgo de derechos por resolver. Las fotos que faltaban se descargaron con el modo `player-images` de `sofascore_batches` (resultado en la sección 4); a quien SofaScore no tiene foto se le muestra el dorsal con el color del equipo. Esto reemplaza la propuesta anterior de lanzar sin fotos.
 
 **Riesgo antes del lanzamiento público: la licencia de los datos.** Los partidos, tiros y posiciones vienen de SofaScore. No revisé sus términos de uso; antes de publicar hay que leerlos (extracción automática y republicación) y decidir atribución o una fuente con licencia. Hasta entonces el producto puede probarse en privado.
 
