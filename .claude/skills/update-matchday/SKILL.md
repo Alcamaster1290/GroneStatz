@@ -55,6 +55,7 @@ py -3.11 -m gronestats.processing.sofascore_batches heatmaps --season 2026   # ~
 py -3.11 -m gronestats.processing.sofascore_batches momentum --season 2026   # 1 llamada por partido (un 404 queda como «vacío»)
 py -3.11 -m gronestats.processing.sofascore_batches team-stats|average-positions|shotmap --season 2026   # solo si el pipeline avisa que falta alguna hoja; una llamada por partido
 py -3.11 -m gronestats.processing.sofascore_batches lineups --season 2026   # formación declarada y 11 titulares de cada partido (una llamada por partido) -> raw/lineups.jsonl
+py -3.11 -m gronestats.processing.sofascore_batches player-images --season 2026   # fotos que faltan de los jugadores de los bundles (una llamada por jugador) -> gronestats/images/players; un 404 = SofaScore no tiene la foto
 py -3.11 -m gronestats.analysis.formations --out docs/recursos-dashboard/datos-de-apoyo/formaciones   # cruza la formación declarada con las posiciones de los titulares
 py -3.11 -m gronestats.processing.pipeline run --league "Liga 1 Peru" --season 2026 --mode full --publish-target all --no-scrape
 ```

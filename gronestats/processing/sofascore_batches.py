@@ -11,6 +11,7 @@ Uso (siempre con la sesion visible de Chrome de ``sofascore_session``):
     py -3.11 -m gronestats.processing.sofascore_batches momentum --season 2025 --batch-size 10 --pause 10
     py -3.11 -m gronestats.processing.sofascore_batches team-stats|average-positions|shotmap --season 2022   # hojas que faltan
     py -3.11 -m gronestats.processing.sofascore_batches lineups --season 2026    # formacion declarada y titulares -> raw/lineups.jsonl
+    py -3.11 -m gronestats.processing.sofascore_batches player-images --season 2026   # fotos que faltan -> gronestats/images/players
     py -3.11 -m gronestats.processing.sofascore_batches fixtures --season 2022      # listado: fecha, estado y estadio
     py -3.11 -m gronestats.processing.sofascore_batches apply-fixtures --season 2022  # sin red: lo vuelca en 0_Matches.xlsx
 Es reanudable: lo ya resuelto se omite y cada partido queda en ``raw/scrape_ledger.jsonl``.
@@ -488,23 +489,113 @@ def pending_lineups(master: pd.DataFrame, ledger: Ledger, *, retry_empty: bool =
     return [match_id for match_id in _match_ids(master) if match_id not in skip]
 
 
+def image_extension(data: bytes) -> str | None:
+    """Formato de una imagen por sus primeros bytes (el content-type del servidor no basta); None si no es PNG, JPEG ni WEBP."""
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if data.startswith(b"\xff\xd8\xff"):
+        return "jpg"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "webp"
+    return None
+
+
+def players_by_minutes(player_matches: Iterable[pd.DataFrame]) -> list[int]:
+    """Ids de jugador de varias tablas ``player_match``, de más a menos minutos; los que nunca jugaron, al final y por id."""
+    frame = pd.concat([part[["player_id", "minutesplayed"]] for part in player_matches], ignore_index=True)
+    frame["player_id"] = pd.to_numeric(frame["player_id"], errors="coerce")
+    frame = frame.dropna(subset=["player_id"]).astype({"player_id": int})
+    frame["minutesplayed"] = pd.to_numeric(frame["minutesplayed"], errors="coerce").fillna(0)
+    totals = frame.groupby("player_id", as_index=False)["minutesplayed"].sum().sort_values(["minutesplayed", "player_id"], ascending=[False, True])
+    return totals["player_id"].astype(int).tolist()
+
+
+def pending_player_images(player_ids: Iterable[int], images_dir: Path, ledger: Ledger, *, retry_empty: bool = False) -> list[int]:
+    """Jugadores sin foto (en cualquier formato) y sin resultado final en el registro; cada id una vez y en el orden dado."""
+    have = {int(path.stem) for path in images_dir.iterdir() if path.is_file() and path.stem.isdigit()} if images_dir.exists() else set()
+    done = {player_id for player_id, status in ledger.last_status("player_images").items() if status == "ok" or (status == "vacio" and not retry_empty)}
+    skip = have | done
+    return [player_id for player_id in dict.fromkeys(int(item) for item in player_ids) if player_id not in skip]
+
+
+def make_image_processor(*, url_for: Callable[[int], str], guard: BlockGuard, images_dir: Path) -> Callable[[int], dict[str, Any]]:
+    """Una llamada por jugador. Un 404 lo deja como 'vacio' (SofaScore no tiene su foto) y no guarda nada.
+
+    El registro usa ``match_id`` como clave de cualquier entidad: aquí es el id del jugador.
+    """
+
+    def process(player_id: int) -> dict[str, Any]:
+        response = guard(url_for(player_id))
+        if guard.tripped:
+            return {"status": "bloqueado"}
+        if error_code(response) is not None:
+            return {"status": "vacio", "note": "SofaScore no tiene foto de este jugador (404)"}
+        data = response.get("data") if isinstance(response, dict) else None
+        extension = image_extension(bytes(data)) if isinstance(data, (bytes, bytearray)) else None
+        if extension is None:
+            return {"status": "error", "note": "la respuesta no es una imagen PNG, JPEG ni WEBP"}
+        images_dir.mkdir(parents=True, exist_ok=True)
+        target = images_dir / f"{player_id}.{extension}"
+        partial = target.with_name(target.name + ".part")
+        partial.write_bytes(data)
+        partial.replace(target)
+        return {"status": "ok", "bytes": len(data), "format": extension}
+
+    return process
+
+
+PLAYER_IMAGE_URL = "https://api.sofascore.com/api/v1/player/{player_id}/image"
+
+
+def run_player_images(args: argparse.Namespace, base_dir: Path, batch_size: int, pause: float) -> int:
+    """Fotos que faltan en ``gronestats/images/players`` para los jugadores de los bundles publicados de 2022 a ``--season``."""
+    images_root = base_dir / "gronestats" / "images"
+    images_dir = images_root / "players"
+    ledger = Ledger(images_root / "scrape_ledger.jsonl")
+    if args.match_ids:
+        candidates = [int(token) for token in args.match_ids.split(",") if token.strip()]
+    else:
+        run_id = timestamp_id()
+        tables = [PipelinePaths(base_dir=base_dir, league=args.league, season=season, run_id=run_id, release_id=run_id).dashboard_current_dir / "player_match.parquet" for season in range(2022, args.season + 1)]
+        frames = [pd.read_parquet(table, columns=["player_id", "minutesplayed"]) for table in tables if table.exists()]
+        candidates = players_by_minutes(frames) if frames else []
+    pending = pending_player_images(candidates, images_dir, ledger, retry_empty=args.retry_empty)
+    if args.limit:
+        pending = pending[: args.limit]
+    print(f"player-images: {len(candidates)} jugadores en los bundles, {len(pending)} sin foto pendientes, tandas de {batch_size}, pausa de {pause:g} s, intervalo mínimo {args.min_interval:g} s.")
+    if args.dry_run or not pending:
+        print("Plan (sin llamadas):", pending[:20], "..." if len(pending) > 20 else "")
+        return 0
+
+    # Las constantes de sofascore_session se leen al importarlo: fijarlas antes.
+    os.environ.setdefault("GRONESTATS_SOFASCORE_ATTEMPTS", "2")
+    os.environ["GRONESTATS_SOFASCORE_MIN_INTERVAL"] = str(args.min_interval)
+    from gronestats.processing import sofascore_session
+
+    guard = BlockGuard(sofascore_session.get_image)
+    process = make_image_processor(url_for=lambda player_id: PLAYER_IMAGE_URL.format(player_id=player_id), guard=guard, images_dir=images_dir)
+    summary = run_batches(pending, process, mode="player_images", guard=guard, ledger=ledger, batch_size=batch_size, pause_seconds=pause, progress_statuses=PROGRESS_STATUSES | {"vacio"})
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    return 2 if summary["stop_reason"] else 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Scrapeo de SofaScore por tandas, con libro de registro y parada al primer bloqueo.")
-    parser.add_argument("mode", choices=("details", "heatmaps", *SHEET_MODES, "lineups", "fixtures", "apply-fixtures"))
+    parser.add_argument("mode", choices=("details", "heatmaps", *SHEET_MODES, "lineups", "player-images", "fixtures", "apply-fixtures"))
     parser.add_argument("--league", default="Liga 1 Peru")
     parser.add_argument("--season", type=int, default=2026)
     parser.add_argument("--batch-size", type=int, default=None, help="Partidos por tanda (details: 5, heatmaps: 3).")
     parser.add_argument("--pause", type=float, default=None, help="Segundos entre tandas (details: 20, heatmaps: 45).")
     parser.add_argument("--min-interval", type=float, default=0.6, help="Segundos minimos entre llamadas.")
     parser.add_argument("--limit", type=int, default=None, help="Maximo de partidos en esta ejecucion.")
-    parser.add_argument("--match-ids", default=None, help="Lista de match_id separados por coma (en vez de todos los pendientes).")
+    parser.add_argument("--match-ids", default=None, help="Lista de match_id separados por coma (en vez de todos los pendientes); en player-images, de player_id.")
     parser.add_argument("--retry-empty", action="store_true", help="Reintenta los partidos que ya quedaron como 'vacio' en el registro.")
     parser.add_argument("--force", action="store_true", help="heatmaps: reescribe la hoja aunque ya tenga filas.")
     parser.add_argument("--dry-run", action="store_true", help="Muestra el plan sin llamar a SofaScore.")
     return parser
 
 
-BATCH_DEFAULTS = {"details": (5, 20.0), "heatmaps": (3, 45.0), "lineups": (20, 10.0), **{mode: (10, 10.0) for mode in SHEET_MODES}}
+BATCH_DEFAULTS = {"details": (5, 20.0), "heatmaps": (3, 45.0), "lineups": (20, 10.0), "player-images": (20, 10.0), **{mode: (10, 10.0) for mode in SHEET_MODES}}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -513,6 +604,8 @@ def main(argv: list[str] | None = None) -> int:
     batch_size = args.batch_size or batch_size
     pause = args.pause if args.pause is not None else pause
     base_dir = Path(__file__).resolve().parents[2]
+    if args.mode == "player-images":
+        return run_player_images(args, base_dir, batch_size, pause)
     run_id = timestamp_id()
     paths = PipelinePaths(base_dir=base_dir, league=args.league, season=args.season, run_id=run_id, release_id=run_id)
     ledger = Ledger(paths.raw_dir / "scrape_ledger.jsonl")

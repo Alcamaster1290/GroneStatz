@@ -10,6 +10,7 @@ la propia página (mismas cookies y cabeceras que la web).
 from __future__ import annotations
 
 import atexit
+import base64
 import json
 import os
 import re
@@ -100,6 +101,20 @@ def _fetch(path: str) -> tuple[int, str]:
     return int(data["s"]), data["b"]
 
 
+def _fetch_binary(path: str) -> tuple[int, str, str]:
+    """Como ``_fetch`` pero para binarios: (estado, content-type, cuerpo en base64)."""
+    script = (
+        "return fetch(%s, {credentials: 'include'})"
+        ".then(async r => {"
+        "const bytes = new Uint8Array(await r.arrayBuffer()); let raw = '';"
+        "for (let i = 0; i < bytes.length; i += 8192) raw += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));"
+        "return JSON.stringify({s: r.status, t: r.headers.get('content-type') || '', b: btoa(raw)});"
+        "})" % json.dumps(path)
+    )
+    data = json.loads(_driver.run_js(script))
+    return int(data["s"]), str(data["t"]), str(data["b"])
+
+
 def _navigate(path: str) -> dict[str, Any]:
     """Alternativa: abrir la URL JSON como página. Algunos endpoints (p. ej. /seasons) solo ceden así."""
     try:
@@ -165,6 +180,50 @@ def get_json(url: str) -> dict[str, Any]:
             if attempt >= 2:
                 _discard_driver()
         return last_body
+
+
+def get_image(url: str) -> dict[str, Any]:
+    """GET de una imagen del API (``/api/v1/player/{id}/image``).
+
+    Devuelve ``{"content_type", "data"}`` con los bytes o, como ``get_json``, ``{"error": {"code", "reason"}}``
+    (404 = no hay imagen). Un 200 que no es una imagen (por ejemplo la página del desafío) es un error, no un dato.
+    """
+    global _last_request_at
+    path = api_path(url)
+    with _lock:
+        last_error: dict[str, Any] = {"error": {"code": 0, "reason": "no_response"}}
+        for attempt in range(1, MAX_ATTEMPTS + 1):
+            if _driver is None:
+                try:
+                    _run_with_timeout(_warm_up, WARMUP_TIMEOUT_SECONDS)
+                except Exception:
+                    _discard_driver()
+                    time.sleep(min(3 * attempt, 15))
+                    continue
+            wait = MIN_INTERVAL_SECONDS - (time.monotonic() - _last_request_at)
+            if wait > 0:
+                time.sleep(wait)
+            _last_request_at = time.monotonic()
+            try:
+                status, content_type, body = _run_with_timeout(_fetch_binary, CALL_TIMEOUT_SECONDS, path)
+            except Exception:
+                status, content_type, body = 0, "", ""
+            if status == 200:
+                if not content_type.lower().startswith("image/"):
+                    return {"error": {"code": 200, "reason": f"not_an_image: {content_type or 'sin content-type'}"}}
+                return {"content_type": content_type, "data": base64.b64decode(body)}
+            last_error = {"error": {"code": status, "reason": "no_response" if status == 0 else f"http_{status}"}}
+            if status == 404:
+                return last_error
+            if status == 0:
+                # El navegador no respondió (cerrado o colgado): descartarlo y abrir otro.
+                _discard_driver()
+                continue
+            # 403 (challenge) o 429: esperar y, desde el 2.º intento, recalentar.
+            time.sleep(min(3 * attempt, 15))
+            if attempt >= 2:
+                _discard_driver()
+        return last_error
 
 
 atexit.register(_close_driver)

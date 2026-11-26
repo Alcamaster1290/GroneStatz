@@ -17,9 +17,11 @@ from gronestats.processing.sofascore_batches import (
     error_code,
     fixtures_frame,
     heatmaps_frame,
+    image_extension,
     list_season_events,
     make_details_processor,
     make_heatmaps_processor,
+    make_image_processor,
     make_lineups_processor,
     make_momentum_processor,
     make_sheet_processor,
@@ -28,7 +30,9 @@ from gronestats.processing.sofascore_batches import (
     pending_details,
     pending_lineups,
     pending_momentum,
+    pending_player_images,
     pending_sheet,
+    players_by_minutes,
     record_administrative,
     run_batches,
     scrape_fixtures,
@@ -690,3 +694,70 @@ def test_pending_lineups_skips_done_and_empty_matches_and_the_given_ids(tmp_path
 
     assert pending_lineups(master, ledger, skip_ids={5}) == [3, 4]  # el error se reintenta
     assert pending_lineups(master, ledger, retry_empty=True) == [2, 3, 4, 5]  # lo ya resuelto con datos no se vuelve a pedir
+
+
+PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 16
+JPG = b"\xff\xd8\xff\xe0" + b"\x00" * 16
+WEBP = b"RIFF\x00\x00\x00\x00WEBPVP8 " + b"\x00" * 8
+
+
+def test_image_extension_reads_the_format_from_the_bytes_not_from_the_server() -> None:
+    assert image_extension(PNG) == "png"
+    assert image_extension(JPG) == "jpg"
+    assert image_extension(WEBP) == "webp"
+    assert image_extension(b"<html>challenge</html>") is None
+    assert image_extension(b"") is None
+
+
+def test_players_by_minutes_orders_by_total_minutes_and_keeps_players_who_never_played() -> None:
+    frames = [
+        pd.DataFrame({"player_id": [1, 2, 3], "minutesplayed": [90, 10, 0]}),
+        pd.DataFrame({"player_id": [2, 4, 3], "minutesplayed": [90, 0, None]}),
+    ]
+
+    assert players_by_minutes(frames) == [2, 1, 3, 4]  # el 2 suma 100 y el 1 suma 90; los de 0 minutos al final, por id
+
+
+def test_player_image_processor_saves_the_file_with_its_real_format_and_tells_missing_from_blocked(tmp_path: Path) -> None:
+    images = tmp_path / "players"
+    guard, requested = _guard_with({"u/1": {"content_type": "image/png", "data": PNG}, "u/2": {"error": {"code": 404}}, "u/3": {"error": {"code": 403, "reason": "Forbidden"}}})
+    process = make_image_processor(url_for=lambda player_id: f"u/{player_id}", guard=guard, images_dir=images)
+
+    ok = process(1)
+    missing = process(2)
+    blocked = process(3)
+
+    assert ok == {"status": "ok", "bytes": len(PNG), "format": "png"}
+    assert (images / "1.png").read_bytes() == PNG
+    assert missing["status"] == "vacio" and "404" in missing["note"]
+    assert blocked == {"status": "bloqueado"}
+    assert requested == ["u/1", "u/2", "u/3"]
+    assert sorted(path.name for path in images.iterdir()) == ["1.png"]  # ni el 404 ni el bloqueo dejan archivos, tampoco temporales
+
+
+def test_player_image_processor_does_not_store_a_response_that_is_not_an_image(tmp_path: Path) -> None:
+    images = tmp_path / "players"
+    guard, _ = _guard_with({"u/1": {"content_type": "image/png", "data": b"<html>challenge</html>"}})
+    process = make_image_processor(url_for=lambda player_id: f"u/{player_id}", guard=guard, images_dir=images)
+
+    result = process(1)
+
+    assert result["status"] == "error"
+    assert not images.exists() or not any(images.iterdir())
+
+
+def test_pending_player_images_skips_photos_in_any_format_and_settled_ledger_entries(tmp_path: Path) -> None:
+    images = tmp_path / "players"
+    images.mkdir()
+    (images / "10.png").write_bytes(PNG)
+    (images / "11.webp").write_bytes(WEBP)
+    (images / "notes.txt").write_text("no es una foto", encoding="utf-8")
+    ledger = Ledger(tmp_path / "ledger.jsonl")
+    ledger.append(mode="player_images", match_id=12, status="ok")
+    ledger.append(mode="player_images", match_id=13, status="vacio")
+    ledger.append(mode="player_images", match_id=14, status="error")
+    ledger.append(mode="lineups", match_id=15, status="ok")  # otro modo: no cuenta
+    ids = [10, 11, 12, 13, 14, 15, 16, 16]
+
+    assert pending_player_images(ids, images, ledger) == [14, 15, 16]  # el error se reintenta y los repetidos cuentan una vez
+    assert pending_player_images(ids, images, ledger, retry_empty=True) == [13, 14, 15, 16]
