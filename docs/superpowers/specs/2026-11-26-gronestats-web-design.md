@@ -1,6 +1,6 @@
 # GroneStats web: diseño
 
-**Estado:** borrador. Secciones 1 a 6 aprobadas por Alvaro (2026-11-26); sección 7 presentada, a la espera de su OK. Reemplaza el borrador de octubre (`2026-10-26-reingenieria-gronestats-borrador.md`).
+**Estado:** borrador. Las siete secciones están aprobadas por Alvaro (2026-11-26). Falta su lectura del spec completo antes de pasar al plan de implementación. Reemplaza el borrador de octubre (`2026-10-26-reingenieria-gronestats-borrador.md`).
 
 ## Alcance y decisiones previas
 
@@ -172,7 +172,7 @@ Cada celda de cobertura tiene un estado: `complete`, `missing_from_source` (404 
 - Para Alvaro: `python -m gronestats.processing.status` imprime pendientes, bloqueados y huecos sin explicar al terminar cada corrida. No hay cuentas en v1, así que no hay vista privada.
 - Alertas: sin notificaciones propias en v1. El chequeo externo de la sección 5 vigila `/v1/status` (caída o `stale: true`) y avisa por correo.
 
-## 7. Transversal y pruebas (presentada, pendiente de OK)
+## 7. Transversal y pruebas (aprobada)
 
 **Pruebas, de abajo hacia arriba:**
 1. **Python (pytest):** pipeline, análisis y API. Hoy son 213 pruebas (3 omitidas) y pasan en un clon limpio. Las nuevas usan un **bundle de juguete**: dos temporadas, cuatro equipos y una docena de partidos, generado por un script determinista a partir del esquema de la sección 2 y versionado en `tests/fixtures/`. Ninguna prueba nueva depende de los datos reales del repo. Las pruebas heredadas que leen bundles publicados se pasan al bundle de juguete o se omiten cuando faltan.
@@ -185,11 +185,11 @@ Cada celda de cobertura tiene un estado: `complete`, `missing_from_source` (404 
 
 **Calidad de código:** `ruff` (lint y formato), TypeScript estricto y `mypy` solo en los módulos nuevos, no en el legado. Hoy no hay linters ni cobertura configurados: la línea base de cobertura se mide al empezar el plan y la regla es no bajarla. Commits convencionales y un PR por cambio, como hasta ahora.
 
-**Secretos.** `FantasyL1-2026/.env.qa` y `.env.test` están versionados en un repo público, con contraseña de Postgres de 7 caracteres y `JWT_SECRET` y `ADMIN_TOKEN` de 9. Las credenciales de Firebase están vacías, así que no se filtró ninguna cuenta de servicio. Propuesta: dejar de versionarlos (`git rm --cached`, `.gitignore` y un `.env.example`) y **rotar** los valores que estén desplegados. No se reescribe el historial: es un repo público con PR ya fusionados y rotar basta para invalidar los valores.
+**Secretos.** `FantasyL1-2026/.env.qa` y `.env.test` están versionados en un repo público, con contraseña de Postgres de 7 caracteres y `JWT_SECRET` y `ADMIN_TOKEN` de 9. Las credenciales de Firebase están vacías, así que no se filtró ninguna cuenta de servicio. Decidido: dejar de versionarlos (`git rm --cached`, `.gitignore` y un `.env.example`) y **rotar** los valores que estén desplegados. No se reescribe el historial: es un repo público con PR ya fusionados y rotar basta para invalidar los valores.
 
-**Datos en git, propuesta.** Desde ahora no se versionan las salidas generadas (`current`, releases, `staging`, `curated` y libros por partido). Sí se versionan el código, los CSV de correcciones y de referencia, el esquema, el bundle de juguete y los docs. Los bundles viajan por SSH (sección 5) y `raw/` se respalda fuera de la PC. Lo ya publicado queda en el historial.
+**Datos en git (decidido).** Desde el plan de implementación no se versionan las salidas generadas (`current`, releases, `staging`, `curated` y libros por partido). Sí se versionan el código, los CSV de correcciones y de referencia, el esquema, el bundle de juguete y los docs. Los bundles viajan por SSH (sección 5) y `raw/` se respalda fuera de la PC. Lo ya publicado queda en el historial.
 
-**Fotos y escudos, propuesta.** La v1 no usa fotos de jugadores (dorsales y color del equipo, como en las pantallas aprobadas), porque su origen y derechos no están verificados. Los escudos se mantienen (29 PNG ya en el repo, hasta 150 px) y queda anotado verificar sus derechos antes del lanzamiento público.
+**Fotos y escudos (decidido).** La v1 no usa fotos de jugadores (dorsales y color del equipo, como en las pantallas aprobadas), porque su origen y derechos no están verificados. Los escudos se mantienen (29 PNG ya en el repo, hasta 150 px) y queda anotado verificar sus derechos antes del lanzamiento público.
 
 **Riesgo antes del lanzamiento público: la licencia de los datos.** Los partidos, tiros y posiciones vienen de SofaScore. No revisé sus términos de uso; antes de publicar hay que leerlos (extracción automática y republicación) y decidir atribución o una fuente con licencia. Hasta entonces el producto puede probarse en privado.
 
@@ -199,7 +199,7 @@ Cada celda de cobertura tiene un estado: `complete`, `missing_from_source` (404 
 
 - Qué cuenta como «tras la fecha N» en `standings` cuando hay partidos aplazados (se fija en el plan).
 - Proveedor del VPS (sección 5).
-- Datos en git, secretos y fotos y escudos: propuestas en la sección 7, pendientes de OK.
+- Ejecutar lo decidido en la sección 7 (dejar de versionar los `.env` y las salidas generadas, y rotar secretos): va al plan de implementación. Esta rama sí incluye los bundles publicados, como último commit de datos.
 - Licencia de los datos de SofaScore para un producto público: leer sus términos antes del lanzamiento.
 - Umbrales que se fijan en el plan: horas para `stale` y desvío del xG que avisa.
 - Definición de percentiles por rol, similitud, sinergia, densidad de heatmap y métricas de estilo (plan de implementación).
