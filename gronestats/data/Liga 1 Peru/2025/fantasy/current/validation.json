@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "validated_at": "2026-04-07T22:38:53.469795+00:00",
+  "validated_at": "2026-11-26T18:04:17.948603+00:00",
   "blocking_errors": [],
   "warnings": [
     "dashboard: Missing warning-only sheet 'momentum' for 6 matches (13596389, 13803195, 13943943, 14199319, 14199322, 14935675) | backfill: missing_from_source=6"
@@ -8,7 +8,7 @@
   "targets": {
     "warehouse": {
       "status": "passed",
-      "validated_at": "2026-04-07T22:38:48.300477+00:00",
+      "validated_at": "2026-11-26T18:04:13.003931+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
@@ -21,7 +21,7 @@
           "player_totals_season_canonical": 597,
           "team_stats_canonical": 39674,
           "average_positions_canonical": 10219,
-          "heatmap_points_canonical": 72629,
+          "heatmap_points_canonical": 430864,
           "shot_events_canonical": 8532,
           "match_momentum_canonical": 30082
         }
@@ -29,7 +29,7 @@
     },
     "dashboard": {
       "status": "passed",
-      "validated_at": "2026-04-07T22:38:51.914942+00:00",
+      "validated_at": "2026-11-26T18:04:16.229892+00:00",
       "blocking_errors": [],
       "warnings": [
         "Missing warning-only sheet 'momentum' for 6 matches (13596389, 13803195, 13943943, 14199319, 14199322, 14935675) | backfill: missing_from_source=6"
@@ -40,13 +40,26 @@
         "curated_matches": 333,
         "curated_players": 597,
         "curated_player_match_rows": 13193,
-        "timestamp_span_seconds": 0.5650575160980225
+        "timestamp_span_seconds": 0.33197021484375
       },
-      "diff": {}
+      "diff": {
+        "matches": {
+          "rows_before": 333,
+          "rows_after": 333,
+          "delta_rows": 0,
+          "home_goals_delta": -1,
+          "away_goals_delta": 3
+        },
+        "heatmap_points": {
+          "rows_before": 72629,
+          "rows_after": 430864,
+          "delta_rows": 358235
+        }
+      }
     },
     "fantasy": {
       "status": "passed",
-      "validated_at": "2026-04-07T22:38:53.465021+00:00",
+      "validated_at": "2026-11-26T18:04:17.944072+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
@@ -61,7 +74,7 @@
           "player_transfer": 96,
           "team_stats": 39674
         },
-        "timestamp_span_seconds": 0.17529559135437012
+        "timestamp_span_seconds": 0.13320469856262207
       }
     }
   }
