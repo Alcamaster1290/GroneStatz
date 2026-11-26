@@ -1,24 +1,36 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 
+from gronestats.processing import pipeline
 from gronestats.processing.pipeline import (
     FANTASY_SOURCE_MODE,
+    PipelineLogger,
     PipelinePaths,
     REQUIRED_CURATED_TABLES,
+    RunContext,
     build_parser,
     build_average_positions_curated,
     build_heatmap_points_curated,
     build_player_totals_full_season,
+    build_shot_events_curated,
+    normalize_finished_master,
+    normalize_match_datetime,
+    parse_heatmap_payload,
+    phase_bootstrap_raw,
+    phase_extract_master,
     publish_release_atomically,
     resolve_changed_match_ids,
     should_refresh_fantasy_bridge,
     source_mode_from_paths,
     stringify_if_mixed_objects,
     validate_dataset_contract,
+    write_legacy_split_workbooks,
 )
 
 
@@ -501,3 +513,308 @@ def test_publish_release_atomically_swaps_current_dir(tmp_path: Path) -> None:
     assert (current_dir / "matches.parquet").read_text(encoding="utf-8") == "new"
     assert not (dashboard_dir / "_current_20260403_010101").exists()
     assert not (dashboard_dir / "_current_backup_20260403_010101").exists()
+
+
+def _shot_matches() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "match_id": [1, 2],
+            "home_id": [10, 30],
+            "away_id": [20, 40],
+            "home": ["Local", "Casa"],
+            "away": ["Visita", "Fuera"],
+        }
+    )
+
+
+def test_build_shot_events_curated_keeps_flat_format_unchanged() -> None:
+    shotmap_raw = pd.DataFrame(
+        {
+            "match_id": [1],
+            "id": [501],
+            "isHome": [True],
+            "id.1": [900],
+            "name": ["Jugador Plano"],
+            "shortName": ["J. Plano"],
+            "position": ["f"],
+            "jerseyNumber": [9],
+            "x": [11.5],
+            "y": [50.0],
+            "z": [0.0],
+            "timeSeconds": [600],
+        }
+    )
+
+    result = build_shot_events_curated(shotmap_raw, _shot_matches()).iloc[0]
+
+    assert (result["x"], result["y"], result["z"]) == (11.5, 50.0, 0.0)
+    assert result["player_id"] == 900
+    assert result["name"] == "Jugador Plano"
+    assert result["position"] == "F"
+    assert result["team_name"] == "Local"
+
+
+def test_build_shot_events_curated_reads_nested_player_and_coordinates() -> None:
+    shotmap_raw = pd.DataFrame(
+        {
+            "match_id": [1],
+            "id": [502],
+            "isHome": [False],
+            "player": ["{'name': 'Agustín González', 'slug': 'agustin-gonzalez', 'shortName': 'A. González', 'position': 'M', 'jerseyNumber': '8', 'userCount': 57, 'id': 924762}"],
+            "playerCoordinates": ["{'x': 28.5, 'y': 45.6, 'z': 0}"],
+            "timeSeconds": [1200],
+        }
+    )
+
+    result = build_shot_events_curated(shotmap_raw, _shot_matches()).iloc[0]
+
+    # Las coordenadas anidadas son las mismas que las planas: no se transforman ni se espejan.
+    assert (result["x"], result["y"], result["z"]) == (28.5, 45.6, 0.0)
+    assert result["player_id"] == 924762
+    assert result["name"] == "Agustín González"
+    assert result["short_name"] == "A. González"
+    assert result["position"] == "M"
+    assert result["jersey_number"] == 8
+    assert result["team_id"] == 20
+    assert result["team_name"] == "Visita"
+
+
+def test_build_shot_events_curated_mixes_flat_and_nested_rows_and_prefers_flat() -> None:
+    shotmap_raw = pd.DataFrame(
+        {
+            "match_id": [1, 1, 2],
+            "id": [1, 2, 3],
+            "isHome": [True, True, False],
+            "id.1": [900, None, None],
+            "name": ["Plano", None, None],
+            "x": [10.0, None, None],
+            "y": [48.0, None, None],
+            "z": [0.0, None, None],
+            "player": [
+                "{'name': 'Anidado Ignorado', 'position': 'D', 'id': 111}",
+                "{'name': 'Anidado Dos', 'position': 'D', 'id': 222}",
+                {"name": "Anidado Tres", "position": "G", "id": 333},
+            ],
+            "playerCoordinates": [
+                "{'x': 99.0, 'y': 1.0, 'z': 0}",
+                "{'x': 20.0, 'y': 60.0, 'z': 0}",
+                {"x": 30.0, "y": 70.0, "z": 0},
+            ],
+            "id_1": [None, None, None],
+        }
+    )
+
+    result = build_shot_events_curated(shotmap_raw, _shot_matches()).set_index("shot_id")
+
+    assert (result.loc[1, "x"], result.loc[1, "y"], result.loc[1, "player_id"], result.loc[1, "name"]) == (10.0, 48.0, 900, "Plano")
+    assert (result.loc[2, "x"], result.loc[2, "y"], result.loc[2, "player_id"], result.loc[2, "name"]) == (20.0, 60.0, 222, "Anidado Dos")
+    assert (result.loc[3, "x"], result.loc[3, "y"], result.loc[3, "player_id"], result.loc[3, "position"]) == (30.0, 70.0, 333, "G")
+
+
+def test_build_shot_events_curated_reads_id_1_column_variant() -> None:
+    shotmap_raw = pd.DataFrame(
+        {
+            "match_id": [1],
+            "id": [503],
+            "isHome": [True],
+            "id_1": [777],
+            "name": ["Variante"],
+            "x": [15.0],
+            "y": [52.0],
+            "z": [0.0],
+        }
+    )
+
+    result = build_shot_events_curated(shotmap_raw, _shot_matches()).iloc[0]
+
+    assert result["player_id"] == 777
+
+
+def test_build_shot_events_curated_tolerates_missing_or_malformed_nested_values() -> None:
+    shotmap_raw = pd.DataFrame(
+        {
+            "match_id": [1, 1, 1, 1],
+            "id": [1, 2, 3, 4],
+            "isHome": [True, True, True, True],
+            "player": [None, "", "no es un diccionario", "{'name': 'Sin id'}"],
+            "playerCoordinates": [None, "", "{'x': 'abc'}", "[1, 2]"],
+        }
+    )
+
+    result = build_shot_events_curated(shotmap_raw, _shot_matches())
+
+    assert len(result) == 4
+    assert result["x"].isna().all() and result["y"].isna().all()
+    assert result["player_id"].isna().all()
+    assert result.set_index("shot_id").loc[4, "name"] == "Sin id"
+
+
+def _bootstrap_context(tmp_path: Path, monkeypatch, *, no_scrape: bool) -> tuple[RunContext, list[list[int]]]:
+    paths = _make_pipeline_paths(tmp_path)
+    paths.run_dir.mkdir(parents=True, exist_ok=True)
+    paths.raw_master_clean_dir.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({"match_id": [1, 2]}).to_excel(paths.raw_master_clean_dir / "master_limpio.xlsx", index=False)
+    scraped: list[list[int]] = []
+
+    def fake_scrape(rows: pd.DataFrame, out_dir: Path, **_: object) -> None:
+        scraped.append(sorted(rows["match_id"].astype(int).tolist()))
+
+    # Modulo falso: evita importar ScraperFC y registra si el pipeline intento scrapear.
+    monkeypatch.setitem(sys.modules, "gronestats.processing.data_loader_unprep", SimpleNamespace(scrape_match_details=fake_scrape))
+    ctx = RunContext(
+        paths=paths,
+        mode="full",
+        only_missing=False,
+        force=False,
+        dry_run=False,
+        publish_target="dashboard",
+        logger=PipelineLogger(None),
+        manifest={},
+        no_scrape=no_scrape,
+    )
+    return ctx, scraped
+
+
+def test_bootstrap_raw_scrapes_missing_workbooks_by_default(tmp_path: Path, monkeypatch) -> None:
+    ctx, scraped = _bootstrap_context(tmp_path, monkeypatch, no_scrape=False)
+
+    details = phase_bootstrap_raw(ctx)
+
+    assert scraped == [[1, 2]]
+    assert details["scrape_skipped"] is False
+
+
+def test_bootstrap_raw_no_scrape_never_calls_sofascore_and_keeps_incomplete_workbooks(tmp_path: Path, monkeypatch) -> None:
+    ctx, scraped = _bootstrap_context(tmp_path, monkeypatch, no_scrape=True)
+    # El workbook llega desde la carpeta de la temporada y se copia a raw/details; sin las hojas requeridas
+    # el flujo normal lo borra para re-scrapearlo, y con --no-scrape debe quedar intacto.
+    ctx.paths.season_dir.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({"a": [1]}).to_excel(ctx.paths.season_dir / "Sofascore_1.xlsx", sheet_name="Otra", index=False)
+
+    details = phase_bootstrap_raw(ctx)
+
+    assert scraped == []
+    assert (ctx.paths.raw_details_dir / "Sofascore_1.xlsx").exists()
+    assert details["scrape_skipped"] is True
+    assert details["missing_match_ids_before_scrape"] == [2]
+    assert details["missing_required_sheet_match_ids_before_scrape"] == [1, 2]
+
+
+def test_run_parser_accepts_no_scrape_flag() -> None:
+    parser = build_parser()
+
+    assert parser.parse_args(["run", "--no-scrape"]).no_scrape is True
+    assert parser.parse_args(["run"]).no_scrape is False
+
+
+def test_parse_heatmap_payload_accepts_historical_dict_and_current_list_formats() -> None:
+    assert parse_heatmap_payload("{'id': 331437, 'heatmap': [(9, 37), (3.5, 50)]}") == (331437, [(9.0, 37.0), (3.5, 50.0)])
+    # El scraper actual guarda solo la lista de puntos; el id viaja en la columna player_id de la fila.
+    assert parse_heatmap_payload("[(9, 37), (3.5, 50)]") == (None, [(9.0, 37.0), (3.5, 50.0)])
+    assert parse_heatmap_payload("[]") == (None, [])
+    assert parse_heatmap_payload("no es un heatmap") == (None, [])
+
+
+def test_build_heatmap_points_curated_reads_list_payload_with_player_id_column() -> None:
+    player_stats_raw = pd.DataFrame(
+        {"match_id": [1], "id": [101], "name": ["Jugador Uno"], "shortName": ["J. Uno"], "teamId": [7], "position": ["M"], "shirtNumber": [8], "substitute": [False]}
+    )
+    heatmaps_raw = pd.DataFrame(
+        {"match_id": [1, 1], "player": ["Jugador Uno", "Suplente"], "player_id": [101, 102], "heatmap": ["[(0, 10), (15.5, 20)]", "[]"]}
+    )
+    teams = pd.DataFrame({"team_id": [7], "short_name": ["Equipo A"]})
+
+    points = build_heatmap_points_curated(heatmaps_raw, player_stats_raw, teams)
+
+    assert len(points) == 2
+    assert points["player_id"].tolist() == [101, 101]
+    assert points["team_id"].tolist() == [7, 7]
+    assert points["x"].tolist() == [0.0, 15.5]
+
+
+def test_finished_master_keeps_fecha_as_a_real_date_so_it_is_normalized_to_lima_time_only_once() -> None:
+    # 2022-2023 generan su maestro limpio desde 0_Matches.xlsx: fecha llega como UTC (Excel) y se convierte a hora de Lima una sola vez.
+    master = pd.DataFrame(
+        {
+            "match_id": [1, 2, 3],
+            "home_score": [1, 0, None],
+            "away_score": [0, 0, None],
+            "round_number": [1, 1, 2],
+            "fecha": pd.to_datetime(["2022-02-26 18:15", "2022-02-06 18:15", "2022-03-01 00:30"]),
+        }
+    )
+
+    clean = normalize_finished_master(master)
+
+    assert pd.api.types.is_datetime64_any_dtype(clean["fecha"])  # no es texto: lo leeria mal un segundo normalizador
+    assert normalize_match_datetime(clean["fecha"]).tolist() == ["26/02/2022 13:15", "06/02/2022 13:15"]  # el día 26 no se confunde con un mes
+
+
+def _legacy_payload(monkeypatch, payload: dict[int, dict[str, pd.DataFrame]]) -> None:
+    monkeypatch.setattr(pipeline, "collect_legacy_split_workbooks", lambda source_dirs, expected_match_ids: (payload, 1))
+
+
+def test_legacy_split_rebuild_keeps_sheets_scraped_after_the_legacy_export(tmp_path: Path, monkeypatch) -> None:
+    # 2022-2023 se reconstruyen en cada corrida desde los archivos por hoja del repo Legacy; una hoja que el Legacy no trae
+    # (por ejemplo un mapa de tiros scrapeado despues) no debe desaparecer.
+    details = tmp_path / "details"
+    details.mkdir()
+    with pd.ExcelWriter(details / "Sofascore_5.xlsx", engine="openpyxl") as writer:
+        pd.DataFrame({"a": [0]}).to_excel(writer, sheet_name="Team Stats", index=False)
+        pd.DataFrame({"x": [1.0, 2.0]}).to_excel(writer, sheet_name="Shotmap", index=False)
+    _legacy_payload(monkeypatch, {5: {"Team Stats": pd.DataFrame({"a": [9]}), "Player Stats": pd.DataFrame({"p": [1, 2]})}})
+
+    result = write_legacy_split_workbooks(source_dirs=[], expected_match_ids={5}, details_dir=details, only_missing=False)
+
+    sheets = pd.read_excel(details / "Sofascore_5.xlsx", sheet_name=None)
+    assert result["written_workbooks"] == 1
+    assert sheets["Team Stats"]["a"].tolist() == [9]  # lo que trae el Legacy sigue mandando en sus hojas
+    assert sheets["Player Stats"]["p"].tolist() == [1, 2]
+    assert sheets["Shotmap"]["x"].tolist() == [1.0, 2.0]  # la hoja scrapeada se conserva
+
+
+def test_legacy_split_rebuild_does_not_duplicate_a_sheet_under_an_alias_name(tmp_path: Path, monkeypatch) -> None:
+    details = tmp_path / "details"
+    details.mkdir()
+    with pd.ExcelWriter(details / "Sofascore_6.xlsx", engine="openpyxl") as writer:
+        pd.DataFrame({"old": [1]}).to_excel(writer, sheet_name="TeamStats", index=False)  # alias antiguo de "Team Stats"
+    _legacy_payload(monkeypatch, {6: {"Team Stats": pd.DataFrame({"a": [9]})}})
+
+    write_legacy_split_workbooks(source_dirs=[], expected_match_ids={6}, details_dir=details, only_missing=False)
+
+    assert pd.ExcelFile(details / "Sofascore_6.xlsx").sheet_names == ["Team Stats"]
+
+
+def test_legacy_split_rebuild_still_creates_missing_workbooks_and_respects_only_missing(tmp_path: Path, monkeypatch) -> None:
+    details = tmp_path / "details"
+    details.mkdir()
+    _legacy_payload(monkeypatch, {7: {"Team Stats": pd.DataFrame({"a": [1]})}, 8: {"Team Stats": pd.DataFrame({"a": [2]})}})
+    pd.DataFrame({"keep": [1]}).to_excel(details / "Sofascore_8.xlsx", sheet_name="Team Stats", index=False)
+
+    result = write_legacy_split_workbooks(source_dirs=[], expected_match_ids={7, 8}, details_dir=details, only_missing=True)
+
+    assert result["written_workbooks"] == 1  # solo el 7, que no existía
+    assert pd.read_excel(details / "Sofascore_8.xlsx")["keep"].tolist() == [1]
+
+
+
+def test_extract_master_applies_official_results_to_the_run_copy_and_never_to_the_source(tmp_path: Path) -> None:
+    paths = _make_pipeline_paths(tmp_path)
+    paths.run_dir.mkdir(parents=True, exist_ok=True)
+    paths.legacy_league_dir.mkdir(parents=True, exist_ok=True)
+    master = pd.DataFrame({"match_id": [1, 2], "round_number": [1, 1], "home_score": [1, 2], "away_score": [0, 0]})
+    master.to_excel(paths.legacy_master_raw_path, index=False)
+    master.to_excel(paths.legacy_master_clean_path, index=False)
+    (paths.legacy_league_dir / "resultados_oficiales.csv").write_text(
+        "season,match_id,status,home_score,away_score,motivo,fuente\n2026,1,awarded,0,3,suspendido,FPF\n2026,2,annulled,,,descalificado,FPF\n", encoding="utf-8"
+    )
+    ctx = RunContext(paths=paths, mode="full", only_missing=False, force=False, dry_run=False, publish_target="dashboard", logger=PipelineLogger(None), manifest={})
+
+    details = phase_extract_master(ctx)
+
+    clean = pd.read_excel(paths.raw_master_clean_dir / paths.legacy_master_clean_path.name).set_index("match_id")
+    assert details["official_results_applied"] == [1, 2]
+    assert (clean.loc[1, "home_score"], clean.loc[1, "away_score"], clean.loc[1, "status"]) == (0, 3, "awarded")
+    assert (clean.loc[2, "home_score"], clean.loc[2, "away_score"], clean.loc[2, "status"]) == (2, 0, "annulled")  # se jugó: marcador real
+    source = pd.read_excel(paths.legacy_master_clean_path).set_index("match_id")
+    assert (source.loc[1, "home_score"], source.loc[1, "away_score"]) == (1, 0)  # la fuente queda como la dejó SofaScore
