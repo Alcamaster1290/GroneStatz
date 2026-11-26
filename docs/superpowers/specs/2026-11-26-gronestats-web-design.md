@@ -1,13 +1,13 @@
 # GroneStats web: diseño
 
-**Estado:** borrador. Secciones 1 a 3 aprobadas por Alvaro (2026-11-26); sección 4 presentada, a la espera de su OK; secciones 5 a 7 pendientes. Reemplaza el borrador de octubre (`2026-10-26-reingenieria-gronestats-borrador.md`).
+**Estado:** borrador. Secciones 1 a 4 aprobadas por Alvaro (2026-11-26); sección 5 presentada, a la espera de su OK; secciones 6 y 7 pendientes. Reemplaza el borrador de octubre (`2026-10-26-reingenieria-gronestats-borrador.md`).
 
 ## Alcance y decisiones previas
 
 - **v1 es solo análisis:** sin cuentas ni Fantasy (Fantasy se enchufará después como módulo).
 - **Backend sin estado:** FastAPI y DuckDB de solo lectura sobre un bundle de servicio.
 - **Frontend:** Next.js con SSR (SEO y tarjetas para compartir en X y YouTube), sin Capacitor.
-- **Entrega:** VPS con Docker Compose, Caddy y Cloudflare delante; los datos llegan por rsync/SSH tras cada jornada y `current` cambia de forma atómica. Vercel solo para previews.
+- **Entrega:** VPS con Docker Compose, Caddy y Cloudflare delante; los datos llegan por SSH (`tar` sobre `ssh`; la PC no tiene `rsync`) tras cada jornada y `current` cambia de forma atómica. Vercel solo para previews.
 - **Datos híbridos:** el pipeline, en la PC de Alvaro, precalcula lo pesado; la API solo hace consultas ligeras.
 - **Descomposición:** A Datos, B API, C Web, D Entrega, T Transversal.
 - **Reglas de trabajo:** las coordenadas y la orientación se verifican con el código local de Streamlit; solo se scrapea lo autorizado; las correcciones manuales viven en CSV versionados con motivo y fuente.
@@ -83,7 +83,7 @@ Endpoints por pantalla, no volcados genéricos de tablas, de modo que cada bloqu
 - **Dato ausente no es cero:** si falta algo en origen (por ejemplo el momentum de 2022) la respuesta trae `null` y `missing_reason: "missing_from_source"`, el mismo estado que usa el registro del scraper.
 - **Contrato y pruebas:** OpenAPI sale del esquema de la sección 2 y la web genera su cliente desde ahí. Las pruebas corren contra un bundle de juguete en el repo; una prueba aparte, fuera de CI, usa el release real.
 
-## 4. Web (presentada, pendiente de OK)
+## 4. Web (aprobada)
 
 - **Stack:** app nueva `web/` con Next.js 14.2 (App Router), React 18, TypeScript y Tailwind 3.4, las mismas versiones que el frontend de Fantasy para copiar piezas sin migrar. Sin Capacitor ni app móvil, y sin monorepo hasta que Fantasy se enchufe.
 - **Render:** componentes de servidor que llaman a la API por la red interna de Compose. Las páginas dependen solo del release, así que se cachean y se revalidan por etiqueta cuando el script de despliegue avisa de un release nuevo.
@@ -104,7 +104,43 @@ Endpoints por pantalla, no volcados genéricos de tablas, de modo que cada bloqu
 - **Paneles «próximamente»:** mapa de ocasiones, take-ons, inicio y fin de pases, zonas defensivas (las 6 hojas del scraper no traen eventos con coordenadas).
 - **Fotos y escudos:** dorsales cuando no hay foto (cobertura del 85 % en 2026 y del 37 % al 65 % en 2022-2025); escudos hasta 150 px.
 
-## 5. Entrega (pendiente)
+## 5. Entrega (presentada, pendiente de OK)
+
+**Topología en el VPS (Docker Compose):** `caddy` (TLS automático y proxy inverso), `web` (Next.js en modo `standalone`) y `api` (uvicorn). Sin base de datos, sin cola y sin estado. `api` monta `/srv/gronestats` en solo lectura; ahí viven `releases/<id>/` y `current`, un enlace simbólico relativo (`current -> releases/<id>`) para que resuelva igual dentro del contenedor. Caddy no expone la ruta interna de recarga de la API.
+
+**Dos ciclos de vida separados: la imagen es código y el bundle es datos.** Subir datos nunca reconstruye imágenes, y desplegar código nunca toca los datos.
+
+| | Código | Datos |
+|---|---|---|
+| Qué se mueve | imágenes de `web` y `api` | un release del bundle (≈9 MB de parquet en las cinco temporadas) |
+| Cómo | se construyen en la PC (ya tiene Docker), se suben a GHCR y el VPS hace `docker compose pull && up -d` | `tar` sobre `ssh` a `releases/<id>.partial/`; no hace falta `rsync` (el bundle es chico y la PC no lo tiene) |
+| Quién lo lanza | `scripts/deploy_code` | `publish_release.py`, al final de la corrida del pipeline |
+| Cuándo | al cambiar código | tras cada jornada |
+
+**Activación de un release** (un solo script en el servidor, `deploy/activate_release.sh`, versionado en el repo; el de la PC solo sube y lo invoca):
+1. verifica los checksums del `manifest.json`;
+2. valida el esquema con la propia API;
+3. renombra `.partial`, cambia `current` de forma atómica y recarga la API;
+4. revalida la web y purga el caché de Cloudflare;
+5. si la API rechaza el release, vuelve al anterior.
+
+Se conservan los últimos 5 releases; revertir es apuntar `current` a uno anterior.
+
+**Cloudflare delante:** el HTML sale con `s-maxage` y `stale-while-revalidate`, y se purga completo tras cada release (una o dos veces por jornada). El WAF y los límites de peticiones los pone Cloudflare, porque Caddy no limita peticiones sin un plugin. El VPS solo acepta 80 y 443 desde IPs de Cloudflare.
+
+**Seguridad:** usuario `deploy` sin root y solo con llave SSH; firewall en 22, 80 y 443; contenedores sin root y `api` con sistema de archivos de solo lectura. Los únicos secretos son dos tokens (revalidación de la web y purga de Cloudflare), en el `.env` del servidor (permisos 600) y en la PC; ninguno en git.
+
+**Respaldos:** el VPS no guarda nada irremplazable (los releases son copias y los certificados se reemiten solos). Lo irremplazable es el `raw/` de la PC: libros descargados, `lineups.jsonl` y registros de scrapeo. Hoy está en git; **si los datos salen de git, el respaldo del `raw/` fuera de la PC pasa a ser obligatorio.**
+
+**Observabilidad mínima:** chequeo externo gratuito sobre `/v1/release` y `/estado`; logs de Docker con rotación. El detalle de los datos va en la sección 6.
+
+**Previews:** Vercel solo para previews de `web`, apuntando a la API pública de solo lectura.
+
+**CI:** no depende de GitHub Actions (el flujo anterior se quitó por facturación bloqueada). Una sola orden local (`scripts/check`) corre pruebas y construcción, y un hook de pre-push la ejecuta; los workflows se enchufan después si se desbloquea.
+
+**Tamaño:** 1 vCPU y 1-2 GB de RAM alcanzan: el bundle es pequeño y Cloudflare absorbe la lectura. Las tablas nuevas se medirán al construirlas; ninguna se espera de la escala de los tiros.
+
+**Proveedor del VPS: abierto.** Oracle quedó como opción débil, Hetzner se descartó por soporte en Latinoamérica y Vultr está cerrado. Criterios: ≥ 1 vCPU, ≥ 1 GB de RAM, ≥ 10 GB de disco, IPv4 fija, snapshots y pago con tarjeta desde Perú. Con Cloudflare delante la región casi no importa.
 
 ## 6. Monitor de estado de datos (pendiente)
 
