@@ -130,7 +130,7 @@ Se conservan los últimos 5 releases; revertir es apuntar `current` a uno anteri
 
 **Seguridad:** usuario `deploy` sin root y solo con llave SSH; firewall en 22, 80 y 443; contenedores sin root y `api` con sistema de archivos de solo lectura. Los únicos secretos son dos tokens (revalidación de la web y purga de Cloudflare), en el `.env` del servidor (permisos 600) y en la PC; ninguno en git.
 
-**Respaldos:** el VPS no guarda nada irremplazable (los releases son copias y los certificados se reemiten solos). Lo irremplazable es el `raw/` de la PC: libros descargados, `lineups.jsonl` y registros de scrapeo. Hoy está en git; **si los datos salen de git, el respaldo del `raw/` fuera de la PC pasa a ser obligatorio.**
+**Respaldos:** el VPS no guarda nada irremplazable (los releases son copias y los certificados se reemiten solos). Lo irremplazable es el `raw/` de la PC: libros descargados, `lineups.jsonl` y registros de scrapeo. **`raw/` está en `.gitignore`** (salvo los libros de 2022-2023, que se versionaron antes), así que el scrapeo de 2026, las alineaciones y los registros existen solo en la PC. Por eso el respaldo del `raw/` fuera de la PC es obligatorio desde ya, salgan o no del repo el resto de los datos generados.
 
 **Observabilidad mínima:** chequeo externo gratuito sobre `/v1/release` y `/estado`; logs de Docker con rotación. El detalle de los datos va en la sección 6.
 
@@ -149,7 +149,7 @@ Se conservan los últimos 5 releases; revertir es apuntar `current` a uno anteri
 ## Decisiones abiertas
 
 - Qué cuenta como «tras la fecha N» en `standings` cuando hay partidos aplazados.
-- Política de datos en git: el repo ya versiona los libros de Excel y los parquet generados (339 MB en `gronestats/data`), y es público.
+- Política de datos en git: el repo es público y ya versiona libros de Excel y parquet generados. La rama sube solo los bundles publicados (`current` y el release al que apuntan) y los maestros de temporada. Quedan fuera, sin decidir, los libros por partido de 2022-2023 regenerados (unos 49 MB), `staging`, `curated` y los releases intermedios de cada corrida.
 - Rotar los secretos de `.env.qa` y `.env.test`, versionados en un repo público.
 - Política de fotos y escudos (derechos sin verificar).
 - Definición de percentiles por rol, similitud, sinergia, densidad de heatmap y métricas de estilo (plan de implementación).
