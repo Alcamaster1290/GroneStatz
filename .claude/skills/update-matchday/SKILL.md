@@ -1,213 +1,118 @@
 ---
 name: update-matchday
 description: >
-  Actualiza los datos de la última jornada jugada de Liga 1 Peru 2026:
-  extrae stats de SofaScore via ScraperFC, corre el pipeline de GroneStats,
-  y sincroniza los parquets al backend Fantasy. Invocable con /update-matchday.
+  Actualiza los datos de Liga 1 Peru 2026 (Apertura y Clausura): refresca la lista de
+  partidos desde SofaScore, scrapea los detalles que faltan, corre el pipeline de GroneStats
+  y publica los parquets. Invocable con /update-matchday.
 ---
 
-# Update Matchday — Flujo completo de actualización post-jornada
+# Update Matchday — Flujo de actualización post-jornada (Apertura + Clausura)
 
-## Contexto del Pipeline
+## Contexto del pipeline
 
-El flujo de datos sigue esta cadena:
+Apertura y Clausura son torneos hijos de **la misma temporada 2026** en SofaScore
+(unique-tournament `406`, season `"2026"`, id 88529). Viven juntos en todas las tablas:
+la columna `tournament` vale `Liga 1, Apertura` o `Liga 1, Clausura`, y `round_number`
+**reinicia en cada torneo** (la ronda 1 existe dos veces). La clave única de un partido es
+`match_id`. No hay carpetas por torneo.
 
 ```
-SofaScore API (via ScraperFC)
-  → gronestats/data/Liga 1 Peru/2026/raw/details/xlsx/Sofascore_{match_id}.xlsx
-  → gronestats/data/Liga 1 Peru/2026/raw/master/clean/Partidos_Liga 1 Peru_2026_limpio.xlsx
-  → python -m gronestats.processing.pipeline run --season 2026
-  → gronestats/data/Liga 1 Peru/2026/fantasy/current/*.parquet
-  → Backend: ingest_parquets_to_duckdb + sync_duckdb_to_postgres
+SofaScore (via ScraperFC + sesión de Chrome persistente)
+  → data_loader_unprep        → gronestats/data/Liga 1 Peru/Partidos_Liga 1 Peru_2026{,_limpio}.xlsx
+  → pipeline: extract-master  → 2026/raw/master/{raw,clean}/
+  → pipeline: bootstrap-raw   → 2026/raw/details/xlsx/Sofascore_{match_id}.xlsx   (scrapea los que faltan)
+  → pipeline: build-staging → build-curated → build-warehouse → validate → publish
+  → 2026/{dashboard,fantasy}/current/*.parquet   (releases anteriores quedan en .../releases/)
 ```
 
-## Instrucciones de Ejecución
+Usar siempre **Python 3.11** (`py -3.11`): es el único con ScraperFC, botasaurus y duckdb.
 
-Ejecuta los siguientes pasos EN ORDEN. Reporta progreso entre cada paso.
+## Camino recomendado (un solo comando)
 
-### Paso 1: Identificar partidos faltantes
-
-Determina qué match_ids ya fueron procesados y cuáles faltan:
-
-```python
-# Partidos ya extraídos (tienen XLSX en raw/details/xlsx/)
-import glob
-from pathlib import Path
-
-raw_dir = Path("gronestats/data/Liga 1 Peru/2026/raw/details/xlsx")
-existing_ids = {
-    int(p.stem.replace("Sofascore_", ""))
-    for p in raw_dir.glob("Sofascore_*.xlsx")
-}
-
-# Partidos en el master (todos los programados/jugados)
-import pandas as pd
-master_path = Path("gronestats/data/Liga 1 Peru/2026/raw/master/clean/Partidos_Liga 1 Peru_2026_limpio.xlsx")
-master = pd.read_excel(master_path)
-all_ids = set(master["match_id"].dropna().astype(int))
-
-# Partidos con score (ya finalizados) que no tienen XLSX
-finished = master.loc[master["home_score"].notna() & master["away_score"].notna()]
-finished_ids = set(finished["match_id"].dropna().astype(int))
-missing_ids = sorted(finished_ids - existing_ids)
+```powershell
+py -3.11 -m gronestats.scripts.update_matchday --season 2026 --refresh-master --skip-sync --publish-target all
 ```
 
-Reporta cuántos partidos faltan y cuáles son (con nombres de equipos si es posible).
+Hace, en orden: (0) refresca el master de toda la temporada, (2) corre el pipeline **sin**
+`--only-missing`, que es lo que hace entrar partidos nuevos. `bootstrap-raw` scrapea solo los
+workbooks que no existen. Con `--refresh-master` se omite `extract_matches` (redundante).
 
-### Paso 2: Extraer datos de SofaScore
+`--skip-extract` solo omite `extract_matches`: el pipeline sigue scrapeando todo workbook que falte en `bootstrap-raw`. Para reprocesar lo ya descargado **sin tocar SofaScore** (por ejemplo tras refrescar el master, cuando faltan muchos detalles), ejecutar el pipeline directamente con `--no-scrape`:
 
-Para cada `match_id` faltante, ejecuta la extracción usando ScraperFC.
-El notebook de referencia es `notebooks/active/nb_05_extraer_partido_por_match_id.ipynb`.
-
-La extracción debe generar un archivo `Sofascore_{match_id}.xlsx` con estas hojas:
-- **Player Stats**: stats de jugadores (player_id, minutesplayed, goals, assists, saves, fouls, etc.)
-- **Team Stats**: stats de equipo
-- **Average Positions**: posiciones promedio
-- **Heatmaps**: datos de heatmap (opcional)
-- **Shotmap**: tiros al arco (opcional)
-- **Match Momentum**: momentum del partido (opcional)
-
-Script de extracción por partido:
-
-```python
-import ScraperFC as sfc
-import pandas as pd
-from pathlib import Path
-
-sofascore = sfc.Sofascore()
-output_dir = Path("gronestats/data/Liga 1 Peru/2026/raw/details/xlsx")
-
-def extract_match(match_id: str | int) -> Path:
-    match_id = str(match_id)
-    output_path = output_dir / f"Sofascore_{match_id}.xlsx"
-
-    match_dict = sofascore.get_match_dict(match_id)
-
-    # Player Stats
-    try:
-        player_stats = sofascore.scrape_player_match_stats(match_id)
-    except Exception:
-        player_stats = pd.DataFrame()
-
-    # Team Stats
-    try:
-        team_stats = sofascore.scrape_team_match_stats(match_id)
-    except Exception:
-        team_stats = pd.DataFrame()
-
-    # Average Positions
-    try:
-        avg_positions = sofascore.scrape_player_average_positions(match_id)
-    except Exception:
-        avg_positions = pd.DataFrame()
-
-    # Shotmap
-    try:
-        shotmap = sofascore.scrape_match_shots(match_id)
-    except Exception:
-        shotmap = pd.DataFrame()
-
-    # Momentum
-    try:
-        momentum = sofascore.scrape_match_momentum(match_id)
-    except Exception:
-        momentum = pd.DataFrame()
-
-    # Heatmaps
-    try:
-        heatmaps_raw = sofascore.scrape_heatmaps(match_id)
-        if isinstance(heatmaps_raw, dict):
-            rows = []
-            for pid, points in heatmaps_raw.items():
-                for pt in (points or []):
-                    rows.append({"player_id": pid, "x": pt.get("x"), "y": pt.get("y")})
-            heatmaps = pd.DataFrame(rows)
-        elif isinstance(heatmaps_raw, pd.DataFrame):
-            heatmaps = heatmaps_raw
-        else:
-            heatmaps = pd.DataFrame()
-    except Exception:
-        heatmaps = pd.DataFrame()
-
-    with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
-        if not player_stats.empty:
-            player_stats.to_excel(writer, sheet_name="Player Stats", index=False)
-        if not team_stats.empty:
-            team_stats.to_excel(writer, sheet_name="Team Stats", index=False)
-        if not avg_positions.empty:
-            avg_positions.to_excel(writer, sheet_name="Average Positions", index=False)
-        if not heatmaps.empty:
-            heatmaps.to_excel(writer, sheet_name="Heatmaps", index=False)
-        if not shotmap.empty:
-            shotmap.to_excel(writer, sheet_name="Shotmap", index=False)
-        if not momentum.empty:
-            momentum.to_excel(writer, sheet_name="Match Momentum", index=False)
-
-    return output_path
+```powershell
+py -3.11 -m gronestats.processing.pipeline run --league "Liga 1 Peru" --season 2026 --mode full --publish-target all --no-scrape
 ```
 
-Ejecuta `extract_match(match_id)` para cada partido faltante. Añade pausa de 3-5 segundos entre partidos para evitar rate limiting.
+`--no-scrape` omite la llamada al scraper y no borra los workbooks incompletos; los partidos sin detalle quedan como advertencias de validación.
 
-### Paso 3: Actualizar el Master Clean
+## Scrapeo por tandas con parada ante bloqueos (recomendado)
 
-Si hay partidos nuevos que no están en el master (nuevos match_ids de la jornada), actualiza el archivo master:
+`gronestats.processing.sofascore_batches` pide a SofaScore por tandas pequeñas y se detiene solo ante el primer bloqueo (cualquier error que no sea un 404; un 404 es dato ausente en origen). Cada partido queda en `<temporada>/raw/scrape_ledger.jsonl` y todo es reanudable. Para una jornada nueva, **después de refrescar el master**:
 
-```python
-# Solo si hay match_ids nuevos no presentes en master
-# Usa sofascore.get_match_dicts() o get_match_dict() para obtener info del partido
-# y añade filas al master con: match_id, round_number, home_id, away_id, home, away,
-# home_score, away_score, fecha, estadio, ciudad, status
+```powershell
+py -3.11 -m gronestats.processing.sofascore_batches details  --season 2026   # 7 llamadas por partido, sin heatmaps
+py -3.11 -m gronestats.processing.sofascore_batches heatmaps --season 2026   # ~41 llamadas por partido, tandas de 3 con pausa de 45 s
+py -3.11 -m gronestats.processing.sofascore_batches momentum --season 2026   # 1 llamada por partido (un 404 queda como «vacío»)
+py -3.11 -m gronestats.processing.sofascore_batches team-stats|average-positions|shotmap --season 2026   # solo si el pipeline avisa que falta alguna hoja; una llamada por partido
+py -3.11 -m gronestats.processing.sofascore_batches lineups --season 2026   # formación declarada y 11 titulares de cada partido (una llamada por partido) -> raw/lineups.jsonl
+py -3.11 -m gronestats.processing.sofascore_batches player-images --season 2026   # fotos que faltan de los jugadores de los bundles (una llamada por jugador) -> gronestats/images/players; un 404 = SofaScore no tiene la foto
+py -3.11 -m gronestats.analysis.formations --out docs/recursos-dashboard/datos-de-apoyo/formaciones   # cruza la formación declarada con las posiciones de los titulares
+py -3.11 -m gronestats.processing.pipeline run --league "Liga 1 Peru" --season 2026 --mode full --publish-target all --no-scrape
 ```
 
-### Paso 4: Ejecutar el pipeline de GroneStats
+- Añadir `--dry-run` para ver el plan sin llamar a SofaScore y `--limit N` para probar con pocos partidos.
+- `details` solo pide partidos **sin workbook** (uno incompleto no se vuelve a pedir ni se borra) y omite los que el listado no marca como `finished`.
+- 2022 y 2023 no tienen maestro propio: `fixtures --season 2022` baja el listado (fecha, estado y estadio, ~13 llamadas) y `apply-fixtures` lo vuelca en `0_Matches.xlsx` sin red. No usar las coordenadas de sede de SofaScore: algunas vienen con latitud y longitud invertidas.
 
-```bash
-python -m gronestats.processing.pipeline run --league "Liga 1 Peru" --season 2026 --only-missing --publish-target fantasy
+## Pasos manuales equivalentes
+
+1. **Refrescar el master** (trae Apertura y Clausura completos, no filtra por torneo):
+   ```powershell
+   py -3.11 -m gronestats.processing.data_loader_unprep -l "Liga 1 Peru" -y 2026 --skip-details
+   ```
+   Pasar siempre `-y 2026` (el valor por defecto es 2024). Revisar el resultado: valores de
+   `tournament`, rango de `round_number` por torneo, `match_id` sin duplicados, partidos sin
+   marcador (suspendidos o pendientes).
+2. **Pipeline** — sin `--only-missing`:
+   ```powershell
+   py -3.11 -m gronestats.processing.pipeline run --league "Liga 1 Peru" --season 2026 --mode full --publish-target all
+   ```
+   - `--only-missing` **no** pisa `raw/master/clean/...limpio.xlsx` si ya existe, así que los
+     partidos nuevos del master no entrarían. Úsalo solo si el master no cambió.
+   - `--only-missing` tampoco hace el proceso incremental; para eso es `--mode incremental`.
+   - Deja un solo `.xlsx` en `raw/master/clean/` (`latest_master_clean_path` toma el más reciente).
+3. **Hojas opcionales** (shotmap, momentum, heatmaps) si el run las reporta como warnings:
+   `gronestats/processing/backfill_optional_sheets.py` (ver `docs/gronestats/shotmap_momentum_backfill.md`).
+4. **Verificar** `2026/raw/runs/<run_id>/validation.json` (`status: passed`, sin `blocking_errors`).
+
+## Sincronizar con la app Fantasy (opcional)
+
+La app de producción está caída (ver `docs/fantasy/RUNBOOK_RECUPERACION.md`). Si hay backend
+disponible, los pasos son one-shot, **no** usar `watch_parquets.py` (es un bucle infinito):
+
+```powershell
+python FantasyL1-2026\scripts\ingest_to_duckdb.py
+python FantasyL1-2026\scripts\sync_duckdb_to_postgres.py
 ```
 
-Esto procesa los nuevos XLSX, construye staging → curated → fantasy parquets.
+Con `SYNC_SKIP_PRUNE_MISSING_PLAYERS=true`, `SYNC_PRESERVE_EXISTING_PRICE_CURRENT=true` y
+`SYNC_PRESERVE_EXISTING_BASE_STATS=true`. La app aún asume una sola temporada por año: el
+Clausura no está soportado allí (ver el apéndice del runbook).
 
-### Paso 5: Sincronizar al Backend
+## Notas importantes
 
-Opción A — Si `watch_parquets.py` está corriendo, los cambios se detectan automáticamente.
-
-Opción B — Ejecutar manualmente:
-
-```bash
-cd FantasyL1-2026
-python scripts/watch_parquets.py --run-on-start
-```
-
-Opción C — Llamar al endpoint admin:
-
-```bash
-curl -X POST http://localhost:8000/api/admin/rebuild_catalog -H "Authorization: Bearer <ADMIN_TOKEN>"
-```
-
-### Paso 6: Cargar player stats al Fantasy (opcional)
-
-Si necesitas cargar las estadísticas de jugadores match-by-match al sistema de puntos:
-
-```python
-# Generar payload para POST /api/admin/player-stats
-# Formato: {"round_number": N, "items": [{"match_id": ..., "player_id": ..., ...}]}
-```
-
-El notebook `nb_05_extraer_partido_por_match_id.ipynb` ya genera el formato `admin_stats_df` listo para usar.
-
-### Paso 7: Verificación
-
-Confirma que:
-1. Los nuevos XLSX existen en `gronestats/data/Liga 1 Peru/2026/raw/details/xlsx/`
-2. El pipeline terminó sin errores
-3. `gronestats/data/Liga 1 Peru/2026/fantasy/current/player_match.parquet` tiene las filas nuevas
-4. Los datos se sincronizaron al backend (verificar via API o DB)
-
-## Notas Importantes
-
-- **ScraperFC** debe estar instalado en el entorno (`pip install ScraperFC`)
-- El scraper usa la API pública de SofaScore; puede fallar por rate limiting
-- Añade delays entre llamadas (3-5s por partido)
-- Si un partido no tiene datos aún en SofaScore (no se jugó), omítelo
-- El pipeline con `--only-missing` solo procesa lo nuevo sin re-procesar lo existente
-- Los match_ids de Liga 1 Peru 2026 están en el rango 153xxxxx-157xxxxx
+- **SofaScore bloquea clientes automatizados** (`403 Forbidden` / `403 challenge`): rechaza
+  `api.sofascore.com`, las rutas con `/` final y un navegador nuevo por petición. El transporte
+  `gronestats/processing/sofascore_session.py` mantiene **una sesión de Chrome visible** (se abre
+  una ventana; no cerrarla), la calienta en www.sofascore.com y consulta `/api/v1/...` con
+  `fetch`. Reintenta y recalienta ante `challenge`. Variables: `GRONESTATS_SOFASCORE_HEADLESS`,
+  `GRONESTATS_SOFASCORE_ATTEMPTS`, `GRONESTATS_SOFASCORE_MIN_INTERVAL`.
+- Nunca usar `ScraperFC.Sofascore()` crudo ni `extract_matches.py` sin ese transporte: sin él
+  fallan en silencio y generan workbooks vacíos (el scraper borra los menores de 15 KB).
+- Un partido nuevo solo se scrapea si el master tiene `match_url` (lo trae el refresco).
+- Cada partido son ~35 llamadas (incluye un heatmap por jugador): contar varios minutos por
+  jornada completa. Es reanudable: lo ya scrapeado se omite.
+- `validate` es estricto con las temporadas pasadas y laxo con la actual (modo parcial); desde
+  2027 la temporada 2026 pasará a ser estricta.
+- Releases publicados: `2026/{dashboard,fantasy}/releases/<run_id>`; `current` se intercambia de
+  forma atómica, por lo que volver atrás es reapuntar a un release anterior.

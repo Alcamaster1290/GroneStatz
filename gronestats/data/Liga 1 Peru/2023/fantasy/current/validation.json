@@ -1,10 +1,10 @@
 {
   "status": "passed",
-  "validated_at": "2026-04-07T21:19:51.986909+00:00",
+  "validated_at": "2026-11-26T17:08:17.424922+00:00",
   "blocking_errors": [],
   "warnings": [
     "dashboard: Missing legacy non-blocking sheet 'player_stats' for 6 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403)",
-    "dashboard: Missing legacy non-blocking sheet 'team_stats' for 8 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044774, 11118014)",
+    "dashboard: Missing legacy non-blocking sheet 'team_stats' for 7 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044774)",
     "dashboard: Missing legacy non-blocking sheet 'average_positions' for 10 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044785, 11044788, 11044790, 11118014)",
     "dashboard: Missing warning-only sheet 'heatmaps' for 6 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403)",
     "dashboard: Missing warning-only sheet 'shotmap' for 10 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044785, 11044788, 11044790, 11118014)",
@@ -13,18 +13,18 @@
   "targets": {
     "warehouse": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:19:46.051370+00:00",
+      "validated_at": "2026-11-26T17:08:12.386250+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
         "row_counts": {
           "matches_canonical": 342,
-          "teams_canonical": 19,
+          "teams_canonical": 26,
           "players_canonical": 593,
           "player_identity_canonical": 593,
           "player_match_canonical": 13222,
           "player_totals_season_canonical": 593,
-          "team_stats_canonical": 37189,
+          "team_stats_canonical": 37192,
           "average_positions_canonical": 10071,
           "heatmap_points_canonical": 413353,
           "shot_events_canonical": 8485,
@@ -34,11 +34,11 @@
     },
     "dashboard": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:19:49.786368+00:00",
+      "validated_at": "2026-11-26T17:08:15.661374+00:00",
       "blocking_errors": [],
       "warnings": [
         "Missing legacy non-blocking sheet 'player_stats' for 6 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403)",
-        "Missing legacy non-blocking sheet 'team_stats' for 8 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044774, 11118014)",
+        "Missing legacy non-blocking sheet 'team_stats' for 7 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044774)",
         "Missing legacy non-blocking sheet 'average_positions' for 10 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044785, 11044788, 11044790, 11118014)",
         "Missing warning-only sheet 'heatmaps' for 6 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403)",
         "Missing warning-only sheet 'shotmap' for 10 matches (11018862, 11018863, 11018866, 11018869, 11018870, 11034403, 11044785, 11044788, 11044790, 11118014)",
@@ -50,28 +50,34 @@
         "curated_matches": 342,
         "curated_players": 593,
         "curated_player_match_rows": 13222,
-        "timestamp_span_seconds": 0.425825834274292
+        "timestamp_span_seconds": 0.3039224147796631
       },
-      "diff": {}
+      "diff": {
+        "team_stats": {
+          "rows_before": 37189,
+          "rows_after": 37192,
+          "delta_rows": 3
+        }
+      }
     },
     "fantasy": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:19:51.984915+00:00",
+      "validated_at": "2026-11-26T17:08:17.424922+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
         "row_counts": {
           "matches": 342,
-          "teams": 19,
+          "teams": 26,
           "players": 593,
           "players_fantasy": 592,
           "player_match": 13222,
           "player_totals": 593,
           "player_team": 621,
           "player_transfer": 56,
-          "team_stats": 37189
+          "team_stats": 37192
         },
-        "timestamp_span_seconds": 0.17166972160339355
+        "timestamp_span_seconds": 0.10992431640625
       }
     }
   }

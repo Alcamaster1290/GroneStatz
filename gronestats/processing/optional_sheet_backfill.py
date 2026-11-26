@@ -168,18 +168,10 @@ def _normalize_json_like_text(payload: str) -> str:
 
 
 def _browser_get_json_compat(url: str) -> dict[str, Any]:
-    from botasaurus_driver.driver import Driver
+    # SofaScore bloquea un navegador nuevo por petición y api.sofascore.com: ver sofascore_session.
+    from gronestats.processing import sofascore_session
 
-    driver = Driver(headless=True, block_images_and_css=True)
-    try:
-        driver.get(url)
-        payload = _normalize_json_like_text(driver.page_text)
-        return json.loads(payload) if payload else {}
-    finally:
-        try:
-            driver.close()
-        except Exception:
-            pass
+    return sofascore_session.get_json(url)
 
 
 def _patch_scraperfc_sofascore_transport() -> None:

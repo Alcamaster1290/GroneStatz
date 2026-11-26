@@ -142,3 +142,52 @@ def test_fantasy_backend_ingests_real_published_multiseason_bundles(tmp_path: Pa
             assert REQUIRED_PLAYERS_FANTASY_COLS.issubset(players_fantasy_cols)
         finally:
             con.close()
+
+
+def test_fantasy_export_bundle_keeps_apertura_and_clausura_with_repeated_rounds(tmp_path: Path) -> None:
+    tables = _sample_curated_tables()
+    # Apertura R1 (match 1) y Clausura R1 (match 3): mismo round_number, torneos distintos.
+    tables["matches"] = pd.DataFrame(
+        {
+            "match_id": [1, 2, 3],
+            "round_number": [1, 2, 1],
+            "tournament": ["Liga 1, Apertura", "Liga 1, Apertura", "Liga 1, Clausura"],
+            "home_id": [10, 20, 30],
+            "away_id": [20, 30, 10],
+            "home": ["Alianza", "Melgar", "Cristal"],
+            "away": ["Melgar", "Cristal", "Alianza"],
+            "home_score": [1, 0, 2],
+            "away_score": [0, 2, 2],
+        }
+    )
+    clausura_row = pd.DataFrame(
+        {
+            "match_id": [3],
+            "player_id": [101],
+            "name": ["Jugador Uno"],
+            "team_id": [10],
+            "position": ["F"],
+            "minutesplayed": [90],
+            "goals": [2],
+            "assists": [0],
+            "saves": [0],
+            "fouls": [0],
+            "penaltywon": [0],
+            "penaltysave": [0],
+            "penaltyconceded": [0],
+        }
+    )
+    tables["player_match"] = pd.concat([tables["player_match"], clausura_row], ignore_index=True)
+
+    bundle = build_fantasy_export_bundle(tables)
+
+    matches = bundle["matches"]
+    assert sorted(matches["tournament"].unique()) == ["Liga 1, Apertura", "Liga 1, Clausura"]
+    assert matches.groupby("round_number")["match_id"].nunique().loc[1] == 2
+    assert matches["match_id"].is_unique
+
+    totals = bundle["player_totals"].set_index("player_id")
+    assert int(totals.loc[101, "goals"]) == 3  # 1 gol del Apertura + 2 del Clausura
+
+    write_table_bundle(tmp_path, bundle)
+    assert validate_fantasy_export_bundle(tmp_path)["status"] == "passed"

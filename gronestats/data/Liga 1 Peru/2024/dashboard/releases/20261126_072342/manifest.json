@@ -1,0 +1,161 @@
+{
+  "run_id": "20261126_072342",
+  "release_id": "20261126_072342",
+  "league": "Liga 1 Peru",
+  "season": 2024,
+  "mode": "full",
+  "publish_target": "dashboard",
+  "dry_run": false,
+  "from_phase": "build-curated",
+  "to_phase": "publish",
+  "selected_phases": [
+    "build-curated",
+    "build-warehouse",
+    "validate",
+    "publish"
+  ],
+  "started_at": "2026-11-26T07:23:42.764963+00:00",
+  "status": "completed",
+  "paths": {
+    "season_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2024",
+    "raw_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2024\\raw",
+    "staging_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2024\\staging",
+    "curated_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2024\\curated",
+    "warehouse_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\warehouse",
+    "warehouse_db_path": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\warehouse\\gronestats.duckdb",
+    "dashboard_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2024\\dashboard",
+    "dashboard_release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2024\\dashboard\\releases\\20261126_072342",
+    "dashboard_current_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2024\\dashboard\\current",
+    "fantasy_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2024\\fantasy",
+    "fantasy_release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2024\\fantasy\\releases\\20261126_072342",
+    "fantasy_current_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2024\\fantasy\\current"
+  },
+  "phases": [
+    {
+      "phase": "build-curated",
+      "started_at": "2026-11-26T07:23:42.767673+00:00",
+      "ended_at": "2026-11-26T07:25:28.120433+00:00",
+      "status": "completed",
+      "details": {
+        "curated_rows": {
+          "matches": 306,
+          "teams": 24,
+          "players": 564,
+          "player_match": 12106,
+          "player_totals_full_season": 564,
+          "team_stats": 34840,
+          "average_positions": 9291,
+          "heatmap_points": 329403,
+          "shot_events": 7862,
+          "match_momentum": 28054,
+          "player_identity": 564
+        }
+      }
+    },
+    {
+      "phase": "build-warehouse",
+      "started_at": "2026-11-26T07:25:28.120433+00:00",
+      "ended_at": "2026-11-26T07:25:32.949805+00:00",
+      "status": "completed",
+      "details": {
+        "warehouse_path": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\warehouse\\gronestats.duckdb",
+        "canonical_rows": {
+          "matches_canonical": 306,
+          "teams_canonical": 24,
+          "players_canonical": 564,
+          "player_identity_canonical": 564,
+          "player_match_canonical": 12106,
+          "player_totals_season_canonical": 564,
+          "team_stats_canonical": 34840,
+          "average_positions_canonical": 9291,
+          "heatmap_points_canonical": 329403,
+          "shot_events_canonical": 7862,
+          "match_momentum_canonical": 28054
+        }
+      }
+    },
+    {
+      "phase": "validate",
+      "started_at": "2026-11-26T07:25:32.951975+00:00",
+      "ended_at": "2026-11-26T07:25:36.473981+00:00",
+      "status": "completed",
+      "details": {
+        "status": "passed",
+        "validated_at": "2026-11-26T07:25:36.429322+00:00",
+        "blocking_errors": [],
+        "warnings": [
+          "dashboard: Missing warning-only sheet 'momentum' for 1 matches (12831489) | backfill: missing_from_source=1"
+        ],
+        "targets": {
+          "warehouse": {
+            "status": "passed",
+            "validated_at": "2026-11-26T07:25:33.393876+00:00",
+            "blocking_errors": [],
+            "warnings": [],
+            "stats": {
+              "row_counts": {
+                "matches_canonical": 306,
+                "teams_canonical": 24,
+                "players_canonical": 564,
+                "player_identity_canonical": 564,
+                "player_match_canonical": 12106,
+                "player_totals_season_canonical": 564,
+                "team_stats_canonical": 34840,
+                "average_positions_canonical": 9291,
+                "heatmap_points_canonical": 329403,
+                "shot_events_canonical": 7862,
+                "match_momentum_canonical": 28054
+              }
+            }
+          },
+          "dashboard": {
+            "status": "passed",
+            "validated_at": "2026-11-26T07:25:36.406495+00:00",
+            "blocking_errors": [],
+            "warnings": [
+              "Missing warning-only sheet 'momentum' for 1 matches (12831489) | backfill: missing_from_source=1"
+            ],
+            "stats": {
+              "expected_finished_matches": 306,
+              "expected_curated_matches": 306,
+              "curated_matches": 306,
+              "curated_players": 564,
+              "curated_player_match_rows": 12106,
+              "timestamp_span_seconds": 0.2682366371154785
+            },
+            "diff": {}
+          }
+        }
+      }
+    },
+    {
+      "phase": "publish",
+      "started_at": "2026-11-26T07:25:36.473981+00:00",
+      "ended_at": "2026-11-26T07:25:38.729853+00:00",
+      "status": "completed",
+      "details": {
+        "targets": {
+          "dashboard": {
+            "release_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2024\\dashboard\\releases\\20261126_072342",
+            "current_dir": "C:\\Users\\Alvaro\\Proyectos\\Proyecto Gronestats\\GroneStatz\\gronestats\\data\\Liga 1 Peru\\2024\\dashboard\\current",
+            "published_tables": [
+              "matches",
+              "teams",
+              "players",
+              "player_match",
+              "player_totals_full_season",
+              "team_stats",
+              "average_positions",
+              "heatmap_points",
+              "shot_events",
+              "match_momentum",
+              "player_identity"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "artifacts": {},
+  "ended_at": "2026-11-26T07:25:38.729853+00:00"
+}

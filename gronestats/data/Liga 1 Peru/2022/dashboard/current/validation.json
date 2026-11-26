@@ -1,23 +1,23 @@
 {
   "status": "passed",
-  "validated_at": "2026-04-07T21:19:39.635317+00:00",
+  "validated_at": "2026-11-26T17:02:30.844217+00:00",
   "blocking_errors": [],
   "warnings": [
     "dashboard: Missing legacy non-blocking sheet 'team_stats' for 1 matches (10858201)",
     "dashboard: Missing legacy non-blocking sheet 'average_positions' for 44 matches (10097645, 10097663, 10097670, 10097677, 10097687, 10097690, 10097707, 10097723, 10097724, 10097727)",
-    "dashboard: Missing warning-only sheet 'shotmap' for 47 matches (10097645, 10097663, 10097666, 10097670, 10097677, 10097687, 10097690, 10097698, 10097704, 10097707)",
+    "dashboard: Missing warning-only sheet 'shotmap' for 46 matches (10097645, 10097663, 10097666, 10097670, 10097677, 10097687, 10097690, 10097698, 10097704, 10097707)",
     "dashboard: Missing warning-only sheet 'momentum' for 39 matches (10097663, 10097670, 10097677, 10097687, 10097690, 10097707, 10097723, 10097724, 10097727, 10097743)"
   ],
   "targets": {
     "warehouse": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:19:34.133119+00:00",
+      "validated_at": "2026-11-26T17:02:26.171665+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
         "row_counts": {
           "matches_canonical": 348,
-          "teams_canonical": 20,
+          "teams_canonical": 28,
           "players_canonical": 617,
           "player_identity_canonical": 617,
           "player_match_canonical": 12519,
@@ -25,19 +25,19 @@
           "team_stats_canonical": 33583,
           "average_positions_canonical": 9148,
           "heatmap_points_canonical": 401662,
-          "shot_events_canonical": 7986,
+          "shot_events_canonical": 8012,
           "match_momentum_canonical": 28397
         }
       }
     },
     "dashboard": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:19:37.772790+00:00",
+      "validated_at": "2026-11-26T17:02:29.224843+00:00",
       "blocking_errors": [],
       "warnings": [
         "Missing legacy non-blocking sheet 'team_stats' for 1 matches (10858201)",
         "Missing legacy non-blocking sheet 'average_positions' for 44 matches (10097645, 10097663, 10097670, 10097677, 10097687, 10097690, 10097707, 10097723, 10097724, 10097727)",
-        "Missing warning-only sheet 'shotmap' for 47 matches (10097645, 10097663, 10097666, 10097670, 10097677, 10097687, 10097690, 10097698, 10097704, 10097707)",
+        "Missing warning-only sheet 'shotmap' for 46 matches (10097645, 10097663, 10097666, 10097670, 10097677, 10097687, 10097690, 10097698, 10097704, 10097707)",
         "Missing warning-only sheet 'momentum' for 39 matches (10097663, 10097670, 10097677, 10097687, 10097690, 10097707, 10097723, 10097724, 10097727, 10097743)"
       ],
       "stats": {
@@ -46,19 +46,19 @@
         "curated_matches": 348,
         "curated_players": 617,
         "curated_player_match_rows": 12519,
-        "timestamp_span_seconds": 0.34498023986816406
+        "timestamp_span_seconds": 0.3014791011810303
       },
       "diff": {}
     },
     "fantasy": {
       "status": "passed",
-      "validated_at": "2026-04-07T21:19:39.635317+00:00",
+      "validated_at": "2026-11-26T17:02:30.842709+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
         "row_counts": {
           "matches": 348,
-          "teams": 20,
+          "teams": 28,
           "players": 617,
           "players_fantasy": 617,
           "player_match": 12519,
@@ -67,7 +67,7 @@
           "player_transfer": 40,
           "team_stats": 33583
         },
-        "timestamp_span_seconds": 0.13441753387451172
+        "timestamp_span_seconds": 0.09398841857910156
       }
     }
   }

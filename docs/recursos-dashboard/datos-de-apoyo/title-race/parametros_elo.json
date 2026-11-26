@@ -1,0 +1,71 @@
+{
+  "params": {
+    "k": 20,
+    "home": 70,
+    "altitude": 60,
+    "regression": 0.0,
+    "draw_max": 0.32,
+    "initial": 1450
+  },
+  "sigma": 120.0,
+  "n_sim": 3000,
+  "fit_seasons": [
+    2023,
+    2024,
+    2025
+  ],
+  "perdida_ajuste": 0.9393219618533394,
+  "fuera_de_muestra": {
+    "2025": {
+      "ajuste": [
+        2023,
+        2024
+      ],
+      "con_altitud": {
+        "k": 20,
+        "home": 70,
+        "altitude": 60,
+        "regression": 0.0,
+        "draw_max": 0.32,
+        "initial": 1450
+      },
+      "sin_altitud": {
+        "k": 20,
+        "home": 130,
+        "altitude": 0,
+        "regression": 0.0,
+        "draw_max": 0.32,
+        "initial": 1450
+      },
+      "perdida_con_altitud": 0.9784992813867734,
+      "perdida_sin_altitud": 0.9892402472406318,
+      "perdida_frecuencias": 1.0532013538491882
+    },
+    "2026": {
+      "ajuste": [
+        2023,
+        2024,
+        2025
+      ],
+      "con_altitud": {
+        "k": 20,
+        "home": 70,
+        "altitude": 60,
+        "regression": 0.0,
+        "draw_max": 0.32,
+        "initial": 1450
+      },
+      "sin_altitud": {
+        "k": 15,
+        "home": 100,
+        "altitude": 0,
+        "regression": 0.0,
+        "draw_max": 0.3,
+        "initial": 1450
+      },
+      "perdida_con_altitud": 0.9757032386597404,
+      "perdida_sin_altitud": 0.9945540388012243,
+      "perdida_frecuencias": 1.027888103574682
+    }
+  }
+}

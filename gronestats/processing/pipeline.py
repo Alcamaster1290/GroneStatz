@@ -26,6 +26,7 @@ from gronestats.processing.fantasy_export import (
     FANTASY_EXPORT_TABLES,
     validate_fantasy_export_bundle,
 )
+from gronestats.processing.official_results import OFFICIAL_RESULTS_FILE, apply_official_results, load_official_results
 from gronestats.processing.optional_sheet_backfill import (
     load_optional_backfill_report_for_staging,
     warning_suffix_from_backfill_report,
@@ -288,6 +289,7 @@ class RunContext:
     publish_target: str
     logger: "PipelineLogger"
     manifest: dict[str, Any]
+    no_scrape: bool = False
 
 
 class PipelineLogger:
@@ -488,7 +490,8 @@ def normalize_finished_master(master: pd.DataFrame) -> pd.DataFrame:
         work = work.dropna(subset=["match_id"]).copy()
         work["match_id"] = pd.to_numeric(work["match_id"], errors="coerce").astype("Int64")
     if "fecha" in work.columns:
-        work["fecha"] = normalize_match_datetime(work["fecha"]).astype("string")
+        # Fecha real (UTC), no texto: la hora de Lima se aplica una sola vez, al construir `matches` curado.
+        work["fecha"] = pd.to_datetime(work["fecha"], errors="coerce")
     sort_columns = [column for column in ["round_number", "match_id"] if column in work.columns]
     if sort_columns:
         work = work.sort_values(sort_columns, kind="mergesort")
@@ -682,6 +685,14 @@ def collect_legacy_split_workbooks(
     return workbooks, source_files
 
 
+def sheet_alias_key(sheet_name: str) -> str:
+    """'Team Stats' y 'TeamStats' son la misma hoja: devuelve su clave canonica (o el propio nombre si no es una hoja conocida)."""
+    for key, aliases in SHEET_ALIASES.items():
+        if sheet_name in aliases:
+            return key
+    return sheet_name
+
+
 def write_legacy_split_workbooks(
     *,
     source_dirs: list[Path],
@@ -701,11 +712,17 @@ def write_legacy_split_workbooks(
         target = details_dir / f"Sofascore_{match_id}.xlsx"
         if only_missing and target.exists():
             continue
+        frames = {sheet_name: sheets[sheet_name] for sheet_name in ordered_sheets if sheet_name in sheets}
+        if target.exists():
+            # El Legacy manda en las hojas que trae, pero una hoja scrapeada despues (que el Legacy no tiene) no se pierde al reconstruir.
+            try:
+                existing = pd.read_excel(target, sheet_name=None)
+            except Exception:
+                existing = {}
+            present = {sheet_alias_key(name) for name in frames}
+            frames.update({name: frame for name, frame in existing.items() if sheet_alias_key(name) not in present})
         with pd.ExcelWriter(target, engine="openpyxl") as writer:
-            for sheet_name in ordered_sheets:
-                frame = sheets.get(sheet_name)
-                if frame is None:
-                    continue
+            for sheet_name, frame in frames.items():
                 frame.to_excel(writer, sheet_name=sheet_name, index=False)
         written += 1
 
@@ -1294,6 +1311,9 @@ def parse_heatmap_payload(value: object) -> tuple[int | None, list[tuple[float, 
             payload = ast.literal_eval(text)
         except (SyntaxError, ValueError):
             return None, []
+    if isinstance(payload, (list, tuple)):
+        # Formato actual del scraper: solo los puntos; el id del jugador va en la columna player_id de la fila.
+        payload = {"heatmap": payload}
     if not isinstance(payload, dict):
         return None, []
     player_id = safe_int(payload.get("id"))
@@ -1395,6 +1415,7 @@ def build_heatmap_points_curated(
         match_id = safe_int(row.get("match_id"))
         name = safe_text(row.get("player")) or safe_text(row.get("name"))
         parsed_player_id, points = parse_heatmap_payload(row.get("heatmap"))
+        parsed_player_id = parsed_player_id or safe_int(row.get("player_id"))
         match_lookup = player_lookup.get(match_id or -1, {"by_id": {}, "by_name": {}})
         identity = None
         if parsed_player_id is not None:
@@ -1431,12 +1452,47 @@ def build_heatmap_points_curated(
     return frame.reset_index(drop=True)
 
 
+def parse_nested_dict(value: object) -> dict[str, Any]:
+    if isinstance(value, dict):
+        return value
+    if not isinstance(value, str) or not value.strip():
+        return {}
+    for parser in (ast.literal_eval, json.loads):
+        try:
+            payload = parser(value.strip())
+        except (SyntaxError, ValueError):
+            continue
+        if isinstance(payload, dict):
+            return payload
+    return {}
+
+
+def fill_nested_shot_columns(work: pd.DataFrame) -> pd.DataFrame:
+    # SofaScore entrega `player` y `playerCoordinates` como diccionarios (2024 parcial, 2025 y 2026) en vez de
+    # las columnas planas x, y, z, name, id.1...; las coordenadas son las mismas y solo se rellenan los vacios.
+    work = work.copy()
+
+    def fill(column: str, nested: pd.Series) -> None:
+        work[column] = work[column].combine_first(nested) if column in work.columns else nested
+
+    if "playerCoordinates" in work.columns:
+        coordinates = work["playerCoordinates"].map(parse_nested_dict)
+        for axis in ("x", "y", "z"):
+            fill(axis, coordinates.map(lambda payload, axis=axis: payload.get(axis)))
+    if "player" in work.columns:
+        player = work["player"].map(parse_nested_dict)
+        work["nested_player_id"] = player.map(lambda payload: payload.get("id"))
+        for column in ("name", "shortName", "position", "jerseyNumber"):
+            fill(column, player.map(lambda payload, column=column: payload.get(column)))
+    return work
+
+
 def build_shot_events_curated(shotmap_raw: pd.DataFrame, matches: pd.DataFrame) -> pd.DataFrame:
     if shotmap_raw.empty:
         return pd.DataFrame()
-    work = shotmap_raw.copy()
+    work = fill_nested_shot_columns(shotmap_raw)
     work = coalesce_columns(work, "shot_id", ["shot_id", "id"])
-    work = coalesce_columns(work, "player_id", ["player_id", "id.1", "playerId"])
+    work = coalesce_columns(work, "player_id", ["player_id", "id.1", "id_1", "playerId", "nested_player_id"])
     work = coalesce_columns(work, "is_home", ["is_home", "isHome"])
     work = coalesce_columns(work, "shot_type", ["shot_type", "shotType"])
     work = coalesce_columns(work, "body_part", ["body_part", "bodyPart"])
@@ -2068,6 +2124,7 @@ def build_base_manifest(args: argparse.Namespace, paths: PipelinePaths, selected
         "mode": args.mode if hasattr(args, "mode") else "validate",
         "publish_target": getattr(args, "publish_target", getattr(args, "target", "dashboard")),
         "dry_run": bool(getattr(args, "dry_run", False)),
+        "no_scrape": bool(getattr(args, "no_scrape", False)),
         "from_phase": getattr(args, "from_phase", None),
         "to_phase": getattr(args, "to_phase", None),
         "selected_phases": selected_phases,
@@ -2166,6 +2223,13 @@ def phase_extract_master(ctx: RunContext) -> dict[str, Any]:
         else:
             copied_clean = False
         master = generated_clean.copy()
+    # Adjudicados y anulados por la federacion: se aplican al maestro limpio de esta corrida, nunca a la fuente.
+    official = load_official_results(paths.legacy_league_dir / OFFICIAL_RESULTS_FILE, paths.season)
+    official_applied: list[int] = []
+    if not official.empty:
+        master, official_applied = apply_official_results(master, official)
+        if not ctx.dry_run:
+            master.to_excel(clean_target, index=False, engine="openpyxl")
     master_inventory = build_master_inventory(master)
     if not ctx.dry_run:
         master_inventory.to_parquet(paths.master_inventory_path, index=False)
@@ -2178,6 +2242,7 @@ def phase_extract_master(ctx: RunContext) -> dict[str, Any]:
         "copied_raw": copied_raw,
         "copied_clean": copied_clean,
         "matches": int(len(master)),
+        "official_results_applied": official_applied,
         "source_mode": source_mode_from_paths(paths),
         "fantasy_bridge": bridge_manifest,
     }
@@ -2228,7 +2293,12 @@ def phase_bootstrap_raw(ctx: RunContext) -> dict[str, Any]:
     missing_match_ids = sorted(expected_match_ids - available_legacy_ids)
     incomplete_required_sheet_match_ids = sorted(find_required_sheet_gaps(paths.raw_details_dir, expected_match_ids))
     refresh_match_ids = sorted(set(missing_match_ids) | set(incomplete_required_sheet_match_ids))
-    if refresh_match_ids:
+    if refresh_match_ids and ctx.no_scrape:
+        # El scrapeo masivo exige autorizacion aparte; sin esto se reprocesa solo lo que ya esta descargado.
+        ctx.logger.log(
+            f"--no-scrape: scrape step skipped; {len(incomplete_required_sheet_match_ids)} matches still lack a complete workbook."
+        )
+    elif refresh_match_ids:
         ctx.logger.log(
             f"Refreshing {len(refresh_match_ids)} matches via targeted scrape "
             f"(missing_workbooks={len(missing_match_ids)}, missing_required_sheets={len(incomplete_required_sheet_match_ids)})."
@@ -2268,6 +2338,7 @@ def phase_bootstrap_raw(ctx: RunContext) -> dict[str, Any]:
         "legacy_split_match_ids": int(len(split_result["available_match_ids"])),
         "missing_match_ids_before_scrape": missing_match_ids,
         "missing_required_sheet_match_ids_before_scrape": incomplete_required_sheet_match_ids,
+        "scrape_skipped": bool(ctx.no_scrape and refresh_match_ids),
     }
 
 
@@ -2535,6 +2606,7 @@ def run_pipeline(args: argparse.Namespace) -> int:
         publish_target=args.publish_target,
         logger=logger,
         manifest=manifest,
+        no_scrape=bool(getattr(args, "no_scrape", False)),
     )
 
     if args.dry_run:
@@ -2668,6 +2740,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--to-phase", choices=PHASES, default=PHASES[-1])
     run_parser.add_argument("--only-missing", action="store_true")
     run_parser.add_argument("--force", action="store_true")
+    run_parser.add_argument("--no-scrape", action="store_true", help="Reprocess only the workbooks already downloaded; never call SofaScore.")
     run_parser.add_argument("--publish-target", choices=PUBLISH_TARGET_CHOICES, default="all")
     run_parser.add_argument("--dry-run", action="store_true")
 

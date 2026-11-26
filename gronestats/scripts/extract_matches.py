@@ -139,8 +139,10 @@ def main() -> None:
             print(f"  Would extract: {mid}")
         return
 
-    import ScraperFC as sfc
-    sofascore = sfc.Sofascore()
+    # Cliente con el transporte parcheado (quita el <pre> de Chrome y usa www.sofascore.com).
+    from gronestats.processing.optional_sheet_backfill import build_sofascore_client
+
+    sofascore = build_sofascore_client()
 
     output_dir = REPO_ROOT / "gronestats" / "data" / "Liga 1 Peru" / str(args.season) / "raw" / "details" / "xlsx"
     output_dir.mkdir(parents=True, exist_ok=True)

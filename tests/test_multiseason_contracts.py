@@ -3,6 +3,7 @@ from __future__ import annotations
 import warnings
 
 import pandas as pd
+import pytest
 
 from gronestats.data_layout import season_layout
 from gronestats.dashboard.data import (
@@ -112,6 +113,8 @@ def test_dashboard_smoke_with_real_published_seasons() -> None:
 
 def test_published_targets_match_warehouse_exports_by_row_count() -> None:
     warehouse_path = season_layout(2026, league="Liga 1 Peru").warehouse_db_path
+    if not warehouse_path.exists():
+        pytest.skip("el warehouse (gronestats.duckdb) está en .gitignore: se genera con el pipeline")
 
     for season in SEASONS:
         canonical_tables = load_canonical_tables_for_season(warehouse_path, season)

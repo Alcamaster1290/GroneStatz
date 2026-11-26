@@ -437,7 +437,7 @@ def test_build_match_goalkeeper_saves_uses_keeper_rows_by_position() -> None:
     assert keepers["saves"].tolist() == [4, 3]
 
 
-def test_published_2026_shot_events_support_goal_mouth_only_mode() -> None:
+def test_published_2026_shot_events_support_pitch_and_goal_mouth_maps() -> None:
     season_dir = Path("gronestats/data/Liga 1 Peru/2026/dashboard/current")
     shot_events_path = season_dir / "shot_events.parquet"
     matches_path = season_dir / "matches.parquet"
@@ -457,7 +457,9 @@ def test_published_2026_shot_events_support_goal_mouth_only_mode() -> None:
     assert not events.empty
     assert metadata["has_goal_mouth_map"] is True
     assert metadata["goal_mouth_event_count"] > 0
-    assert metadata["has_pitch_map"] is False
+    # build_shot_events_curated lee el formato anidado (playerCoordinates): el 2026 publicado trae x, y.
+    assert metadata["has_pitch_map"] is True
+    assert metadata["pitch_event_count"] > 0
 
 
 def test_build_match_insight_cards_degrades_without_standout_players() -> None:

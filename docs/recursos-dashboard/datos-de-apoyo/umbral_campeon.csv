@@ -1,0 +1,11 @@
+﻿temporada,torneo,campeon,puntos,verificado_con_datos,fuente
+2022,Apertura,Melgar,41,si,"gráfico «Puntos para ganar un torneo» (Mano a Mano) compartido por Alvaro, 2026-11-25"
+2022,Clausura,Alianza Lima,42,si,"gráfico «Puntos para ganar un torneo» (Mano a Mano) compartido por Alvaro, 2026-11-25"
+2023,Apertura,Alianza Lima,42,si,"gráfico «Puntos para ganar un torneo» (Mano a Mano) compartido por Alvaro, 2026-11-25"
+2023,Clausura,Universitario,39,si,"gráfico «Puntos para ganar un torneo» (Mano a Mano) compartido por Alvaro, 2026-11-25"
+2024,Apertura,Universitario,40,si,"gráfico «Puntos para ganar un torneo» (Mano a Mano) compartido por Alvaro, 2026-11-25"
+2024,Clausura,Universitario,37,si,"gráfico «Puntos para ganar un torneo» (Mano a Mano) compartido por Alvaro, 2026-11-25"
+2025,Apertura,Universitario,39,si,"gráfico «Puntos para ganar un torneo» (Mano a Mano) compartido por Alvaro, 2026-11-25"
+2025,Clausura,Universitario,40,si,"gráfico «Puntos para ganar un torneo» (Mano a Mano) compartido por Alvaro, 2026-11-25"
+2026,Apertura,Alianza Lima,40,"si (2026-11-26, con las 17 jornadas)","gráfico «Puntos para ganar un torneo» (Mano a Mano) compartido por Alvaro, 2026-11-25"
+2026,Clausura,Sport Huancayo,37,"medido con datos (no está en la imagen): 17 jornadas hasta el 2026-11-22; Sporting Cristal 35 con mejor diferencia de gol","calculado con gronestats.analysis.title_race, 2026-11-26"
