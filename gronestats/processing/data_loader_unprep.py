@@ -11,7 +11,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import pandas as pd
 import ScraperFC as sfc
 import ScraperFC.sofascore as sofascore_module
-from botasaurus_driver.driver import Driver
+
+from gronestats.processing import sofascore_session
 
 # Valores por defecto (sobrescribibles por CLI o env)
 DEFAULT_YEAR = os.getenv("GRONESTATS_YEAR", "2024")
@@ -45,16 +46,8 @@ def _normalize_json_like_text(payload: str) -> str:
 
 
 def botasaurus_browser_get_json_compat(url: str) -> dict:
-    driver = Driver(headless=True, block_images_and_css=True)
-    try:
-        driver.get(url)
-        page_source = _normalize_json_like_text(driver.page_text)
-        return json.loads(page_source)
-    finally:
-        try:
-            driver.close()
-        except Exception:
-            pass
+    # SofaScore bloquea un navegador nuevo por petición y api.sofascore.com: ver sofascore_session.
+    return sofascore_session.get_json(url)
 
 
 def patch_scraperfc_sofascore_transport() -> None:
@@ -261,6 +254,7 @@ def fetch_matches(liga: str, year: str) -> pd.DataFrame:
             "ciudad": (venue_dict.get("city") or {}).get("name"),
             "fecha": pd.to_datetime(md.get("startTimestamp"), unit="s", errors="coerce"),
             "arbitro": (md.get("referee") or {}).get("name"),
+            "status": (md.get("status") or {}).get("type"),  # finished, postponed, canceled: un 3-0 administrativo no es un partido jugado
         }
         rows.append(row)
     return pd.DataFrame(rows).reset_index(drop=True)
@@ -342,8 +336,11 @@ def scrape_match_details(df_matches: pd.DataFrame, out_dir: Path, min_file_kb: i
             except Exception:
                 momentum_df = pd.DataFrame()
             heatmaps_df = pd.DataFrame(columns=["player", "player_id", "heatmap"])
+            # Un heatmap por jugador son ~30 llamadas por partido (~90 % del tiempo). Con
+            # GRONESTATS_SKIP_HEATMAPS=1 se omiten y se rellenan luego con backfill_optional_sheets.
+            skip_heatmaps = os.getenv("GRONESTATS_SKIP_HEATMAPS", "").lower() in {"1", "true", "yes"}
             try:
-                hm_dict = sofascore.scrape_heatmaps(match_id)
+                hm_dict = {} if skip_heatmaps else sofascore.scrape_heatmaps(match_id)
                 heatmaps_list = []
                 for pname, info in hm_dict.items():
                     if isinstance(info, dict) and info.get("heatmap"):
