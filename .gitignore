@@ -242,3 +242,6 @@ gronestats/data/Liga 1 Peru/warehouse/*.duckdb
 
 # Release de servicio para la API y la web (se genera con gronestats.web_bundle.build)
 gronestats/data/Liga 1 Peru/web/
+
+# web/lib es código de la web (utilidades), no la carpeta lib/ de paquetes de Python
+!web/lib/
