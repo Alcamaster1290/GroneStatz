@@ -236,3 +236,6 @@ gronestats/data/**/curated/
 gronestats/data/Liga 1 Peru/Partidos_*.xlsx
 gronestats/data/master_data/Partidos_Liga 1 Peru_*_limpio.xlsx
 gronestats/data/Liga 1 Peru/warehouse/*.duckdb
+
+# Visual companion sessions from brainstorming (local, regenerable)
+.superpowers/
