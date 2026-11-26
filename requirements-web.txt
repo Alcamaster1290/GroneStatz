@@ -1,0 +1,7 @@
+# Dependencias del bundle de servicio, la API y su arranque local (la web va en web/package.json)
+pandas
+pyarrow
+duckdb==0.10.2
+fastapi>=0.110,<1
+uvicorn>=0.29,<1
+httpx>=0.27
