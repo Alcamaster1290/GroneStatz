@@ -8,6 +8,8 @@
 
 **Tecnología:** Python 3.11 (pandas, pyarrow, duckdb, FastAPI, uvicorn), Node 22, Next.js 14.2, React 18, TypeScript 5.5, Tailwind 3.4, Jest.
 
+**Estado (2026-11-26): tareas 1 a 6 hechas** en la rama `feat/web-v1` (commits `f0a4184` a `ac61316`). Verificado: 256 pruebas de Python y 12 de Jest pasan; un clon limpio compila la web y pasa las pruebas nuevas; `scripts/smoke_web.py` da 12 de 12 con datos reales. Diferencias con lo planeado: los casilleros de abajo no se marcaron uno a uno; el heatmap y la altitud se agregan en la API; sin dorsal (el bundle no lo trae), el respaldo de la foto son las iniciales sobre el color del equipo; `ruff`, Playwright y `scripts/check` siguen fuera.
+
 ## Alcance de esta entrega
 
 **Entra:** bundle `web` con esquema y validación; API con los endpoints de Liga, Equipo, Jugador, Partido y Estado; web con las páginas `/liga`, `/equipos`, `/jugadores`, `/partidos` y `/estado`; pruebas de Python y de las utilidades de la web; arranque local.

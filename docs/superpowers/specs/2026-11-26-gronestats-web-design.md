@@ -1,6 +1,6 @@
 # GroneStats web: diseño
 
-**Estado:** borrador. Las siete secciones están aprobadas por Alvaro (2026-11-26). Falta su lectura del spec completo antes de pasar al plan de implementación. Reemplaza el borrador de octubre (`2026-10-26-reingenieria-gronestats-borrador.md`).
+**Estado:** borrador. Las siete secciones están aprobadas por Alvaro (2026-11-26). La v1 local está implementada según `docs/superpowers/plans/2026-11-26-gronestats-web-v1.md` (rama `feat/web-v1`): bundle de servicio, API y las pantallas de Liga, Equipo, Jugador, Partido y Estado. Quedan fuera de esa entrega: la fase `build-analytics` del pipeline, las tablas de la ficha sin código (percentiles, similitud, sinergia, densidad, estilo), las tarjetas Open Graph, el despliegue y el CI. Reemplaza el borrador de octubre (`2026-10-26-reingenieria-gronestats-borrador.md`).
 
 ## Alcance y decisiones previas
 
