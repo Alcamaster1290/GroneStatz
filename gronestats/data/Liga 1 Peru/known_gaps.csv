@@ -1,0 +1,8 @@
+season,kind,scope,reason,source
+2023,detail,6 partidos de la fecha 3 del Apertura 2023,Resultados administrativos 3-0: SofaScore no tiene datos de partido (no hay tiros ni estadísticas),docs/recursos-dashboard/plan-datos-faltantes.md §10
+2023,matches,Grau–Municipal y Mannucci–Municipal del Clausura 2023,Sin partido ni marcador en SofaScore; la tabla oficial los cuenta como puntos sin goles (decisión de Alvaro: quedan fuera del análisis),docs/recursos-dashboard/verificacion-tablas.md
+2025,matches,5 partidos de Deportivo Binacional del Clausura 2025,Se jugaron pero la federación los anuló: no cuentan en ninguna tabla,gronestats/data/Liga 1 Peru/resultados_oficiales.csv
+2022,venue,33 partidos de local de ADT Tarma (2022-2023),SofaScore no trae estadio para esos partidos,docs/recursos-dashboard/DECISIONES.md
+2023,venue,33 partidos de local de ADT Tarma (2022-2023),SofaScore no trae estadio para esos partidos,docs/recursos-dashboard/DECISIONES.md
+2025,lineups,20 alineaciones con 10 titulares (16 de Deportivo Garcilaso y 4 de Alianza Lima),SofaScore lista 10 titulares para el equipo en esos partidos,docs/recursos-dashboard/formacion-declarada.md
+,momentum,Hojas de momentum que SofaScore no trae (50 intentos en 2022-2026),Todos respondieron 404 en origen,docs/recursos-dashboard/plan-datos-faltantes.md §10

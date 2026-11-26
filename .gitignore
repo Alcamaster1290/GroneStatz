@@ -239,3 +239,6 @@ gronestats/data/Liga 1 Peru/warehouse/*.duckdb
 
 # Visual companion sessions from brainstorming (local, regenerable)
 .superpowers/
+
+# Release de servicio para la API y la web (se genera con gronestats.web_bundle.build)
+gronestats/data/Liga 1 Peru/web/
