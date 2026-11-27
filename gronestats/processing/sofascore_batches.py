@@ -20,6 +20,7 @@ Es reanudable: lo ya resuelto se omite y cada partido queda en ``raw/scrape_ledg
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import os
 import time
@@ -216,7 +217,7 @@ def make_heatmaps_processor(*, details_dir: Path, client: Any, guard: BlockGuard
             return {"status": "vacio", "note": "no hay workbook del partido"}
         frames = read_workbook_frames(workbook)
         sheet_name = next((name for name in HEATMAP_SHEET_NAMES if name in frames), HEATMAP_SHEET_NAMES[0])
-        if not force and not frames.get(sheet_name, pd.DataFrame()).empty:
+        if not force and _sheet_has_points(frames.get(sheet_name, pd.DataFrame())):
             return {"status": "saltado"}
         players = client.scrape_heatmaps(str(match_id))
         if guard.tripped:  # ScraperFC deja listas vacias ante un 403: nada de lo recibido es fiable
@@ -253,9 +254,33 @@ def pending_details(master: pd.DataFrame, details_dir: Path, ledger: Ledger, *, 
     return [match_id for match_id in ids if match_id in gaps and match_id not in skip and not (details_dir / f"Sofascore_{match_id}.xlsx").exists()]
 
 
+def _cell_has_points(cell: object) -> bool:
+    """La celda de un jugador trae puntos: la lista ``[(x, y), ...]`` o el dict historico ``{'id': ..., 'heatmap': [...]}``.
+    ``[]``, ``{}``, una celda vacia o ilegible no cuentan."""
+    if cell is None or (isinstance(cell, float) and pd.isna(cell)):
+        return False
+    if isinstance(cell, str):
+        try:
+            cell = ast.literal_eval(cell)
+        except (ValueError, SyntaxError):
+            return False
+    if isinstance(cell, dict):
+        cell = cell.get("heatmap")
+    return isinstance(cell, (list, tuple)) and len(cell) > 0
+
+
+def _sheet_has_points(frame: pd.DataFrame) -> bool:
+    """Una hoja con filas pero sin un solo punto no es un heatmap: un scrape bloqueado deja una fila por jugador con listas vacias
+    (y un libro de pocos KB)."""
+    if frame.empty:
+        return False
+    column = "heatmap" if "heatmap" in frame.columns else frame.columns[-1]
+    return any(_cell_has_points(cell) for cell in frame[column])
+
+
 def _heatmaps_done(workbook: Path) -> bool:
     frames = read_workbook_frames(workbook)
-    return any(not frames[name].empty for name in HEATMAP_SHEET_NAMES if name in frames)
+    return any(_sheet_has_points(frames[name]) for name in HEATMAP_SHEET_NAMES if name in frames)
 
 
 def pending_heatmaps(master: pd.DataFrame, details_dir: Path, ledger: Ledger, *, retry_empty: bool = False) -> list[int]:

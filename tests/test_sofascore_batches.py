@@ -29,6 +29,7 @@ from gronestats.processing.sofascore_batches import (
     parse_lineups,
     pending_details,
     pending_lineups,
+    pending_heatmaps,
     pending_momentum,
     pending_player_images,
     pending_sheet,
@@ -232,6 +233,28 @@ def test_heatmaps_processor_reuses_the_legacy_sheet_name_and_never_writes_when_b
 
     assert process(9)["status"] == "ok"
     assert pd.ExcelFile(legacy).sheet_names.count("Heatmap") == 1 and "Heatmaps" not in pd.ExcelFile(legacy).sheet_names
+
+
+def test_a_heatmaps_sheet_with_rows_but_no_points_is_pending_and_gets_rescraped(tmp_path: Path) -> None:
+    # Un scrape bloqueado dejó una fila por jugador con listas vacías: el libro pesa poco y no tiene heatmaps de verdad.
+    empty = tmp_path / "Sofascore_20.xlsx"
+    _write_workbook(empty, Team_Stats=pd.DataFrame({"a": [1]}), Heatmaps=pd.DataFrame({"player": ["A", "B"], "player_id": [1, 2], "heatmap": ["[]", "[]"]}))
+    done = tmp_path / "Sofascore_21.xlsx"
+    _write_workbook(done, Team_Stats=pd.DataFrame({"a": [1]}), Heatmaps=pd.DataFrame({"player": ["A"], "player_id": [1], "heatmap": ["[(1, 2)]"]}))
+    legacy_done = tmp_path / "Sofascore_22.xlsx"
+    _write_workbook(legacy_done, Team_Stats=pd.DataFrame({"a": [1]}), Heatmap=pd.DataFrame({"player": ["Viejo"], "heatmap": ["{'id': 5, 'heatmap': [(1, 2)]}"]}))
+    legacy_empty = tmp_path / "Sofascore_23.xlsx"
+    _write_workbook(legacy_empty, Team_Stats=pd.DataFrame({"a": [1]}), Heatmap=pd.DataFrame({"player": ["Viejo"], "heatmap": ["{'id': 5, 'heatmap': []}"]}))
+    ledger = Ledger(tmp_path / "ledger.jsonl")
+
+    assert pending_heatmaps(_master([20, 21, 22, 23]), tmp_path, ledger) == [20, 23]  # solo los que no tienen un solo punto
+
+    guard, _ = _guard_with({})
+    process = make_heatmaps_processor(details_dir=tmp_path, client=_FakeClient(guard, {"A": {"id": 1, "heatmap": [(5, 6)]}}), guard=guard, force=False)
+    assert process(20)["status"] == "ok"  # ya no lo salta por tener filas
+    assert pd.read_excel(empty, sheet_name="Heatmaps")["heatmap"].tolist() == ["[(5, 6)]"]
+    assert process(21) == {"status": "saltado"}  # el que ya tiene puntos no se vuelve a pedir
+    assert pending_heatmaps(_master([20, 21, 22, 23]), tmp_path, ledger) == [23]
 
 
 def test_heatmaps_processor_reports_empty_when_the_match_has_no_points_or_no_workbook(tmp_path: Path) -> None:
