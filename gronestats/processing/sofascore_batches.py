@@ -616,6 +616,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--match-ids", default=None, help="Lista de match_id separados por coma (en vez de todos los pendientes); en player-images, de player_id.")
     parser.add_argument("--retry-empty", action="store_true", help="Reintenta los partidos que ya quedaron como 'vacio' en el registro.")
     parser.add_argument("--force", action="store_true", help="heatmaps: reescribe la hoja aunque ya tenga filas.")
+    parser.add_argument("--max-failures", type=int, default=3, help="Corta tras N partidos seguidos sin progreso (un bloqueo corta siempre). Sube el valor al reintentar partidos que se espera que den 404.")
     parser.add_argument("--dry-run", action="store_true", help="Muestra el plan sin llamar a SofaScore.")
     return parser
 
@@ -727,7 +728,7 @@ def main(argv: list[str] | None = None) -> int:
         progress = PROGRESS_STATUSES | {"vacio"}  # un 404 es dato ausente en origen; un bloqueo real corta por el guard
 
     ledger_mode = args.mode if args.mode in {"details", "heatmaps", "lineups"} else SHEET_MODES[args.mode]
-    summary = run_batches(pending, process, mode=ledger_mode, guard=guard, ledger=ledger, batch_size=batch_size, pause_seconds=pause, progress_statuses=progress)
+    summary = run_batches(pending, process, mode=ledger_mode, guard=guard, ledger=ledger, batch_size=batch_size, pause_seconds=pause, max_consecutive_failures=args.max_failures, progress_statuses=progress)
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 2 if summary["stop_reason"] else 0
 
