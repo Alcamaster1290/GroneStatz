@@ -50,6 +50,7 @@ Otras galerías y documentación de mplsoccer:
 
 | Recurso | Enlace | Para qué |
 |---|---|---|
+| football-docs (nutmeg) | <https://nutmeg.withqwerty.com/football-docs/> | Documentación indexada de proveedores de datos (Opta, StatsBomb, Wyscout, FBref, Understat…). Instalada como MCP en el CLI; notas guardadas en `literatura/` |
 | kloppy | <https://kloppy.pysport.org/> | Normalizar datos de eventos entre proveedores |
 | socceraction (SPADL, VAEP, xT) | <https://socceraction.readthedocs.io/> | Si algún día hay eventos con coordenadas |
 | soccerdata | <https://github.com/probberechts/soccerdata> | Referencia de cómo se obtienen datos abiertos |

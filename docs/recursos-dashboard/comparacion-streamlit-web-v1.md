@@ -78,7 +78,7 @@ Leyenda: ✔ igual o mejor · ◐ parcial · ✘ falta · ➕ solo existe en la 
 
 # Referencia de scouting (captura de Alvaro, 2026-11-27)
 
-Alvaro aclaró que el Streamlit es sobre todo **una referencia del tipo de información que se busca, orientada al scouting con datos, sin perder la parte comercial existente**. La comparación de arriba es contra `gronestats/dashboard` del repo; la captura es de otra app (liga argentina) que no está en el repo, así que lo siguiente sale solo de la imagen. Qué es «la parte comercial existente» está pendiente de aclarar.
+Alvaro aclaró que el Streamlit es sobre todo **una referencia del tipo de información que se busca, orientada al scouting con datos, sin perder la parte comercial existente**. La comparación de arriba es contra `gronestats/dashboard` del repo; la captura es de otra app (liga argentina) que no está en el repo, así que lo siguiente sale solo de la imagen. **La «parte comercial» que no se debe perder** (aclarado por Alvaro el 2026-11-27) son las estadísticas y los gráficos típicos de televisión: xG, tiros, tiros al arco, posesión, córners y gráficos simples. La web debe conservar esa capa, sencilla y de lectura rápida, y sumarle por debajo la de scouting.
 
 **Estructura que se ve.** Tres modos: *Clubes y Estadísticas*, *Jugadores y Scouting* y *Simulador Predictivo*. Dentro del primero: *Tablas de Liga*, *Ficha de Club*, *Comparador* y *Buscador de Partidos*. La tabla de liga tiene dos filtros, **Condición** (General, Local, Visitante) y **Valores** (Promedio por partido, Totales acumulados), y las columnas #, escudo, equipo, PJ, PTS, Efec %, GF, GC, DG, Pos %, Tiros, Al Arco, Córners y Atajadas; un selector de club abre su ficha.
 
