@@ -26,7 +26,7 @@ Para desarrollar la web con recarga en caliente: `npm run dev` en lugar de `buil
 | Ruta | Contenido |
 |---|---|
 | `/` | redirige a la liga de la última temporada |
-| `/liga/[temporada]/[torneo]` | tabla (Apertura, Clausura o Acumulada, tras cada fecha) y probabilidad de campeonar |
+| `/liga/[temporada]/[torneo]` | tabla de liga (Apertura, Clausura o Acumulada, tras cada fecha) con estadísticas de equipo (xG, posesión, tiros, tiros al arco, córners, atajadas, faltas, tarjetas), filtros **Condición** (general, local, visitante) y **Valores** (promedio por partido o totales acumulados), orden por cualquier columna (`?cond=&valores=&orden=&dir=`) y probabilidad de campeonar |
 | `/equipos/[slug]?season=&torneo=` | resumen, probabilidad, partido a partido (rival, altitud, xG, formación declarada, importancia), plantel |
 | `/jugadores/[slug]?season=` | ficha: totales, mapa de tiros con xG, heatmap, historial por temporada |
 | `/partidos/[id]` | marcador, formaciones, tiros de ambos equipos, jugadores |

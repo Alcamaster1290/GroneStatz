@@ -19,8 +19,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="es">
       <body className="min-h-screen bg-bg font-sans text-ink antialiased">
         <Header />
-        <main className="mx-auto w-full max-w-6xl px-4 py-6">{children}</main>
-        <footer className="mx-auto w-full max-w-6xl px-4 pb-10 pt-4 text-xs text-muted">
+        <main className="mx-auto w-full max-w-7xl px-4 py-6">{children}</main>
+        <footer className="mx-auto w-full max-w-7xl px-4 pb-10 pt-4 text-xs text-muted">
           <p>
             Datos hasta el {formatDate(release.data_as_of)} (hora de Lima) · release <span className="num">{release.release_id}</span> ·{" "}
             <Link href="/estado" className="underline">

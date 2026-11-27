@@ -98,3 +98,5 @@ Alvaro aclaró que el Streamlit es sobre todo **una referencia del tipo de infor
 | Simulador predictivo | Elo con altitud y Monte Carlo (ya calcula la probabilidad de título) | falta exponerlo de forma interactiva (resultados hipotéticos) |
 
 **Orden propuesto con este criterio:** (1) tablas de liga con estadísticas y los filtros Condición y Valores; (2) Jugadores y Scouting; (3) Comparador; (4) Buscador de partidos; (5) Simulador.
+
+**Avance (2026-11-27):** el punto 1 está hecho. `/liga/[temporada]/[torneo]` muestra PJ, PTS, Efec %, GF, GC, DG, xG, xGC, Pos %, Tiros, Al arco, Córners, Atajadas, Faltas y tarjetas, con los filtros Condición (general, local, visitante) y Valores (promedio por partido, totales acumulados) y orden por cualquier columna. En «general» usa las posiciones y puntos oficiales (con sanciones); local y visitante se calculan solo con los partidos jugados, sin sanciones. Las estadísticas de equipo vienen de la tabla nueva `team_match_stats` del bundle (esquema 1.2.0).

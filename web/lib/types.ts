@@ -49,6 +49,50 @@ export interface Standings {
   rows: StandingRow[];
 }
 
+export type LeagueCondition = "general" | "local" | "visita";
+export type LeagueValues = "promedio" | "total";
+
+export interface LeagueRow {
+  pos: number;
+  team_id: number;
+  name: string | null;
+  color: string | null;
+  crest: string | null;
+  level: string | null;
+  pj: number;
+  pts: number;
+  eff: number | null;
+  gf: number;
+  gc: number;
+  dg: number;
+  xg: number | null;
+  xga: number | null;
+  possession: number | null;
+  shots: number | null;
+  shots_on_target: number | null;
+  corners: number | null;
+  saves: number | null;
+  fouls: number | null;
+  yellow: number | null;
+  red: number | null;
+  /** Partidos con estadísticas de equipo (los promedios se calculan sobre ellos). */
+  n_stats: number;
+}
+
+export interface LeagueTableData {
+  release_id: string;
+  season: number;
+  tournament: string;
+  round_number: number;
+  rounds: number;
+  condition: LeagueCondition;
+  values: LeagueValues;
+  sort: string;
+  order: "asc" | "desc";
+  note: string | null;
+  rows: LeagueRow[];
+}
+
 export interface Importance {
   band: number | null;
   band_name: string | null;

@@ -31,8 +31,10 @@ def main() -> int:
 
     checks = [
         ("/", ["Tabla tras la fecha", leader["name"]]),
-        (f"/liga/{season}/Clausura", ["Probabilidad de campeonar", "Pts"]),
+        (f"/liga/{season}/Clausura", ["Probabilidad de campeonar", "PTS", "Efec %", "Atajadas"]),
         (f"/liga/{season}/Apertura?fecha=5", ["Tabla tras la fecha 5"]),
+        (f"/liga/{season}/Clausura?cond=local&valores=total&orden=shots", ["Totales acumulados", "Tiros", "Sin sanciones de puntos"]),
+        (f"/liga/{season}/Clausura?cond=inventada&orden=magia", ["Efec %", "Pos %"]),  # un filtro inválido cae al valor por defecto
         (f"/liga/{season}/Acumulada", ["Tabla acumulada"]),
         (f"/equipos/{leader['team_id']}-x?season={season}&torneo=Clausura", ["Partido a partido", "Plantel", "Próximamente", leader["name"]]),
         (f"/jugadores/{with_photo['player_id']}-x?season={season}", ["Mapa de tiros", "Por temporada", with_photo["name"]]),
@@ -46,7 +48,7 @@ def main() -> int:
         missing = [needle for needle in needles if needle not in response.text]
         ok = response.status_code == 200 and not missing
         failures += not ok
-        print(f"{'OK ' if ok else 'FALLA'} {response.status_code} {path}" + (f"  → falta: {missing}" if missing else ""))
+        print(f"{'OK ' if ok else 'FALLA'} {response.status_code} {path}" + (f"  -> falta: {missing}" if missing else ""))
     for path in ("/equipos/abc", "/liga/2026/Verano", "/partidos/1"):
         status = web.get(path).status_code
         failures += status != 404
