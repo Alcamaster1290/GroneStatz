@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from gronestats.api.app import create_app
 from gronestats.web_bundle.build import build_web_bundle
+from gronestats.web_bundle.schema import SCHEMA_VERSION
 from tests.fixtures.web_inputs import PNG, SEASONS, make_web_inputs
 
 
@@ -34,7 +35,7 @@ def client(world) -> TestClient:
 def test_release_reports_the_version_and_the_seasons(client: TestClient) -> None:
     body = client.get("/v1/release").json()
 
-    assert body["schema_version"] == "1.0.0" and body["release_id"]
+    assert body["schema_version"] == SCHEMA_VERSION and body["release_id"]
     assert body["seasons"] == [2026, 2025]
     assert {"xg", "elo"} <= set(body["models"])
 
@@ -201,3 +202,20 @@ def test_responses_carry_an_etag_per_release_and_answer_304_when_unchanged(clien
 
     assert first.headers["cache-control"].startswith("public") and first.headers["etag"].startswith('W/"')
     assert again.status_code == 304
+
+
+def test_team_strip_carries_the_team_cards_and_none_when_the_match_has_no_team_stats(client: TestClient) -> None:
+    apertura = client.get("/v1/teams/1/seasons/2026/matches").json()["tournaments"]["Apertura"]
+    first, last = apertura[0], apertura[2]
+
+    assert (first["yellow_for"], first["yellow_against"], first["red_for"], first["red_against"]) == (2, 1, 1, 0)  # Alfa local: 2 amarillas y 1 roja; Beta, 1 amarilla
+    assert last["yellow_for"] is None and last["red_for"] is None  # sin estadísticas de equipo no hay ceros inventados
+
+
+def test_status_classifies_the_gaps_and_lists_the_recoverable_ones(client: TestClient) -> None:
+    body = client.get("/v1/status").json()
+    momentum = next(row for row in body["coverage"] if row["season"] == 2025 and row["kind"] == "momentum")
+    actionable = [row for row in body["actionable"] if row["season"] == 2025 and row["kind"] == "momentum"]
+
+    assert (momentum["missing_from_source"], momentum["failed"], momentum["blocked"], momentum["pending"]) == (1, 1, 1, 2)
+    assert actionable == [{"season": 2025, "kind": "momentum", "pending": 2, "failed": 1, "blocked": 1}]  # el 404 no es recuperable

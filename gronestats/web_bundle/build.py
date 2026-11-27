@@ -173,10 +173,55 @@ def build_model_runs(analytics_dir: Path) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=list(TABLES["model_runs"].columns))
 
 
+LEDGER_MODE = {"detail": "details", "shots": "shotmap", "heatmaps": "heatmaps", "lineups": "lineups", "momentum": "momentum", "team_stats": "team_stats", "average_positions": "average_positions"}
+GAP_STATE = {"vacio": "missing_from_source", "error": "failed", "bloqueado": "blocked"}  # sin registro (o cualquier otro estado): pending
+
+
+def read_ledger(data_dir: Path, season: int) -> dict[tuple[str, object], str]:
+    """Último estado de cada (modo, partido) en el registro de scrapeo de la temporada; vacío si no hay registro."""
+    path = data_dir / str(season) / "raw" / "scrape_ledger.jsonl"
+    last: dict[tuple[str, object], str] = {}
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                entry = json.loads(line)
+                last[(str(entry.get("mode")), entry.get("match_id"))] = str(entry.get("status"))
+    return last
+
+
+def build_team_cards(data_dir: Path, seasons: Iterable[int], matches: pd.DataFrame) -> pd.DataFrame:
+    """Amarillas y rojas por equipo y partido (``Team Stats``, periodo ALL). SofaScore omite las rojas cuando no hubo ninguna, así que
+    en un partido con estadísticas de equipo una clave ausente es 0; un partido sin estadísticas de equipo no tiene fila."""
+    rows = []
+    teams = {int(row.match_id): (int(row.home_id), int(row.away_id)) for row in matches.itertuples()}
+    for season in seasons:
+        stats = _season_table(data_dir, season, "team_stats", ["MATCH_ID", "KEY", "PERIOD", "HOMEVALUE", "AWAYVALUE"])
+        if stats.empty:
+            continue
+        stats = stats[stats["PERIOD"].astype(str).str.upper() == "ALL"].assign(MATCH_ID=lambda f: pd.to_numeric(f["MATCH_ID"], errors="coerce"))
+        by_key = {key: stats[stats["KEY"] == key].drop_duplicates("MATCH_ID").set_index("MATCH_ID") for key in ("yellowCards", "redCards")}
+
+        def value(key: str, match_id: int, side: str) -> int:
+            frame = by_key[key]
+            if match_id not in frame.index:
+                return 0
+            number = pd.to_numeric(frame.at[match_id, f"{side}VALUE"], errors="coerce")
+            return 0 if pd.isna(number) else int(number)
+
+        for match_id in sorted(int(value) for value in stats["MATCH_ID"].dropna().unique()):
+            if match_id not in teams:
+                continue
+            for side, team_id in zip(("HOME", "AWAY"), teams[match_id]):
+                rows.append({"season": season, "match_id": match_id, "team_id": team_id, "yellow": value("yellowCards", match_id, side), "red": value("redCards", match_id, side)})
+    return pd.DataFrame(rows, columns=list(TABLES["team_cards"].columns))
+
+
 def build_coverage(data_dir: Path, seasons: Iterable[int], matches: pd.DataFrame, tables: dict[str, pd.DataFrame]) -> pd.DataFrame:
-    """Por temporada y tipo de dato: partidos esperados (jugados, sin marcador fijado ni anulados) y los que tienen ese dato."""
+    """Por temporada y tipo de dato: partidos esperados (jugados, sin marcador fijado ni anulados), los que tienen ese dato y, de los
+    que faltan, cuántos SofaScore no tiene (404), cuántos nunca se pidieron, cuántos dieron error y cuántos se cortaron por bloqueo."""
     rows = []
     for season in seasons:
+        ledger = read_ledger(data_dir, season)
         season_matches = matches[matches["season"] == season]
         normal = season_matches[season_matches["home_score"].notna() & season_matches["away_score"].notna() & ~is_official_award(season_matches["status"]) & ~is_annulled(season_matches["status"])]
         expected = _ids(normal, "match_id")
@@ -190,8 +235,12 @@ def build_coverage(data_dir: Path, seasons: Iterable[int], matches: pd.DataFrame
             "average_positions": _ids(_season_table(data_dir, season, "average_positions", ["match_id"]), "match_id"),
         }
         for kind, present_ids in sources.items():
-            present = len(expected & present_ids)
-            rows.append({"season": season, "kind": kind, "expected": len(expected), "present": present, "missing": len(expected) - present})
+            missing_ids = expected - present_ids
+            states = Counter(GAP_STATE.get(ledger.get((LEDGER_MODE[kind], match_id)), "pending") for match_id in missing_ids)
+            rows.append(
+                {"season": season, "kind": kind, "expected": len(expected), "present": len(expected & present_ids), "missing": len(missing_ids),
+                 "missing_from_source": states["missing_from_source"], "pending": states["pending"], "failed": states["failed"], "blocked": states["blocked"]}
+            )
     return pd.DataFrame(rows)
 
 
@@ -199,14 +248,9 @@ def ledger_summary(data_dir: Path, seasons: Iterable[int]) -> dict[str, dict[str
     """Estado actual de cada intento de scrapeo por temporada: modo -> estado -> partidos (el último intento de cada partido manda)."""
     summary: dict[str, dict[str, dict[str, int]]] = {}
     for season in seasons:
-        path = data_dir / str(season) / "raw" / "scrape_ledger.jsonl"
-        if not path.exists():
+        last = read_ledger(data_dir, season)
+        if not last:
             continue
-        last: dict[tuple[str, object], str] = {}
-        for line in path.read_text(encoding="utf-8").splitlines():
-            if line.strip():
-                entry = json.loads(line)
-                last[(str(entry.get("mode")), entry.get("match_id"))] = str(entry.get("status"))
         modes = {mode for mode, _ in last}
         summary[str(season)] = {mode: dict(Counter(status for (m, _), status in last.items() if m == mode)) for mode in sorted(modes)}
     return summary
@@ -256,6 +300,7 @@ def build_web_bundle(data_dir: Path, analytics_dir: Path, reference_dir: Path, o
         "known_gaps": _typed(known_gaps, "known_gaps"),
     }
     tables["data_coverage"] = _typed(build_coverage(data_dir, seasons, matches, tables), "data_coverage")
+    tables["team_cards"] = _typed(build_team_cards(data_dir, seasons, matches), "team_cards")
 
     played = matches[matches["home_score"].notna() & matches["away_score"].notna() & ~is_official_award(matches["status"]) & ~is_annulled(matches["status"])]
     data_as_of = played["date"].max()

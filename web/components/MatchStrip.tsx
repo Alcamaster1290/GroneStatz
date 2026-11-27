@@ -39,6 +39,24 @@ function Formation({ match }: { match: StripMatch }) {
   );
 }
 
+/** Amarillas (y rojas si las hubo) del equipo y del rival. Sin estadísticas de equipo no hay dato: un guion, no un cero. */
+function Cards({ match }: { match: StripMatch }) {
+  if (match.yellow_for === null || match.yellow_against === null) return <span className="text-muted">—</span>;
+  const reds = (match.red_for ?? 0) + (match.red_against ?? 0);
+  return (
+    <span className="num whitespace-nowrap" title={`Amarillas: ${match.yellow_for} del equipo y ${match.yellow_against} del rival. Rojas: ${match.red_for ?? 0} y ${match.red_against ?? 0}.`}>
+      <span aria-hidden className="mr-1 inline-block h-3 w-2 rounded-[1px] bg-[#f5c518] align-middle" />
+      {match.yellow_for}–{match.yellow_against}
+      {reds > 0 ? (
+        <span className="ml-2 text-loss">
+          <span aria-hidden className="mr-1 inline-block h-3 w-2 rounded-[1px] bg-[#d32f2f] align-middle" />
+          {match.red_for ?? 0}–{match.red_against ?? 0}
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 function Altitude({ match }: { match: StripMatch }) {
   if (match.altitude_m === null) return <span className="text-muted">—</span>;
   const diff = match.altitude_diff_m ?? 0;
@@ -70,7 +88,7 @@ function Probability({ match }: { match: StripMatch }) {
 export default function MatchStrip({ matches, tournament }: { matches: StripMatch[]; tournament: string }) {
   return (
     <div className="overflow-x-auto rounded-lg border border-line bg-surface">
-      <table className="w-full min-w-[860px] border-collapse text-sm">
+      <table className="w-full min-w-[940px] border-collapse text-sm">
         <caption className="sr-only">Partido a partido del {tournament}</caption>
         <thead>
           <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
@@ -94,6 +112,9 @@ export default function MatchStrip({ matches, tournament }: { matches: StripMatc
             </th>
             <th scope="col" className="px-2 py-2" title="Goles esperados a favor y en contra, con el modelo propio">
               xG
+            </th>
+            <th scope="col" className="px-2 py-2" title="Tarjetas del equipo – tarjetas del rival (amarillas y, si hubo, rojas)">
+              Tarjetas
             </th>
             <th scope="col" className="px-2 py-2">
               Formación
@@ -144,6 +165,9 @@ export default function MatchStrip({ matches, tournament }: { matches: StripMatc
               </td>
               <td className="num px-2 py-2 text-muted whitespace-nowrap">
                 {match.xg_for === null ? "—" : `${number(match.xg_for, 2)} – ${number(match.xg_against, 2)}`}
+              </td>
+              <td className="px-2 py-2">
+                <Cards match={match} />
               </td>
               <td className="num px-2 py-2">
                 <Formation match={match} />

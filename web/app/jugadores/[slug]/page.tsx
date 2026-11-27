@@ -78,7 +78,7 @@ export default async function PlayerPage({ params, searchParams }: Props) {
             <StatCard label="xG" value={number(stats.xg, 2)} hint={`${stats.shots} tiros · ${per90(stats.xg)} cada 90`} dim={dim} />
             <StatCard label="Goles − xG" value={`${stats.goals_minus_xg > 0 ? "+" : ""}${number(stats.goals_minus_xg, 2)}`} hint="rinde sobre lo esperado si es positivo" dim={dim} />
             <StatCard label="Rating" value={number(stats.rating, 2)} hint="promedio de SofaScore" dim={dim} />
-            <StatCard label="Tarjetas" value="sin dato" hint="el origen no las trae" />
+            <StatCard label="Tarjetas" value="sin dato" hint="no vienen por jugador; las del equipo están en su página" />
           </section>
 
           <section className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">

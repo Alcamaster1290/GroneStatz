@@ -182,6 +182,32 @@ def test_coverage_counts_expected_matches_without_annulled_or_postponed_ones(bui
     assert (coverage["expected"] - coverage["present"] == coverage["missing"]).all()
 
 
+def test_coverage_classifies_every_gap_with_the_scrape_ledger(built) -> None:
+    _, _, release = built
+    coverage = _table(release, "data_coverage").set_index(["season", "kind"])
+    momentum = coverage.loc[(2025, "momentum")]
+
+    # de los 5 momentum que faltan: uno dio 404, uno error, uno bloqueo y dos nunca se pidieron
+    assert (momentum["missing_from_source"], momentum["failed"], momentum["blocked"], momentum["pending"]) == (1, 1, 1, 2)
+    assert momentum["missing"] == 5
+    states = coverage["missing_from_source"] + coverage["pending"] + coverage["failed"] + coverage["blocked"]
+    assert (states == coverage["missing"]).all()  # cada hueco cae en un solo estado
+    assert coverage.loc[(2026, "heatmaps"), "pending"] == coverage.loc[(2026, "heatmaps"), "missing"]  # sin registro: nunca se pidió
+
+
+def test_team_cards_come_from_the_all_period_team_stats_and_omitted_reds_are_zero(built) -> None:
+    inputs, _, release = built
+    cards = _table(release, "team_cards")
+    first = inputs.played[2025][0]
+    second = inputs.played[2025][1]
+    first_rows = cards[cards["match_id"] == first].set_index("team_id")
+
+    assert first_rows.loc[1, "yellow"] == 2 and first_rows.loc[2, "yellow"] == 1  # el periodo 1ST no se suma
+    assert first_rows.loc[1, "red"] == 1 and first_rows.loc[2, "red"] == 0
+    assert cards[cards["match_id"] == second]["red"].tolist() == [0, 0]  # la roja se omite cuando no la hay
+    assert len(cards[cards["season"] == 2025]) == 6  # 3 partidos con estadísticas de equipo; los demás no tienen fila (no se inventan ceros)
+
+
 def test_manifest_lists_the_schema_version_tables_and_models(built) -> None:
     _, out, release = built
     manifest = json.loads((release / "manifest.json").read_text(encoding="utf-8"))

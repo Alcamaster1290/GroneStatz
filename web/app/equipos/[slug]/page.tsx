@@ -48,6 +48,9 @@ export default async function TeamPage({ params, searchParams }: Props) {
   const withXg = played.filter((match) => match.xg_for !== null);
   const xgFor = withXg.reduce((sum, match) => sum + (match.xg_for ?? 0), 0);
   const xgAgainst = withXg.reduce((sum, match) => sum + (match.xg_against ?? 0), 0);
+  const withCards = played.filter((match) => match.yellow_for !== null);
+  const yellows = withCards.reduce((sum, match) => sum + (match.yellow_for ?? 0), 0);
+  const reds = withCards.reduce((sum, match) => sum + (match.red_for ?? 0), 0);
   const last = race?.teams.find((item) => item.team_id === id)?.series.at(-1);
   const query = (value: string) => `?season=${season}&torneo=${value}`;
 
@@ -76,11 +79,12 @@ export default async function TeamPage({ params, searchParams }: Props) {
         <p className="rounded-lg border border-dashed border-line p-6 text-muted">{team.name} no jugó el Apertura ni el Clausura de {season}. Elige otra temporada.</p>
       ) : (
         <>
-          <section aria-label="Resumen del torneo" className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <section aria-label="Resumen del torneo" className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
             <StatCard label="Partidos" value={String(played.length)} hint={`n=${played.length}`} />
             <StatCard label="G · E · P" value={`${wins}·${draws}·${played.length - wins - draws}`} />
             <StatCard label="Goles" value={`${goalsFor}–${goalsAgainst}`} hint="a favor – en contra" />
             <StatCard label="xG" value={withXg.length ? `${number(xgFor, 1)}–${number(xgAgainst, 1)}` : "—"} hint={withXg.length ? `n=${withXg.length} partidos` : "sin mapa de tiros"} />
+            <StatCard label="Tarjetas" value={withCards.length ? `${yellows} · ${reds}` : "—"} hint={withCards.length ? `amarillas · rojas, n=${withCards.length} partidos` : "sin estadísticas de equipo"} />
             <StatCard label="Prob. título" value={pct(last?.p_title)} hint="tras su último partido" />
             <StatCard label="Puntos" value={String(wins * 3 + draws)} hint="sin sanciones" />
           </section>

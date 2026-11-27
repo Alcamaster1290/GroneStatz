@@ -112,6 +112,10 @@ def team_matches(release: Release, team_id: int, season: int) -> dict[str, Any]:
     lineups = {int(row.match_id): row for row in release.q("SELECT match_id, formation, defenders_ok, consistent FROM lineups WHERE season = ? AND team_id = ?", [season, team_id]).itertuples()}
     importance = {int(row["match_id"]): row for row in records(release.q("SELECT match_id, band, band_name, lives, threshold_used, matches_before, matches_remaining, points_before, points_needed FROM match_importance WHERE season = ? AND team_id = ?", [season, team_id]))}
     xg = {(int(row.match_id), int(row.team_id)): float(row.xg) for row in release.q("SELECT s.match_id, s.team_id, SUM(s.xg) AS xg FROM shot_events s JOIN matches m ON m.match_id = s.match_id WHERE m.season = ? AND (m.home_id = ? OR m.away_id = ?) GROUP BY 1, 2", [season, team_id, team_id]).itertuples()}
+    cards = {
+        (int(row.match_id), int(row.team_id)): (int(row.yellow), int(row.red))
+        for row in release.q("SELECT c.match_id, c.team_id, c.yellow, c.red FROM team_cards c JOIN matches m ON m.match_id = c.match_id WHERE c.season = ? AND (m.home_id = ? OR m.away_id = ?)", [season, team_id, team_id]).itertuples()
+    }
     after: dict[int, float] = {}
     before: dict[int, float] = {}
     for _, group in release.q("SELECT tournament, match_id, k, p_title FROM title_probability WHERE season = ? AND team_id = ? ORDER BY tournament, k", [season, team_id]).groupby("tournament"):
@@ -130,6 +134,7 @@ def team_matches(release: Release, team_id: int, season: int) -> dict[str, Any]:
         result = None if scored is None or conceded is None else "G" if scored > conceded else "E" if scored == conceded else "P"
         lineup = lineups.get(match_id)
         altitude = _py(row.altitude_m)
+        own_cards, rival_cards = cards.get((match_id, team_id)), cards.get((match_id, rival_id))  # None = el partido no tiene estadísticas de equipo
         grouped.setdefault(str(row.tournament), []).append(
             {
                 "match_id": match_id,
@@ -148,6 +153,10 @@ def team_matches(release: Release, team_id: int, season: int) -> dict[str, Any]:
                 "result": result,
                 "xg_for": xg.get((match_id, team_id)),
                 "xg_against": xg.get((match_id, rival_id)),
+                "yellow_for": own_cards[0] if own_cards else None,
+                "yellow_against": rival_cards[0] if rival_cards else None,
+                "red_for": own_cards[1] if own_cards else None,
+                "red_against": rival_cards[1] if rival_cards else None,
                 "formation": _py(lineup.formation) if lineup is not None else None,
                 "defenders_ok": bool(lineup.defenders_ok) if lineup is not None else None,
                 "importance": importance.get(match_id),
@@ -300,6 +309,7 @@ def player_heatmap(release: Release, player_id: int, season: int | None) -> dict
 def status(release: Release) -> dict[str, Any]:
     cutoff = datetime.now() - timedelta(hours=STALE_AFTER_HOURS)
     overdue = int(release.q("SELECT COUNT(*) AS n FROM matches WHERE date < ? AND home_score IS NULL AND (status IS NULL OR status = 'finished')", [cutoff])["n"].iloc[0])
+    coverage = records(release.q("SELECT * FROM data_coverage ORDER BY season DESC, kind"))
     models = []
     for row in records(release.q("SELECT * FROM model_runs")):
         for key in ("params", "metrics"):
@@ -315,7 +325,13 @@ def status(release: Release) -> dict[str, Any]:
         "stale": overdue > 0,
         "stale_after_hours": STALE_AFTER_HOURS,
         "overdue_matches": overdue,
-        "coverage": records(release.q("SELECT * FROM data_coverage ORDER BY season DESC, kind")),
+        "coverage": coverage,
+        # lo que sí se puede recuperar: nunca se pidió, dio error o se cortó por bloqueo (un 404 de SofaScore no es recuperable)
+        "actionable": [
+            {"season": row["season"], "kind": row["kind"], "pending": row["pending"], "failed": row["failed"], "blocked": row["blocked"]}
+            for row in coverage
+            if row["pending"] + row["failed"] + row["blocked"] > 0
+        ],
         "known_gaps": records(release.q("SELECT * FROM known_gaps")),
         "ledger": release.manifest.get("ledger", {}),
         "models": models,

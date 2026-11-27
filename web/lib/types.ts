@@ -77,6 +77,10 @@ export interface StripMatch {
   result: "G" | "E" | "P" | null;
   xg_for: number | null;
   xg_against: number | null;
+  yellow_for: number | null;
+  yellow_against: number | null;
+  red_for: number | null;
+  red_against: number | null;
   formation: string | null;
   defenders_ok: boolean | null;
   importance: Importance | null;
@@ -265,6 +269,20 @@ export interface CoverageRow {
   expected: number;
   present: number;
   missing: number;
+  /** SofaScore respondió 404: no se puede recuperar. */
+  missing_from_source: number;
+  /** Nunca se pidió. */
+  pending: number;
+  failed: number;
+  blocked: number;
+}
+
+export interface ActionableGap {
+  season: number;
+  kind: string;
+  pending: number;
+  failed: number;
+  blocked: number;
 }
 
 export interface KnownGap {
@@ -291,6 +309,7 @@ export interface Status {
   stale_after_hours: number;
   overdue_matches: number;
   coverage: CoverageRow[];
+  actionable: ActionableGap[];
   known_gaps: KnownGap[];
   ledger: Record<string, Record<string, Record<string, number>>>;
   models: ModelRun[];

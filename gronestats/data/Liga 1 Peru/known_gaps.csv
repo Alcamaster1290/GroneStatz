@@ -6,4 +6,4 @@ season,kind,scope,reason,source
 2023,venue,33 partidos de local de ADT Tarma (2022-2023),SofaScore no trae estadio para esos partidos,docs/recursos-dashboard/DECISIONES.md
 2025,lineups,20 alineaciones con 10 titulares (16 de Deportivo Garcilaso y 4 de Alianza Lima),SofaScore lista 10 titulares para el equipo en esos partidos,docs/recursos-dashboard/formacion-declarada.md
 ,momentum,Hojas de momentum que SofaScore no trae (50 intentos en 2022-2026),Todos respondieron 404 en origen,docs/recursos-dashboard/plan-datos-faltantes.md §10
-,cards,Tarjetas amarillas y rojas por jugador (2022-2026),La columna viene vacía en las cinco temporadas del bundle publicado: no hay dato de tarjetas,gronestats/data/Liga 1 Peru/<temporada>/dashboard/current/player_match.parquet
+,cards,Tarjetas amarillas y rojas por jugador (2022-2026),«Player Stats» no trae tarjetas por jugador (la columna del bundle está vacía en las cinco temporadas). Sí hay tarjetas por equipo y partido en «Team Stats»: tabla team_cards,gronestats/data/Liga 1 Peru/<temporada>/dashboard/current/player_match.parquet

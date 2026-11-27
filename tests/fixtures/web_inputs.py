@@ -84,9 +84,21 @@ def make_web_inputs(root: Path) -> WebInputs:
             hm_rows += [{"match_id": match_id, "player_id": 11, "team_id": 1, "team_name": "Alfa", "name": "Jugador 11", "x": 40 + i * 5, "y": 30 + i * 8} for i in range(5)]
         for match_id in played[season][::2]:
             momentum.append({"match_id": match_id, "minute": 1, "value": 5, "dominant_side": "home"})
-        for match_id in played[season][:3]:
+        for number, match_id in enumerate(played[season][:3]):
             stats.append({"MATCH_ID": match_id, "KEY": "expectedGoals", "PERIOD": "ALL", "HOMEVALUE": 1.1, "AWAYVALUE": 0.8})
+            stats.append({"MATCH_ID": match_id, "KEY": "yellowCards", "PERIOD": "ALL", "HOMEVALUE": 2.0, "AWAYVALUE": 1.0})
+            stats.append({"MATCH_ID": match_id, "KEY": "yellowCards", "PERIOD": "1ST", "HOMEVALUE": 1.0, "AWAYVALUE": 0.0})  # otros periodos no cuentan
+            if number == 0:  # SofaScore solo trae las rojas cuando las hay: el resto de los partidos las omite
+                stats.append({"MATCH_ID": match_id, "KEY": "redCards", "PERIOD": "ALL", "HOMEVALUE": 1.0, "AWAYVALUE": 0.0})
             positions.append({"match_id": match_id, "player_id": 11, "team_id": 1, "average_x": 50, "average_y": 50})
+        # Registro de scrapeo: de los momentum que faltan, uno dio 404, uno error, uno bloqueo y el resto nunca se pidió.
+        ledger_modes = {1: "vacio", 3: "error", 5: "bloqueado"}
+        ledger_path = data_dir / str(season) / "raw"
+        ledger_path.mkdir(parents=True, exist_ok=True)
+        (ledger_path / "scrape_ledger.jsonl").write_text(
+            "".join(json.dumps({"ts": "2026-11-26T10:00:00+00:00", "mode": "momentum", "match_id": played[season][index], "status": status}) + "\n" for index, status in ledger_modes.items() if index < len(played[season])),
+            encoding="utf-8",
+        )
         pd.DataFrame(pm_rows).to_parquet(folder / "player_match.parquet", index=False)
         pd.DataFrame(hm_rows).to_parquet(folder / "heatmap_points.parquet", index=False)
         pd.DataFrame(momentum).to_parquet(folder / "match_momentum.parquet", index=False)

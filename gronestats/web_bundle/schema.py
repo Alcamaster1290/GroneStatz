@@ -13,7 +13,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-SCHEMA_VERSION = "1.0.0"
+# 1.1.0: data_coverage clasifica cada hueco con el registro de scrapeo y se añade team_cards (cambios compatibles: solo añaden).
+SCHEMA_VERSION = "1.1.0"
 TOURNAMENTS = ("Apertura", "Clausura")  # los torneos cortos; ``standings`` agrega "Acumulada"
 
 
@@ -51,7 +52,10 @@ TABLES: dict[str, TableSpec] = {
     ),
     "venues": TableSpec(("estadio", "ciudad", "altitud_msnm", "precision", "fuente"), ("estadio", "ciudad")),
     "model_runs": TableSpec(("model", "version", "trained_on", "params", "metrics"), ("model", "version")),
-    "data_coverage": TableSpec(("season", "kind", "expected", "present", "missing"), ("season", "kind")),
+    # missing = missing_from_source (SofaScore respondió 404) + pending (nunca se pidió) + failed (error) + blocked (bloqueo)
+    "data_coverage": TableSpec(("season", "kind", "expected", "present", "missing", "missing_from_source", "pending", "failed", "blocked"), ("season", "kind")),
+    # Tarjetas por equipo y partido, de «Team Stats» (periodo ALL). «Player Stats» no trae tarjetas por jugador.
+    "team_cards": TableSpec(("season", "match_id", "team_id", "yellow", "red"), ("season", "match_id", "team_id")),
     "known_gaps": TableSpec(("season", "kind", "scope", "reason", "source")),
     "release_log": TableSpec(("release_id", "built_at", "matches", "data_as_of"), ("release_id",)),
 }
