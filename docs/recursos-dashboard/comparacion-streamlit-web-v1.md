@@ -73,3 +73,28 @@ Leyenda: ✔ igual o mejor · ◐ parcial · ✘ falta · ➕ solo existe en la 
 10. Tarjetas para compartir (Open Graph), fase `build-analytics` en el pipeline, despliegue y CI.
 
 **Decisión pendiente:** la final y los playoffs (el Streamlit muestra «Grand Final»; el bundle de la web solo trae Apertura y Clausura).
+
+---
+
+# Referencia de scouting (captura de Alvaro, 2026-11-27)
+
+Alvaro aclaró que el Streamlit es sobre todo **una referencia del tipo de información que se busca, orientada al scouting con datos, sin perder la parte comercial existente**. La comparación de arriba es contra `gronestats/dashboard` del repo; la captura es de otra app (liga argentina) que no está en el repo, así que lo siguiente sale solo de la imagen. Qué es «la parte comercial existente» está pendiente de aclarar.
+
+**Estructura que se ve.** Tres modos: *Clubes y Estadísticas*, *Jugadores y Scouting* y *Simulador Predictivo*. Dentro del primero: *Tablas de Liga*, *Ficha de Club*, *Comparador* y *Buscador de Partidos*. La tabla de liga tiene dos filtros, **Condición** (General, Local, Visitante) y **Valores** (Promedio por partido, Totales acumulados), y las columnas #, escudo, equipo, PJ, PTS, Efec %, GF, GC, DG, Pos %, Tiros, Al Arco, Córners y Atajadas; un selector de club abre su ficha.
+
+**Qué de eso tenemos.** `Team Stats` trae 50 métricas en 7 grupos (Match overview, Shots, Attack, Passes, Defending, Duels, Goalkeeping) más xG, con 306 de 306 partidos en 2026.
+
+| Elemento de la referencia | Con qué se construye | Estado |
+|---|---|---|
+| PJ, PTS, GF, GC, DG | `standings` y `matches` | ya está en el bundle |
+| Efec % | puntos ÷ (3 × PJ) | se calcula |
+| Condición local o visitante | `matches` (lado del equipo) | se calcula |
+| Pos %, Tiros, Al Arco, Córners, Atajadas | `team_stats`: `ballPossession`, `totalShotsOnGoal`, `shotsOnGoal`, `cornerKicks`, `goalkeeperSaves` | está en el warehouse; falta publicarlo en el bundle |
+| Ficha de club | página de equipo actual | parcial |
+| Comparador de clubes | las 50 métricas de equipo | datos listos; falta la pantalla |
+| Comparador de jugadores | percentiles por rol | falta calcularlos |
+| Buscador de partidos | catálogo con filtros | falta |
+| Jugadores y Scouting | `player_match`, xG por jugador, edad (`dateofbirth`), posición, fotos (89,3 %) | falta per-90, percentiles por rol, jugadores parecidos, filtros por edad, posición y minutos, y lista corta |
+| Simulador predictivo | Elo con altitud y Monte Carlo (ya calcula la probabilidad de título) | falta exponerlo de forma interactiva (resultados hipotéticos) |
+
+**Orden propuesto con este criterio:** (1) tablas de liga con estadísticas y los filtros Condición y Valores; (2) Jugadores y Scouting; (3) Comparador; (4) Buscador de partidos; (5) Simulador.
