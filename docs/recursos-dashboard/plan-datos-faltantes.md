@@ -176,3 +176,15 @@ Quedan 126 jugadores con minutos sin foto en origen (el 0,8 % de los minutos): s
 - Los formatos siguen mezclados (la carpeta ya los mezclaba): la web debe servir los tres o convertirlos.
 
 Reproducir: `py -3.11 -m gronestats.processing.sofascore_batches player-images`.
+
+## 12. Heatmaps de 2024, heatmaps vacíos de 2022-2023 y tarjetas (2026-11-27)
+
+**Heatmaps del Clausura 2024 (34 partidos): no hacía falta scrapear.** Los libros ya traían la hoja `Heatmaps` con 1.025 jugadores y unos 1.000 puntos por partido, guardados como lista simple `[(x, y), ...]`. El bundle de 2024 se había republicado desde un `staging` anterior al arreglo del lector. Reprocesar 2024 desde `build-staging` con `--no-scrape` los recuperó: **306 de 306 partidos con heatmap (368.113 puntos)**.
+
+**Heatmaps de 2022-2023 (45 partidos): libros vacíos.** Alvaro señaló que un heatmap puede existir en el Excel y estar vacío (el libro pesa menos de 100 KB). Eran 41 y 4 libros de 11-13 KB con la hoja `Heatmaps` y una fila por jugador, pero cero puntos. El ejecutor los daba por hechos porque la hoja tenía filas. Arreglo: una hoja cuenta solo si al menos un jugador trae puntos (`_sheet_has_points`), con prueba. Al pedirlos de nuevo, los 11 primeros resueltos respondieron vacíos, sin bloqueo, y son partidos que tampoco tienen tiros ni posiciones medias en origen: SofaScore no tiene el detalle de jugador. Opción nueva `--max-failures` para seguir con el resto sin que la regla de los 3 fallos seguidos corte la tanda.
+
+**Posiciones medias 2022, partido 10438805 (Cristal–Mannucci, Clausura fecha 19):** el reintento volvió a dar el mismo error de ScraperFC (lista vacía). Queda como «con error».
+
+**Tarjetas.** La hoja `Player Stats` (85 columnas) no trae tarjetas por jugador (solo `fouls` y `wasFouled`). `Team Stats` sí trae `Yellow cards` y, cuando las hay, `Red cards` por equipo y partido: 330-343 partidos con amarillas por temporada (2022: 1.930 amarillas y 142 rojas; 2026: 1.362 y 135). Van a la tabla `team_cards` del bundle de servicio (esquema 1.1.0). Las tarjetas por jugador exigirían pedir `/event/{id}/incidents`, una llamada por partido (unos 1.600), sin autorización todavía.
+
+**Monitor.** `data_coverage` clasifica cada partido que falta con el registro de scrapeo: `missing_from_source` (404), `pending` (nunca pedido), `failed` y `blocked`. Solo los tres últimos son recuperables.

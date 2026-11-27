@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "validated_at": "2026-11-26T07:25:36.429322+00:00",
+  "validated_at": "2026-11-27T00:15:31.203744+00:00",
   "blocking_errors": [],
   "warnings": [
     "dashboard: Missing warning-only sheet 'momentum' for 1 matches (12831489) | backfill: missing_from_source=1"
@@ -8,7 +8,7 @@
   "targets": {
     "warehouse": {
       "status": "passed",
-      "validated_at": "2026-11-26T07:25:33.393876+00:00",
+      "validated_at": "2026-11-27T00:15:23.453309+00:00",
       "blocking_errors": [],
       "warnings": [],
       "stats": {
@@ -21,7 +21,7 @@
           "player_totals_season_canonical": 564,
           "team_stats_canonical": 34840,
           "average_positions_canonical": 9291,
-          "heatmap_points_canonical": 329403,
+          "heatmap_points_canonical": 368113,
           "shot_events_canonical": 7862,
           "match_momentum_canonical": 28054
         }
@@ -29,7 +29,7 @@
     },
     "dashboard": {
       "status": "passed",
-      "validated_at": "2026-11-26T07:25:36.406495+00:00",
+      "validated_at": "2026-11-27T00:15:28.366760+00:00",
       "blocking_errors": [],
       "warnings": [
         "Missing warning-only sheet 'momentum' for 1 matches (12831489) | backfill: missing_from_source=1"
@@ -40,9 +40,35 @@
         "curated_matches": 306,
         "curated_players": 564,
         "curated_player_match_rows": 12106,
-        "timestamp_span_seconds": 0.2682366371154785
+        "timestamp_span_seconds": 0.5346503257751465
       },
-      "diff": {}
+      "diff": {
+        "heatmap_points": {
+          "rows_before": 329403,
+          "rows_after": 368113,
+          "delta_rows": 38710
+        }
+      }
+    },
+    "fantasy": {
+      "status": "passed",
+      "validated_at": "2026-11-27T00:15:31.199623+00:00",
+      "blocking_errors": [],
+      "warnings": [],
+      "stats": {
+        "row_counts": {
+          "matches": 306,
+          "teams": 24,
+          "players": 564,
+          "players_fantasy": 561,
+          "player_match": 12106,
+          "player_totals": 564,
+          "player_team": 642,
+          "player_transfer": 84,
+          "team_stats": 34840
+        },
+        "timestamp_span_seconds": 0.19913530349731445
+      }
     }
   }
 }
