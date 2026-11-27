@@ -16,6 +16,11 @@ SEASONS = (2025, 2026)
 TEAMS = {1: ("Alfa", "#112548", "Candidato"), 2: ("Beta", "#aa0000", "Competitivo"), 3: ("Gama", "#007a33", "Promedio"), 4: ("Delta", "#f2a900", None)}
 ROUNDS = {1: [(1, 2), (3, 4)], 2: [(1, 3), (2, 4)], 3: [(1, 4), (2, 3)]}
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 16
+# Estadísticas de equipo de «Team Stats» (periodo ALL): clave -> (local, visita). El mismo valor en los tres primeros partidos de cada temporada.
+TEAM_STATS = {
+    "ballPossession": (60.0, 40.0), "totalShotsOnGoal": (10.0, 8.0), "shotsOnGoal": (4.0, 3.0), "totalShotsInsideBox": (6.0, 5.0), "cornerKicks": (5.0, 2.0),
+    "goalkeeperSaves": (3.0, 2.0), "fouls": (11.0, 12.0), "passes": (400.0, 300.0), "accuratePasses": (320.0, 220.0), "totalTackle": (15.0, 18.0), "interceptionWon": (7.0, 9.0),
+}
 
 
 @dataclass(frozen=True)
@@ -88,6 +93,10 @@ def make_web_inputs(root: Path) -> WebInputs:
             stats.append({"MATCH_ID": match_id, "KEY": "expectedGoals", "PERIOD": "ALL", "HOMEVALUE": 1.1, "AWAYVALUE": 0.8})
             stats.append({"MATCH_ID": match_id, "KEY": "yellowCards", "PERIOD": "ALL", "HOMEVALUE": 2.0, "AWAYVALUE": 1.0})
             stats.append({"MATCH_ID": match_id, "KEY": "yellowCards", "PERIOD": "1ST", "HOMEVALUE": 1.0, "AWAYVALUE": 0.0})  # otros periodos no cuentan
+            for key, (home_value, away_value) in TEAM_STATS.items():
+                stats.append({"MATCH_ID": match_id, "KEY": key, "PERIOD": "ALL", "HOMEVALUE": home_value, "AWAYVALUE": away_value})
+            stats.append({"MATCH_ID": match_id, "KEY": "totalShotsOnGoal", "PERIOD": "ALL", "HOMEVALUE": 10.0, "AWAYVALUE": 8.0})  # SofaScore repite la clave en dos grupos
+            stats.append({"MATCH_ID": match_id, "KEY": "ballPossession", "PERIOD": "1ST", "HOMEVALUE": 50.0, "AWAYVALUE": 50.0})
             if number == 0:  # SofaScore solo trae las rojas cuando las hay: el resto de los partidos las omite
                 stats.append({"MATCH_ID": match_id, "KEY": "redCards", "PERIOD": "ALL", "HOMEVALUE": 1.0, "AWAYVALUE": 0.0})
             positions.append({"match_id": match_id, "player_id": 11, "team_id": 1, "average_x": 50, "average_y": 50})

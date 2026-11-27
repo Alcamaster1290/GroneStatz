@@ -219,3 +219,83 @@ def test_status_classifies_the_gaps_and_lists_the_recoverable_ones(client: TestC
 
     assert (momentum["missing_from_source"], momentum["failed"], momentum["blocked"], momentum["pending"]) == (1, 1, 1, 2)
     assert actionable == [{"season": 2025, "kind": "momentum", "pending": 2, "failed": 1, "blocked": 1}]  # el 404 no es recuperable
+
+
+def _played(world, tournament: str, season: int = 2026, up_to_round: int | None = None):
+    import pandas as pd
+
+    matches = pd.read_parquet(world["out"] / "current" / "matches.parquet")
+    played = matches[(matches["season"] == season) & matches["home_score"].notna() & (matches["status"].fillna("") != "annulled")]
+    if tournament != "Acumulada":
+        played = played[played["tournament"] == tournament]
+    if up_to_round is not None:
+        played = played[played["round_number"] <= up_to_round]
+    return played
+
+
+def _by_team(response) -> dict[int, dict]:
+    return {row["team_id"]: row for row in response.json()["rows"]}
+
+
+def test_league_table_general_keeps_the_official_points_and_averages_the_team_stats(client: TestClient, world) -> None:
+    body = client.get("/v1/seasons/2026/league-table", params={"tournament": "Apertura"}).json()
+    official = {row["team_id"]: row for row in client.get("/v1/seasons/2026/standings", params={"tournament": "Apertura"}).json()["rows"]}
+    rows = {row["team_id"]: row for row in body["rows"]}
+
+    assert body["condition"] == "general" and body["values"] == "promedio" and body["round_number"] == 3
+    assert [row["pos"] for row in body["rows"]] == [1, 2, 3, 4]
+    assert all(rows[team]["pts"] == official[team]["pts"] and rows[team]["pos"] == official[team]["pos"] for team in rows)  # incluida la sanción del equipo 4
+    assert rows[1]["eff"] == pytest.approx(rows[1]["pts"] / (3 * rows[1]["pj"]))
+    # el equipo 1 fue local en los dos partidos con estadísticas de equipo: posesión 60, tiros 10 y córners 5 de media
+    assert (rows[1]["possession"], rows[1]["shots"], rows[1]["corners"], rows[1]["n_stats"]) == (60, 10, 5, 2)
+    assert (rows[3]["possession"], rows[3]["shots"]) == (50, 9)  # local con 60 y visita con 40; tiros 10 y 8
+    assert rows[1]["gf"] == pytest.approx(official[1]["gf"] / official[1]["pj"])  # en promedio, los goles son por partido
+    assert rows[1]["dg"] == official[1]["dg"]  # la diferencia de gol siempre es el total
+
+
+def test_league_table_totals_sum_the_stats_but_keep_possession_as_an_average(client: TestClient) -> None:
+    rows = _by_team(client.get("/v1/seasons/2026/league-table", params={"tournament": "Apertura", "values": "total"}))
+
+    assert (rows[1]["shots"], rows[1]["corners"], rows[1]["saves"]) == (20, 10, 6)  # dos partidos con estadísticas
+    assert rows[1]["possession"] == 60  # sumar porcentajes no tiene sentido
+    assert rows[1]["gf"] == int(rows[1]["gf"])  # goles totales como entero
+
+
+def test_league_table_by_condition_counts_only_home_or_away_matches_without_sanctions(client: TestClient, world) -> None:
+    local = client.get("/v1/seasons/2026/league-table", params={"tournament": "Apertura", "condition": "local"}).json()
+    visita = _by_team(client.get("/v1/seasons/2026/league-table", params={"tournament": "Apertura", "condition": "visita"}))
+    played = _played(world, "Apertura")
+    home_games = played.groupby("home_id").size().to_dict()
+    away_games = played.groupby("away_id").size().to_dict()
+    rows = {row["team_id"]: row for row in local["rows"]}
+
+    assert {team: row["pj"] for team, row in rows.items()} == home_games  # el equipo 4 nunca juega de local: no aparece
+    assert {team: row["pj"] for team, row in visita.items()} == away_games
+    assert 4 not in rows and "sin sanciones" in local["note"].lower()
+    assert [row["pos"] for row in local["rows"]] == list(range(1, len(local["rows"]) + 1))
+
+
+def test_league_table_sorts_by_any_stat_but_keeps_the_position_by_points(client: TestClient) -> None:
+    default = {row["team_id"]: row["pos"] for row in client.get("/v1/seasons/2026/league-table", params={"tournament": "Apertura"}).json()["rows"]}
+    body = client.get("/v1/seasons/2026/league-table", params={"tournament": "Apertura", "sort": "shots"}).json()
+    shots = [row["shots"] for row in body["rows"]]
+    asc = client.get("/v1/seasons/2026/league-table", params={"tournament": "Apertura", "sort": "shots", "order": "asc"}).json()
+
+    assert shots == sorted(shots, reverse=True) and body["sort"] == "shots"
+    assert {row["team_id"]: row["pos"] for row in body["rows"]} == default  # ordenar por otra columna no cambia la posición por puntos
+    assert [row["shots"] for row in asc["rows"]] == sorted(row["shots"] for row in asc["rows"])
+
+
+def test_league_table_after_an_earlier_round_and_for_both_tournaments(client: TestClient, world) -> None:
+    first = _by_team(client.get("/v1/seasons/2026/league-table", params={"tournament": "Apertura", "round": 1}))
+    both = _by_team(client.get("/v1/seasons/2026/league-table", params={"tournament": "Acumulada"}))
+    total_games = _played(world, "Acumulada").pipe(lambda frame: frame.groupby("home_id").size().add(frame.groupby("away_id").size(), fill_value=0)).to_dict()
+
+    assert max(row["pj"] for row in first.values()) == 1
+    assert {team: row["pj"] for team, row in both.items()} == {team: int(count) for team, count in total_games.items()}
+
+
+def test_league_table_rejects_unknown_options_and_seasons(client: TestClient) -> None:
+    assert client.get("/v1/seasons/2026/league-table", params={"condition": "neutral"}).status_code == 422
+    assert client.get("/v1/seasons/2026/league-table", params={"sort": "magia"}).status_code == 422
+    assert client.get("/v1/seasons/1999/league-table").status_code == 404

@@ -237,3 +237,19 @@ def test_stats_that_sofascore_omits_for_players_who_played_become_zero_but_cards
 
     assert played[["goals", "assists", "saves"]].notna().all().all()  # un nulo de quien jugó es un cero omitido
     assert player_match["yellowcards"].isna().all() and player_match["redcards"].isna().all()  # las tarjetas no se inventan
+
+
+def test_team_match_stats_use_the_all_period_drop_repeated_groups_and_add_the_own_xg(built) -> None:
+    inputs, _, release = built
+    stats = _table(release, "team_match_stats")
+    shots = _table(release, "shot_events")
+    first = inputs.played[2025][0]
+    rows = stats[stats["match_id"] == first].set_index("team_id")  # partido 1 contra 2: local el equipo 1
+
+    assert (rows.loc[1, "possession"], rows.loc[2, "possession"]) == (60, 40)  # el periodo 1ST (50-50) no cuenta
+    assert (rows.loc[1, "shots"], rows.loc[2, "shots"]) == (10, 8)  # la clave viene repetida en dos grupos: una sola fila por equipo
+    assert (rows.loc[1, "shots_on_target"], rows.loc[1, "corners"], rows.loc[2, "saves"]) == (4, 5, 2)
+    own = shots[(shots["match_id"] == first) & (shots["team_id"] == 1)]["xg"].sum()
+    assert rows.loc[1, "xg"] == pytest.approx(own)  # xG propio: suma de los tiros del equipo en el partido
+    assert len(stats[stats["season"] == 2025]) == 6  # 3 partidos con estadísticas de equipo y dos filas cada uno
+    assert stats["possession"].notna().all()

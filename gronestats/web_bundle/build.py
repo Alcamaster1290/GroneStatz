@@ -216,6 +216,41 @@ def build_team_cards(data_dir: Path, seasons: Iterable[int], matches: pd.DataFra
     return pd.DataFrame(rows, columns=list(TABLES["team_cards"].columns))
 
 
+TEAM_STAT_KEYS = {
+    "ballPossession": "possession", "totalShotsOnGoal": "shots", "shotsOnGoal": "shots_on_target", "totalShotsInsideBox": "shots_inside_box", "cornerKicks": "corners",
+    "goalkeeperSaves": "saves", "fouls": "fouls", "passes": "passes", "accuratePasses": "accurate_passes", "totalTackle": "tackles", "interceptionWon": "interceptions", "expectedGoals": "xg_provider",
+}
+
+
+def build_team_match_stats(data_dir: Path, seasons: Iterable[int], matches: pd.DataFrame, shot_events: pd.DataFrame) -> pd.DataFrame:
+    """Una fila por equipo y partido con las estadísticas de equipo de SofaScore (periodo ALL) y el xG propio.
+
+    SofaScore repite algunas claves en varios grupos (con el mismo valor): se deja una. Una clave ausente es un dato ausente (nulo), no un cero.
+    """
+    columns = list(TABLES["team_match_stats"].columns)
+    teams = {int(row.match_id): (int(row.home_id), int(row.away_id)) for row in matches.itertuples()}
+    own_xg = shot_events.groupby(["season", "match_id", "team_id"])["xg"].sum()
+    rows = []
+    for season in seasons:
+        stats = _season_table(data_dir, season, "team_stats", ["MATCH_ID", "KEY", "PERIOD", "HOMEVALUE", "AWAYVALUE"])
+        if stats.empty:
+            continue
+        stats = stats[(stats["PERIOD"].astype(str).str.upper() == "ALL") & stats["KEY"].isin(TEAM_STAT_KEYS)].copy()
+        stats["MATCH_ID"] = pd.to_numeric(stats["MATCH_ID"], errors="coerce")
+        stats = stats.dropna(subset=["MATCH_ID"]).drop_duplicates(["MATCH_ID", "KEY"])
+        wide = {side: stats.pivot(index="MATCH_ID", columns="KEY", values=f"{side}VALUE").apply(pd.to_numeric, errors="coerce") for side in ("HOME", "AWAY")}
+        for match_id in sorted(int(value) for value in stats["MATCH_ID"].unique()):
+            if match_id not in teams:
+                continue
+            for side, team_id in zip(("HOME", "AWAY"), teams[match_id]):
+                row: dict = {"season": season, "match_id": match_id, "team_id": team_id}
+                for key, column in TEAM_STAT_KEYS.items():
+                    row[column] = wide[side].at[match_id, key] if key in wide[side].columns else float("nan")
+                row["xg"] = float(own_xg.get((season, match_id, team_id), float("nan")))
+                rows.append(row)
+    return pd.DataFrame(rows, columns=columns)
+
+
 def build_coverage(data_dir: Path, seasons: Iterable[int], matches: pd.DataFrame, tables: dict[str, pd.DataFrame]) -> pd.DataFrame:
     """Por temporada y tipo de dato: partidos esperados (jugados, sin marcador fijado ni anulados), los que tienen ese dato y, de los
     que faltan, cuántos SofaScore no tiene (404), cuántos nunca se pidieron, cuántos dieron error y cuántos se cortaron por bloqueo."""
@@ -301,6 +336,7 @@ def build_web_bundle(data_dir: Path, analytics_dir: Path, reference_dir: Path, o
     }
     tables["data_coverage"] = _typed(build_coverage(data_dir, seasons, matches, tables), "data_coverage")
     tables["team_cards"] = _typed(build_team_cards(data_dir, seasons, matches), "team_cards")
+    tables["team_match_stats"] = _typed(build_team_match_stats(data_dir, seasons, matches, tables["shot_events"]), "team_match_stats")
 
     played = matches[matches["home_score"].notna() & matches["away_score"].notna() & ~is_official_award(matches["status"]) & ~is_annulled(matches["status"])]
     data_as_of = played["date"].max()

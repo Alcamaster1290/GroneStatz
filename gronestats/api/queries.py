@@ -95,6 +95,83 @@ def standings(release: Release, season: int, tournament: str | None, round_numbe
     return {"release_id": release.release_id, "season": season, "tournament": tournament, "round_number": selected, "rounds": 0 if tournament == "Acumulada" else rounds, "rows": rows}
 
 
+LEAGUE_SORTS = ("pts", "pj", "eff", "gf", "gc", "dg", "xg", "xga", "possession", "shots", "shots_on_target", "corners", "saves", "fouls", "yellow", "red")
+STAT_COLUMNS = ("xg", "xga", "possession", "shots", "shots_on_target", "corners", "saves", "fouls", "yellow", "red")
+DECIMAL_STATS = {"xg", "xga", "possession"}  # el resto son conteos: enteros cuando se piden los totales
+
+
+def league_table(release: Release, season: int, tournament: str | None, round_number: int | None, condition: str, values: str, sort: str, order: str) -> dict[str, Any]:
+    """Tabla de liga con estadísticas de equipo: resultados (los oficiales en «general», con sus sanciones) y, por partido o en total,
+    xG, posesión, tiros, tiros al arco, córners, atajadas, faltas y tarjetas. «local» y «visita» cuentan solo esos partidos y no llevan sanciones."""
+    official = standings(release, season, tournament, round_number)
+    tournament, selected_round = official["tournament"], official["round_number"]
+    played = release.q(
+        "SELECT match_id, tournament, round_number, home_id, away_id, home_score, away_score FROM matches "
+        "WHERE season = ? AND home_score IS NOT NULL AND away_score IS NOT NULL AND lower(coalesce(status, '')) <> 'annulled'",
+        [season],
+    )
+    if tournament != "Acumulada":
+        played = played[(played["tournament"] == tournament) & (played["round_number"] <= selected_round)]
+    home = pd.DataFrame({"match_id": played["match_id"], "team_id": played["home_id"], "opp_id": played["away_id"], "is_home": True, "gf": played["home_score"], "gc": played["away_score"]})
+    away = pd.DataFrame({"match_id": played["match_id"], "team_id": played["away_id"], "opp_id": played["home_id"], "is_home": False, "gf": played["away_score"], "gc": played["home_score"]})
+    sides = pd.concat([home, away], ignore_index=True)
+    if condition == "local":
+        sides = sides[sides["is_home"]]
+    elif condition == "visita":
+        sides = sides[~sides["is_home"]]
+    sides = sides.assign(pg=(sides["gf"] > sides["gc"]).astype(int), pe=(sides["gf"] == sides["gc"]).astype(int), pp=(sides["gf"] < sides["gc"]).astype(int))
+
+    stats = release.q("SELECT match_id, team_id, possession, shots, shots_on_target, corners, saves, fouls, xg FROM team_match_stats WHERE season = ?", [season])
+    cards = release.q("SELECT match_id, team_id, yellow, red FROM team_cards WHERE season = ?", [season])
+    against = stats[["match_id", "team_id", "xg"]].rename(columns={"team_id": "opp_id", "xg": "xga"})
+    sides = sides.merge(stats, on=["match_id", "team_id"], how="left").merge(cards, on=["match_id", "team_id"], how="left").merge(against, on=["match_id", "opp_id"], how="left")
+
+    grouped = sides.groupby("team_id")
+    base = grouped.agg(pj=("match_id", "size"), pg=("pg", "sum"), pe=("pe", "sum"), pp=("pp", "sum"), gf=("gf", "sum"), gc=("gc", "sum"))
+    totals = {column: grouped[column].sum(min_count=1) for column in STAT_COLUMNS}
+    counts = {column: grouped[column].count() for column in STAT_COLUMNS}
+    n_stats = grouped["shots"].count()
+
+    def stat(team_id: int, column: str) -> float | int | None:
+        total, count = totals[column].get(team_id), counts[column].get(team_id, 0)
+        if total is None or pd.isna(total) or count == 0:
+            return None
+        if column == "possession" or values == "promedio":
+            return float(total) / int(count)  # sumar porcentajes de posesión no tiene sentido: siempre el promedio
+        return float(total) if column in DECIMAL_STATS else int(round(total))
+
+    if condition == "general":
+        results = {int(row["team_id"]): {key: row[key] for key in ("pos", "pj", "pts", "gf", "gc", "dg")} for row in official["rows"]}
+    else:
+        results = {int(team): {"pj": int(row.pj), "pts": int(3 * row.pg + row.pe), "gf": int(row.gf), "gc": int(row.gc), "dg": int(row.gf - row.gc)} for team, row in base.iterrows()}
+        ranked = sorted(results, key=lambda team: (-results[team]["pts"], -results[team]["dg"], -results[team]["gf"], team))
+        for position, team in enumerate(ranked, start=1):
+            results[team]["pos"] = position
+
+    rows = []
+    for team_id, result in results.items():
+        games = result["pj"]
+        row = {
+            "pos": int(result["pos"]), "team_id": team_id, "pj": games, "pts": result["pts"],
+            "eff": result["pts"] / (3 * games) if games else None,
+            "gf": result["gf"] / games if values == "promedio" and games else result["gf"],
+            "gc": result["gc"] / games if values == "promedio" and games else result["gc"],
+            "dg": result["dg"],
+            **{column: stat(team_id, column) for column in STAT_COLUMNS},
+            "n_stats": int(n_stats.get(team_id, 0)),
+        }
+        team = release.team(team_id) or {}
+        rows.append({**row, **{key: team.get(key) for key in ("name", "color", "crest", "level")}})
+    descending = order == "desc"
+    rows.sort(key=lambda item: (item[sort] is None, -(item[sort] or 0) if descending else (item[sort] or 0), item["pos"]))
+    return {
+        "release_id": release.release_id, "season": season, "tournament": tournament, "round_number": selected_round, "rounds": official["rounds"],
+        "condition": condition, "values": values, "sort": sort, "order": order,
+        "note": None if condition == "general" else "Sin sanciones de puntos: se cuentan solo los partidos jugados de esa condición.",
+        "rows": rows,
+    }
+
+
 def team_matches(release: Release, team_id: int, season: int) -> dict[str, Any]:
     team = release.team(team_id)
     if team is None:

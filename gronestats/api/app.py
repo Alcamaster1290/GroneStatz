@@ -31,6 +31,25 @@ class Tournament(str, Enum):
     acumulada = "Acumulada"
 
 
+class Condition(str, Enum):
+    general = "general"
+    local = "local"
+    visita = "visita"
+
+
+class Values(str, Enum):
+    promedio = "promedio"
+    total = "total"
+
+
+class Order(str, Enum):
+    desc = "desc"
+    asc = "asc"
+
+
+SortKey = Enum("SortKey", {key: key for key in queries.LEAGUE_SORTS}, type=str)
+
+
 def create_app(bundle_dir: Path | None = None, images_dir: Path | None = None) -> FastAPI:
     root = Path(__file__).resolve().parents[1]
     bundle_dir = Path(bundle_dir or os.getenv("GRONESTATS_WEB_BUNDLE") or root / "data" / "Liga 1 Peru" / "web")
@@ -77,6 +96,18 @@ def create_app(bundle_dir: Path | None = None, images_dir: Path | None = None) -
     @app.get("/v1/seasons/{season}/standings")
     def standings(season: int, tournament: Tournament | None = None, round: int | None = Query(default=None, ge=0)) -> dict[str, Any]:
         return run(queries.standings, season, tournament.value if tournament else None, round)
+
+    @app.get("/v1/seasons/{season}/league-table")
+    def league_table(
+        season: int,
+        tournament: Tournament | None = None,
+        round: int | None = Query(default=None, ge=0),
+        condition: Condition = Condition.general,
+        values: Values = Values.promedio,
+        sort: SortKey = SortKey.pts,  # type: ignore[assignment]
+        order: Order = Order.desc,
+    ) -> dict[str, Any]:
+        return run(queries.league_table, season, tournament.value if tournament else None, round, condition.value, values.value, sort.value, order.value)
 
     @app.get("/v1/teams/{team_id}/seasons/{season}/matches")
     def team_matches(team_id: int, season: int) -> dict[str, Any]:

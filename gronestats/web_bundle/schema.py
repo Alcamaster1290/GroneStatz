@@ -13,8 +13,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-# 1.1.0: data_coverage clasifica cada hueco con el registro de scrapeo y se añade team_cards (cambios compatibles: solo añaden).
-SCHEMA_VERSION = "1.1.0"
+# 1.1.0: data_coverage clasifica cada hueco con el registro de scrapeo y se añade team_cards.
+# 1.2.0: se añade team_match_stats (estadísticas de equipo por partido para las tablas de liga). Cambios compatibles: solo añaden.
+SCHEMA_VERSION = "1.2.0"
 TOURNAMENTS = ("Apertura", "Clausura")  # los torneos cortos; ``standings`` agrega "Acumulada"
 
 
@@ -54,6 +55,11 @@ TABLES: dict[str, TableSpec] = {
     "model_runs": TableSpec(("model", "version", "trained_on", "params", "metrics"), ("model", "version")),
     # missing = missing_from_source (SofaScore respondió 404) + pending (nunca se pidió) + failed (error) + blocked (bloqueo)
     "data_coverage": TableSpec(("season", "kind", "expected", "present", "missing", "missing_from_source", "pending", "failed", "blocked"), ("season", "kind")),
+    # Estadísticas de equipo por partido, de «Team Stats» (periodo ALL), y el xG propio (suma de los tiros del equipo). Nulo = el partido no la trae.
+    "team_match_stats": TableSpec(
+        ("season", "match_id", "team_id", "possession", "shots", "shots_on_target", "shots_inside_box", "corners", "saves", "fouls", "passes", "accurate_passes", "tackles", "interceptions", "xg_provider", "xg"),
+        ("season", "match_id", "team_id"),
+    ),
     # Tarjetas por equipo y partido, de «Team Stats» (periodo ALL). «Player Stats» no trae tarjetas por jugador.
     "team_cards": TableSpec(("season", "match_id", "team_id", "yellow", "red"), ("season", "match_id", "team_id")),
     "known_gaps": TableSpec(("season", "kind", "scope", "reason", "source")),
